@@ -91,7 +91,10 @@ export abstract class BasePage {
     cmLocator: Locator,
     text: string,
   ): Promise<void> {
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    const deadline = Date.now() + DEFAULT_TIMEOUT;
+    let attempt = 0;
+    do {
+      attempt++;
       await expect(async () => {
         await cmLocator.evaluate(
           (el, value) => (el as any).CodeMirror?.setValue(value),
@@ -100,8 +103,16 @@ export abstract class BasePage {
         expect(await this.readCodeMirror(cmLocator)).toBe(text);
       }).toPass({ timeout: DEFAULT_TIMEOUT });
       if (await this.valueHolds(cmLocator, text, 200)) return;
-    }
-    throw new Error(`CodeMirror value "${text}" did not hold after 3 attempts`);
+      // A revert means a background patch of a still-initializing document
+      // landed over the write; back off so the next write goes in after it
+      // rather than racing it again within the same few milliseconds.
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, Math.min(250 * attempt, 1000)),
+      );
+    } while (Date.now() < deadline);
+    throw new Error(
+      `CodeMirror value "${text}" did not hold after ${attempt} attempts`,
+    );
   }
 
   /**

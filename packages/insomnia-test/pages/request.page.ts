@@ -44,6 +44,8 @@ export abstract class RequestPage extends TabPanelPage {
    * method on purpose: the step instrumentation wraps page methods into
    * async ones, which a synchronous per-document read can't be.
    */
+  /** Whether the key/value editor keeps a blank row appended after the persisted rows (gRPC's doesn't). */
+  protected readonly hasTrailingBlankRow: boolean = true;
   protected readonly persistedRowPaths: string[] = [
     "parameters",
     "headers",
@@ -106,17 +108,31 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Clicks the Connect/Disconnect button to open a connection (for
    * streaming request types) and waits for it to flip to "Disconnect".
+   * If an error dialog (e.g. "Failed to Render Request") appears instead,
+   * throws using its text rather than waiting out the full timeout for a
+   * button that will never appear.
+   * @param options.expectConnected - Set to `false` when the connection is expected to be refused or to fail right away (unreachable server/proxy), so the button never stays on "Disconnect"; returns right after the click
    */
-  async connect(): Promise<void> {
+  async connect({
+    expectConnected = true,
+  }: { expectConnected?: boolean } = {}): Promise<void> {
     const connectButton = this.page
       .locator(this.PANE)
       .getByRole("button", { name: /^(Connect|Disconnect)$/ });
     await connectButton.click();
-    await expect(
-      this.page
-        .locator(this.PANE)
-        .getByRole("button", { name: "Disconnect", exact: true }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    if (!expectConnected) return;
+
+    const disconnectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Disconnect", exact: true });
+    const dialog = this.page.getByRole("dialog").first();
+    await disconnectButton
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
   }
 
   /**
@@ -404,7 +420,12 @@ export abstract class RequestPage extends TabPanelPage {
       await deleteAllBtn.click();
     }
     const options = panel.locator('[role="listbox"] [role="option"]');
-    for (const pair of pairs) {
+    for (const [index, pair] of pairs.entries()) {
+      // Without a trailing blank row the only blank row is the initial one
+      // shown while the list is empty; later rows must be added explicitly.
+      if (!this.hasTrailingBlankRow && index > 0) {
+        await panel.locator('button:has-text("Add")').click();
+      }
       // Locate the row by its fixed position: once it is persisted a new
       // trailing blank row is appended, so `.last()` would no longer be it.
       const rowIndex = (await options.count()) - 1;
@@ -429,9 +450,10 @@ export abstract class RequestPage extends TabPanelPage {
       // only mints a fresh trailing blank row after it has re-rendered
       // from the persisted data. Typing the value earlier lets that late
       // re-render reset the value editor back to its stale default.
-      await expect(options).toHaveCount(rowIndex + 2, {
-        timeout: DEFAULT_TIMEOUT,
-      });
+      await expect(options).toHaveCount(
+        rowIndex + (this.hasTrailingBlankRow ? 2 : 1),
+        { timeout: DEFAULT_TIMEOUT },
+      );
       await setValue();
       if (pair.disabled) {
         await row.locator('button[aria-pressed="true"]').click();
@@ -501,14 +523,21 @@ export abstract class RequestPage extends TabPanelPage {
         // missing row back-to-back would recreate the stale-row-list race.
         for (const { pair, index } of missing) {
           const row = rows.nth(index);
-          await this.setCodeMirrorValue(
-            row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-            pair.name,
-          );
-          await this.setCodeMirrorValue(
-            row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-            pair.value ?? "",
-          );
+          // The editor can already show the right text while the saved row
+          // list lacks it; re-setting identical text fires no save, so
+          // detour through a different value to force a fresh save.
+          const nameEditor = row
+            .locator(this.ONE_LINE_EDITOR)
+            .nth(0)
+            .locator(".CodeMirror");
+          const valueEditor = row
+            .locator(this.ONE_LINE_EDITOR)
+            .nth(1)
+            .locator(".CodeMirror");
+          await this.setCodeMirrorValue(nameEditor, `${pair.name}-`);
+          await this.setCodeMirrorValue(nameEditor, pair.name);
+          await this.setCodeMirrorValue(valueEditor, `${pair.value ?? ""}-`);
+          await this.setCodeMirrorValue(valueEditor, pair.value ?? "");
           await this.syncRowToggle(row, pair);
           await this.waitForPairPersisted(pair).catch(() => {});
         }

@@ -879,6 +879,38 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
+   * A custom-styled checkbox (General tab,
+   * Settings.hideSecretValuesInPreviewAndConsole) whose native input
+   * ignores direct clicks — the wrapping label is the actual clickable
+   * target. Toggling it in either direction pops an informational alert
+   * ("Hiding Confidential Variables" / "Confidential Variables Are Now
+   * Visible"), which is dismissed here so it doesn't block later steps.
+   * On by default, which masks vault/secret values in the template tag
+   * Live Preview as `••••••`.
+   * @param enabled - Whether confidential values should be hidden in Preview/Console
+   */
+  async setHideSecretValuesInPreviewAndConsole(
+    enabled: boolean,
+  ): Promise<void> {
+    const label = this.dialog.locator("label", {
+      hasText: /^Hide Confidential values in Preview\/Console$/,
+    });
+    const input = label.locator('input[type="checkbox"]');
+    if ((await input.isChecked()) !== enabled) {
+      await label.click();
+      await expect(input).toBeChecked({
+        checked: enabled,
+        timeout: DEFAULT_TIMEOUT,
+      });
+      const alert = this.page
+        .getByRole("dialog")
+        .filter({ hasText: /Confidential Variables/ });
+      await alert.getByRole("button", { name: "Ok" }).click();
+      await expect(alert).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    }
+  }
+
+  /**
    * A custom-styled checkbox (General tab, Settings.filterResponsesByEnv)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target, same quirk as `setValidateSSL()`.

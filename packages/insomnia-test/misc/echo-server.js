@@ -277,7 +277,8 @@ const httpsServer = https.createServer(HTTPS_OPTIONS, handleRequest);
 const customCaHttpsServer = https.createServer(CUSTOM_CA_HTTPS_OPTIONS, handleRequest);
 const mtlsHttpsServer = https.createServer(MTLS_HTTPS_OPTIONS, handleRequest);
 
-server.listen(4060, '127.0.0.1', () => {
+// Dual-stack so http://[::1]:4060 (ipv6-local-address.spec.ts) is reachable as well as 127.0.0.1.
+server.listen(4060, '::', () => {
   process.stdout.write('Listening at http://localhost:4060\n');
 });
 httpsServer.listen(4061, '127.0.0.1', () => {
