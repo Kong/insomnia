@@ -1,0 +1,46 @@
+import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, getServerCommits, GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
+
+test(
+  "Verify discarding all unstaged changes removes the uncommitted collection and keeps the committed one",
+  async ({ user }) => {
+    const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
+    const { workspacePage } = user.pageManager;
+
+    await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
+    const project = await workspaceFlow.cloneGitProject(
+      new Project(faker.string.alphanumeric(10), ProjectType.Git),
+      GIT_CREDENTIAL.name,
+    );
+    const committedCollection = await workspaceFlow.createCollection(
+      project,
+      new Collection(faker.string.alphanumeric(10)),
+      faker.string.alphanumeric(10),
+    );
+    await gitSyncFlow.commit(faker.string.alphanumeric(10));
+
+    const collection = await workspaceFlow.createCollection(
+      project,
+      new Collection(faker.string.alphanumeric(10)),
+      faker.string.alphanumeric(10),
+    );
+    await gitSyncFlow.discardAllChanges();
+
+    await expect
+      .poll(async () => workspacePage.findItemNode(collection), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .toBeUndefined();
+
+    const committedNode = await workspacePage.findItemNode(committedCollection);
+    const serverCommits = await getServerCommits();
+
+    expect(committedNode).toBeDefined();
+    expect(serverCommits).toHaveLength(1);
+  },
+);
