@@ -166,6 +166,18 @@ describe('curl', () => {
       expected: { body: { params: [{ name: '', value: 'value' }] } },
     },
     {
+      // https://github.com/Kong/insomnia/issues/6336
+      name: 'should keep an @ inside a --data-urlencode value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'email=user@example.com'",
+      expected: { body: { params: [{ name: 'email', value: 'user@example.com' }] } },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/6336
+      name: 'should keep an @ inside a -d value',
+      curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' -d 'email=user@example.com'",
+      expected: { body: { params: [{ name: 'email', value: 'user@example.com' }] } },
+    },
+    {
       name: 'should handle --data-urlencode with special characters',
       curl: "curl -X POST https://example.com -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode ' '",
       expected: { body: { params: [{ name: '', value: ' ' }] } },
