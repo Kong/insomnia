@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { AuthTypeOAuth2 } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import type { AuthTypeOAuth2 } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 for (const pkceMethod of ["S256", "plain"] as const) {
   test(`Verify Authorization Code grant with PKCE (${pkceMethod}) is verified server-side and authorizes the sent request`, async ({
@@ -48,14 +49,14 @@ for (const pkceMethod of ["S256", "plain"] as const) {
     ).json();
 
     const responseView = await httpRequestFlow.send(request);
-    const body = responseView.preview as { authorization?: string };
+    const body = responseView.body as { authorization?: string };
 
     expect(tokens.accessToken).not.toBe("");
     expect(lastTokenRequest.grantType).toBe("authorization_code");
     expect(lastTokenRequest.pkceUsed).toBe(true);
     expect(lastTokenRequest.pkceMethod).toBe(pkceMethod);
     expect(lastTokenRequest.pkceVerified).toBe(true);
-    expect(responseView.statusBar.code).toBe(200);
+    expect(responseView.statusCode).toBe(200);
     expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
   });
 }
