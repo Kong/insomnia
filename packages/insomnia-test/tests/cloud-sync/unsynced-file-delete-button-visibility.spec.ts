@@ -1,14 +1,15 @@
 import { faker } from "@faker-js/faker";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { DialogDismissMethod } from "@package/pages/cloud-sync-file-delete.page";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { DialogDismissMethod } from "../../pages/cloud-sync.page";
 
 test("Verify the dashboard's unsynced-file delete button only appears on unsynced cards, is revealed on hover and keyboard focus, and cancelling its dialog leaves the file intact", async ({
   user,
 }) => {
   const { workspaceFlow, cloudSyncFlow, appFlow } = user.flowManager;
-  const { cloudSyncPage, cloudSyncFileDeletePage } = user.pageManager;
+  const { cloudSyncPage } = user.pageManager;
 
   const project = await workspaceFlow.getProject({ name: "Personal Workspace" });
   const localCollection = await workspaceFlow.createCollection(
@@ -20,46 +21,46 @@ test("Verify the dashboard's unsynced-file delete button only appears on unsynce
   await cloudSyncPage.backToAllProjects();
   await cloudSyncFlow.openProjectDashboard(project!);
 
-  const syncedHasButton = await cloudSyncFileDeletePage.hasFileDeleteButton(
+  const syncedHasButton = await cloudSyncPage.hasFileDeleteButton(
     "My Collection R1",
   );
-  const localOnlyHasButton = await cloudSyncFileDeletePage.hasFileDeleteButton(
+  const localOnlyHasButton = await cloudSyncPage.hasFileDeleteButton(
     (localCollection as Collection).name,
   );
-  const unsyncedHasButton = await cloudSyncFileDeletePage.hasFileDeleteButton(
+  const unsyncedHasButton = await cloudSyncPage.hasFileDeleteButton(
     "My Environment",
   );
 
-  const revealedBeforeHover = await cloudSyncFileDeletePage.isFileDeleteButtonRevealed(
+  const revealedBeforeHover = await cloudSyncPage.isFileDeleteButtonRevealed(
     "My Environment",
   );
-  await cloudSyncFileDeletePage.hoverFile("My Environment");
-  const revealedOnHover = await cloudSyncFileDeletePage.isFileDeleteButtonRevealed(
+  await cloudSyncPage.hoverFile("My Environment");
+  const revealedOnHover = await cloudSyncPage.isFileDeleteButtonRevealed(
     "My Environment",
   );
-  await cloudSyncFileDeletePage.hoverFile((localCollection as Collection).name);
-  const revealedAfterUnhover = await cloudSyncFileDeletePage.isFileDeleteButtonRevealed(
+  await cloudSyncPage.hoverFile((localCollection as Collection).name);
+  const revealedAfterUnhover = await cloudSyncPage.isFileDeleteButtonRevealed(
     "My Environment",
   );
-  await cloudSyncFileDeletePage.focusFile("My Environment");
-  const revealedOnFocus = await cloudSyncFileDeletePage.isFileDeleteButtonRevealed(
+  await cloudSyncPage.focusFile("My Environment");
+  const revealedOnFocus = await cloudSyncPage.isFileDeleteButtonRevealed(
     "My Environment",
   );
 
   const logLines = await appFlow.captureMainProcessLog(async () => {
-    await cloudSyncFileDeletePage.openFileDeleteDialog("My Environment");
-    await cloudSyncFileDeletePage.dismissFileDeleteDialog(DialogDismissMethod.XButton);
-    await cloudSyncFileDeletePage.openFileDeleteDialog("My Environment");
-    await cloudSyncFileDeletePage.dismissFileDeleteDialog(DialogDismissMethod.Escape);
-    await cloudSyncFileDeletePage.openFileDeleteDialog("My Environment");
-    await cloudSyncFileDeletePage.dismissFileDeleteDialog(
+    await cloudSyncPage.openFileDeleteDialog("My Environment");
+    await cloudSyncPage.dismissFileDeleteDialog(DialogDismissMethod.XButton);
+    await cloudSyncPage.openFileDeleteDialog("My Environment");
+    await cloudSyncPage.dismissFileDeleteDialog(DialogDismissMethod.Escape);
+    await cloudSyncPage.openFileDeleteDialog("My Environment");
+    await cloudSyncPage.dismissFileDeleteDialog(
       DialogDismissMethod.ClickOutside,
     );
   });
   const archivedLines = logLines.filter((line) =>
     /Archived remote project/.test(line),
   );
-  const fileStillPresent = await cloudSyncFileDeletePage.isFileCardVisible(
+  const fileStillPresent = await cloudSyncPage.isFileCardVisible(
     "My Environment",
   );
 

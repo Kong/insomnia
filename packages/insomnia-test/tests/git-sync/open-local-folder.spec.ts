@@ -3,10 +3,11 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { test } from '@package/misc/git-fixtures';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { test } from '../../misc/git-fixtures';
+import { Project } from '../../models/project';
 
 test(
   'Verify adopting an existing local folder as a Git project runs git init in it',
