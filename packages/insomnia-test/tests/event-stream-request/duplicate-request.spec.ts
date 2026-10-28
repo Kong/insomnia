@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EventStreamMethod } from "@package/models/event-stream-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EventStreamMethod } from "../../models/event-stream-request";
+import { Project } from "../../models/project";
 
 test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", async ({
   user,
@@ -36,6 +37,6 @@ test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", asy
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.method).toBe(request.method);
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`X-Custom: ${headerValue}`);
 });
