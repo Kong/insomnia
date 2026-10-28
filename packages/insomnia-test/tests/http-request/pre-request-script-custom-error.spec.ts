@@ -1,0 +1,63 @@
+import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
+
+const url = `${HTTP_SERVER}/post`;
+
+test("Verify a thrown error in pre-request script surfaces in the response console", async ({
+  user,
+}) => {
+  const { httpRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const errorMessage = faker.string.alphanumeric(10);
+  const request = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Post,
+    url,
+    preRequestScript: `throw new Error('${errorMessage}');`,
+  });
+  const responseView = await httpRequestFlow.send(request);
+
+  await expect
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .toContain(errorMessage);
+});
+
+test("Verify accessing an invalid field in pre-request script surfaces in the response console", async ({
+  user,
+}) => {
+  const { httpRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const request = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Post,
+    url,
+    preRequestScript: `insomnia.INVALID_FIELD.set('', '');`,
+  });
+  const responseView = await httpRequestFlow.send(request);
+
+  await expect
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .toContain("Cannot read properties of undefined (reading 'set')");
+});
