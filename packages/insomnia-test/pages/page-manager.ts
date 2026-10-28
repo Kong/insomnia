@@ -26,6 +26,7 @@ import { ResponsePage } from "./response.page";
 import { RunnerPage } from "./runner.page";
 import { SocketIORequestPage } from "./socket-io-request.page";
 import { TemplateTagPage } from "./template-tag.page";
+import { VariableSourcePage } from "./variable-source.page";
 import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
@@ -242,7 +243,7 @@ export class PageManager {
    * @returns The shared ResponsePage instance
    */
   get responsePage(): ResponsePage {
-    return this.getOrCreate("response", () => new ResponsePage(this.page));
+    return this.getOrCreate("response", () => new ResponsePage(this.page, this.insomnia));
   }
 
   /**
@@ -275,6 +276,17 @@ export class PageManager {
     return this.getOrCreate(
       "templateTag",
       () => new TemplateTagPage(this.page, this.insomnia),
+    );
+  }
+
+  /**
+   * Lazily creates (and caches) the VariableSourcePage instance.
+   * @returns The shared VariableSourcePage instance
+   */
+  get variableSourcePage(): VariableSourcePage {
+    return this.getOrCreate(
+      "variableSource",
+      () => new VariableSourcePage(this.page, this.insomnia),
     );
   }
 
