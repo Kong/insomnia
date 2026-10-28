@@ -1,12 +1,13 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import type { HttpRequest } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 const sharedVariable = "shared";
 
@@ -65,8 +66,8 @@ test("Verify an empty sub-environment falls back to the base environment until i
   ]);
   const afterOwnValue = await httpRequestFlow.send(request);
 
-  expect(beforeOwnValue.statusBar.code).toBe(200);
-  expect(beforeOwnValue.preview).toMatchObject({ args: { value: baseValue } });
-  expect(afterOwnValue.statusBar.code).toBe(200);
-  expect(afterOwnValue.preview).toMatchObject({ args: { value: subValue } });
+  expect(beforeOwnValue.statusCode).toBe(200);
+  expect(beforeOwnValue.body).toMatchObject({ args: { value: baseValue } });
+  expect(afterOwnValue.statusCode).toBe(200);
+  expect(afterOwnValue.body).toMatchObject({ args: { value: subValue } });
 });
