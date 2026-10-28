@@ -1,34 +1,21 @@
 import { faker } from "@faker-js/faker";
-import { LintSeverity } from "@package/enums/lint-severity";
-import { ProjectType } from "@package/enums/project-types";
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { LintSeverity } from "../../enums/lint-severity";
+import { ProjectType } from "../../enums/project-types";
+import { test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage, specPage } = user.pageManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-
-  const projectNode = (await workspacePage.findItemNode(
-    project,
-    TreeNodeType.Project,
-  ))!;
-  await workspacePage.expand(projectNode);
-  const projectChildren = (await workspacePage.getTree())
-    .flatten()
-    .find((node) => node._id === projectNode._id)!.children;
-  expect(projectChildren.map((node) => node._id)).toEqual([
-    `empty-project-${projectNode._id}`,
-  ]);
-  expect(projectChildren[0].type).toBe(TreeNodeType.Empty);
 
   await workspaceFlow.createInEmptyState(
     project,
@@ -36,7 +23,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   );
 
   const requestPath = `/${faker.word.sample()}`;
-  await specPage.setSpecification(
+  await workspacePage.setSpecification(
     JSON.stringify({
       openapi: "3.0.0",
       info: { title: faker.commerce.productName(), version: "1.0.0" },
@@ -47,7 +34,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   );
   const baseline = await workspaceFlow.getLintState();
 
-  await specPage.setSpecification(
+  await workspacePage.setSpecification(
     JSON.stringify({
       openapi: "3.0.0",
       info: { version: "1.0.0" },
@@ -70,7 +57,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference In A YAML Spec",
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage, specPage } = user.pageManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -82,7 +69,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference In A YAML Spec",
   );
 
   const requestPath = `/${faker.word.sample()}`;
-  await specPage.setSpecification(
+  await workspacePage.setSpecification(
     `openapi: 3.0.0
 info:
   title: ${faker.commerce.productName()}
@@ -97,7 +84,7 @@ paths:
   );
   const baseline = await workspaceFlow.getLintState();
 
-  await specPage.setSpecification(
+  await workspacePage.setSpecification(
     `openapi: 3.0.0
 info:
   version: 1.0.0

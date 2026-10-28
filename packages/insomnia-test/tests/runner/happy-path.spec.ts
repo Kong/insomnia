@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 const unreachableUrl = "http://localhost:59999/nope";
@@ -73,10 +74,8 @@ test("Verify Running a Collection via Run Collection Context Menu", async ({
         }),
       ]),
     );
-    const executedResults = allResults[i].results.filter(
-      (result) => result.name !== requestC!.name,
-    );
-    for (const result of executedResults) {
+    for (const result of allResults[i].results) {
+      if (result.name === requestC!.name) continue;
       expect(result.durationMs).toBeGreaterThan(0);
       expect(result.bytes).toBeGreaterThan(0);
     }

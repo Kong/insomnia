@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { ScriptTab } from "@package/enums/script-tab";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { ScriptTab } from "../../enums/script-tab";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify the Docs editor keeps undo history across a Write/Preview toggle", async ({
   user,

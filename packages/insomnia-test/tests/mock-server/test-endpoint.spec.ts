@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
-import { MockServer } from "@package/models/mock-server";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
+import { MockServer } from "../../models/mock-server";
+import { Project } from "../../models/project";
 
 test("Verify Testing A Default Mock Route Returns 200 With No Body", async ({
   user,
@@ -23,6 +24,6 @@ test("Verify Testing A Default Mock Route Returns 200 With No Body", async ({
   });
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toBeUndefined();
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toBeUndefined();
 });
