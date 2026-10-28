@@ -1,12 +1,13 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import { Folder } from "@package/models/folder";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import { Folder } from "../../models/folder";
+import { Project } from "../../models/project";
 
 const sharedVariable = faker.string.alpha(8);
 const subOnlyVariable = faker.string.alpha(9);
@@ -64,12 +65,12 @@ test("Verify a folder environment overrides sub and base environments for its re
   const responseInFolder = await httpRequestFlow.send(requestInFolder);
   const responseOutsideFolder = await httpRequestFlow.send(requestOutsideFolder);
 
-  expect(responseInFolder.statusBar.code).toBe(200);
-  expect(responseInFolder.preview).toMatchObject({
+  expect(responseInFolder.statusCode).toBe(200);
+  expect(responseInFolder.body).toMatchObject({
     args: { shared: folderShared, subOnly: subSubOnly },
   });
-  expect(responseOutsideFolder.statusBar.code).toBe(200);
-  expect(responseOutsideFolder.preview).toMatchObject({
+  expect(responseOutsideFolder.statusCode).toBe(200);
+  expect(responseOutsideFolder.body).toMatchObject({
     args: { shared: subShared, subOnly: subSubOnly },
   });
 });
