@@ -1,12 +1,13 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { EnvironmentKvPairDataType } from "@package/models/environment";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { EnvironmentKvPairDataType } from "../../models/environment";
+import type { HttpRequest } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 const sharedVariable = "shared";
 
@@ -59,6 +60,6 @@ test("Verify a disabled sub-environment variable falls back to the base environm
   } satisfies HttpRequest);
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toMatchObject({ args: { value: baseValue } });
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({ args: { value: baseValue } });
 });
