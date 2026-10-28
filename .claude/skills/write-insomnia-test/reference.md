@@ -1509,7 +1509,7 @@ Real example: `tests/migration/git-repo-onboarding.spec.ts` — writes `insomnia
 
 Three distinct recovery paths, each needing a request whose `preRequestScript`/`afterResponseScript` is a plain string of real JS (both `HttpRequest` fields already exist — no Model change needed):
 
-- **Cancel while sending**: give the request a `preRequestScript` that `await`s a multi-second `setTimeout`-based delay, call `pageManager.httpRequestPage.send()` directly (not `httpRequestFlow.send()`, which blocks until the response fully arrives) after navigating to the request with `httpRequestFlow.get(name)`, poll `responsePage.getSendButtonState()` (`enums/send-button-state.ts`) until `"sending"`, then `responsePage.cancelRequest()`. The response pane's error text is `"Execute pre-request script failed: Request was cancelled"` — check for it with `responsePage.hasMessage("Request was cancelled")` (substring match, not exact — `getByText()` without `{ exact: true }`).
+- **Cancel while sending**: give the request a `preRequestScript` that `await`s a multi-second `setTimeout`-based delay, call `pageManager.httpRequestPage.send()` directly (not `httpRequestFlow.send()`, which blocks until the response fully arrives) after navigating to the request with `httpRequestFlow.get(name)`, poll `responsePage.getRequestState()` (`enums/request-state.ts`'s `RequestState`) until `RequestState.Sending`, then `responsePage.cancelRequest()`. The response pane's error text is `"Execute pre-request script failed: Request was cancelled"` — check for it with `responsePage.hasMessage("Request was cancelled")` (substring match, not exact — `getByText()` without `{ exact: true }`).
 - **Hidden window closed mid-script**: lower `Settings.timeout` (via `preferencesFlow.set({ timeout: 1000 })`) below an `afterResponseScript`'s delay so the script itself times out (`responsePage.hasMessage("Executing script timeout")`), then call `appFlow.closeHiddenScriptWindow()`, restore a longer timeout, and send a _different_ request to confirm recovery.
 - **Hidden window hangs**: same shape, but the request's `preRequestScript` is a genuine `"while (true) {}"` infinite loop — the app is expected to detect the hang once `Settings.timeout` elapses and restart the window on its own, no `appFlow` call needed.
 
@@ -1572,7 +1572,7 @@ CollaboratorRole: Owner | Admin | Member; // enums/collaborator-role.ts — Invi
 DeleteMode: Local | Full; // enums/delete-mode.ts
 SyncStatus: Synced | Unsynced; // enums/sync-status.ts
 ExportFormat: InsomniaV5 | Har; // enums/export-format.ts
-ApiSpecExportFormat: Yaml | Json; // enums/spec-format.ts or export-format.ts — see ExportPage
+ApiSpecExportFormat: Yaml | Json; // enums/api-spec-export-format.ts — ExportPage.exportOpenApiSpec()/ExportFlow's OpenAPI-spec-only export
 ImportSource: File | Url | Curl | Clipboard | Mcp;
 LintSeverity: Error | Warning; // enums/lint-severity.ts — WorkspacePage.getLintEntries()/.getLintRowSummary()
 ProjectType: Local | Cloud | Git;
@@ -1588,7 +1588,8 @@ ScriptSandboxRuleGroup: GlobalAndNodeJsInternals |
   Scopes;
 // enums/script-sandbox-rule-group.ts — Preferences → Scripting tab's per-rule-group switches
 ScriptTab: PreRequest | AfterResponse; // enums/script-tab.ts — ScriptTabComponent's (RequestPage.scripts/FolderPage.scripts) typeScripts()/undoScript()/switchScriptTab() sub-tab selector
-SendButtonState: Idle | Sending;
+RequestState: Idle | Sending; // enums/request-state.ts — ResponsePage.getRequestState()
+MockBodyType: PlainText | Json | Xml | Yaml | Other; // enums/mock-body-type.ts — MockRoute.bodyType
 SpecFormat: JSON | YAML;
 TreeNodeType: Project | Workspace | Request | Folder | Empty | Unknown;
 ```
