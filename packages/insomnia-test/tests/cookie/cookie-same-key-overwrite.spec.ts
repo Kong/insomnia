@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/cookies`;
 
@@ -39,7 +40,7 @@ test("Verify Re-Linking Same Cookie Key Overwrites Previous Value", async ({
 
   const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = responseView.preview as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(cookieList.filter((cookie) => cookie.key === key)).toHaveLength(1);
   expect(cookieList).toMatchObject([{ key, value: freshValue }]);
   expect(cookies).toMatchObject({ [key]: freshValue });
