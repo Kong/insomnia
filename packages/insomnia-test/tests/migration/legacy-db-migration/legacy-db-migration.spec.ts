@@ -1,10 +1,11 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
 
-const LEGACY_DB_DIR = path.join(import.meta.dirname, "insomnia-legacy-db");
+import { test } from "../../../misc/fixtures";
+
+const LEGACY_DB_DIR = path.join(__dirname, "insomnia-legacy-db");
 
 const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
@@ -32,6 +33,7 @@ testWithLegacyDatabase(
     );
     const designDocumentRequest = await httpRequestFlow.get(
       "Get echo",
+      designDocument,
     );
     const designDocumentResponse = await httpRequestFlow.send(
       designDocumentRequest!,
@@ -43,6 +45,6 @@ testWithLegacyDatabase(
     expect(request?.url).toBe("https://httpbin.org/status/200");
     expect(designDocument).toBeTruthy();
     expect(designDocumentRequest).toBeTruthy();
-    expect(designDocumentResponse.statusBar.code).toBe(200);
+    expect(designDocumentResponse.statusCode).toBe(200);
   },
 );

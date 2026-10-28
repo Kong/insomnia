@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "@package/misc/fixtures";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../../../enums/project-types";
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../../../misc/fixtures";
+import { Project } from "../../../../models/project";
 
 const mcp = "Imported MCP Client";
 const tool = "read_wiki_structure";
