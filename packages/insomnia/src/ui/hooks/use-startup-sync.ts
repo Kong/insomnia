@@ -74,3 +74,11 @@ export function useStartupSync(organizationId: string) {
     retry,
   } as const;
 }
+
+/** Syncs an organization's team projects, e.g. when another member changes them. */
+export function useSyncProjects() {
+  return useServerMutation({
+    mutationFn: syncProjects,
+    onError: error => console.log('[sync] Failed to sync projects', error),
+  });
+}
