@@ -102,15 +102,19 @@ export class McpClientFlow extends BaseFlow {
   /**
    * Opens the given MCP Client node and clicks its connect action.
    * @param client - The MCP Client to connect
+   * @param options - Forwarded to the page's `connect()`
    */
-  async connect(client: McpClient): Promise<void> {
+  async connect(
+    client: McpClient,
+    options?: { expectConnected?: boolean },
+  ): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
     const node = await workspace.findItemNode(client);
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
-    await mcpClientPage.connect();
+    await mcpClientPage.connect(options);
   }
 
   /**

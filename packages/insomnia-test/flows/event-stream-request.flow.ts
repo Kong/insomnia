@@ -113,9 +113,13 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Connects the event stream for `request` and reads back the resulting
    * response via the standalone project tree.
    * @param request - The request to connect
+   * @param options - Forwarded to the page's `connect()`
    * @returns The response view captured after connecting
    */
-  async send(request: EventStreamRequest): Promise<ResponseView> {
+  async send(
+    request: EventStreamRequest,
+    options?: { expectConnected?: boolean },
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const eventStreamRequestPage = this.pageManager.eventStreamRequestPage;
     const responsePage = this.pageManager.responsePage;
@@ -124,7 +128,7 @@ export class EventStreamRequestFlow extends BaseFlow {
     await workspace.openRequestNode(node!);
     await eventStreamRequestPage.navigate();
 
-    await eventStreamRequestPage.connect();
+    await eventStreamRequestPage.connect(options);
     await responsePage.navigate();
 
     const data = await responsePage.get();

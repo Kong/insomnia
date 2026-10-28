@@ -488,8 +488,13 @@ export class WorkspacePage extends BasePage {
    */
   async clickDelete(): Promise<void> {
     const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /^Delete/ }).click();
-    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    const deleteButton = dialog.getByRole("button", { name: /^Delete/ });
+    // The dialog can re-render right as it opens, swallowing the first
+    // click; press again while the button is still there.
+    await expect(async () => {
+      if (await deleteButton.isVisible()) await deleteButton.click({ timeout: 2000 });
+      await expect(dialog).toBeHidden({ timeout: 3000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT * 2 });
   }
 
   /**

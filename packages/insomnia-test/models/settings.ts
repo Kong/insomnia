@@ -70,6 +70,7 @@ export type SettingsInit = Partial<
     | "httpsProxy"
     | "noProxy"
     | "sidebarFocusForCollections"
+    | "hideSecretValuesInPreviewAndConsole"
   >
 > & {
   /**
@@ -103,6 +104,7 @@ export class Settings implements SettingsInit {
   httpsProxy?: string;
   noProxy?: string;
   sidebarFocusForCollections?: boolean;
+  hideSecretValuesInPreviewAndConsole?: boolean;
   showLegacyUnitTests?: boolean;
   aiUrlBackend?: AiUrlBackendSettings | null;
   cloudCredentials?: CloudCredential[];
@@ -118,6 +120,8 @@ export class Settings implements SettingsInit {
     this.httpsProxy = init.httpsProxy;
     this.noProxy = init.noProxy;
     this.sidebarFocusForCollections = init.sidebarFocusForCollections;
+    this.hideSecretValuesInPreviewAndConsole =
+      init.hideSecretValuesInPreviewAndConsole;
     this.showLegacyUnitTests = init.showLegacyUnitTests;
     this.aiUrlBackend = init.aiUrlBackend;
     this.cloudCredentials = init.cloudCredentials;

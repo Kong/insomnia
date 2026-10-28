@@ -33,6 +33,11 @@ export class PreferencesFlow extends BaseFlow {
         settings.showLegacyUnitTests,
       );
     }
+    if (settings.hideSecretValuesInPreviewAndConsole !== undefined) {
+      await preferencesPage.setHideSecretValuesInPreviewAndConsole(
+        settings.hideSecretValuesInPreviewAndConsole,
+      );
+    }
     if (settings.dataFolders !== undefined) {
       for (const path of settings.dataFolders) {
         await preferencesPage.addDataFolder(path);
