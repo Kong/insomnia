@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Folder } from "@package/models/folder";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Folder } from "../../models/folder";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
@@ -44,9 +45,9 @@ test("Verify a folder-level script wrapping insomnia.variables.replaceIn resolve
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toMatch(/log: string \S+/);
-  const consoleText = await responseView.console();
+  const consoleText = await responseView.console?.();
   expect(consoleText).not.toContain("Promise");
   expect(consoleText).not.toContain("undefined");
 });
