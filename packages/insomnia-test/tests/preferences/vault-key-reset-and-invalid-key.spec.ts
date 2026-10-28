@@ -1,7 +1,8 @@
 import * as crypto from "node:crypto";
 
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 const testWithVaultSalt = test.extend({
   vaultSalt: async ({}, use) => {
@@ -18,10 +19,10 @@ testWithVaultSalt(
       await preferencesFlow.enterVaultKey("invalidVaultKey");
     const resetKey = await preferencesFlow.resetVaultKey();
 
-    const { preferences, preferencesVault } = user.pageManager;
-    await preferences.open();
-    const displayedKey = await preferencesVault.getVaultKey();
-    await preferences.close();
+    const { preferencesPage } = user.pageManager;
+    await preferencesPage.open();
+    const displayedKey = await preferencesPage.getVaultKey();
+    await preferencesPage.close();
 
     expect(invalidKeyError).toBe(
       "Invalid vault key, please check and input again",
