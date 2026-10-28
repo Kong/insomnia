@@ -3,20 +3,21 @@ import os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { CurlCommand } from "@package/models/curl-command";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../../../enums/content-type";
+import { HttpMethod } from "../../../../enums/http-method";
+import { ProjectType } from "../../../../enums/project-types";
+import { HTTP_SERVER, test } from "../../../../misc/fixtures";
+import { Collection } from "../../../../models/collection";
+import type { CurlCommand } from "../../../../models/curl-command";
+import type { HttpRequest } from "../../../../models/http-request";
+import { Project } from "../../../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 const title = faker.string.alphanumeric(8);
 const fixtureFilePath = path.join(
-  import.meta.dirname,
+  __dirname,
   "..",
   "..",
   "..",
@@ -56,7 +57,7 @@ test("Import HTTP Request by Curl Command With -F Builds a Multipart Form Body I
   } satisfies HttpRequest;
   const persisted = await httpRequestFlow.get(url);
   const responseView = await httpRequestFlow.send(request);
-  const raw = (responseView.preview as { data: string }).data;
+  const raw = (responseView.body as { data: string }).data;
 
   expect(persisted).toMatchObject(request);
   expect(persisted?.body?.mimeType).toBe(ContentType.Multipart);
@@ -66,12 +67,12 @@ test("Import HTTP Request by Curl Command With -F Builds a Multipart Form Body I
   });
   expect(persisted?.body?.params?.[1]?.name).toBe("upload");
   expect(persisted?.body?.params?.[1]?.fileName).toContain("upload-sample.txt");
-  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(raw).toContain('name="title"');
   expect(raw).toContain(title);
   expect(raw).toContain('name="upload"; filename="upload-sample.txt"');
   expect(raw).toContain("insomnia-e2e-upload-fixture");
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.Multipart),
     }),

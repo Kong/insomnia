@@ -1,10 +1,11 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
 
-const LEGACY_DB_DIR = path.join(import.meta.dirname, "insomnia-legacy-db");
+import { test } from "../../../misc/fixtures";
+
+const LEGACY_DB_DIR = path.join(__dirname, "insomnia-legacy-db");
 
 const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
@@ -23,12 +24,12 @@ testWithLegacyDatabase(
   "Verify the legacy unit test setting defaults off and lists the existing suite for a profile that already has one",
   async ({ user }) => {
     const { workspaceFlow } = user.flowManager;
-    const { preferences } = user.pageManager;
+    const { preferencesPage } = user.pageManager;
 
-    await preferences.open();
+    await preferencesPage.open();
     const disableByDefault =
-      await preferences.isShowLegacyUnitTestsEnabled();
-    await preferences.close();
+      await preferencesPage.isShowLegacyUnitTestsEnabled();
+    await preferencesPage.close();
 
     const designDocument = await workspaceFlow.getCollectionSpec(
       "Local Design Document",

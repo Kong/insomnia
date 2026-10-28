@@ -2,14 +2,15 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-const wsdl = fs.readFileSync(path.join(import.meta.dirname, "calculator.wsdl"), "utf8");
-const soapBody = fs.readFileSync(path.join(import.meta.dirname, "soap-body.xml"), "utf8");
+import { ContentType } from "../../../../../enums/content-type";
+import { ProjectType } from "../../../../../enums/project-types";
+import { test } from "../../../../../misc/fixtures";
+import { Project } from "../../../../../models/project";
+
+const wsdl = fs.readFileSync(path.join(__dirname, "calculator.wsdl"), "utf8");
+const soapBody = fs.readFileSync(path.join(__dirname, "soap-body.xml"), "utf8");
 
 test("Import WSDL by Clipboard", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
@@ -30,10 +31,10 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   await httpRequestPage.setBody({
     mimeType: ContentType.XML,
     text: soapBody,
-  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+  });
 
   const responseView = await httpRequestFlow.send(request!);
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toContain("AddResult");
-  expect(responseView.preview).toContain("9");
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toContain("AddResult");
+  expect(responseView.body).toContain("9");
 });
