@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { DEFAULT_TIMEOUT, test, WS_SERVER } from '@package/misc/fixtures';
-import { Collection } from '@package/models/collection';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from '../../misc/fixtures';
+import { Collection } from '../../models/collection';
+import { Project } from '../../models/project';
 
 test('Verify WebSocket Connection Sends the Basic Authentication Header Until Authentication Is Set to None', async ({
   user,
@@ -24,7 +25,7 @@ test('Verify WebSocket Connection Sends the Basic Authentication Header Until Au
   const authenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => authenticatedResponse.console(), {
+    .poll(() => authenticatedResponse.console?.(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`authorization: Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`);
@@ -34,9 +35,9 @@ test('Verify WebSocket Connection Sends the Basic Authentication Header Until Au
   const unauthenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console(), {
+    .poll(() => unauthenticatedResponse.console?.(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('host:');
-  expect(await unauthenticatedResponse.console()).not.toContain('authorization:');
+  expect(await unauthenticatedResponse.console?.()).not.toContain('authorization:');
 });
