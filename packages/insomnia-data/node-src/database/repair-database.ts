@@ -2,12 +2,19 @@ import type { CookieJar, Environment, GitRepository, Workspace } from 'insomnia-
 import { database, models } from 'insomnia-data';
 
 import * as apiSpecServices from '../services/api-spec';
+import * as projectServices from '../services/project';
 
 /**
  * Run various database repair scripts
  */
 export async function repairDatabase() {
   console.log('[fix] Running database repairs');
+
+  for (const project of await projectServices.list()) {
+    if (project.remoteId === null) {
+      await projectServices.clearWorkspaceSyncFlags(project._id);
+    }
+  }
 
   for (const workspace of await database.find<Workspace>(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
