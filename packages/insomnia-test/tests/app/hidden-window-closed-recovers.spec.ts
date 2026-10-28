@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const LONG_DELAY_AFTER_RESPONSE_SCRIPT = `
 function delay(ms) {
@@ -63,5 +64,5 @@ test("Verify closing the hidden script-execution window mid-timeout surfaces the
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(timeoutMessageVisible).toBe(true);
-  expect(laterResponse.statusBar.code).toBe(200);
+  expect(laterResponse.statusCode).toBe(200);
 });

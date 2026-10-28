@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify collection/request create and delete persist correctly while offline", async ({
   user,
@@ -40,9 +41,9 @@ test("Verify collection/request create and delete persist correctly while offlin
   await user.page.reload({ waitUntil: "networkidle" });
 
   const gotCollectionA = await workspaceFlow.getCollection(collectionA.name);
-  const gotRequestA = await httpRequestFlow.get(requestA.name);
+  const gotRequestA = await httpRequestFlow.get(requestA.name, collectionA);
   const gotCollectionB = await workspaceFlow.getCollection(collectionB.name);
-  const gotRequestB = await httpRequestFlow.get(requestB.name);
+  const gotRequestB = await httpRequestFlow.get(requestB.name, collectionB);
 
   expect(gotCollectionA).toBeDefined();
   expect(gotRequestA).toBeUndefined();
