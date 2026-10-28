@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 
@@ -48,11 +49,11 @@ test("Verify pre-request script reads the configured proxy and overrides it via 
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBeUndefined();
+  expect(responseView.statusCode).toBeUndefined();
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("localhost:1111");
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Trying 127.0.0.1:8888");
 });

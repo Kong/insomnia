@@ -1,11 +1,12 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
+import { Project } from "../../../models/project";
 
 test("Verify hovering an undefined variable swaps the tooltip to the render error instead of vanishing", async ({
   user,
@@ -18,7 +19,7 @@ test("Verify hovering an undefined variable swaps the tooltip to the render erro
   );
   await importFlow.importFile(
     project,
-    path.join(import.meta.dirname, "collection-for-global-environments.yaml"),
+    path.join(__dirname, "collection-for-global-environments.yaml"),
   );
   const collection = new Collection("collection-for-global-environments");
   await environmentFlow.activate(collection, "ExampleA");
@@ -44,7 +45,7 @@ test("Verify hovering the tooltip's own content keeps it visible", async ({ user
   );
   await importFlow.importFile(
     project,
-    path.join(import.meta.dirname, "environment-cascade-collection.yaml"),
+    path.join(__dirname, "environment-cascade-collection.yaml"),
   );
   const collection = new Collection("Environment Cascade");
   await environmentFlow.activate(collection, "Base Environment");

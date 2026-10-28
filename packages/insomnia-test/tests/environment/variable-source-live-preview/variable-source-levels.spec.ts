@@ -1,17 +1,18 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import type { FlowManager } from "@package/flows/flow-manager";
-import type { VariableSourceLanding } from "@package/flows/variable-source.flow";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-const cascadeFixture = path.join(import.meta.dirname, "environment-cascade-collection.yaml");
-const globalCollectionFixture = path.join(import.meta.dirname, "collection-for-global-environments.yaml");
-const globalEnvironmentFixture = path.join(import.meta.dirname, "global-environment.yaml");
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
+import { Project } from "../../../models/project";
+import type { FlowManager } from "../../../flows/flow-manager";
+import type { VariableSourceLanding } from "../../../flows/variable-source.flow";
+
+const cascadeFixture = path.join(__dirname, "environment-cascade-collection.yaml");
+const globalCollectionFixture = path.join(__dirname, "collection-for-global-environments.yaml");
+const globalEnvironmentFixture = path.join(__dirname, "global-environment.yaml");
 
 interface Scenario {
   id: string;
@@ -145,9 +146,9 @@ for (const scenario of scenarios) {
       scenario.landingRow,
     );
 
-    expect(response.statusBar.code).toBe(200);
+    expect(response.statusCode).toBe(200);
     expect(
-      JSON.parse((response.preview as { data: string }).data)[scenario.field],
+      JSON.parse((response.body as { data: string }).data)[scenario.field],
     ).toBe(scenario.value);
     expect(modal.source).toContain(scenario.source);
     expect(modal.preview).toBe(scenario.value);
