@@ -2,16 +2,11 @@ import type { Organization } from 'insomnia-api';
 import type { GitProject, GitRepository } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
-import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
+import { href, matchPath, type PathMatch, useFetcher, useFetchers, useNavigation } from 'react-router';
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
-
-export const enum AsyncTask {
-  MigrateProjects,
-  SyncProjects,
-}
 
 const getMatchParams = (location: string) => {
   const workspaceMatch = matchPath(
@@ -152,13 +147,7 @@ export const getInitialEntry = async () => {
         ? await getKonnectOrganizationEscapeRoute(organizationId)
         : null;
 
-      return {
-        pathname: escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true })),
-        state: {
-          // async task need to execute when first entry
-          asyncTaskList: [AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
-        },
-      };
+      return escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }));
     }
 
     if (hasUserLoggedInBefore) {
@@ -212,3 +201,14 @@ export const createFetcherLoadHook =
       load,
     } as Override<typeof fetcher, { load: ReturnType<T> }>;
   };
+
+/**
+ * True when no navigation and no fetcher is in flight. Data-driven redirects (reacting to a query
+ * result) wait for this so they never race an action that is about to redirect on its own, e.g. a
+ * project delete removes the project from the cache before its redirect to the next project lands.
+ */
+export const useIsRouterIdle = () => {
+  const navigation = useNavigation();
+  const fetchers = useFetchers();
+  return navigation.state === 'idle' && fetchers.every(fetcher => fetcher.state === 'idle');
+};

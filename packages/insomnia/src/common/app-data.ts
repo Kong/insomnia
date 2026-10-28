@@ -13,6 +13,8 @@ import type {
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
+import { getAllLocalFiles } from '~/common/project';
+
 export const organizationDataKeys = {
   all: ['organization-data'],
   byOrganizationId: (organizationId: string) => [...organizationDataKeys.all, organizationId],
@@ -75,6 +77,22 @@ export const untrackedProjectsQuery = (trackedOrganizationIds: string[]) =>
     },
   });
 
+export const localFilesKeys = {
+  all: ['local-files'],
+  byProjectId: (projectId: string) => [...localFilesKeys.all, projectId],
+};
+
+// The workspace cards on the project page. A separate query rather than derived from organization
+// data: it also needs api specs (parsed for version/format), mock servers and per-workspace git
+// repositories, which organization data doesn't carry and shouldn't — spec edits would refetch it
+// for every org-data consumer.
+// Invalidated by `updateAppDataOnDbChanges` on any of LOCAL_FILES_DOC_TYPES.
+export const localFilesQuery = (projectId: string) =>
+  queryOptions({
+    queryKey: localFilesKeys.byProjectId(projectId),
+    queryFn: () => getAllLocalFiles({ projectId }),
+  });
+
 const COLLECTION_REQUEST_DOC_TYPES: string[] = [
   models.request.type,
   models.grpcRequest.type,
@@ -102,6 +120,15 @@ const WORKSPACE_CHILD_DOC_TYPES: string[] = [
   models.apiSpec.type,
   models.mcpRequest.type,
   models.environment.type,
+];
+
+// Doc types `getAllLocalFiles` reads from
+const LOCAL_FILES_DOC_TYPES: string[] = [
+  models.workspace.type,
+  models.workspaceMeta.type,
+  models.apiSpec.type,
+  models.mockServer.type,
+  models.gitRepository.type,
 ];
 
 const MONITOR_DOC_TYPES: string[] = [
@@ -294,11 +321,20 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
   const organizationIdsToRevalidate = new Set<string>();
   const workspaceIdsToRevalidate = new Set<string>();
   let shouldRevalidateUntrackedProjects = false;
+  let shouldRevalidateLocalFiles = false;
 
   // We do not use the patches here because some db operations do not contain patches like git repo file watcher
   for (const [event, doc] of changes) {
     if (!MONITOR_DOC_TYPES.includes(doc.type)) {
       continue;
+    }
+
+    // Only a Workspace points at its project directly; metas, specs and mock servers point at a
+    // workspace whose project the cached organization data may not know yet (e.g. created in the
+    // same change batch), and a GitRepository has no parent link at all. So mark every project's
+    // list stale instead — only the mounted project page refetches, the rest on their next visit.
+    if (LOCAL_FILES_DOC_TYPES.includes(doc.type)) {
+      shouldRevalidateLocalFiles = true;
     }
 
     if (doc.type === models.project.type) {
@@ -433,5 +469,8 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
   );
   if (shouldRevalidateUntrackedProjects) {
     queryClient.invalidateQueries({ queryKey: untrackedProjectsKeys.all });
+  }
+  if (shouldRevalidateLocalFiles) {
+    queryClient.invalidateQueries({ queryKey: localFilesKeys.all });
   }
 }
