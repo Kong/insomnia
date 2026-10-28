@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/graphql`;
 const query = '{ characters(filter: {status: "Alive"}) { results { name } } }';
@@ -34,8 +35,8 @@ test("Verify Create GraphQL Request", async ({ user }) => {
     body: body,
   });
   const responseView = await graphqlRequestFlow.send(request);
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.statusBar.message).toBe("OK");
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusMessage).toBe("OK");
   expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
@@ -44,7 +45,7 @@ test("Verify Create GraphQL Request", async ({ user }) => {
       }),
     ]),
   );
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.body).toMatchObject({
     data: {
       characters: {
         results: expect.arrayContaining(

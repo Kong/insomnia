@@ -4,11 +4,12 @@ import * as net from "node:net";
 import type { Duplex } from "node:stream";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { MCP_SERVER, test } from "@package/misc/fixtures";
-import { McpClient } from "@package/models/mcp-client";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { MCP_SERVER, test } from "../../misc/fixtures";
+import { McpClient } from "../../models/mcp-client";
+import { Project } from "../../models/project";
 
 const startRecordingProxy = async () => {
   const targets: string[] = [];
