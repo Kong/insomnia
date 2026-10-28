@@ -8,20 +8,25 @@ import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
 test(
-  'Verify dragging a request between a Cloud project and a Local project moves it in both directions',
+  'Verify dragging a request between a Cloud project and a Local project is rejected in both directions',
   async ({ user }) => {
-    test.fail(true, 'INS-3844');
-
     const { workspaceFlow, httpRequestFlow } = user.flowManager;
     const { workspacePage } = user.pageManager;
 
     const localProject = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-    const localCollection = await workspaceFlow.create(localProject, new Collection(faker.string.alphanumeric(10)));
+    const localSource = await workspaceFlow.create(localProject, new Collection(faker.string.alphanumeric(10)));
+    const localTarget = await workspaceFlow.create(localProject, new Collection(faker.string.alphanumeric(10)));
     const cloudProject = (await workspaceFlow.getProject({
       name: 'Personal Workspace',
     }))!;
-    const cloudCollection = await workspaceFlow.create(cloudProject, new Collection(faker.string.alphanumeric(10)));
-    const request = await httpRequestFlow.create(localCollection, {
+    const cloudSource = await workspaceFlow.create(cloudProject, new Collection(faker.string.alphanumeric(10)));
+    const cloudTarget = await workspaceFlow.create(cloudProject, new Collection(faker.string.alphanumeric(10)));
+    const localRequest = await httpRequestFlow.create(localSource, {
+      name: faker.string.alphanumeric(10),
+      method: HttpMethod.Get,
+      url: `${HTTP_SERVER}/get`,
+    });
+    const cloudRequest = await httpRequestFlow.create(cloudSource, {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Get,
       url: `${HTTP_SERVER}/get`,
@@ -31,55 +36,62 @@ test(
     const cloudProjectNode = (await workspacePage.findItemNode(cloudProject, TreeNodeType.Project))!;
     await workspacePage.expand(localProjectNode);
     await workspacePage.expand(cloudProjectNode);
-    const localCollectionNode = (await workspacePage.findItemNode(localCollection, TreeNodeType.Workspace))!;
-    const cloudCollectionNode = (await workspacePage.findItemNode(cloudCollection, TreeNodeType.Workspace))!;
-    const requestNode = (await workspacePage.findItemNode(
-      { name: request.name, id: request.id },
+    const localSourceNode = (await workspacePage.findItemNode(localSource, TreeNodeType.Workspace))!;
+    const localTargetNode = (await workspacePage.findItemNode(localTarget, TreeNodeType.Workspace))!;
+    const cloudSourceNode = (await workspacePage.findItemNode(cloudSource, TreeNodeType.Workspace))!;
+    const cloudTargetNode = (await workspacePage.findItemNode(cloudTarget, TreeNodeType.Workspace))!;
+    const localRequestNode = (await workspacePage.findItemNode(
+      { name: localRequest.name, id: localRequest.id },
       TreeNodeType.Request,
-      localCollectionNode,
+      localSourceNode,
     ))!;
-    const emptyCloudCollectionPlaceholder = {
-      _id: `empty-collection-${cloudCollection.id}`,
+    const cloudRequestNode = (await workspacePage.findItemNode(
+      { name: cloudRequest.name, id: cloudRequest.id },
+      TreeNodeType.Request,
+      cloudSourceNode,
+    ))!;
+    const emptyCloudTargetPlaceholder = {
+      _id: `empty-collection-${cloudTarget.id}`,
+      name: '',
+      type: TreeNodeType.Unknown,
+      children: [],
+    };
+    const emptyLocalTargetPlaceholder = {
+      _id: `empty-collection-${localTarget.id}`,
       name: '',
       type: TreeNodeType.Unknown,
       children: [],
     };
 
-    await workspacePage.startDrag(requestNode);
-    await workspacePage.dragOver(emptyCloudCollectionPlaceholder, 0.5, 0.5);
+    await workspacePage.startDrag(localRequestNode);
+    await workspacePage.dragOver(emptyCloudTargetPlaceholder, 0.5, 0.5);
     const localToCloudIndicator = await workspacePage.getDropIndicator();
     await workspacePage.releaseDrag();
     const treeAfterLocalToCloud = await workspacePage.getTree();
-    const localCollectionChildrenAfterMove = treeAfterLocalToCloud
+    const localSourceChildrenAfterReject = treeAfterLocalToCloud
       .flatten()
-      .find(n => n._id === localCollectionNode._id)!.children;
-    const cloudCollectionChildrenAfterMove = treeAfterLocalToCloud
+      .find(n => n._id === localSourceNode._id)!.children;
+    const cloudTargetChildrenAfterReject = treeAfterLocalToCloud
       .flatten()
-      .find(n => n._id === cloudCollectionNode._id)!.children;
-    const emptyLocalCollectionPlaceholder = {
-      _id: `empty-collection-${localCollection.id}`,
-      name: '',
-      type: TreeNodeType.Unknown,
-      children: [],
-    };
+      .find(n => n._id === cloudTargetNode._id)!.children;
 
-    await workspacePage.startDrag(requestNode);
-    await workspacePage.dragOver(emptyLocalCollectionPlaceholder, 0.5, 0.5);
+    await workspacePage.startDrag(cloudRequestNode);
+    await workspacePage.dragOver(emptyLocalTargetPlaceholder, 0.5, 0.5);
     const cloudToLocalIndicator = await workspacePage.getDropIndicator();
     await workspacePage.releaseDrag();
     const treeAfterCloudToLocal = await workspacePage.getTree();
-    const cloudCollectionChildrenAfterMoveBack = treeAfterCloudToLocal
+    const cloudSourceChildrenAfterReject = treeAfterCloudToLocal
       .flatten()
-      .find(n => n._id === cloudCollectionNode._id)!.children;
-    const localCollectionChildrenAfterMoveBack = treeAfterCloudToLocal
+      .find(n => n._id === cloudSourceNode._id)!.children;
+    const localTargetChildrenAfterReject = treeAfterCloudToLocal
       .flatten()
-      .find(n => n._id === localCollectionNode._id)!.children;
+      .find(n => n._id === localTargetNode._id)!.children;
 
-    expect(localToCloudIndicator?.isValid).toBe(true);
-    expect(localCollectionChildrenAfterMove.some(n => n._id === requestNode._id)).toBe(false);
-    expect(cloudCollectionChildrenAfterMove.some(n => n._id === requestNode._id)).toBe(true);
-    expect(cloudToLocalIndicator?.isValid).toBe(true);
-    expect(cloudCollectionChildrenAfterMoveBack.some(n => n._id === requestNode._id)).toBe(false);
-    expect(localCollectionChildrenAfterMoveBack.some(n => n._id === requestNode._id)).toBe(true);
+    expect(localToCloudIndicator?.isValid).toBe(false);
+    expect(localSourceChildrenAfterReject.some(n => n._id === localRequestNode._id)).toBe(true);
+    expect(cloudTargetChildrenAfterReject.some(n => n._id === localRequestNode._id)).toBe(false);
+    expect(cloudToLocalIndicator?.isValid).toBe(false);
+    expect(cloudSourceChildrenAfterReject.some(n => n._id === cloudRequestNode._id)).toBe(true);
+    expect(localTargetChildrenAfterReject.some(n => n._id === cloudRequestNode._id)).toBe(false);
   },
 );

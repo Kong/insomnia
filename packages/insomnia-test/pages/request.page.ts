@@ -199,7 +199,11 @@ export abstract class RequestPage extends TabPanelPage {
     await this.switchTab(tab);
     const panel = this.page.locator(this.TABPANEL);
     await panel.getByRole("button", { name: "Add", exact: true }).click();
-    const rows = panel.locator('[role="listbox"] [role="option"]');
+    // "Add" inserts the new pair before the editor's trailing blank placeholder
+    // row, so the new row is the last one that isn't the placeholder.
+    const rows = panel.locator(
+      '[role="listbox"] [role="option"]:not([id*="-option-pair-blank"])',
+    );
     return rows.last().locator(".editor__container").first();
   }
 

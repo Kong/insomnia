@@ -9,7 +9,6 @@ import { Project } from "../../models/project";
 test("Verify Clicking a Vault Tag With a Missing Argument Does Not Stop Other Template Tags From Opening Their Editor", async ({
   user,
 }) => {
-  test.fail(true, "INS-4149");
   const { workspaceFlow, httpRequestFlow, templateTagFlow } = user.flowManager;
   const { templateTagPage } = user.pageManager;
 
@@ -34,6 +33,7 @@ test("Verify Clicking a Vault Tag With a Missing Argument Does Not Stop Other Te
   });
 
   await templateTagPage.openTagByTemplate(vaultTag);
+  await templateTagPage.done();
   await httpRequestFlow.get(hashRequest);
   const hashResult = await templateTagFlow.get(hashTag);
 

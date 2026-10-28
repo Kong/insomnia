@@ -7,7 +7,6 @@ import { Collection } from "../../models/collection";
 test("Verify dragging a request out of a Cloud Sync collection into an empty Cloud Sync collection", async ({
   user,
 }) => {
-  test.fail(true, "INS-3844");
 
   const { workspaceFlow, cloudSyncFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
