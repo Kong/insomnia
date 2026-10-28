@@ -2,19 +2,20 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and in the main process when disabled", async ({
   user,
 }) => {
   const { appFlow, workspaceFlow, httpRequestFlow, preferencesFlow } =
     user.flowManager;
-  const { preferences, preferencesPlugins } = user.pageManager;
+  const { preferencesPage } = user.pageManager;
 
   const pluginName = faker.lorem.slug(2);
   const tagName = `probeCtx${faker.string.alphanumeric(6)}`;
@@ -47,7 +48,7 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
       },
     }];`,
   );
-  await preferencesPlugins.reloadPlugins();
+  await preferencesPage.reloadPlugins();
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -70,9 +71,9 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
   const responseWithSandboxEnabled = await httpRequestFlow.send(request!);
 
   expect(
-    (responseWithSandboxDisabled.preview as any)?.headers?.["x-sandbox-ctx"],
+    (responseWithSandboxDisabled.body as any)?.headers?.["x-sandbox-ctx"],
   ).toBe("main-process");
   expect(
-    (responseWithSandboxEnabled.preview as any)?.headers?.["x-sandbox-ctx"],
+    (responseWithSandboxEnabled.body as any)?.headers?.["x-sandbox-ctx"],
   ).toBe("sandbox");
 });

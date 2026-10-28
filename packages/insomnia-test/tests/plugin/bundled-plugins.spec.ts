@@ -1,13 +1,14 @@
-import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures";
 
 test("Verify the app's bundled plugins are reported by the plugin bridge and stay off the user-installed Plugins list", async ({
   user,
 }) => {
   const { preferencesFlow } = user.flowManager;
-  const { preferences, preferencesPlugins } = user.pageManager;
+  const { preferencesPage } = user.pageManager;
 
-  const bundlePlugins = await preferencesPlugins.getBundlePlugins();
+  const bundlePlugins = await preferencesPage.getBundlePlugins();
   const userPluginNames = await preferencesFlow.getInstalledPlugins();
 
   const bundlePluginNames = bundlePlugins.map((p) => p.name);

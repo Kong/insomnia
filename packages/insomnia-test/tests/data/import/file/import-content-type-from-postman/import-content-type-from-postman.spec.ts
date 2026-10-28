@@ -1,12 +1,13 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../../../../enums/http-method";
+import { ProjectType } from "../../../../../enums/project-types";
+import { HTTP_SERVER, test } from "../../../../../misc/fixtures";
+import type { HttpRequest } from "../../../../../models/http-request";
+import { Project } from "../../../../../models/project";
 
 test("Import Generates Content-Type Header From Postman File", async ({
   user,
@@ -18,7 +19,7 @@ test("Import Generates Content-Type Header From Postman File", async ({
   );
 
   const filePath = path.join(
-    import.meta.dirname,
+    __dirname,
     "import-content-type-from-postman.json",
   );
   await importFlow.importFile(project, filePath);
@@ -30,8 +31,8 @@ test("Import Generates Content-Type Header From Postman File", async ({
   } satisfies HttpRequest;
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusBar.code).toBe(200);
-  expect(responseView.preview).toMatchObject({
+  expect(responseView.statusCode).toBe(200);
+  expect(responseView.body).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(
         "application/x-www-form-urlencoded",

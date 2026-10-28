@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../../../../enums/project-types";
+import { test } from "../../../../../misc/fixtures";
+import { Project } from "../../../../../models/project";
 
 test("Import Multiple Workspaces From Single File", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
@@ -13,7 +14,7 @@ test("Import Multiple Workspaces From Single File", async ({ user }) => {
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const filePath = path.join(import.meta.dirname, "multiple-workspaces.yaml");
+  const filePath = path.join(__dirname, "multiple-workspaces.yaml");
   await importFlow.importFile(project, filePath);
 
   const collection1 = await workspaceFlow.getCollection("Collection 1");

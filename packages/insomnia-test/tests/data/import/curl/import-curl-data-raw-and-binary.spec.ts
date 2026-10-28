@@ -1,13 +1,14 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { CurlCommand } from "@package/models/curl-command";
-import type { HttpRequest } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../../../enums/content-type";
+import { HttpMethod } from "../../../../enums/http-method";
+import { ProjectType } from "../../../../enums/project-types";
+import { HTTP_SERVER, test } from "../../../../misc/fixtures";
+import { Collection } from "../../../../models/collection";
+import type { CurlCommand } from "../../../../models/curl-command";
+import type { HttpRequest } from "../../../../models/http-request";
+import { Project } from "../../../../models/project";
 
 const rawUrl = `${HTTP_SERVER}/post`;
 const binaryUrl = `${HTTP_SERVER}/posts`;
@@ -48,8 +49,8 @@ test("Import HTTP Request by Curl Command With --data-raw and --data-binary Both
 
   expect(await httpRequestFlow.get(rawUrl)).toMatchObject(rawRequest);
   expect(await httpRequestFlow.get(binaryUrl)).toMatchObject(binaryRequest);
-  expect(rawResponse.statusBar.code).toBe(200);
-  expect(rawResponse.preview).toMatchObject({ data: rawBody });
-  expect(binaryResponse.statusBar.code).toBe(201);
-  expect(binaryResponse.preview).toMatchObject(JSON.parse(binaryBody));
+  expect(rawResponse.statusCode).toBe(200);
+  expect(rawResponse.body).toMatchObject({ data: rawBody });
+  expect(binaryResponse.statusCode).toBe(201);
+  expect(binaryResponse.body).toMatchObject(JSON.parse(binaryBody));
 });
