@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify Import from URL Moves Query String Into Params and Preserves It on Connect", async ({
   user,
@@ -42,10 +43,10 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
     ]),
   );
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
-    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain(
       `Preparing request to ${baseUrl}?${paramName1}=${paramValue1}&${paramName2}=${paramValue2}`,
     );
