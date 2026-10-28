@@ -6,6 +6,8 @@ Insomnia uses NeDB as its local embedded database, storing users' API requests, 
 
 **Goal:** Implement encryption at rest for sensitive fields in local `.db` files, with automatic encryption/decryption during normal application use, fully transparent to users and to the business logic layer.
 
+**Terminology:** A **datastore** is one NeDB `Datastore`, persisted as one `insomnia.<Type>.db` file. There is one datastore per model type (44 in total). This is unrelated to an Insomnia **Collection**, which is a Workspace with `scope: 'collection'` stored as a document in `insomnia.Workspace.db`.
+
 ## 2. Sensitive Fields Analysis
 
 An audit of all 40+ data models identified 12+ models containing sensitive fields, with nesting depths of 1–3 levels:
@@ -20,8 +22,13 @@ An audit of all 40+ data models identified 12+ models containing sensitive field
 | CookieJar                                       | `cookies[].value`                                                                                                                               | 2             |
 | GrpcRequest                                     | `reflectionApi.apiKey`                                                                                                                          | 2             |
 | WebSocketRequest / SocketIORequest / McpRequest | Same authentication fields as Request                                                                                                           | 2             |
+| RequestVersion                                  | `compressedRequest` — gzip + base64 snapshot of the full request (including `authentication`), written on every send of a changed request      | 1             |
 
 **Characteristics:** Sensitive fields are mostly `string` types, often nested inside `authentication` objects or array elements.
+
+**Sensitive data inside opaque values:** A field that embeds sensitive data in an encoded form is encrypted as a whole string. RequestVersion's `compressedRequest` is a gzip + base64 copy of the entire request, so encrypting only the Request's `authentication.*` fields would leave the same secrets readable in `insomnia.RequestVersion.db`.
+
+**Out of scope — confidential environment variables:** Environment variables can be flagged as confidential (`kvPairData[].isConfidential`, serialized as `confidentialKeys` in v5 export and Git Sync YAML). This flag is a display-masking policy (preview, timeline, generated code) and does not change how values are stored. This design does **not** encrypt confidential variables; their values remain plaintext in the local database. Environment variables of type `SECRET` are already encrypted by the Vault.
 
 ## 3. Approaches Explored & Comparison
 
@@ -67,9 +74,9 @@ The user's existing account-level AES-256 symmetric key, which is part of Insomn
 
 #### Locally Generated Key (auto-generated + safeStorage protected)
 
-A local AES-256 key auto-generated on first launch of the Insomnia App (regardless of login state), protected at rest by Electron's `safeStorage`. The key is device-specific, stable, and always available. Users can export it from Preferences for use with inso CLI.
+A local AES-256 key auto-generated on first launch of the Insomnia App (regardless of login state), protected at rest by Electron's asynchronous `safeStorage` API (`encryptStringAsync` / `decryptStringAsync`, introduced in Electron 42). The key is device-specific, stable, and always available. Users can export it from Preferences for use with inso CLI.
 
-- **Pros:** Zero user interaction (auto-generated on first launch); always available — works in Scratch Pad mode without login; key never changes (stable across passphrase resets, E2EE toggles); no dependency on account lifecycle or server; protected by OS-level security (safeStorage)
+- **Pros:** Zero user interaction (auto-generated on first launch); always available — works in Scratch Pad mode without login; key never changes (stable across passphrase resets, E2EE toggles); no dependency on account lifecycle or server; protected by OS-level security (safeStorage); OS-side key/provider rotation only re-wraps the key file and never touches `.db` ciphertext (see 4.2.1)
 - **Cons:** Machine-bound — key cannot be recovered from server if lost (user must export it manually for cross-machine use); if safeStorage is corrupted (e.g., OS reinstall), key is lost
 
 | Approach                  | User Interaction                          | CLI Compatible                                 | Key Recovery                      | Key Stability                                | Works Without Login | Verdict        |
@@ -121,44 +128,143 @@ A local AES-256 key auto-generated on first launch of the Insomnia App (regardle
 - **Algorithm:** AES-256-GCM (random 12-byte IV, 128-bit authentication tag)
 - **Key:** Locally generated AES-256 key — auto-generated on first launch of the Insomnia App, regardless of login state
 - **Key generation:** On first launch, if no local encryption key exists, generate a new AES-256 key using `crypto.subtle.generateKey` (or equivalent)
-- **Key local protection:** Encrypted with Electron `safeStorage` before storing locally
+- **Key local protection:** Encrypted with Electron's asynchronous `safeStorage` API before storing locally (see 4.2.1)
 - **Key storage location:** Stored in a dedicated local file (e.g., `<dataPath>/.encryption-key`), protected by safeStorage
-- **Encrypted value format:** `enc:` + base64-encoded AESMessage JSON (containing `iv`, `t`, `ad`, `d` fields)
-- **Bootstrapping:** Load and decrypt the local encryption key from safeStorage → initialize all NeDB collections with hooks
+- **Encrypted value format:** `enc:v1:` + base64(`iv` (12 bytes) ‖ `tag` (16 bytes) ‖ `ciphertext`)
+  - **Compact:** the binary parts are concatenated and base64-encoded once. A JSON envelope (e.g. base64 of `{iv, t, ad, d}` with hex/base64 inside) would make each value more than twice as large
+  - **Versioned:** `v1` allows a future change of algorithm or layout; readers dispatch on the version and keep decoding older versions
+  - **JSON-safe:** only the base64 alphabet, so the value never needs escaping inside the serialized line and can be located in the raw line without parsing it
+- **Bootstrapping:** Load and decrypt the local encryption key from safeStorage → pass it to `mainDatabase.init()` → hooks are attached to every datastore of that database instance
+
+#### 4.2.1 Key Protection with Asynchronous safeStorage
+
+The key file is protected with `safeStorage.encryptStringAsync()` / `decryptStringAsync()` (Electron 42+; Insomnia is on Electron 43). Findings below come from the [Electron safeStorage Async API Research and Test Summary](https://konghq.atlassian.net/wiki/spaces/ST/pages/5774245941/Electron+safeStorage+Async+API+Research+and+Test+Summary) (Electron source review + tests on WSL/Linux).
+
+**Why async, not sync:** The two APIs are different code paths — sync uses `OSCrypt`, async uses `os_crypt_async::Encryptor` — so `isEncryptionAvailable()` and `isAsyncEncryptionAvailable()` are **not equivalent**. On Linux with the `basic_text` backend, sync availability was `false` (sync `encryptString` threw "Encryption is not available") while async availability was `true` and `encryptStringAsync` succeeded. The existing sync helper in `src/main/ipc/secret-storage.ts` falls back to storing the value **in plaintext** when sync encryption is unavailable; the local encryption key must never take that path.
+
+**Rules:**
+
+1. **Only after `app.whenReady()`.** `isAsyncEncryptionAvailable()` resolves `false` immediately when called before `ready`. `initDatabase(mainDatabase)` is already called inside `app.on('ready')` in `entry.main.ts`, so loading the key in `mainDatabase.init()` satisfies this. Key loading must not move earlier.
+2. **Pre-flight check:** Call `isAsyncEncryptionAvailable()` after `ready` as a signal, but still treat every encrypt/decrypt call as fallible — after `ready`, errors surface during operations rather than in the availability check.
+3. **Always `try/catch`.** Temporary unavailability is **not** a field in the success payload; it is a Promise rejection from `decryptStringAsync` with a message like `safeStorage.decryptStringAsync is temporarily unavailable. Please try again.`
+4. **Bounded exponential backoff for temporary unavailability only.** Detect the error by its "temporarily unavailable" message and retry: 5 attempts, 120 ms base delay, 2000 ms cap, 20% jitter. Any other error fails immediately.
+5. **Handle `shouldReEncrypt`.** `decryptStringAsync` resolves `{ result, shouldReEncrypt }`; `shouldReEncrypt: true` signals an OS-side key/provider rotation. Re-encrypt the plaintext key with `encryptStringAsync` and write the new ciphertext back to the key file (write to a temp file, then rename, so a crash cannot leave a half-written key file). The local AES key itself does not change, so `.db` ciphertext is unaffected.
+6. **Never delete or regenerate on failure.** A temporary-unavailable error, exhausted retries, or a non-retriable decrypt error must leave the key file untouched. A new key is generated **only when the key file does not exist**. Regenerating over an unreadable key file would orphan every encrypted field on disk.
+7. **Recoverable degraded state.** If retries are exhausted or decryption fails, the database opens in degraded mode (see 4.3) and the user is shown the decryption failure dialog (5.2). The next launch retries normally.
+
+**First launch when protection fails:** If no key file exists and `encryptStringAsync` fails after retries, the key is **not** persisted in plaintext. Encryption is not enabled for that session (data stays in its current plaintext state and migration is deferred), and key generation is retried on the next launch.
+
+The wrapper is implemented in the main process (e.g., `src/main/local-encryption-key.ts`), following the reference `decryptWithAutoRotate` / `encryptWithRetry` / `withExponentialBackoff` implementation in the research page's appendix. The existing Vault Key helpers in `secret-storage.ts` are out of scope and keep using the sync API.
 
 ### 4.3 NeDB Serialization Hooks
 
+`createNedbDatabase()` returns independent instances, each with its own datastores and change listeners. Besides the main-process `mainDatabase`, there are in-memory scratch instances (e.g. the Git Sync canonical-file scratch DB in `sync/git/canonical-file.ts`, the in-memory DB in `network/send-request.node.ts`, and the Vitest setups). The encryption key is therefore passed **per instance through `init()` options**, never held in module-level state:
+
 ```typescript
-// In database-nedb.ts init()
-new NeDB({
-  filename: dbPath,
-  afterSerialization: line => encryptDocLine(line, localEncryptionKey),
-  beforeDeserialization: line => decryptDocLine(line, localEncryptionKey),
-  testSerializationHooks: false, // Disable self-test
-});
+// packages/insomnia-data/node-src/database/database-nedb.ts
+type initOptions = DataStoreOptions & { dbPath?: string; fieldEncryptionKey?: FieldEncryptionKey };
+
+init: async ({ dbPath, fieldEncryptionKey, ...config }: initOptions = {}, forceReset = false) => {
+  // { afterSerialization, beforeDeserialization, testSerializationHooks: false }
+  const encryptionHooks =
+    fieldEncryptionKey && !config.inMemoryOnly ? createFieldEncryptionHooks(fieldEncryptionKey) : {};
+  const defaultConfig: NeDB.DataStoreOptions = {
+    autoload: true,
+    corruptAlertThreshold: 0.9,
+    ...config,
+    ...encryptionHooks,
+  };
+  // every datastore is created from defaultConfig, so all datastores of this instance get the hooks
+  // ...
+};
 ```
 
-- **afterSerialization(line):** Called before writing to disk. Parses the JSON line → looks up `encryptedFields` based on the `type` field → encrypts matching field paths → re-stringifies
-- **beforeDeserialization(line):** Called after reading from disk. Parses the JSON line → detects values with `enc:` prefix → decrypts → re-stringifies
-- **Key always available:** The local key is generated on first launch and always present — no pass-through/no-op mode needed
+```typescript
+// packages/insomnia/src/main/database.main.ts
+init: async (config: DataStoreOptions = {}, forceReset = false) => {
+  const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+  // safeStorage-protected local key (4.2.1); not needed (and not loaded) for in-memory instances.
+  // Resolves undefined when the key cannot be loaded or created → degraded mode.
+  const fieldEncryptionKey = config.inMemoryOnly ? undefined : await getLocalEncryptionKey(dbPath);
+  await nedbDatabase.init({ dbPath, fieldEncryptionKey, ...config }, forceReset);
+  // ...
+};
+```
+
+- **afterSerialization(line):** Called before writing to disk. Parses the JSON line → looks up the encrypted field paths for the doc's `type` (see 4.4) → encrypts matching field paths → re-stringifies
+- **beforeDeserialization(line):** Called after reading from disk. Parses the JSON line → detects values with `enc:v1:` prefix → decrypts → re-stringifies. Never throws (see 4.3.1)
+- **`testSerializationHooks: false`:** NeDB's self-test feeds random non-JSON strings through the hooks, which JSON-parsing hooks cannot handle
+- **Persistent instances only:** `inMemoryOnly` instances never write to disk, so they get no hooks and require no key
+- **Shared hook factory:** `createFieldEncryptionHooks()` lives in `insomnia-data` (Node side) so inso CLI's `ne-db-adapter.ts`, which constructs `NeDB` directly, reuses the same implementation
+- **Key normally available in the app:** The local key is generated on first launch and present on every later launch. The only exception is a safeStorage failure (4.2.1), handled by degraded mode below
+- **Degraded mode (no usable key):** The main database is initialized without `fieldEncryptionKey`, so no hooks are attached. `enc:` values are ordinary strings to NeDB, so they load and save verbatim — no data loss — but are non-functional until the key can be decrypted again (the decryption failure dialog in 5.2 is shown). Sensitive values written during a degraded session stay plaintext; the next healthy launch encrypts them automatically, because every load rewrites each datastore through the hooks (section 6). Migration therefore never happens in a degraded session
+
+#### 4.3.1 Hook Error Handling — Hooks Must Never Lose Data
+
+**Why this matters:** NeDB (`@seald-io/nedb` 4.x, `treatRawStreamAsync`) catches any error thrown while deserializing a line — including from `beforeDeserialization` — counts the line as corrupt and **skips it**. Insomnia sets `corruptAlertThreshold: 0.9`, so up to 90% of lines can be skipped without any error. Because every load ends with a full rewrite (`persistCachedDatabaseAsync()`), skipped documents are then **permanently removed** from the `.db` file. A single throwing decrypt would silently delete a user's request.
+
+**`beforeDeserialization` never throws:**
+
+- The whole hook is wrapped in `try/catch`; any failure returns a line NeDB can still load.
+- **Per-field decrypt failure** (wrong key, GCM authentication failure, truncated or malformed `enc:v1:` value): keep the original `enc:v1:` value verbatim and continue with the remaining fields. The document loads; only that field is non-functional.
+- **Record every failure** as `{ type, _id, path }` in an in-memory failure report owned by the database instance. After init, the main process exposes the report to the renderer, which shows the decryption failure dialog (5.2) when it is non-empty.
+- **Line the hook cannot parse** (genuinely corrupt JSON): return the line unchanged, so NeDB's existing corrupt-line handling applies exactly as it does today. Encryption must not change which lines count as corrupt.
+- **Lookalike values:** a plaintext string that happens to start with `enc:v1:` fails GCM authentication and is likewise kept verbatim — never dropped or cleared.
+
+**`afterSerialization` never writes plaintext for an encrypted field:**
+
+- **Values already starting with `enc:v1:` are written unchanged**, never encrypted again. This keeps values that failed decryption byte-identical across rewrites, so they remain recoverable once the correct key is available.
+- **If encryption itself fails**, the hook throws instead of falling back to plaintext. NeDB builds all lines before touching the file, so nothing partial is written:
+  - During an insert/update, the operation rejects. NeDB has already applied the change in memory, so it is lost on restart; the error surfaces to the caller.
+  - During the startup rewrite, that datastore's load rejects and its `.db` file is left untouched (see "Load failures" below).
+- With a valid `KeyObject` already in memory, encryption failure indicates a programming error, not a runtime condition; tests (below) guard against it.
+
+**Load failures must surface as errors, not hangs:** Each datastore is created with `autoload: true`, which starts its load immediately; Insomnia currently neither passes `onload` nor awaits `autoloadPromise`. If a load rejects, NeDB rethrows it as an unhandled rejection and never marks the datastore ready, so every query on it waits forever — `init()` then hangs in `repairDatabase()` and no window ever appears. `init()` therefore awaits every datastore's `autoloadPromise` (`Promise.allSettled`) and rejects with an error naming the failed datastores. Startup reports that error to the user instead of hanging. The failed `.db` files are untouched, so nothing is lost.
+
+**Tests:** For each encrypted model, cover wrong key, tampered ciphertext, truncated value, lookalike plaintext, and unparseable line. Assert that the document count is unchanged after load + rewrite, failed values are preserved byte-for-byte, and the failure report lists exactly the affected `{ type, _id, path }`.
 
 ### 4.4 Encrypted Fields Definition
 
-Each model file exports an `encryptedFields` array:
+Models are defined as Zod schemas (each model exports `schema = createModelSchema(type, prefix).extend(...)`). Sensitive fields are **marked directly on the schema field**, and the encrypted field paths are **derived from the schema**. The marking sits next to the field definition, so adding or renaming a field cannot drift out of sync with a separately maintained path list.
+
+```typescript
+// packages/insomnia-data/src/models/utils/encrypted-field.ts
+import { z } from 'zod/v4';
+
+// A dedicated registry rather than `.meta()` / globalRegistry: `z.toJSONSchema()` is used to generate the
+// published insomnia.schema JSON, and globalRegistry metadata would leak into it.
+export const encryptedFieldRegistry = z.registry<{ encrypted: true }>();
+
+export const encrypted = <T extends z.ZodType>(schema: T): T => schema.register(encryptedFieldRegistry, { encrypted: true });
+```
 
 ```typescript
 // packages/insomnia-data/src/models/request.ts
-export const encryptedFields = [
-  'authentication.password',
-  'authentication.token',
-  'authentication.clientSecret',
-  'authentication.accessToken',
-  'authentication.refreshToken',
+export const AuthTypeBasicSchema = z.object({
   // ...
-];
+  password: encrypted(z.string()).optional(),
+});
+
+// packages/insomnia-data/src/models/cookie-jar.ts
+export const CookieSchema = z.object({
+  // ...
+  value: encrypted(z.string()).optional().default(''),
+});
 ```
 
-Array path syntax is supported: `cookies[].value` means encrypt the `value` field for every element in the array.
+**Path derivation** (`getEncryptedFieldPaths(schema)`) runs once per model `schema` and produces a `Record<AllTypes, string[]>` used by `afterSerialization`:
+
+- `ZodObject` → recurse into each key (`authentication.password`)
+- `ZodArray` → `[]` segment: `cookies[].value` means encrypt the `value` field for every element in the array
+- `ZodOptional` / `ZodNullable` / `ZodDefault` / `ZodPipe` → unwrap; a field is encrypted if the inner schema or any wrapper layer is registered
+- `ZodUnion` / `ZodDiscriminatedUnion` → union of the paths of all options. E.g. Request `authentication` is a discriminated union of 13 auth types, so `authentication.password` is collected once from Basic, Digest, NTLM and OAuth2
+- Only `string` leaves may be marked, since the encrypted value format is a string; derivation throws otherwise
+
+**Trade-off:** Union paths are merged by field name, not by discriminator. A name that is a secret in one variant but not in another (Hawk `key` is a secret; API Key auth's `key` is the header name) is encrypted in both. This over-encrypts a harmless value in exchange for a simple path syntax with no discriminator-aware rules.
+
+**Models not yet on Zod:** ClientCertificate, CloudCredential, OAuth2Token, GitCredentials and RequestVersion are still plain interfaces. Phase 5 migrates them to Zod schemas following the existing `createModelSchema` pattern so all models use one mechanism. Until a model is migrated, it may export a literal `encryptedFields: string[]`, which is merged into the same map and removed once the model is migrated.
+
+A snapshot unit test of the derived map makes every change to the set of encrypted fields visible in code review.
 
 ### 4.5 Impact on Existing Features
 
@@ -168,6 +274,7 @@ Array path syntax is supported: `cookies[].value` means encrypt the `value` fiel
 | Cloud Sync       | ✅ No impact       | Sync reads in-memory plaintext data                                             |
 | Git Sync         | ✅ No impact       | NeDBClient reads in-memory data via `db.findOne()`                              |
 | Import/Export    | ✅ No impact       | Export reads in-memory data; import writes trigger automatic encryption         |
+| In-memory DBs    | ✅ No impact       | `inMemoryOnly` scratch instances never serialize to disk; no hooks, no key      |
 | inso CLI         | ⚠️ May require key | Only if reading encrypted `.db` files directly; git/export workflows unaffected |
 
 ## 5. User Interaction Impact
@@ -178,7 +285,7 @@ Array path syntax is supported: `cookies[].value` means encrypt the `value` fiel
 
 ```
 First launch → Local encryption key auto-generated
-            → Key protected with safeStorage
+            → Key protected with async safeStorage (after app ready)
             → All DB reads/writes automatically encrypted/decrypted
             → User is completely unaware of encryption
             → Works in both logged-in mode and Scratch Pad mode
@@ -186,7 +293,7 @@ First launch → Local encryption key auto-generated
 
 ### 5.2 Decryption Failure Handling
 
-Decryption failures are rare with this approach (only if safeStorage is corrupted, e.g., after OS reinstall). When it occurs, the application **must not silently fail**. Instead:
+Decryption failures are rare with this approach (only if safeStorage is corrupted, e.g., after OS reinstall). Temporary safeStorage unavailability is retried with backoff first and never reaches the user; the dialog is shown only when retries are exhausted or the key file fails to decrypt with a non-retriable error (4.2.1), and the database is then running in degraded mode (4.3). The key file is never deleted or regenerated automatically. When it occurs, the application **must not silently fail**. Instead:
 
 1. **Show a dialog** explaining that some locally encrypted data could not be decrypted
 2. **Provide context:** "This may happen if the application data was moved from another machine or the OS credential store was reset"
@@ -222,39 +329,77 @@ INSOMNIA_ENCRYPTION_KEY="JWK_STRING" inso run collection "My Collection"
 
 ## 6. Data Migration Plan
 
-### 6.1 Design Principle
+### 6.1 Design Principles
 
-The migration process **must be fail-safe** — no exception should lead to data loss.
+- **Fail-safe:** no exception may lead to data loss.
+- **Invisible to the user:** no progress screen, no prompt, no backup step. The user only sees something when a failure occurs (the decryption failure dialog in 5.2, or a startup error from 4.3.1).
 
-### 6.2 Migration Strategy
+### 6.2 Migration Is the First Load with Hooks
 
-1. **Pre-migration automatic backup:** On first launch after upgrade, before activating encryption, automatically copy all `.db` files to a `<dataPath>/backup-pre-encryption/` directory (timestamped)
-2. **One-time full migration with progress UI:** After backup is complete, perform a full migration of all existing data immediately. Show a migration progress screen to the user (e.g., "Encrypting local data... Collection X of Y") while the migration runs. The migration calls `compactDatafileAsync()` on each collection sequentially, which rewrites all data through the `afterSerialization` hook, encrypting all sensitive fields.
-3. **Backward-compatible reads:** The `beforeDeserialization` hook always handles unencrypted data gracefully (no `enc:` prefix → treat as plaintext). This ensures the app still works if migration is interrupted.
-4. **Migration status tracking:** Write `.encryption-migration-status.json` in the data directory to record each collection's status (pending/completed/failed). On next launch, resume from where it left off if interrupted.
-5. **Failure handling:** If any collection migration fails, log the error, mark that collection as failed, and continue with remaining collections. After migration completes (or partially completes), show a summary to the user indicating any failures.
-6. **Post-migration verification:** After all collections are migrated, verify document counts match pre-migration counts. If mismatch detected, alert the user and preserve the backup.
+At the end of every load, NeDB rewrites the whole datastore (`persistCachedDatabaseAsync()` in `loadDatabaseAsync`, `@seald-io/nedb` 4.x). So the first launch that initializes the main database with the encryption key reads the existing plaintext values (backward-compatible reads: a value without the `enc:v1:` prefix is plaintext) and writes every datastore back through `afterSerialization`, with all sensitive fields encrypted. There is no separate migration step, no compaction pass and no migration state.
 
-### 6.3 Rollback Capability
+First launch of the new version:
 
-- The backup directory is retained until the user confirms data integrity (can be manually deleted in settings)
-- To rollback: overwrite `.db` files with the backup files to restore pre-encryption state
+1. Load the local key, or create it if the key file does not exist (6.3).
+2. Call `mainDatabase.init()` with the key. Each datastore loads and is rewritten encrypted.
+3. Done.
+
+Every later launch performs the same rewrite. The same mechanism encrypts plaintext values written during a degraded session (4.3) or by an older Insomnia version (6.5) at the next healthy launch.
+
+**Timing and cost:**
+
+- `initDatabase(mainDatabase)` runs in `app.on('ready')` before any window is created, and all datastores load concurrently (`autoload: true`). Migration therefore runs before any UI exists, which is why it has no UI.
+- The cost of the first launch is the same encrypt pass that every later launch performs, with nothing to decrypt; see [field-encryption-performance.md](./field-encryption-performance.md).
+
+### 6.3 Key Before Data
+
+The key must be durably persisted and verified **before** any datastore is written with encryption. Otherwise a crash after the `.db` files are encrypted, but before the key is safely on disk, makes the data permanently unreadable.
+
+1. Generate the AES-256 key.
+2. Protect it with `encryptStringAsync` (4.2.1).
+3. Write it to a temp file, flush it to disk, then rename it to the key file.
+4. Read the key file back, decrypt it with `decryptStringAsync`, and compare it with the in-memory key.
+5. Only then initialize the database with hooks.
+
+If any of steps 1–4 fails, the "first launch when protection fails" path in 4.2.1 applies: encryption is not enabled for this session, and key creation is retried on the next launch.
+
+### 6.4 Why Interruption Is Safe
+
+- **Each file is replaced atomically:** NeDB's `crashSafeWriteFileLinesAsync` writes `<file>~`, flushes it, then renames it over the `.db` file, and `ensureDatafileIntegrityAsync` recovers from a crash between the two on the next load. Each `.db` file is therefore entirely old or entirely new.
+- **A mixed state is readable:** If the app is killed mid-migration, some datastores are encrypted and others are still plaintext. Both read correctly.
+- **The next launch completes it:** Every load rewrites every datastore, so no status file or resume logic is needed.
+- **No document is dropped and no failure hangs:** Hooks never throw on read, and datastore load failures surface as errors with the `.db` file untouched (4.3.1).
+
+### 6.5 Downgrade to a Version Without Encryption (Known Limitation)
+
+- The older version reads `enc:v1:` values as literal strings. All other data works, but encrypted fields (passwords, tokens, cookie values, ...) are non-functional, and features that decode an encrypted field fail (e.g. restoring a request from response history via RequestVersion's `compressedRequest`).
+- The older version writes `enc:v1:` strings back verbatim, so they stay recoverable. Values the user re-enters there are written in plaintext.
+- Upgrading again reads the mixed state, and the next load encrypts the plaintext values.
+- No data is lost, but the user must re-enter secrets while on the older version.
+
+### 6.6 Backups
+
+- **No separate pre-migration backup.** Users who update through the updater already have one: when a newer version is available, the running version copies all `.db` files to `<dataPath>/backups/<version>/` (`src/main/backup.ts`).
+- **Existing backups are not modified.** Backups written by versions before encryption remain plaintext copies in `backups/`. This is a known limitation and out of scope.
+- **Restoring still works.**
+  - Backups written by encryption-enabled versions contain encrypted values and restore on the same machine, because the local key is stable.
+  - Restoring a pre-encryption backup (`restoreBackup()`) also works: plaintext is read as-is and encrypted on the next load.
 
 ## 7. Implementation Plan
 
 | Phase   | Content                                          | Estimated Changes                           |
 | ------- | ------------------------------------------------ | ------------------------------------------- |
 | Phase 1 | Field encryption utility (`field-encryption.ts`) | 1 new file + tests                          |
-| Phase 2 | Integrate hooks into `database-nedb.ts`          | 1 file modified                             |
-| Phase 3 | Local key generation + safeStorage protection    | 1–2 new files                               |
+| Phase 2 | Integrate hooks into `database-nedb.ts` `init()` (per-instance key via init options, skip `inMemoryOnly`); pass key from `database.main.ts` | 2 files modified |
+| Phase 3 | Local key generation + async safeStorage protection (retry with backoff, `shouldReEncrypt` write-back, atomic key file write, degraded mode) | 1–2 new files + tests |
 | Phase 4 | Decryption failure dialog UI                     | 1–2 new files                               |
-| Phase 5 | Add `encryptedFields` declarations to each model | 12+ files modified (pure data declarations) |
-| Phase 6 | inso CLI `--encryption-key` support              | 2–3 files modified                          |
+| Phase 5 | `encrypted()` registry + schema path derivation; mark sensitive fields in model schemas; migrate ClientCertificate / CloudCredential / OAuth2Token / GitCredentials / RequestVersion to Zod | 1 new file + tests; 12+ model files modified |
+| Phase 6 | inso CLI `--encryption-key` support (reuse `createFieldEncryptionHooks()` in `ne-db-adapter.ts`) | 2–3 files modified |
 | Phase 7 | Encryption key export/copy in Preferences UI     | 1–2 files modified                          |
-| Phase 8 | Data migration logic + backup + progress UI      | 2–3 files created/modified                  |
+| Phase 8 | Migration: durable key creation + verification before first encrypted write; `init()` awaits every datastore load | 1–2 files modified |
 
 ## 8. Open Questions
 
-1. **Performance impact** — Every read/write requires JSON parsing + field traversal + AES encrypt/decrypt; benchmark testing is needed to verify impact
+1. **Performance impact** — Every read/write requires JSON parsing + field traversal + AES encrypt/decrypt; benchmark testing is needed to verify impact. Optimizations to apply after the baseline implementation, and the benchmark used to compare the two, are in [field-encryption-performance.md](./field-encryption-performance.md)
 2. **Encryption granularity** — Should users be able to customize which fields are encrypted, or should the system define this uniformly? (Current design: system-defined)
-3. **Old backup cleanup** — How long to retain pre-encryption backups? (Recommendation: until user manually deletes via settings)
+3. **Linux `basic_text` backend** — Async encryption succeeds on `basic_text` (where sync reports unavailable), but that backend has no OS keyring behind it, so the protection it gives the key file is likely much weaker than DPAPI / Keychain / Secret Service. Should we detect it via `safeStorage.getSelectedStorageBackend()` and log or warn? Needs verification of what the async path actually uses on `basic_text`.
