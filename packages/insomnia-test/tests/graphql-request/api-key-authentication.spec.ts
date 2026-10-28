@@ -1,11 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { ContentType } from '@package/enums/content-type';
-import { HttpMethod } from '@package/enums/http-method';
-import { ProjectType } from '@package/enums/project-types';
-import { HTTP_SERVER, test } from '@package/misc/fixtures';
-import { Collection } from '@package/models/collection';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ContentType } from '../../enums/content-type';
+import { HttpMethod } from '../../enums/http-method';
+import { ProjectType } from '../../enums/project-types';
+import { HTTP_SERVER, test } from '../../misc/fixtures';
+import { Collection } from '../../models/collection';
+import { Project } from '../../models/project';
 
 const query = '{ characters { results { name } } }';
 const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
@@ -29,14 +30,14 @@ test('Verify GraphQL Request Sends the API Key Header Until Authentication Is Se
   await graphqlRequestFlow.setAuthentication(request, { type: 'none' });
   const unauthenticatedResponse = await graphqlRequestFlow.send(request);
 
-  expect(authenticatedResponse.statusBar.code).toBe(200);
-  expect(authenticatedResponse.preview).toMatchObject({
+  expect(authenticatedResponse.statusCode).toBe(200);
+  expect(authenticatedResponse.body).toMatchObject({
     headers: expect.objectContaining({
       [apiKeyName.toLowerCase()]: apiKeyValue,
     }),
   });
-  expect(unauthenticatedResponse.statusBar.code).toBe(200);
-  expect((unauthenticatedResponse.preview as { headers: Record<string, string> }).headers).not.toHaveProperty(
+  expect(unauthenticatedResponse.statusCode).toBe(200);
+  expect((unauthenticatedResponse.body as { headers: Record<string, string> }).headers).not.toHaveProperty(
     apiKeyName.toLowerCase(),
   );
 });
