@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_PASSWORD, OAUTH2_SERVER, OAUTH2_USERNAME, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import type { AuthTypeOAuth2 } from "@package/models/http-request";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_PASSWORD, OAUTH2_SERVER, OAUTH2_USERNAME, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import type { AuthTypeOAuth2 } from "../../models/http-request";
+import { Project } from "../../models/project";
 
 test("Verify Resource Owner Password Credentials grant fetches tokens with no popup and authorizes the sent request", async ({
   user,
@@ -48,12 +49,12 @@ test("Verify Resource Owner Password Credentials grant fetches tokens with no po
   ).json();
 
   const responseView = await httpRequestFlow.send(request);
-  const body = responseView.preview as { authorization?: string };
+  const body = responseView.body as { authorization?: string };
 
   expect(tokens.accessToken).not.toBe("");
   expect(tokens.refreshToken).not.toBe("");
   expect(windowsAfterFetch).toBe(windowsBeforeFetch);
   expect(lastTokenRequest.grantType).toBe("password");
-  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusCode).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });
