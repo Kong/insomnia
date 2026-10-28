@@ -5,8 +5,6 @@ import { ProjectType } from '../../enums/project-types';
 import { expect, test } from '../../misc/fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
-import { ENVIRONMENT_TYPE } from '../../models/environment';
-import { project } from '../../../insomnia-data/src/models';
 
 test("Verify adding a query parameter or header focuses the new row's Name cell", async ({ user }) => {
   const { workspaceFlow } = user.flowManager;
