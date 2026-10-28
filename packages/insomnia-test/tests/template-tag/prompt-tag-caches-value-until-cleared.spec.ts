@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test("Verify a prompt Tag Caches its Value Under the Storage Key Until it is Cleared", async ({
   user,
@@ -48,10 +49,10 @@ test("Verify a prompt Tag Caches its Value Under the Storage Key Until it is Cle
 
   expect(previewBeforeSend.functionName).toBe("prompt");
   expect(first.promptInputType).toBe("password");
-  expect(first.response.statusBar.code).toBe(200);
-  expect(first.response.preview).toMatchObject({ data: firstValue });
-  expect(cached.statusBar.code).toBe(200);
-  expect(cached.preview).toMatchObject({ data: firstValue });
-  expect(second.response.statusBar.code).toBe(200);
-  expect(second.response.preview).toMatchObject({ data: secondValue });
+  expect(first.response.statusCode).toBe(200);
+  expect(first.response.body).toMatchObject({ data: firstValue });
+  expect(cached.statusCode).toBe(200);
+  expect(cached.body).toMatchObject({ data: firstValue });
+  expect(second.response.statusCode).toBe(200);
+  expect(second.response.body).toMatchObject({ data: secondValue });
 });
