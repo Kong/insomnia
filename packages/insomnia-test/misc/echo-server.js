@@ -246,6 +246,16 @@ async function handleRequest(req, res) {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/large-json') {
+    const items = Array.from({ length: 100_000 }, (_, i) => ({ id: i, name: `item-${i}`, value: 'x'.repeat(100) }));
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(JSON.stringify({ items }));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/status/404') {
     res.writeHead(404, {
       'Content-Type': 'application/json',
