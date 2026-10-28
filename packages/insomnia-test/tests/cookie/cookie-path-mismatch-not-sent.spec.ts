@@ -1,10 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { HttpMethod } from "@package/enums/http-method";
-import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/cookies`;
 
@@ -43,7 +44,7 @@ test("Verify Cookie With Mismatched Path Is Not Sent With HTTP Request", async (
 
   const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = responseView.preview as { cookies: Record<string, string> };
+  const { cookies } = responseView.body as { cookies: Record<string, string> };
   expect(cookies).not.toHaveProperty(mismatchedCookie.key);
   expect(cookies).toMatchObject({ [matchedCookie.key]: matchedCookie.value });
 });
