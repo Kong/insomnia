@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { DEFAULT_TIMEOUT, setKonnectEntitlement, test } from '@package/misc/fixtures';
 import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT, setKonnectEntitlement, test } from '../../misc/fixtures';
 
 test.beforeAll(async () => {
   await setKonnectEntitlement(true);
@@ -13,9 +14,9 @@ test.afterAll(async () => {
 test(
   'Verify configuring a Konnect PAT closes the settings modal, shows the Sync Konnect button, and leaves the Projects tab usable',
   async ({ user }) => {
-    const { konnectPage, workspacePage, projectPage } = user.pageManager;
+    const { konnectPage, workspacePage } = user.pageManager;
 
-    await projectPage.switchOrganization('Control Planes');
+    await workspacePage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     const introVisibleBeforeConfigure = await konnectPage.isIntroCardVisible();
     await konnectPage.clickConfigure();
@@ -38,9 +39,9 @@ test(
 test(
   'Verify the initial Konnect sync creates the control plane project and a collection for each gateway service',
   async ({ user }) => {
-    const { konnectPage, workspacePage, projectPage } = user.pageManager;
+    const { konnectPage, workspacePage } = user.pageManager;
 
-    await projectPage.switchOrganization('Control Planes');
+    await workspacePage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     await konnectPage.clickConfigure();
     await konnectPage.setPat(`kpat_${faker.string.alphanumeric(20)}`);
@@ -68,9 +69,9 @@ test(
 test(
   'Verify syncing Konnect again after the first sync completes without errors',
   async ({ user }) => {
-    const { konnectPage, workspacePage, projectPage } = user.pageManager;
+    const { konnectPage, workspacePage } = user.pageManager;
 
-    await projectPage.switchOrganization('Control Planes');
+    await workspacePage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     await konnectPage.clickConfigure();
     await konnectPage.setPat(`kpat_${faker.string.alphanumeric(20)}`);

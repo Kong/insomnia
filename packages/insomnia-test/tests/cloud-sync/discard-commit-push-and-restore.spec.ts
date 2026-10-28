@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 
 test("Verify discarding changes, committing and pushing, and restoring an earlier snapshot on a Cloud-synced workspace", async ({
   user,
@@ -13,14 +14,14 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
   const collection = await workspaceFlow.getCollection({
     name: "My Collection R1",
   });
-  await httpRequestFlow.get("New Request");
+  await httpRequestFlow.get("New Request", collection);
   await httpRequestPage.setBody({
     mimeType: ContentType.Plain,
     text: faker.lorem.slug(),
-  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+  });
   await cloudSyncFlow.discardAllChanges();
   await user.page.reload();
-  await httpRequestFlow.get("New Request");
+  await httpRequestFlow.get("New Request", collection);
 
   await expect
     .poll(() => httpRequestPage.getBody(), { timeout: DEFAULT_TIMEOUT })
@@ -29,13 +30,13 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
   await httpRequestPage.setBody({
     mimeType: ContentType.Plain,
     text: faker.lorem.slug(),
-  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+  });
   await cloudSyncFlow.commitAndPush("New Request", faker.lorem.sentence());
   const isCommitDisabled = await cloudSyncPage.isCommitDisabled();
 
   await cloudSyncFlow.restoreSnapshot("Initial Snapshot");
   await user.page.reload();
-  await httpRequestFlow.get("New Request");
+  await httpRequestFlow.get("New Request", collection);
   const bodyAfterRestore = await httpRequestPage.getBody();
 
   expect(isCommitDisabled).toBe(true);

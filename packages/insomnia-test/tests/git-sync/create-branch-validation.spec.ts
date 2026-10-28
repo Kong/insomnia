@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { ProjectType } from '@package/enums/project-types';
-import { GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
-import { Project } from '@package/models/project';
 import { expect } from "@playwright/test";
+
+import { ProjectType } from '../../enums/project-types';
+import { GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { Project } from '../../models/project';
 
 test('Verify creating a branch with a duplicate or invalid name shows an error and keeps the current branch', async ({
   user,

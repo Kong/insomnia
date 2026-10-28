@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { getServerCommits, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
-import { Collection } from "@package/models/collection";
-import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { DEFAULT_TIMEOUT, getServerCommits, GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
 
 test(
   "Verify discarding all unstaged changes removes the uncommitted collection and keeps the committed one",
@@ -28,10 +29,13 @@ test(
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),
     );
-    const collectionNode = await workspacePage.requireItemNode(collection);
     await gitSyncFlow.discardAllChanges();
 
-    await workspacePage.waitForNodeRemoved(collectionNode);
+    await expect
+      .poll(async () => workspacePage.findItemNode(collection), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .toBeUndefined();
 
     const committedNode = await workspacePage.findItemNode(committedCollection);
     const serverCommits = await getServerCommits();
