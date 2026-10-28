@@ -2,15 +2,16 @@ import * as crypto from "node:crypto";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
-import { Collection } from "@package/models/collection";
+import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../../enums/project-types";
+import { test } from "../../../misc/fixtures";
+import { Collection } from "../../../models/collection";
 import {
   ENVIRONMENT_TYPE,
   EnvironmentKvPairDataType,
-} from "@package/models/environment";
-import { Project } from "@package/models/project";
-import { expect } from "@playwright/test";
+} from "../../../models/environment";
+import { Project } from "../../../models/project";
 
 const testWithVaultKey = test.extend({
   vaultKey: async ({}, use) => {
@@ -57,7 +58,7 @@ testWithVaultKey(
 
     await importFlow.importFile(
       project,
-      path.join(import.meta.dirname, "vault-legacy-formats.yaml"),
+      path.join(__dirname, "vault-legacy-formats.yaml"),
     );
     const collection = new Collection("Vault Legacy Format Collection");
     await environmentFlow.link(collection, secretEnvironment);
@@ -73,12 +74,12 @@ testWithVaultKey(
     await environmentFlow.activate(collection, "base with vault");
     const invalidRequest = await httpRequestFlow.get("legacy-invalid-vault");
 
-    expect(arrayResponse.statusBar.code).toBe(200);
-    expect((arrayResponse.preview as { data: string }).data).toBe(
+    expect(arrayResponse.statusCode).toBe(200);
+    expect((arrayResponse.body as { data: string }).data).toBe(
       "vault_array_a\nvault_array_b",
     );
-    expect(objectResponse.statusBar.code).toBe(200);
-    expect((objectResponse.preview as { data: string }).data).toBe("secv1\nsecv2");
+    expect(objectResponse.statusCode).toBe(200);
+    expect((objectResponse.body as { data: string }).data).toBe("secv1\nsecv2");
     await expect(httpRequestFlow.send(invalidRequest!)).rejects.toThrow(
       /vault is a reserved key for insomnia vault/,
     );
