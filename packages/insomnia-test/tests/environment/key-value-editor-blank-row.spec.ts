@@ -1,13 +1,14 @@
 import { faker } from "@faker-js/faker";
-import { ProjectType } from "@package/enums/project-types";
-import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
+
+import { ProjectType } from "../../enums/project-types";
+import { test } from "../../misc/fixtures";
 import type {
-  EnvironmentKvPairData} from "@package/models/environment";
+  EnvironmentKvPairData} from "../../models/environment";
 import {
   EnvironmentKvPairDataType,
-} from "@package/models/environment";
-import { Project } from "@package/models/project";
-import { expect } from "@playwright/test";
+} from "../../models/environment";
+import { Project } from "../../models/project";
 
 test("Verify Environment Table Editor's Blank Row Is Not Persisted And Deleting A Row Leaves No Stale Text", async ({
   user,
