@@ -78,7 +78,16 @@ export class RunnerPage extends BasePage {
    */
   async setBail(enabled: boolean): Promise<void> {
     await this.switchRequestTab("advanced");
-    await this.page.locator(this.BAIL_CHECKBOX).setChecked(enabled);
+    const checkbox = this.page.locator(this.BAIL_CHECKBOX);
+    // Bail defaults to on and the checkbox is controlled by per-runner state
+    // that can re-render after the tab switch, so Playwright's `setChecked`
+    // can read stale state and throw. Re-evaluate and click until it settles.
+    await expect(async () => {
+      if ((await checkbox.isChecked()) !== enabled) {
+        await checkbox.click({ timeout: 2000 });
+      }
+      await expect(checkbox).toBeChecked({ checked: enabled, timeout: 2000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

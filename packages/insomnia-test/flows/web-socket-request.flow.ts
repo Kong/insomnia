@@ -107,9 +107,13 @@ export class WebSocketRequestFlow extends BaseFlow {
    * Opens the WebSocket connection for `request` and returns the
    * resulting response, locating it via the standalone project tree.
    * @param request - The request whose connection should be opened
+   * @param options - Forwarded to the page's `connect()`
    * @returns The response view received after connecting
    */
-  async send(request: WebSocketRequest): Promise<ResponseView> {
+  async send(
+    request: WebSocketRequest,
+    options?: { expectConnected?: boolean },
+  ): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
@@ -118,7 +122,7 @@ export class WebSocketRequestFlow extends BaseFlow {
     await workspace.openRequestNode(node!);
     await webSocketRequestPage.navigate();
 
-    await webSocketRequestPage.connect();
+    await webSocketRequestPage.connect(options);
     await responsePage.navigate();
 
     const data = await responsePage.get();
