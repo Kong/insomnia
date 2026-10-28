@@ -1,0 +1,41 @@
+import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { ContentType } from "../../enums/content-type";
+import { HttpMethod } from "../../enums/http-method";
+import { ProjectType } from "../../enums/project-types";
+import { HTTP_SERVER_HTTPS, test } from "../../misc/fixtures";
+import { Collection } from "../../models/collection";
+import { Project } from "../../models/project";
+
+const query = "{ characters { results { name } } }";
+const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
+
+test("Verify GraphQL Request Over a TLS Connection", async ({ user }) => {
+  const { graphqlRequestFlow, preferencesFlow, workspaceFlow } =
+    user.flowManager;
+
+  await preferencesFlow.set({ validateSSL: false });
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const request = await graphqlRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Post,
+    url: `${HTTP_SERVER_HTTPS}/post`,
+    body,
+  });
+  const responseView = await graphqlRequestFlow.send(request);
+
+  expect(responseView.statusCode).toBe(200);
+  const sent = JSON.parse((responseView.body as { data: string }).data) as {
+    query: string;
+  };
+  expect(sent.query.replace(/\s+/g, " ").trim()).toBe(query);
+});
