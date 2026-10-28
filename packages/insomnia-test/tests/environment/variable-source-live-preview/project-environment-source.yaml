@@ -1,0 +1,25 @@
+type: environment.insomnia.rest/5.0
+schema_version: "5.1"
+name: project-environment-source
+meta:
+  id: wrk_5c1e0a7d93f24b64a1f0e2d3c4b5a697
+  created: 1736618596041
+  modified: 1736618596041
+environments:
+  name: Base Environment
+  meta:
+    id: env_6c1e0a7d93f24b64a1f0e2d3c4b5a698
+    created: 1728549301585
+    modified: 1728549418314
+    isPrivate: false
+  data:
+    text_base: fromProjectBase
+  subEnvironments:
+    - name: Source Sub Environment
+      meta:
+        id: env_7c1e0a7d93f24b64a1f0e2d3c4b5a699
+        created: 1728549316977
+        modified: 1728549426890
+        isPrivate: false
+      data:
+        text_ref: '{{ _.text_base }}'
