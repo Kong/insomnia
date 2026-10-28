@@ -1,4 +1,5 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
+import type { ResponseExportOption } from "../enums/response-export-option";
 import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
@@ -101,6 +102,36 @@ export class HttpRequestFlow extends BaseFlow {
 
     await httpRequestPage.auth.fetchOAuth2Tokens();
     return httpRequestPage.auth.getOAuth2Tokens();
+  }
+
+  /**
+   * Exports the response currently shown for the last-sent request to
+   * `filePath` via the response pane's "Preview" dropdown.
+   * @param option - The export menu item to click
+   * @param filePath - Absolute path the file should be written to
+   */
+  async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
+    await this.pageManager.responsePage.exportResponse(option, filePath);
+  }
+
+  /**
+   * Saves the large response currently shown for the last-sent request to
+   * `filePath` via the response pane's "Save To File" button.
+   * @param filePath - Absolute path the file should be written to
+   */
+  async saveResponseToFile(filePath: string): Promise<void> {
+    await this.pageManager.responsePage.saveResponseToFile(filePath);
+  }
+
+  /**
+   * Reads an export menu item's label and disabled state for the response
+   * currently shown.
+   * @param option - The export menu item to inspect
+   */
+  async getResponseExportOptionState(
+    option: ResponseExportOption,
+  ): Promise<{ text: string; disabled: boolean }> {
+    return this.pageManager.responsePage.getExportOptionState(option);
   }
 
   private async applyRequestFields(

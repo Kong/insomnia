@@ -32,6 +32,36 @@ export class FolderPage extends TabPanelPage {
   }
 
   /**
+   * Opens the folder's Environment tab and adds each variable as a row in
+   * its key/value table, confirming every name and value against the
+   * folder's on-disk document before moving on to the next row.
+   * @param variables - The folder environment's variable names and values
+   */
+  async setEnvironmentVariables(variables: Record<string, string>): Promise<void> {
+    await this.switchTab("environment");
+    const listbox = this.page.locator(this.PANE).getByRole("listbox");
+    for (const [name, value] of Object.entries(variables)) {
+      const key = await listbox.locator('[role="option"]').last().getAttribute("data-key");
+      const row = listbox.locator(`[role="option"][data-key="${key}"]`);
+      await this.setCodeMirrorValue(
+        row.getByTestId("OneLineEditor").nth(0).locator(".CodeMirror"),
+        name,
+      );
+      await this.waitForRowPersisted(["insomnia.RequestGroup.db"], (doc) => [doc.kvPairData], name);
+      await this.setCodeMirrorValue(
+        row.getByTestId("OneLineEditor").nth(1).locator(".CodeMirror"),
+        value,
+      );
+      await this.waitForRowPersisted(
+        ["insomnia.RequestGroup.db"],
+        (doc) => [doc.kvPairData],
+        name,
+        (pair) => pair.value === value,
+      );
+    }
+  }
+
+  /**
    * Also rewires the composed Auth/Scripts tab components, whose
    * persistence checks read the app's on-disk store via `insomnia`.
    * @param page - The freshly-launched app's main window
