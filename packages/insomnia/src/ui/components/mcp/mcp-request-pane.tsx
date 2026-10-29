@@ -419,11 +419,10 @@ export const McpRequestPane: FC<Props> = ({
           {isDisconnected && isModifyingHostHeader && <ModifyHostHeaderBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
-            headers={activeRequest.headers}
+            request={activeRequest}
+            onChange={patch => patchRequest(activeRequest._id, patch)}
             bulk={false}
             isDisabled={!isDisconnected}
-            requestType="McpRequest"
-            disableUserAgentHeader={activeRequest.disableUserAgentHeader}
             onDescriptionToggle={() => {
               window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestHeadersDescriptionToggled });
             }}

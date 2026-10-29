@@ -238,6 +238,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                   <RequestParametersEditor
                     key={contentType}
+                    request={activeRequest}
+                    onChange={patch => patchRequest(activeRequest._id, patch)}
                     bulk={settings.useBulkParametersEditor}
                     onDescriptionToggle={() => {
                       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsDescriptionToggled });
@@ -306,9 +308,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             <div className="flex-1 shrink-0 overflow-y-auto">
               <RequestHeadersEditor
                 bulk={settings.useBulkHeaderEditor}
-                headers={activeRequest.headers}
-                requestType="Request"
-                disableUserAgentHeader={activeRequest.disableUserAgentHeader}
+                request={activeRequest}
+                onChange={patch => patchRequest(activeRequest._id, patch)}
                 onDescriptionToggle={() => {
                   window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersDescriptionToggled });
                 }}
