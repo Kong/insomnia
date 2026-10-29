@@ -8,6 +8,7 @@ import { DEFAULT_TIMEOUT } from '../misc/constants';
 import { Collection, TestSuite, UnitTest } from '../models/collection';
 import { Environment } from '../models/environment';
 import type { EventStreamRequest } from '../models/event-stream-request';
+import type { Folder } from "../models/folder";
 import type { GitRepository } from '../models/git-repository';
 import type { GraphQLRequest } from '../models/graphql-request';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -1072,5 +1073,71 @@ export class WorkspaceFlow extends BaseFlow {
     if (node) await workspace.clickNode(node);
     await workspace.openTestsTab();
     return node;
+  }
+
+  /**
+   * Deletes the tree node matching `item` with the sidebar's Delete shortcut
+   * and confirms the dialog. Does nothing if no matching node is found.
+   * @param item - The workspace item, folder or request to delete
+   */
+  async deleteViaShortcut(
+    item:
+      | Collection
+      | McpClient
+      | Folder
+      | HttpRequest
+      | GraphQLRequest
+      | GrpcRequest
+      | EventStreamRequest
+      | SocketIORequest
+      | WebSocketRequest,
+  ): Promise<void> {
+    const node = await this.pageManager.workspacePage.findItemNode(item);
+    if (!node) return;
+    await this.pageManager.workspacePage.pressDeleteShortcut(node);
+    await this.pageManager.workspacePage.clickDelete();
+    await this.pageManager.workspacePage.waitForNodeRemoved(node);
+  }
+
+  /**
+   * Clones a Git Sync Project like `cloneGitProject(item, credentialName, repo)`, but
+   * reads the "Unknown Fields Detected" warning off the post-scan screen
+   * before confirming the clone.
+   * @param item - The Project to create (type must be ProjectType.Git)
+   * @param credentialName - The display name of the credential to use, e.g. "Custom Git Credential"
+   * @param repo - Overrides for the repo to clone; `uri` defaults to the injected `gitRepoUrl`, `branch` defaults to "master"
+   * @returns The created Project, and the warning's file list and text (both empty when the scan found no unknown fields)
+   */
+  async cloneWithScanReport(
+    item: Project,
+    credentialName: string,
+    repo?: Partial<GitRepository>,
+  ): Promise<{ project: Project; unknownFieldFiles: string[]; unknownFieldsWarningText: string }> {
+    const uri = repo?.uri ?? this.gitRepoUrl;
+    if (!uri) {
+      throw new Error(
+        'cloneWithScanReport(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one',
+      );
+    }
+    const branch = repo?.branch ?? 'master';
+
+    const { workspacePage, projectSettingsPage } = this.pageManager;
+    await workspacePage.clickNewProject();
+    await workspacePage.setNewItemName(item.name);
+    await workspacePage.setNewProjectType(item.type);
+
+    await projectSettingsPage.selectCredential(credentialName);
+    await projectSettingsPage.setRepositoryUrl(uri);
+    await projectSettingsPage.selectBranch(branch);
+    if (repo?.cloneParentDir) {
+      await projectSettingsPage.chooseCloneLocation(repo.cloneParentDir);
+    }
+    await projectSettingsPage.submitScanForFiles();
+    const unknownFieldFiles = await projectSettingsPage.getUnknownFieldFiles();
+    const unknownFieldsWarningText = await projectSettingsPage.getUnknownFieldsWarningText();
+    await projectSettingsPage.confirmClone();
+
+    const project = this.assertCreated(await this.getProject(item.name), item.name);
+    return { project, unknownFieldFiles, unknownFieldsWarningText };
   }
 }
