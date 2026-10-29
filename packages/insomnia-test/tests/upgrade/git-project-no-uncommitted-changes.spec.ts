@@ -36,7 +36,7 @@ testWithUpgrade(
 );
 
 testWithUpgrade(
-  'Verify the work created before the upgrade can be committed',
+  'Verify the work created before the upgrade cannot be committed',
   upgradePhase(UpgradePhase.After),
   async ({ user }) => {
     const { gitSyncPage, workspacePage } = user.pageManager;
