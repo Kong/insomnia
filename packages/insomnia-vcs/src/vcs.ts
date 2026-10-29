@@ -1429,7 +1429,6 @@ export class VCS {
   }
 
   async _removeBranch(branch: Branch) {
-    encodeBranchName(branch.name);
     const errMsg = VCS.validateBranchName(branch.name);
 
     if (errMsg) {
