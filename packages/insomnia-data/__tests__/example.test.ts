@@ -1,4 +1,4 @@
-import type { Example, ExamplePatch, Request } from 'insomnia-data';
+import type { Example, ExamplePatch, ExampleRequest, Request } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { v4 as uuidv4 } from 'uuid';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -467,5 +467,106 @@ describe('Example Service validated write paths', () => {
       await expect(services.example.createFromRequest('req_missing', { name: 'X' }, workspaceId))
         .rejects.toThrow('Request not found');
     });
+  });
+});
+
+describe('Request Service createFromExample', () => {
+  let workspaceId: string;
+  let requestId: string;
+
+  beforeEach(async () => {
+    await services.settings.getOrCreate();
+
+    const project = await services.project.create({
+      _id: `proj_test_${uuidv4()}`,
+      name: 'Test Project',
+    });
+    const workspace = await services.workspace.create({
+      _id: `wrk_test_${uuidv4()}`,
+      name: 'Test Workspace',
+      parentId: project._id,
+      scope: 'collection',
+    });
+    const request = (await services.request.create({
+      _id: `req_test_${uuidv4()}`,
+      name: 'Test Request',
+      parentId: workspace._id,
+      url: 'https://api.example.com/test',
+      method: 'GET',
+      metaSortKey: -1 * Date.now(),
+    })) as Request;
+    workspaceId = workspace._id;
+    requestId = request._id;
+  });
+
+  it('creates a request from the example right after its parent', async () => {
+    const example = (await services.example.create({
+      parentId: requestId,
+      name: '200 OK',
+      description: 'promoted',
+      metaSortKey: -100,
+      request: {
+        method: 'POST',
+        url: 'https://example.com/promoted',
+        parameters: [],
+        headers: [],
+        body: {},
+      } satisfies Partial<ExampleRequest>,
+    })) as Example;
+
+    // A sibling request after the parent gives the placement something to
+    // fall between: parent < created < next sibling.
+    const parentRequest = (await services.request.getById(requestId))!;
+    const nextSibling = (await services.request.create({
+      name: 'Next Request',
+      parentId: workspaceId,
+      url: 'r2.url',
+      metaSortKey: parentRequest.metaSortKey + 100,
+    })) as Request;
+
+    const created = await services.request.createFromExample(example._id, requestId);
+
+    expect(created).toMatchObject({
+      parentId: workspaceId,
+      name: '200 OK',
+      description: 'promoted',
+      method: 'POST',
+      url: 'https://example.com/promoted',
+    });
+    expect(created.metaSortKey).toBeGreaterThan(parentRequest.metaSortKey);
+    expect(created.metaSortKey).toBeLessThan(nextSibling.metaSortKey);
+  });
+
+  it('places the created request after the parent when there is no later sibling', async () => {
+    const example = (await services.example.create({
+      parentId: requestId,
+      name: '200 OK',
+      metaSortKey: -100,
+    })) as Example;
+
+    const parentRequest = (await services.request.getById(requestId))!;
+    const created = await services.request.createFromExample(example._id, requestId);
+
+    // No sibling after the parent: the fallback boundary is
+    // parent.metaSortKey + 100, halved into a midpoint (+50).
+    expect(created.metaSortKey).toBe(parentRequest.metaSortKey + 50);
+  });
+
+  it('falls back to the parent request name when the example is unnamed', async () => {
+    const example = (await services.example.create({ parentId: requestId, name: '', metaSortKey: -100 })) as Example;
+
+    const created = await services.request.createFromExample(example._id, requestId);
+
+    expect(created.name).toBe('Test Request');
+  });
+
+  it('throws when the example does not belong to the expected parent', async () => {
+    const example = (await services.example.create({ parentId: requestId, name: 'X', metaSortKey: -100 })) as Example;
+
+    await expect(services.request.createFromExample(example._id, 'req_other')).rejects.toThrow('does not belong');
+  });
+
+  it('throws when the example does not exist', async () => {
+    await expect(services.request.createFromExample('exp_missing', requestId)).rejects.toThrow('not found');
   });
 });

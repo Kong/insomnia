@@ -7,6 +7,7 @@ import type {
   ExampleRequest,
   ExampleResponse,
   ExampleSummary,
+  Request,
   WorkspaceChildren,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -58,6 +59,18 @@ export interface CreateExampleVariables {
   // Partial snapshot overriding the fields snapshotted from the parent request
   request?: Partial<ExampleRequest>;
   response?: Partial<ExampleResponse>;
+}
+
+/** Variables accepted by `useCreateRequestFromExample().mutate`. */
+export interface CreateRequestFromExampleVariables {
+  exampleId: string;
+  parentId: string;
+  // Target request's location, used for post-create navigation — never infer
+  // these from the calling component's route params (the sidebar can trigger a
+  // create for a request in a different workspace).
+  workspaceId: string;
+  projectId: string;
+  organizationId: string;
 }
 
 // The default name mirrors the HTTP reason phrases used across the app
@@ -294,6 +307,38 @@ export const useCreateExample = (): UseMutationResult<Example, Error, CreateExam
         // not the calling component's route params (the sidebar can trigger a
         // create for a request in a different workspace, and project-level
         // routes leave workspaceId undefined).
+        navigate(
+          buildResourceUrl({
+            organizationId: variables.organizationId,
+            projectId: variables.projectId,
+            workspaceId: variables.workspaceId,
+            resource: created,
+          }),
+        );
+      },
+      onError: error => showError(error),
+    },
+    queryClient,
+  );
+};
+
+/**
+ * Promote an example back into a first-class request, then navigate to the
+ * new request. The service owns the sibling sort-key placement.
+ */
+export const useCreateRequestFromExample = (): UseMutationResult<Request, Error, CreateRequestFromExampleVariables> => {
+  const queryClient = useDBQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation(
+    {
+      mutationKey: ['example', 'create-request'],
+      scope: { id: 'example' },
+      mutationFn: ({ exampleId, parentId }: CreateRequestFromExampleVariables) =>
+        services.request.createFromExample(exampleId, parentId),
+      onSuccess: (created, variables) => {
+        // The created request enters the sidebar via the DB change listener
+        // (insert events invalidate the workspace children); navigate to it.
         navigate(
           buildResourceUrl({
             organizationId: variables.organizationId,
