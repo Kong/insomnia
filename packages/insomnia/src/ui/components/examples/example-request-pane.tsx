@@ -6,8 +6,10 @@ import { Fragment } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
+import { getAuthObjectOrNull } from '~/network/authentication';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
+import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 import { BodyEditor } from '~/ui/components/editors/body/body-editor';
 import { readOnlyHttpPairs, RequestHeadersEditor } from '~/ui/components/editors/request-headers-editor';
 import { RequestParametersEditor } from '~/ui/components/editors/request-parameters-editor';
@@ -117,6 +119,18 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
           </Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+            id="auth"
+          >
+            <span>Auth</span>
+            {getAuthObjectOrNull(request.authentication)?.type &&
+              getAuthObjectOrNull(request.authentication)?.type !== 'none' && (
+                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
+                  <span className="h-2 w-2 rounded bg-green-500" />
+                </span>
+              )}
+          </Tab>
+          <Tab
+            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
             <span>Headers</span>
@@ -193,6 +207,9 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col" id="content-type">
           <BodyEditor key={requestId} request={request} environmentId={environmentId} />
+        </TabPanel>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
+          <AuthWrapper authentication={request.authentication} />
         </TabPanel>
         <TabPanel className="relative flex w-full flex-1 flex-col overflow-hidden" id="headers">
           <div className="flex-1 shrink-0 overflow-y-auto">
