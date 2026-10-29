@@ -41,6 +41,8 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
   });
 
   const skippedCount = skipped.reduce((total, outcome) => total + outcome.result.errors.length, 0);
+  // Nothing written at all is a failure, not a completion with a caveat.
+  const nothingWritten = skipped.every(({ result }) => result.yaml === '');
 
   // The YAML itself is left out — it can be megabytes and the toast already carries the user-facing report.
   console.error(
@@ -60,7 +62,7 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
     {
       icon: 'circle-exclamation',
       status: 'error',
-      title: `Export completed with ${skippedCount} skipped ${skippedCount === 1 ? 'entity' : 'entities'}`,
+      title: nothingWritten ? 'Export failed, nothing was written' : `Export completed with ${skippedCount} skipped ${skippedCount === 1 ? 'entity' : 'entities'}`,
       description: (
         <div className="flex flex-col gap-1">
           {lines.slice(0, MAX_LISTED_SKIPPED_ENTITIES).map(({ key, line }) => (

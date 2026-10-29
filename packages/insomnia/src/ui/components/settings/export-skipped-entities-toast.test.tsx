@@ -58,6 +58,7 @@ describe('showExportSkippedEntitiesToast', () => {
     ]);
 
     const description = renderedDescription();
+    expect(vi.mocked(showToast).mock.calls[0][0].title).toBe('Export failed, nothing was written');
     expect(description).toContain('Broken Workspace: export failed, no file was written');
     expect(description).toContain('Broken Workspace: Broken Request (Request) — expected string, received null');
   });
