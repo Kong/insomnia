@@ -604,7 +604,8 @@ export class VCS {
   }) {
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
-    const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
+    // Fixed temp name: `<localBranch.name>.hidden` can exceed the length cap or hit a reserved device name that the local branch itself passes
+    const tmpBranchForRemote = await this.customFetch(PULL_TMP_BRANCH_NAME, localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
     const delta = (await this._merge(
@@ -813,8 +814,8 @@ export class VCS {
 
       const conflictResolutions = await this.handleAnyConflicts(
         conflictsWithContent,
-        otherBranchName.includes('.hidden')
-          ? { ours: `${trunkBranchName} local`, theirs: `${otherBranchName.replace('.hidden', '')} remote` }
+        otherBranchName === PULL_TMP_BRANCH_NAME
+          ? { ours: `${trunkBranchName} local`, theirs: `${trunkBranchName} remote` }
           : { ours: trunkBranchName, theirs: otherBranchName },
         '',
       );
@@ -1527,6 +1528,8 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
 }
 
 const MAX_BRANCH_NAME_LENGTH = 200;
+
+const PULL_TMP_BRANCH_NAME = 'pull-tmp.hidden';
 
 function encodeBranchName(branchName: string) {
   // Branch names can come from the sync server; never let one influence the path beyond its own file name
