@@ -8,14 +8,14 @@ import { configureStore } from '../store/current-store';
 import FileSystemDriver from '../store/drivers/file-system-driver';
 import { VCS } from '../vcs';
 
-// The sync server accepts branch names up to 256 bytes. The on-disk file is `<name>.json` (+5 bytes,
+// Branch names can be up to 256 bytes. The on-disk file is `<name>.json` (+5 bytes,
 // so any name over 250 bytes cannot be stored at all) and the atomic-write temp file is
 // `<name>.json.<uuid>.tmp` (+46 bytes, so names over ~209 bytes fail at write time). A fetch of such a
 // branch must not leave snapshots stored without the branch that references them.
 
 const REMOTE_SNAPSHOT_ID = 'b'.repeat(40);
 
-describe('customFetch with server-accepted branch names stays all-or-nothing', () => {
+describe('customFetch with long branch names stays all-or-nothing', () => {
   let root: string;
   let vcs: VCS;
 
@@ -65,14 +65,14 @@ describe('customFetch with server-accepted branch names stays all-or-nothing', (
     return { fetchError, snapshotStored, branchStored };
   }
 
-  it('control: a short server-accepted name stores the snapshot and the branch together', async () => {
+  it('control: a short name stores the snapshot and the branch together', async () => {
     const result = await fetchAndReport('feature/short');
     expect(result.fetchError).toBeNull();
     expect(result.snapshotStored).toBe(true);
     expect(result.branchStored).toBe(true);
   });
 
-  it('256-byte server-accepted name: snapshot is not stored without its branch (no half-applied pull)', async () => {
+  it('256-byte name: snapshot is not stored without its branch (no half-applied pull)', async () => {
     const longName = 'a'.repeat(256);
     const result = await fetchAndReport(longName);
     // Whatever the fix (accept the name, or reject it before any write), a failed fetch must leave

@@ -1,6 +1,6 @@
 /**
- * A project member (or a compromised server) can publish a blob whose decrypted doc carries any `_id`,
- * `parentId`, `type` or `modified`: the server never sees blob content. Only the first pull validates
+ * A project member (or a compromised sync service) can publish a blob whose decrypted doc carries any `_id`,
+ * `parentId`, `type` or `modified`: blob content is encrypted end to end. Only the first pull validates
  * docs (pullBackendProject -> assertSafeSyncedDoc). The routine pull route applies the VCS delta straight
  * into the database, so the hostile doc must be refused there or upstream of it.
  *
@@ -21,15 +21,15 @@ const LOCAL_BLOB_ID = 'c'.repeat(40);
 const SNAPSHOT_ID = 'd'.repeat(40);
 const VICTIM_REQUEST_ID = 'req_victim';
 
-// `key` is the sync state key (server-visible, validated against ^[A-Za-z0-9_-]{1,255}$).
-// `doc` is the encrypted content (server-invisible): every field is attacker-controlled.
+// `key` is the sync state key (visible to the sync service, validated against ^[A-Za-z0-9_-]{1,255}$).
+// `doc` is the encrypted content (encrypted): every field is attacker-controlled.
 // Blob plaintext is the gzip form the store's read hook expects (see store/index.ts compress hook).
 const hostileBlobDoc = async (doc: Record<string, unknown>) => {
   const gzipped = new Blob([JSON.stringify(doc)]).stream().pipeThrough(new CompressionStream('gzip'));
   return Buffer.from(await new Response(gzipped).arrayBuffer());
 };
 
-describe('insomnia-sync pull route with server-accepted hostile blob content', () => {
+describe('insomnia-sync pull route with hostile blob content', () => {
   let projectId: string;
   let workspaceId: string;
   let vcs: VCS;

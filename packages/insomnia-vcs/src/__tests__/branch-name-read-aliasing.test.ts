@@ -8,13 +8,13 @@ import { configureStore } from '../store/current-store';
 import FileSystemDriver from '../store/drivers/file-system-driver';
 import { VCS } from '../vcs';
 
-// `a/b` is stored as `branches/a~b.json`. The server allows `~` in branch names, so `a~b` is a
-// server-accepted name. Read and remove paths use only encodeBranchName (no validator), so they must
+// `a/b` is stored as `branches/a~b.json`. `a~b` is a
+// name that is not validated on these paths. Read and remove paths use only encodeBranchName (no validator), so they must
 // not resolve `a~b` to the file of `a/b`. Writes are unaffected because validateBranchName rejects `~`.
 
 const now = () => new Date();
 
-describe('branch read/remove paths for server-accepted names that alias another branch', () => {
+describe('branch read/remove paths for names that alias another branch', () => {
   let root: string;
   let storeDir: string;
   let vcs: VCS;

@@ -10,7 +10,7 @@ import { VCS } from '../vcs';
 
 const VALID_BLOB_ID = 'a'.repeat(40);
 
-// Ids that a malicious sync server could return. None may cause a write outside the store.
+// Ids that a malicious sync peer could supply. None may cause a write outside the store.
 const maliciousBlobIds: Record<string, string> = {
   'parent traversal': 'zz/../../../../../../ESCAPED_PROOF.txt',
   'parent traversal without prefix': '../../../../../../ESCAPED_PROOF.txt',

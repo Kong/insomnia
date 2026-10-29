@@ -8,7 +8,7 @@ import { configureStore } from '../store/current-store';
 import FileSystemDriver from '../store/drivers/file-system-driver';
 import { VCS } from '../vcs';
 
-// Branch names can arrive from the sync server. Writes are already restricted by
+// Branch names can arrive from a sync peer. Writes are already restricted by
 // VCS.validateBranchName; lookups and removals must be just as strict.
 const hostileBranchNames: Record<string, string> = {
   'parent traversal': '../../../../ESCAPED_PROOF',
