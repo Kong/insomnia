@@ -1,36 +1,46 @@
+import { useMutationState } from '@tanstack/react-query';
 import { models, services } from 'insomnia-data';
+import { useEffect } from 'react';
 import type { LoaderFunctionArgs } from 'react-router';
-import { href, redirect, useParams } from 'react-router';
+import { href, redirect, useNavigate, useParams } from 'react-router';
 
 import { organizationDataQuery } from '~/common/app-data';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
+import { useRootLoaderData } from '~/root';
 import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
-import { MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
+import { DelayedLoadingIndicator, MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
+import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-import { useDBQuery } from '~/ui/hooks/use-query';
+import { useDBMutation, useDBQuery } from '~/ui/hooks/use-query';
+import { useStartupSyncStatus } from '~/ui/hooks/use-startup-sync';
 
-const shouldAutoCreateInitialProject = async ({ accountId }: { accountId: string | null | undefined }) => {
+const isFirstAccountLanding = (accountId: string | null | undefined) => {
   if (!accountId) {
     return false;
   }
 
-  const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
-  const legacyFirstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
+  try {
+    const firstAccountLandingKey = `firstAccountLandingHandled:${accountId}`;
+    const legacyFirstPersonalOrgLandingKey = `firstPersonalOrgLandingHandled:${accountId}`;
 
-  return (
-    !window.localStorage.getItem(firstAccountLandingKey) &&
-    !window.localStorage.getItem(legacyFirstPersonalOrgLandingKey)
-  );
+    return (
+      !window.localStorage.getItem(firstAccountLandingKey) &&
+      !window.localStorage.getItem(legacyFirstPersonalOrgLandingKey)
+    );
+  } catch (error) {
+    console.warn('[project] Failed to evaluate first account landing state', error);
+    return false;
+  }
 };
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId, accountId } = await services.userSession.get();
+  const { id: sessionId } = await services.userSession.get();
 
   if (!sessionId) {
     await logout();
@@ -46,37 +56,63 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     return redirect(`/organization/${organizationId}/project/${projects[0]._id}`);
   }
 
-  let isFirstAccountLanding = false;
-
-  try {
-    isFirstAccountLanding = await shouldAutoCreateInitialProject({ accountId });
-  } catch (error) {
-    console.warn('[project] Failed to evaluate first account landing state', error);
-  }
-
-  if (isFirstAccountLanding) {
-    try {
-      const project = await services.project.create({
-        name: 'Drafts',
-        parentId: organizationId,
-      });
-
-      await services.workspace.create({
-        name: 'My first collection',
-        scope: 'collection',
-        parentId: project._id,
-      });
-
-      return redirect(`/organization/${organizationId}/project/${project._id}?isExpanded=true`);
-    } catch (error) {
-      console.warn('[project] Failed to auto-create initial local project', error);
-    }
-  }
-
-  // Reaching here means the organization has no projects and none was auto-created, so there is
-  // nothing to hand the component — it renders the same empty view either way.
+  // Reaching here means the organization has no projects locally. Its team projects may still be
+  // syncing in the background; the component waits for that before deciding anything.
   return null;
 }
+
+/**
+ * Creates the "Drafts" project with a first collection when an account lands for the first time in
+ * an organization that has no projects, and opens it. Waits for the organization's startup sync to
+ * succeed, as its team projects may not have arrived yet, and then checks the database rather than
+ * the cache, which may not have heard about the synced projects yet. Once per organization and
+ * session, like the startup sync.
+ * Returns whether the empty view should keep waiting (the creation is pending or about to start).
+ */
+function useCreateInitialProject(organizationId: string, isSynced: boolean) {
+  const navigate = useNavigate();
+  const queryClient = useDBQueryClient();
+  const { userSession } = useRootLoaderData()!;
+  const shouldCreate = isSynced && isFirstAccountLanding(userSession.accountId);
+  const mutationKey = createInitialProjectMutationKey(organizationId);
+  const { mutate } = useDBMutation({
+    mutationKey,
+    mutationFn: async () => {
+      if ((await services.project.count({ parentId: organizationId })) > 0) {
+        return null;
+      }
+      const project = await services.project.create({ name: 'Drafts', parentId: organizationId });
+      await services.workspace.create({ name: 'My first collection', scope: 'collection', parentId: project._id });
+      return project;
+    },
+    onSuccess: project => {
+      if (project) {
+        navigate(`/organization/${organizationId}/project/${project._id}?isExpanded=true`);
+      }
+    },
+    onError: error => console.warn('[project] Failed to auto-create initial local project', error),
+    gcTime: Infinity,
+  });
+  // From the mutation cache, for the same StrictMode reason as `useStartupSyncStatus`.
+  const statuses = useMutationState(
+    { filters: { mutationKey, exact: true }, select: mutation => mutation.state.status },
+    queryClient,
+  );
+  const status = statuses.at(-1) ?? 'idle';
+
+  useEffect(() => {
+    const hasRun = queryClient
+      .getMutationCache()
+      .find({ mutationKey: createInitialProjectMutationKey(organizationId), exact: true });
+    if (shouldCreate && !hasRun) {
+      mutate();
+    }
+  }, [mutate, organizationId, queryClient, shouldCreate]);
+
+  return shouldCreate && (status === 'idle' || status === 'pending');
+}
+
+const createInitialProjectMutationKey = (organizationId: string) => ['create-initial-project', organizationId];
 
 /**
  * Default pane when no project is selected — typically an organization with no projects at all.
@@ -99,10 +135,16 @@ const Component = () => {
 
   const storageRules = useOrganizationStorageRule(organizationId);
   const { data: organizationData } = useDBQuery(organizationDataQuery(organizationId));
+  // A failed sync shows the empty view; the sync indicator in the status bar offers the retry.
+  const syncStatus = useStartupSyncStatus(organizationId);
+  const isSyncing = syncStatus === 'pending';
+  const isCreatingInitialProject = useCreateInitialProject(organizationId, syncStatus === 'success');
 
   return (
     <ErrorBoundary>
-      {organizationData && organizationData.projects.length > 0 ? (
+      {isSyncing || isCreatingInitialProject ? (
+        <DelayedLoadingIndicator />
+      ) : organizationData && organizationData.projects.length > 0 ? (
         <MissingEntityRedirect
           queryOptions={organizationDataQuery(organizationId)}
           getRedirectTo={() => href('/organization/:organizationId', { organizationId })}

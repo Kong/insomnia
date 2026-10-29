@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { type QueryStatus, queryOptions } from '@tanstack/react-query';
 import type { Organization } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { useCallback } from 'react';
@@ -66,6 +66,15 @@ export function useStartupSync(organizationId: string) {
     status: isFetching ? 'pending' : isError ? 'error' : 'idle',
     retry,
   } as const;
+}
+
+/**
+ * The status of the organization's startup sync, `pending` until its first run settles. Reading it
+ * also starts the run when none has started yet, so a child route can rely on it before the
+ * organization layout has rendered.
+ */
+export function useStartupSyncStatus(organizationId: string): QueryStatus {
+  return useServerQuery(startupSyncQuery(organizationId)).status;
 }
 
 /** Syncs an organization's team projects, e.g. when another member changes them. */
