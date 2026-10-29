@@ -192,8 +192,15 @@ app.post('/mcp-list/:key', (req, res) => {
           ? (script.pages[params?.cursor ?? ''] ?? { result: EMPTY_LISTS[method] })
           : script;
     if (method === 'tools/list' && config?.serverRequestReusingToolsListId) {
-      res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' });
+      res.writeHead(200, {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-cache',
+        'x-content-type-options': 'nosniff',
+      });
+      // SSE (not HTML) response with JSON-serialized payloads; test-only mock server
+      // nosemgrep: javascript.express.security.audit.xss.direct-response-write.direct-response-write
       res.write(`event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id, ...reply })}\n\n`);
+      // nosemgrep: javascript.express.security.audit.xss.direct-response-write.direct-response-write
       res.write(`event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id, method: 'roots/list' })}\n\n`);
       res.end();
       return;
