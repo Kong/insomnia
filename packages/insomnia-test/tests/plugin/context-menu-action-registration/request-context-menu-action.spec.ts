@@ -2,10 +2,11 @@ import * as fs from 'node:fs';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../../enums/http-method';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, HTTP_SERVER, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from '../../../misc/fixtures';
 import { Collection } from '../../../models/collection';
 import type { HttpRequest } from '../../../models/http-request';
 import { Project } from '../../../models/project';
@@ -25,8 +26,8 @@ test(
     fs.copyFileSync(path.join(__dirname, 'plugin-main.js'), path.join(pluginDir, 'main.js'));
     await preferencesPage.reloadPlugins();
 
-    const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-    const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+    const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+    const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
     const requestName = faker.string.alphanumeric(10);
     await httpRequestFlow.create(collection, {
       name: requestName,

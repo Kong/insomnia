@@ -1,16 +1,17 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../../../enums/project-types";
-import { expect, test } from "../../../../../misc/fixtures";
+import { test } from "../../../../../misc/fixtures";
 import { Project } from "../../../../../models/project";
 
 test("Import OpenAPI Spec by File", async ({ user }) => {
   const { importFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -25,7 +26,7 @@ test("Import OpenAPI Spec by YAML File", async ({ user }) => {
   const { importFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

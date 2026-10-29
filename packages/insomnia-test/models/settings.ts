@@ -70,6 +70,7 @@ export type SettingsInit = Partial<
     | "httpsProxy"
     | "noProxy"
     | "sidebarFocusForCollections"
+    | "hideSecretValuesInPreviewAndConsole"
   >
 > & {
   /**
@@ -78,11 +79,6 @@ export type SettingsInit = Partial<
    * explicitly `null`; leave AI backend state untouched when `undefined`.
    */
   aiUrlBackend?: AiUrlBackendSettings | null;
-  /**
-   * AI Settings' "Smart Commits" switch. Only switchable while an AI
-   * backend is active, so it is applied after `aiUrlBackend` in the same call.
-   */
-  aiSmartCommits?: boolean;
   /**
    * Cloud (vault) service credentials to add via Preferences ->
    * Credentials, in order. Not an `AppSettings` field itself — a cloud
@@ -108,9 +104,9 @@ export class Settings implements SettingsInit {
   httpsProxy?: string;
   noProxy?: string;
   sidebarFocusForCollections?: boolean;
+  hideSecretValuesInPreviewAndConsole?: boolean;
   showLegacyUnitTests?: boolean;
   aiUrlBackend?: AiUrlBackendSettings | null;
-  aiSmartCommits?: boolean;
   cloudCredentials?: CloudCredential[];
 
   constructor(init: SettingsInit = {}) {
@@ -124,9 +120,12 @@ export class Settings implements SettingsInit {
     this.httpsProxy = init.httpsProxy;
     this.noProxy = init.noProxy;
     this.sidebarFocusForCollections = init.sidebarFocusForCollections;
+    this.hideSecretValuesInPreviewAndConsole =
+      init.hideSecretValuesInPreviewAndConsole;
     this.showLegacyUnitTests = init.showLegacyUnitTests;
     this.aiUrlBackend = init.aiUrlBackend;
-    this.aiSmartCommits = init.aiSmartCommits;
     this.cloudCredentials = init.cloudCredentials;
   }
+
+  aiSmartCommits?: boolean;
 }

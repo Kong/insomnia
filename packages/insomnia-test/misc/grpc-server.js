@@ -1,13 +1,12 @@
 #!/usr/bin/env node
+"use strict";
 
-import fs from "node:fs";
-import path from "node:path";
-
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import { ReflectionService } from "@grpc/reflection";
-
-import { certPath } from "./certs";
+const fs = require("node:fs");
+const path = require("node:path");
+const grpc = require("@grpc/grpc-js");
+const protoLoader = require("@grpc/proto-loader");
+const { ReflectionService } = require("@grpc/reflection");
+const { certPath } = require("./certs");
 
 const PROTO_PATH = path.join(__dirname, "protos", "hello.proto");
 
@@ -34,27 +33,15 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   oneofs: true,
 });
 
-interface HelloMessage {
-  greeting?: string;
-}
-
-interface HelloReply {
-  reply: string;
-}
-
-const helloProto = grpc.loadPackageDefinition(packageDefinition)
-  .hello as grpc.GrpcObject;
+const helloProto = grpc.loadPackageDefinition(packageDefinition).hello;
 
 const CUSTOM_HEADER = "x-test-header";
 const REPLY_DELAY_HEADER = "x-reply-delay-ms";
 const DEFAULT_REPLY_DELAY_MS = 50;
 
 const server = new grpc.Server();
-server.addService((helloProto.HelloService as grpc.ServiceClientConstructor).service, {
-  sayHello(
-    call: grpc.ServerUnaryCall<HelloMessage, HelloReply>,
-    callback: grpc.sendUnaryData<HelloReply>,
-  ) {
+server.addService(helloProto.HelloService.service, {
+  sayHello(call, callback) {
     if (!call.request.greeting) {
       callback({
         code: grpc.status.INVALID_ARGUMENT,
@@ -68,10 +55,10 @@ server.addService((helloProto.HelloService as grpc.ServiceClientConstructor).ser
       : `hello ${call.request.greeting}`;
     callback(null, { reply });
   },
-  lotsOfReplies(call: grpc.ServerWritableStream<HelloMessage, HelloReply>) {
+  lotsOfReplies(call) {
     const names = (call.request.greeting || "")
       .split(",")
-      .map((name: string) => name.trim())
+      .map((name) => name.trim())
       .filter(Boolean);
     const queue = names.length ? names : [""];
     const delayMs =
@@ -89,20 +76,17 @@ server.addService((helloProto.HelloService as grpc.ServiceClientConstructor).ser
     }, delayMs);
     call.on("cancelled", () => clearInterval(interval));
   },
-  lotsOfGreetings(
-    call: grpc.ServerReadableStream<HelloMessage, HelloReply>,
-    callback: grpc.sendUnaryData<HelloReply>,
-  ) {
-    const greetings: string[] = [];
-    call.on("data", (chunk: HelloMessage) => {
+  lotsOfGreetings(call, callback) {
+    const greetings = [];
+    call.on("data", (chunk) => {
       if (chunk.greeting) greetings.push(chunk.greeting);
     });
     call.on("end", () =>
       callback(null, { reply: `hello ${greetings.join(", ")}` }),
     );
   },
-  bidiHello(call: grpc.ServerDuplexStream<HelloMessage, HelloReply>) {
-    call.on("data", (chunk: HelloMessage) => {
+  bidiHello(call) {
+    call.on("data", (chunk) => {
       call.write({ reply: `hello ${chunk.greeting || ""}` });
     });
     call.on("end", () => call.end());
@@ -116,7 +100,7 @@ const SECURE_PORT = process.env.GRPC_SECURE_PORT || 9001;
 const MTLS_PORT = process.env.GRPC_MTLS_PORT || 9002;
 
 server.bindAsync(
-  `0.0.0.0:${PORT}`,
+  `127.0.0.1:${PORT}`,
   grpc.ServerCredentials.createInsecure(),
   (err) => {
     if (err) {
@@ -127,7 +111,7 @@ server.bindAsync(
   },
 );
 server.bindAsync(
-  `0.0.0.0:${SECURE_PORT}`,
+  `127.0.0.1:${SECURE_PORT}`,
   grpc.ServerCredentials.createSsl(null, [
     { private_key: TLS_KEY, cert_chain: TLS_CERT },
   ]),
@@ -142,7 +126,7 @@ server.bindAsync(
   },
 );
 server.bindAsync(
-  `0.0.0.0:${MTLS_PORT}`,
+  `127.0.0.1:${MTLS_PORT}`,
   grpc.ServerCredentials.createSsl(
     MTLS_CA,
     [{ private_key: MTLS_KEY, cert_chain: MTLS_CERT }],

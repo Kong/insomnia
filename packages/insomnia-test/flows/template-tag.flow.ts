@@ -1,3 +1,6 @@
+import { TreeNodeType } from "../enums/tree-node-types";
+import type { HttpRequest } from "../models/http-request";
+import type { ResponseView } from "../models/response";
 import type { TemplateTag, TemplateTagName } from "../models/template-tag";
 import { BaseFlow } from "./base.flow";
 
@@ -78,5 +81,49 @@ export class TemplateTagFlow extends BaseFlow {
       input: target.input,
       preview,
     };
+  }
+
+  /**
+   * Opens a `prompt` tag already rendered on the current request's page,
+   * clicks "Clear" to wipe the value cached under its storage key, and
+   * confirms via "Done".
+   * @param template - The prompt tag's raw text, used to find and open it
+   */
+  async clearCachedPrompt(template: string): Promise<void> {
+    const templateTag = this.pageManager.templateTagPage;
+    const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
+    await templateTag.openTagByTemplate(tag);
+    await templateTag.clearCachedValue();
+    await templateTag.done();
+  }
+
+  /**
+   * Sends `request` (whose body holds a `prompt` tag with no cached
+   * value), answers the resulting prompt dialog, and reads back the
+   * response.
+   * @param request - The request to send
+   * @param label - The prompt tag's title text shown in its dialog
+   * @param value - The value to submit in the prompt
+   * @returns The prompt input's `type` attribute and the response received
+   */
+  async sendAnsweringPrompt(
+    request: HttpRequest,
+    label: string,
+    value: string,
+  ): Promise<{ promptInputType: string; response: ResponseView }> {
+    const workspace = this.pageManager.workspacePage;
+    const httpRequestPage = this.pageManager.httpRequestPage;
+    const templateTag = this.pageManager.templateTagPage;
+    const responsePage = this.pageManager.responsePage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await httpRequestPage.navigate();
+
+    await templateTag.clickSend();
+    const promptInputType = await templateTag.answerPrompt(label, value);
+    await responsePage.navigate();
+
+    return { promptInputType, response: await responsePage.get() };
   }
 }

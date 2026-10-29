@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { McpPrimitiveType } from "../../enums/mcp-capability";
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 import { scriptMcpListServer } from "../../misc/mcp-list-server";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
@@ -27,7 +28,7 @@ test("Verify the Selected Same-Name Tool Stays Selected When a Reload Prepends A
   const url = await scriptMcpListServer(key, {
     "tools/list": { result: { tools: [alphaTool, betaTool] } },
   });
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const client = await mcpClientFlow.create(

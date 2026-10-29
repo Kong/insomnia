@@ -1,11 +1,7 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  setKonnectEntitlement,
-  test,
-} from '../../misc/fixtures';
+import { DEFAULT_TIMEOUT, setKonnectEntitlement, test } from '../../misc/fixtures';
 
 test.beforeAll(async () => {
   await setKonnectEntitlement(true);

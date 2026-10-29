@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { CurlCommand } from "../../models/curl-command";
 import type { HttpRequest } from "../../models/http-request";
@@ -16,10 +17,10 @@ const command = `curl -X QUERY "${url}" -H "Content-Type: application/json" -d '
 test("Verify sending a QUERY request with a body", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

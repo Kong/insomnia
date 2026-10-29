@@ -3,10 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile,test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from '../../../models/project';
 
 test('Verify vault-backed secrets are listed by name and never shown in the clear in an environment card', async ({ user }) => {
@@ -45,7 +46,7 @@ test('Verify vault-backed secrets are listed by name and never shown in the clea
   }
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-visual-diff-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   fs.writeFileSync(path.join(cloneDir, fileName), buildEnvironmentFile(environmentName, buildData('new', newSecret), id));
   await expect.poll(async () => gitSyncPage.hasUncommittedChanges(), { timeout: DEFAULT_TIMEOUT }).toBe(true);

@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../../enums/http-method';
-import { DEFAULT_TIMEOUT, expect, MOCK_BIN_SERVER, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, MOCK_BIN_SERVER, test } from "../../../misc/fixtures";
 import { MockServer } from '../../../models/mock-server';
 import { commitEachChange, NO_ROW_WARNINGS, readRowWarnings } from './helpers';
 

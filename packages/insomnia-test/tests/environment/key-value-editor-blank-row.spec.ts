@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import type {
   EnvironmentKvPairData} from "../../models/environment";
 import {
@@ -15,7 +16,7 @@ test("Verify Environment Table Editor's Blank Row Is Not Persisted And Deleting 
   const { environmentFlow, workspaceFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -40,7 +41,7 @@ test("Verify Environment Table Editor's Blank Row Is Not Persisted And Deleting 
     type: EnvironmentKvPairDataType.STRING,
     enabled: true,
   } satisfies EnvironmentKvPairData;
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [varA, varB, varC],
   });

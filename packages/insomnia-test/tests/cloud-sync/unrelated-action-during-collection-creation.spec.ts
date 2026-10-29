@@ -2,17 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import {
-  expect,
-  getCloudSyncGraphQLRequestLog,
-  MOCK_API_SERVER,
-  resetCloudSyncState,
-  SESSION_ID,
-  setCloudSyncGraphQLDelay,
-  test,
-} from "../../misc/fixtures";
+import { getCloudSyncGraphQLRequestLog, MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, setCloudSyncGraphQLDelay, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
+import type { Environment } from "../../models/environment";
 
 test.afterAll(async () => {
   await setCloudSyncGraphQLDelay(0);
@@ -31,7 +25,9 @@ test("Verify an unrelated action during collection creation is equally safe", as
   const { cloudSyncPage } = user.pageManager;
 
   await cloudSyncFlow.fetch("My Environment");
-  const workspaceX = await workspaceFlow.get({ name: "My Environment" });
+  const workspaceX = await workspaceFlow.get<Environment>({
+    name: "My Environment",
+  });
   const project = await workspaceFlow.getProject({
     name: "Personal Workspace",
   });
@@ -100,9 +96,9 @@ test("Verify an unrelated action during collection creation is equally safe", as
   await cloudSyncPage.clickPull();
 
   const renamedXName = `X ${faker.string.alphanumeric(8)}`;
-  await workspaceFlow.rename(workspaceX!, renamedXName);
+  await workspaceFlow.renameEnvironment(workspaceX!, renamedXName);
   const collectionYName = `Y ${faker.string.alphanumeric(8)}`;
-  const collectionY = await workspaceFlow.create(
+  const collectionY = await workspaceFlow.createCollection(
     project!,
     new Collection(collectionYName),
   );

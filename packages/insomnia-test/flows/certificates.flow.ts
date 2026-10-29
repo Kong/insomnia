@@ -1,4 +1,4 @@
-import type { ClientCertificate } from "../models/certificate";
+import type { ClientCertificate } from "../models/client-certificate";
 import type { Collection } from "../models/collection";
 import type { EventStreamRequest } from "../models/event-stream-request";
 import type { GraphQLRequest } from "../models/graphql-request";
@@ -75,6 +75,12 @@ export class CertificatesFlow extends BaseFlow {
     await certificatesPage.close();
   }
 
+  private async openTarget(item: CertificateTarget): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(item);
+    await workspace.clickNode(node);
+  }
+
   /**
    * Toggles `item`'s workspace-wide CA Certificate's Enabled/Disabled
    * state, opening the "Manage Certificates" dialog from `item`'s location.
@@ -109,11 +115,5 @@ export class CertificatesFlow extends BaseFlow {
     await certificatesPage.open();
     await certificatesPage.setSslValidationEnabled(enabled);
     await certificatesPage.close();
-  }
-
-  private async openTarget(item: CertificateTarget): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(item);
-    await workspace.clickNode(node);
   }
 }

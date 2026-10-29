@@ -2,9 +2,10 @@ import * as crypto from "node:crypto";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import {
   ENVIRONMENT_TYPE,
@@ -34,14 +35,14 @@ testWithVaultKey(
     const { environmentFlow, httpRequestFlow, importFlow, workspaceFlow } =
       user.flowManager;
 
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.createProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Local),
     );
-    const globalEnvironment = await environmentFlow.create(project, {
+    const globalEnvironment = await environmentFlow.createBaseEnvironment(project, {
       name: faker.string.alphanumeric(10),
       type: ENVIRONMENT_TYPE,
     });
-    const secretEnvironment = await environmentFlow.create(globalEnvironment, {
+    const secretEnvironment = await environmentFlow.createSubEnvironment(globalEnvironment, {
       name: faker.string.alphanumeric(10),
       isPrivate: true,
       kvPairData: [

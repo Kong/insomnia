@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection, Info, Specification } from "../../models/collection";
 import { Project } from "../../models/project";
 
@@ -11,7 +12,7 @@ test("Verify creating, renaming, duplicating, and deleting collections", async (
   const { workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const specPath = `/${faker.word.sample()}`;
@@ -26,35 +27,35 @@ test("Verify creating, renaming, duplicating, and deleting collections", async (
       },
     },
   );
-  const collectionA = await workspaceFlow.create(
+  const collectionA = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10), spec),
   );
-  const collectionB = await workspaceFlow.create(
+  const collectionB = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
   const renamedCollectionAName = faker.string.alphanumeric(10);
-  const renamedCollectionA = (await workspaceFlow.rename(
+  const renamedCollectionA = (await workspaceFlow.renameCollection(
     collectionA,
     renamedCollectionAName,
   )) as Collection;
 
   const renamedCollectionBName = faker.string.alphanumeric(10);
-  const renamedCollectionB = (await workspaceFlow.rename(
+  const renamedCollectionB = (await workspaceFlow.renameCollection(
     collectionB,
     renamedCollectionBName,
   )) as Collection;
 
   const duplicatedCollectionAName = faker.string.alphanumeric(10);
-  const duplicatedCollectionA = (await workspaceFlow.duplicate(
+  const duplicatedCollectionA = (await workspaceFlow.duplicateCollection(
     renamedCollectionA,
     duplicatedCollectionAName,
   )) as Collection;
 
   const duplicatedCollectionBName = faker.string.alphanumeric(10);
-  const duplicatedCollectionB = (await workspaceFlow.duplicate(
+  const duplicatedCollectionB = (await workspaceFlow.duplicateCollection(
     renamedCollectionB,
     duplicatedCollectionBName,
   )) as Collection;

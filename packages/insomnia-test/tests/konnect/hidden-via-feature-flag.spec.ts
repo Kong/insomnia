@@ -1,4 +1,6 @@
-import { expect, setKonnectEntitlement, test } from "../../misc/fixtures";
+import { expect } from "@playwright/test";
+
+import { setKonnectEntitlement, test } from "../../misc/fixtures";
 
 test.afterEach(async () => {
   await setKonnectEntitlement(false);

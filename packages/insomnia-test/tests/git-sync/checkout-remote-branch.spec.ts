@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { buildCollectionFile, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../misc/git-fixtures';
+import { buildCollectionFile, GIT_CREDENTIAL, pushServerFile, test } from '../../misc/git-fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
@@ -10,7 +11,7 @@ test('Verify a branch that exists only on the remote is listed after Fetch and c
   const { gitSyncPage, workspacePage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const remoteBranch = faker.string.alpha(10).toLowerCase();
   const remoteCollection = new Collection(faker.string.alpha(10));
   const fileName = faker.string.alpha(10).toLowerCase();

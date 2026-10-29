@@ -1,13 +1,11 @@
 #!/usr/bin/env node
+"use strict";
 
-import fs from "node:fs";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { createServer as createHttpsServer } from "node:https";
-
-import type WebSocket from "ws";
-import { WebSocketServer } from "ws";
-
-import { certPath } from "./certs";
+const { createServer } = require("node:http");
+const { createServer: createHttpsServer } = require("node:https");
+const fs = require("node:fs");
+const { WebSocketServer } = require("ws");
+const { certPath } = require("./certs");
 
 const PORT = process.env.WS_PORT || 4040;
 const SECURE_PORT = process.env.WS_SECURE_PORT || 4041;
@@ -17,23 +15,23 @@ const HTTPS_OPTIONS = {
   cert: fs.readFileSync(certPath("localhost-cert.pem")),
 };
 
-function handleRequest(_req: IncomingMessage, res: ServerResponse) {
+function handleRequest(req, res) {
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("ws-echo-server ok");
 }
 
-function handleConnection(ws: WebSocket, req: IncomingMessage) {
+function handleConnection(ws, req) {
   const delayMs = Number(req.headers["x-reply-delay-ms"]) || 0;
 
-  const sendAfterDelay = (data: WebSocket.RawData | string, opts?: { binary: boolean }) => {
+  const sendAfterDelay = (data, opts) => {
     setTimeout(() => {
-      if (ws.readyState === ws.OPEN) ws.send(data, opts ?? {});
+      if (ws.readyState === ws.OPEN) ws.send(data, opts);
     }, delayMs);
   };
 
   sendAfterDelay("Request served by insomnia-mock-ws-echo-server");
 
-  ws.on("message", (data: WebSocket.RawData, isBinary: boolean) => {
+  ws.on("message", (data, isBinary) => {
     sendAfterDelay(data, { binary: isBinary });
   });
 }
@@ -47,12 +45,12 @@ wss.on("connection", handleConnection);
 const wssSecure = new WebSocketServer({ server: httpsServer });
 wssSecure.on("connection", handleConnection);
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '127.0.0.1', () => {
   process.stdout.write(
     `WebSocket echo server listening at http://localhost:${PORT}\n`,
   );
 });
-httpsServer.listen(SECURE_PORT, () => {
+httpsServer.listen(SECURE_PORT, '127.0.0.1', () => {
   process.stdout.write(
     `WebSocket echo server listening at https://localhost:${SECURE_PORT}\n`,
   );

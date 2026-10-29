@@ -2,11 +2,12 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ApiSpecExportFormat } from '../../../enums/api-spec-export-format';
 import { ProjectType } from '../../../enums/project-types';
 import { waitForExportedFile } from '../../../misc/export-file';
-import { expect, test } from '../../../misc/fixtures';
+import { test } from '../../../misc/fixtures';
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 
@@ -28,9 +29,9 @@ test("Verify exporting an API Collection's OpenAPI spec as YAML and JSON from th
 }) => {
   const { workspaceFlow, exportFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const title = faker.commerce.productName();
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10), petStoreSpec(title)),
   );
@@ -54,8 +55,8 @@ test("Verify exporting shows 'Cannot export' while the spec is empty, then succe
 }) => {
   const { workspaceFlow, exportFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
 
   const emptyPath = path.join(os.tmpdir(), `${faker.string.alphanumeric(10)}.yaml`);
   await expect(exportFlow.exportOpenApiSpec(collection, ApiSpecExportFormat.Yaml, emptyPath)).rejects.toThrow(

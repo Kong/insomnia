@@ -1,9 +1,10 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, test } from "../../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test } from "../../../misc/fixtures";
 import { Project } from "../../../models/project";
 
 test("Verify the Variable Source Tooltip in the Manage Environments Modal Is Interactive and Its Open Action Selects the Source Environment Every Time", async ({
@@ -12,7 +13,7 @@ test("Verify the Variable Source Tooltip in the Manage Environments Modal Is Int
   const { workspaceFlow, importFlow, environmentFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   await importFlow.importFile(

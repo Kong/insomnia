@@ -1,54 +1,37 @@
-import { expect } from '@playwright/test';
+import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../enums/git-change-list';
-import { GitDiffView } from '../enums/git-diff-view';
-import { DEFAULT_TIMEOUT } from '../misc/constants';
-import { BasePage } from './base.page';
+import { GitChangeList } from "../enums/git-change-list";
+import { GitDiffView } from "../enums/git-diff-view";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { BasePage } from "./base.page";
 
 export class GitSyncPage extends BasePage {
-  private readonly syncDropdownButton = this.page.getByTestId('git-dropdown');
-  private readonly syncMenu = this.page.getByRole('menu', {
-    name: 'Git Sync',
+  private readonly syncDropdownButton = this.page.getByTestId("git-dropdown");
+  private readonly syncMenu = this.page.getByRole("menu", {
+    name: "Git Sync",
   });
-  private readonly commitDialog = this.page.getByRole('dialog', {
-    name: 'Commit Changes',
+  private readonly commitDialog = this.page.getByRole("dialog", {
+    name: "Commit Changes",
   });
-  private readonly branchesDialog = this.page.getByRole('dialog', {
-    name: 'Branches',
+  private readonly branchesDialog = this.page.getByRole("dialog", {
+    name: "Branches",
   });
-  private readonly stageAllPrompt = this.page.getByRole('dialog').filter({ hasText: 'Stage All Changes' });
-  private readonly mergeConflictsDialog = this.page.getByRole('dialog', {
-    name: 'Resolve conflicts',
+  private readonly stageAllPrompt = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Stage All Changes" });
+  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
+    name: "Resolve conflicts",
   });
   private readonly historyDialog = this.page
-    .getByRole('dialog')
-    .filter({ has: this.page.getByRole('heading', { name: 'History' }) });
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
 
-  private readonly discardDialog = this.page
-    .getByRole('dialog')
-    .filter({ has: this.page.getByRole('heading', { name: 'Discard Changes' }) });
-  private readonly undiscardableWarning = this.page.getByText(
-    'This change is only Insomnia internally reformatting the file',
-  );
-
-  private readonly unknownFieldsConfirmDialog = this.page
-    .getByRole('dialog')
-    .filter({ has: this.page.getByRole('heading', { name: 'Unrecognized Fields' }) });
-
-  private readonly entityCard = (entityName: string, typeLabel?: string) => {
-    const card = this.commitDialog
-      .locator('div.border-l-2')
-      .filter({ has: this.page.locator('span.font-semibold').getByText(entityName, { exact: true }) });
-    return typeLabel ? card.filter({ has: this.page.getByText(typeLabel, { exact: true }) }) : card;
-  };
-
-  private readonly visualDiffNotice = this.commitDialog.getByText(
-    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|doesn't match the Insomnia file format/,
-  );
-
-  private readonly changeRow = (list: GitChangeList, fileName: string) =>
+  private readonly changeRow = (
+    list: "Staged changes" | "Unstaged changes",
+    fileName: string,
+  ) =>
     this.commitDialog
-      .getByRole('grid', { name: list, exact: true })
+      .getByRole("grid", { name: list, exact: true })
       .locator('[role="row"][data-key]')
       .filter({ hasText: fileName });
 
@@ -62,9 +45,9 @@ export class GitSyncPage extends BasePage {
    */
   async navigate(): Promise<void> {
     await this.page
-      .getByText('Setup Git Credentials')
+      .getByText("Setup Git Credentials")
       .or(this.syncDropdownButton)
-      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -84,7 +67,9 @@ export class GitSyncPage extends BasePage {
    */
   async switchBranch(branch: string): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByRole('menuitemradio', { name: branch, exact: true }).click();
+    await this.syncMenu
+      .getByRole("menuitemradio", { name: branch, exact: true })
+      .click();
     await expect(this.syncDropdownButton).toContainText(branch, {
       timeout: DEFAULT_TIMEOUT,
     });
@@ -95,7 +80,9 @@ export class GitSyncPage extends BasePage {
    */
   async fetch(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByRole('menuitemradio', { name: 'Fetch', exact: true }).click();
+    await this.syncMenu
+      .getByRole("menuitemradio", { name: "Fetch", exact: true })
+      .click();
   }
 
   /**
@@ -105,7 +92,9 @@ export class GitSyncPage extends BasePage {
    */
   async pull(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByRole('menuitemradio', { name: 'Pull', exact: true }).click();
+    await this.syncMenu
+      .getByRole("menuitemradio", { name: "Pull", exact: true })
+      .click();
   }
 
   /**
@@ -114,8 +103,10 @@ export class GitSyncPage extends BasePage {
    */
   async push(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByRole('menuitemradio', { name: 'Push', exact: true }).click();
-    await expect(this.page.getByText('Push completed')).toBeVisible({
+    await this.syncMenu
+      .getByRole("menuitemradio", { name: "Push", exact: true })
+      .click();
+    await expect(this.page.getByText("Push completed")).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -137,23 +128,29 @@ export class GitSyncPage extends BasePage {
   async openCommitDialog(): Promise<void> {
     await expect(async () => {
       await this.openSyncMenu();
-      const commitItem = this.syncMenu.getByRole('menuitemradio', {
-        name: 'Commit',
+      const commitItem = this.syncMenu.getByRole("menuitemradio", {
+        name: "Commit",
         exact: true,
       });
       try {
         await expect(commitItem).toBeEnabled({ timeout: 3000 });
       } catch (error) {
-        await this.page.keyboard.press('Escape');
+        await this.page.keyboard.press("Escape");
         throw error;
       }
       await commitItem.click();
     }).toPass({ timeout: DEFAULT_TIMEOUT * 3 });
     await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    await expect(this.commitDialog).not.toHaveAttribute('data-loading', 'true', {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await expect(this.commitDialog.locator('[role="row"][data-key]').first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog).not.toHaveAttribute(
+      "data-loading",
+      "true",
+      {
+        timeout: DEFAULT_TIMEOUT,
+      },
+    );
+    await expect(
+      this.commitDialog.locator('[role="row"][data-key]').first(),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -168,14 +165,14 @@ export class GitSyncPage extends BasePage {
    */
   private async stageAllChanges(): Promise<void> {
     await this.commitDialog
-      .getByRole('grid', { name: 'Unstaged changes' })
-      .getByRole('row')
+      .getByRole("grid", { name: "Unstaged changes" })
+      .getByRole("row")
       .first()
-      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
     await this.commitDialog.locator('button[name="Stage all changes"]').click();
-    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes [1-9]/ })).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect(
+      this.commitDialog.getByRole("heading", { name: /^Staged changes [1-9]/ }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -185,8 +182,12 @@ export class GitSyncPage extends BasePage {
    */
   async commit(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
-    await this.commitDialog.getByRole('button', { name: 'Commit', exact: true }).click();
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message);
+    await this.commitDialog
+      .getByRole("button", { name: "Commit", exact: true })
+      .click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -201,10 +202,16 @@ export class GitSyncPage extends BasePage {
    */
   async commitAndPush(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
-    await this.commitDialog.getByRole('button', { name: 'Commit and push' }).click();
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message);
+    await this.commitDialog
+      .getByRole("button", { name: "Commit and push" })
+      .click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-    await expect(this.page.getByText('Changes committed and pushed')).toBeVisible({
+    await expect(
+      this.page.getByText("Changes committed and pushed"),
+    ).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -231,7 +238,7 @@ export class GitSyncPage extends BasePage {
    * @returns The staged file names
    */
   async getStagedChanges(): Promise<string[]> {
-    return this.readChangeRows(GitChangeList.Staged);
+    return this.readChangeRows("Staged changes");
   }
 
   /**
@@ -240,7 +247,7 @@ export class GitSyncPage extends BasePage {
    * @returns The unstaged file names
    */
   async getUnstagedChanges(): Promise<string[]> {
-    return this.readChangeRows(GitChangeList.Unstaged);
+    return this.readChangeRows("Unstaged changes");
   }
 
   /**
@@ -250,10 +257,10 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async stageChange(fileName: string): Promise<void> {
-    const row = this.changeRow(GitChangeList.Unstaged, fileName);
+    const row = this.changeRow("Unstaged changes", fileName);
     await row.hover();
     await row.locator('button[name="Stage change"]').click();
-    await expect(this.changeRow(GitChangeList.Staged, fileName)).toBeVisible({
+    await expect(this.changeRow("Staged changes", fileName)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -265,10 +272,10 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async unstageChange(fileName: string): Promise<void> {
-    const row = this.changeRow(GitChangeList.Staged, fileName);
+    const row = this.changeRow("Staged changes", fileName);
     await row.hover();
     await row.locator('button[name="Unstage change"]').click();
-    await expect(this.changeRow(GitChangeList.Unstaged, fileName)).toBeVisible({
+    await expect(this.changeRow("Unstaged changes", fileName)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -280,9 +287,9 @@ export class GitSyncPage extends BasePage {
    */
   async unstageAllChanges(): Promise<void> {
     await this.commitDialog.locator('button[name="Unstage all changes"]').click();
-    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ })).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect(
+      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -292,12 +299,377 @@ export class GitSyncPage extends BasePage {
    * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async discardChange(fileName: string): Promise<void> {
-    const row = this.changeRow(GitChangeList.Unstaged, fileName);
+    const row = this.changeRow("Unstaged changes", fileName);
     await row.hover();
     await row.locator('button[name="Discard change"]').click();
-    await this.page.getByTestId('discard-changes-confirm-button').click();
+    await this.page.getByTestId("discard-changes-confirm-button").click();
     await expect(row).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
+
+  /**
+   * Fills `message` (clearing the field when omitted, since it keeps its
+   * previous text between attempts) and clicks "Commit" on whatever is
+   * currently staged, without staging anything first. Waits for the staged
+   * list to empty rather than for the modal to close, since the modal
+   * stays open while unstaged changes remain. Requires `openCommitDialog()`
+   * to have been called first.
+   * @param message - The commit message; omit to submit with an empty message
+   */
+  async commitStaged(message?: string): Promise<void> {
+    await this.commitDialog
+      .getByRole("textbox", { name: "Message" })
+      .fill(message ?? "");
+    await this.commitDialog
+      .getByRole("button", { name: "Commit", exact: true })
+      .click();
+  }
+
+  /**
+   * Whether the Commit modal is currently open.
+   * @returns true if the modal is visible
+   */
+  async isCommitDialogOpen(): Promise<boolean> {
+    return this.commitDialog.isVisible();
+  }
+
+  /**
+   * Reads the text of the "Stage All Changes" prompt the Commit modal opens
+   * when Commit is clicked with nothing staged. Waits for it to appear.
+   * @returns The prompt's text
+   */
+  async getStageAllPromptText(): Promise<string> {
+    await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await this.stageAllPrompt.innerText()).replaceAll("\n", " ");
+  }
+
+  /**
+   * Dismisses the "Stage All Changes" prompt with "Cancel", leaving the
+   * Commit modal open and nothing committed.
+   */
+  async cancelStageAllPrompt(): Promise<void> {
+    await this.stageAllPrompt.getByRole("button", { name: "Cancel" }).click();
+    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Accepts the "Stage All Changes" prompt with "Yes", which stages every
+   * change and commits it, then waits for the Commit modal to close.
+   */
+  async confirmStageAllPrompt(): Promise<void> {
+    await this.stageAllPrompt.getByRole("button", { name: "Yes" }).click();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Waits until the Commit modal's staged list holds no files.
+   */
+  async waitForNothingStaged(): Promise<void> {
+    await expect(
+      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Discards every uncommitted change via the Commit modal's "Discard all
+   * changes" button, confirming the prompt. Requires `openCommitDialog()`
+   * to have been called first. The modal auto-closes once everything has
+   * been discarded.
+   */
+  async discardAllChanges(): Promise<void> {
+    await this.commitDialog
+      .getByRole("grid", { name: "Unstaged changes" })
+      .getByRole("row")
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    await this.commitDialog
+      .locator('button[name="Discard all changes"]')
+      .click();
+    await this.page.getByTestId("discard-changes-confirm-button").click();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Opens the History modal via the Git Sync dropdown's "History" action.
+   * Does not wait for the commit log itself to finish loading — `Table`'s
+   * `renderEmptyState` renders both the "Loading..." and "No history
+   * available" placeholders as a `role="row"` element indistinguishable
+   * from a real commit row by role alone, so that has to be done by
+   * `getLatestCommit()`, which can tell a real commit row apart from a
+   * placeholder by its `data-key` attribute.
+   */
+  async openHistory(): Promise<void> {
+    await this.openSyncMenu();
+    await this.syncMenu.getByText("History", { exact: true }).click();
+    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Reads the id (git OID, exposed via the row's `data-key` attribute) and
+   * message of the most recent commit from the open History modal — the
+   * log lists commits newest-first, and the first row after the column
+   * header is that newest commit. Requires `openHistory()` to have been
+   * called first.
+   *
+   * Matched by `[data-key]` rather than by row position: the table's
+   * loading/empty placeholder is also a `role="row"` element (see
+   * `openHistory()`), so `getByRole("row").nth(1)` can match that
+   * placeholder — which carries no `data-key` — instead of the first real
+   * commit row while the log is still being fetched. Only actual data rows
+   * get a `data-key`, so waiting for one to appear here doubles as waiting
+   * for the log to finish loading.
+   * @returns The latest commit's id and message, or undefined if the log is empty
+   */
+  async getLatestCommit(): Promise<
+    { id: string; message: string } | undefined
+  > {
+    const row = this.historyDialog.locator('[role="row"][data-key]').first();
+    try {
+      await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    } catch {
+      return undefined;
+    }
+    const id = await row.getAttribute("data-key");
+    if (!id) return undefined;
+    const message = await row.getByRole("rowheader").innerText();
+    return { id, message };
+  }
+
+  /**
+   * Closes the History modal via Escape.
+   */
+  async closeHistory(): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Opens the Branches modal via the Git Sync dropdown's "Branches" action.
+   */
+  async openBranchesDialog(): Promise<void> {
+    await this.openSyncMenu();
+    await this.syncMenu
+      .getByRole("menuitemradio", { name: "Branches", exact: true })
+      .click();
+    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Creates a new local branch from the Branches modal's "New branch name"
+   * field and waits for it to become the active branch (the Create button
+   * stays disabled while the request is in flight, so this can't just
+   * wait for the click to resolve). Requires `openBranchesDialog()` to
+   * have been called first.
+   * @param branch - The new branch's name
+   */
+  async createBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByRole("textbox", { name: "New branch name:" })
+      .fill(branch);
+    await this.branchesDialog
+      .getByRole("button", { name: "Create", exact: true })
+      .click();
+    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Checks out `branch` from its row in the Branches modal. Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The branch to check out
+   */
+  async checkoutBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByRole("row", { name: branch, exact: true })
+      .getByRole("button", { name: "Checkout" })
+      .click();
+  }
+
+  /**
+   * Deletes `branch` from its row in the Branches modal, confirming the
+   * prompt. Requires `openBranchesDialog()` to have been called first.
+   * @param branch - The branch to delete
+   */
+  async deleteBranch(branch: string): Promise<void> {
+    const row = this.branchesDialog.getByRole("row", {
+      name: branch,
+      exact: true,
+    });
+    await row.getByRole("button", { name: "Delete" }).click();
+    await row.getByRole("button", { name: "Confirm" }).click();
+  }
+
+  /**
+   * Merges `branch` into the current branch, confirming the prompt.
+   * Requires `openBranchesDialog()` to have been called first.
+   * @param branch - The branch to merge in
+   */
+  async mergeBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByLabel(branch, { exact: true })
+      .getByRole("button", { name: "Merge" })
+      .click();
+    await this.page.getByRole("button", { name: "Confirm" }).click();
+  }
+
+  /**
+   * Submits `branch` in the Branches modal's "New branch name" field
+   * without waiting for it to become the active branch — for names the app
+   * is expected to reject. Requires `openBranchesDialog()` to have been
+   * called first.
+   * @param branch - The branch name to attempt to create
+   */
+  async submitNewBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByRole("textbox", { name: "New branch name:" })
+      .fill(branch);
+    await this.branchesDialog
+      .getByRole("button", { name: "Create", exact: true })
+      .click();
+  }
+
+  /**
+   * Reads the validation error shown under the Branches modal's "New
+   * branch name" field after a rejected `submitNewBranch()`. Waits for it
+   * to appear. Requires `openBranchesDialog()` to have been called first.
+   * @returns The error text
+   */
+  async getNewBranchError(): Promise<string> {
+    const error = this.branchesDialog.locator("form p");
+    await expect(error).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await error.innerText()).trim();
+  }
+
+  /**
+   * Reads the names listed under "Local Branches" (without the current
+   * branch's trailing " *"). Requires `openBranchesDialog()` to have been
+   * called first.
+   * @returns The local branch names
+   */
+  async getLocalBranches(): Promise<string[]> {
+    return this.readBranchRows("Branches list");
+  }
+
+  /**
+   * Reads the names listed under "Remote Branches" (remote-only branches).
+   * Waits for the "Fetching remote branches..." placeholder to clear.
+   * Requires `openBranchesDialog()` to have been called first.
+   * @returns The remote-only branch names
+   */
+  async getRemoteBranches(): Promise<string[]> {
+    await expect(
+      this.branchesDialog.getByText("Fetching remote branches..."),
+    ).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    return this.readBranchRows("Remote Branches list");
+  }
+
+  /**
+   * Checks out a remote-only branch via its "Fetch and checkout" button and
+   * waits for it to become the active branch. Requires
+   * `openBranchesDialog()` to have been called first.
+   * @param branch - The remote-only branch to check out
+   */
+  async checkoutRemoteBranch(branch: string): Promise<void> {
+    await this.branchesDialog
+      .getByRole("grid", { name: "Remote Branches list", exact: true })
+      .getByRole("row")
+      .filter({ hasText: branch })
+      .getByRole("button", { name: "Fetch and checkout" })
+      .click();
+    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Resolves every conflicted file listed in the "Resolve conflicts" modal
+   * by taking the same side for each (via "Take all current/incoming
+   * changes" in the merge editor, confirming the prompt), then submits and waits for the modal to
+   * close. Call after `mergeBranch()` or `pull()` hit conflicts.
+   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
+   */
+  async resolveMergeConflicts(version: "Current" | "Incoming"): Promise<void> {
+    await expect(this.mergeConflictsDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const rows = this.mergeConflictsDialog
+      .getByRole("grid", { name: "Conflicted changes" })
+      .getByRole("row");
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+      await rows.nth(i).click();
+      await this.mergeConflictsDialog
+        .getByRole("button", {
+          name: `Take all ${version.toLowerCase()} changes`,
+        })
+        .click();
+      await this.page.getByRole("button", { name: "Confirm" }).click();
+    }
+    await this.mergeConflictsDialog
+      .getByRole("button", { name: "Resolve conflicts" })
+      .click();
+    await expect(this.mergeConflictsDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Closes the Branches modal.
+   */
+  async closeBranchesDialog(): Promise<void> {
+    await this.page.getByTestId("close-git-project-branches-modal").click();
+    await this.page
+      .getByTestId("git-project-branches-modal-overlay")
+      .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+  }
+
+  private async readChangeRows(
+    list: "Staged changes" | "Unstaged changes",
+  ): Promise<string[]> {
+    const rows = this.commitDialog
+      .getByRole("grid", { name: list, exact: true })
+      .locator('[role="row"][data-key]');
+    const texts = await rows.allInnerTexts();
+    return texts.map((text) => text.split("\n")[0].trim());
+  }
+
+  private async readBranchRows(
+    list: "Branches list" | "Remote Branches list",
+  ): Promise<string[]> {
+    const rows = this.branchesDialog
+      .getByRole("grid", { name: list, exact: true })
+      .locator('[role="row"][data-key]');
+    const texts = await rows.allInnerTexts();
+    return texts.map((text) => text.split("\n")[0].replace(/\s*\*$/, "").trim());
+  }
+
+  private async openSyncMenu(): Promise<void> {
+    await this.syncDropdownButton.click();
+    await expect(this.syncMenu).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  private readonly discardDialog = this.page
+    .getByRole('dialog')
+    .filter({ has: this.page.getByRole('heading', { name: 'Discard Changes' }) });
+
+  private readonly undiscardableWarning = this.page.getByText(
+    'This change is only Insomnia internally reformatting the file',
+  );
+
+  private readonly unknownFieldsConfirmDialog = this.page
+    .getByRole('dialog')
+    .filter({ has: this.page.getByRole('heading', { name: 'Unrecognized Fields' }) });
+
+  private readonly entityCard = (entityName: string, typeLabel?: string) => {
+    const card = this.commitDialog
+      .locator('div.border-l-2')
+      .filter({ has: this.page.locator('span.font-semibold').getByText(entityName, { exact: true }) });
+    return typeLabel ? card.filter({ has: this.page.getByText(typeLabel, { exact: true }) }) : card;
+  };
+
+  private readonly visualDiffNotice = this.commitDialog.getByText(
+    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|doesn't match the Insomnia file format/,
+  );
 
   /**
    * Clicks a file's row in the open Commit modal to open its diff, and
@@ -841,20 +1213,6 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Fills `message` (clearing the field when omitted, since it keeps its
-   * previous text between attempts) and clicks "Commit" on whatever is
-   * currently staged, without staging anything first. Waits for the staged
-   * list to empty rather than for the modal to close, since the modal
-   * stays open while unstaged changes remain. Requires `openCommitDialog()`
-   * to have been called first.
-   * @param message - The commit message; omit to submit with an empty message
-   */
-  async commitStaged(message?: string): Promise<void> {
-    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message ?? '');
-    await this.commitDialog.getByRole('button', { name: 'Commit', exact: true }).click();
-  }
-
-  /**
    * Fills `message` and clicks "Commit and push" on whatever is currently
    * staged, without staging anything first and without waiting for the
    * modal to close, so a confirmation raised by the click (e.g. the
@@ -893,42 +1251,6 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Whether the Commit modal is currently open.
-   * @returns true if the modal is visible
-   */
-  async isCommitDialogOpen(): Promise<boolean> {
-    return this.commitDialog.isVisible();
-  }
-
-  /**
-   * Reads the text of the "Stage All Changes" prompt the Commit modal opens
-   * when Commit is clicked with nothing staged. Waits for it to appear.
-   * @returns The prompt's text
-   */
-  async getStageAllPromptText(): Promise<string> {
-    await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await this.stageAllPrompt.innerText()).replaceAll('\n', ' ');
-  }
-
-  /**
-   * Dismisses the "Stage All Changes" prompt with "Cancel", leaving the
-   * Commit modal open and nothing committed.
-   */
-  async cancelStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole('button', { name: 'Cancel' }).click();
-    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Accepts the "Stage All Changes" prompt with "Yes", which stages every
-   * change and commits it, then waits for the Commit modal to close.
-   */
-  async confirmStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole('button', { name: 'Yes' }).click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
    * Accepts the "Stage All Changes" prompt with "Yes" without waiting for the
    * Commit modal to close, for when another confirmation (e.g. unknown
    * fields) follows and keeps the modal open.
@@ -936,15 +1258,6 @@ export class GitSyncPage extends BasePage {
   async acceptStageAllPrompt(): Promise<void> {
     await this.stageAllPrompt.getByRole('button', { name: 'Yes' }).click();
     await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Waits until the Commit modal's staged list holds no files.
-   */
-  async waitForNothingStaged(): Promise<void> {
-    await expect(this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ })).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
   }
 
   /**
@@ -961,258 +1274,5 @@ export class GitSyncPage extends BasePage {
       expect(isClosed || isStagedEmpty).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     await this.commitDialog.waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT / 2 }).catch(() => {});
-  }
-
-  /**
-   * Discards every uncommitted change via the Commit modal's "Discard all
-   * changes" button, confirming the prompt. Requires `openCommitDialog()`
-   * to have been called first. The modal auto-closes once everything has
-   * been discarded.
-   */
-  async discardAllChanges(): Promise<void> {
-    await this.commitDialog
-      .getByRole('grid', { name: 'Unstaged changes' })
-      .getByRole('row')
-      .first()
-      .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-    await this.commitDialog.locator('button[name="Discard all changes"]').click();
-    await this.page.getByTestId('discard-changes-confirm-button').click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Opens the History modal via the Git Sync dropdown's "History" action.
-   * Does not wait for the commit log itself to finish loading — `Table`'s
-   * `renderEmptyState` renders both the "Loading..." and "No history
-   * available" placeholders as a `role="row"` element indistinguishable
-   * from a real commit row by role alone, so that has to be done by
-   * `getLatestCommit()`, which can tell a real commit row apart from a
-   * placeholder by its `data-key` attribute.
-   */
-  async openHistory(): Promise<void> {
-    await this.openSyncMenu();
-    await this.syncMenu.getByText('History', { exact: true }).click();
-    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Reads the id (git OID, exposed via the row's `data-key` attribute) and
-   * message of the most recent commit from the open History modal — the
-   * log lists commits newest-first, and the first row after the column
-   * header is that newest commit. Requires `openHistory()` to have been
-   * called first.
-   *
-   * Matched by `[data-key]` rather than by row position: the table's
-   * loading/empty placeholder is also a `role="row"` element (see
-   * `openHistory()`), so `getByRole("row").nth(1)` can match that
-   * placeholder — which carries no `data-key` — instead of the first real
-   * commit row while the log is still being fetched. Only actual data rows
-   * get a `data-key`, so waiting for one to appear here doubles as waiting
-   * for the log to finish loading.
-   * @returns The latest commit's id and message, or undefined if the log is empty
-   */
-  async getLatestCommit(): Promise<{ id: string; message: string } | undefined> {
-    const row = this.historyDialog.locator('[role="row"][data-key]').first();
-    try {
-      await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    } catch {
-      return undefined;
-    }
-    const id = await row.getAttribute('data-key');
-    if (!id) return undefined;
-    const message = await row.getByRole('rowheader').innerText();
-    return { id, message };
-  }
-
-  /**
-   * Closes the History modal via Escape.
-   */
-  async closeHistory(): Promise<void> {
-    await this.page.keyboard.press('Escape');
-    await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Opens the Branches modal via the Git Sync dropdown's "Branches" action.
-   */
-  async openBranchesDialog(): Promise<void> {
-    await this.openSyncMenu();
-    await this.syncMenu.getByRole('menuitemradio', { name: 'Branches', exact: true }).click();
-    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Creates a new local branch from the Branches modal's "New branch name"
-   * field and waits for it to become the active branch (the Create button
-   * stays disabled while the request is in flight, so this can't just
-   * wait for the click to resolve). Requires `openBranchesDialog()` to
-   * have been called first.
-   * @param branch - The new branch's name
-   */
-  async createBranch(branch: string): Promise<void> {
-    await this.branchesDialog.getByRole('textbox', { name: 'New branch name:' }).fill(branch);
-    await this.branchesDialog.getByRole('button', { name: 'Create', exact: true }).click();
-    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Checks out `branch` from its row in the Branches modal. Requires
-   * `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to check out
-   */
-  async checkoutBranch(branch: string): Promise<void> {
-    await this.branchesDialog
-      .getByRole('row', { name: branch, exact: true })
-      .getByRole('button', { name: 'Checkout' })
-      .click();
-  }
-
-  /**
-   * Deletes `branch` from its row in the Branches modal, confirming the
-   * prompt. Requires `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to delete
-   */
-  async deleteBranch(branch: string): Promise<void> {
-    const row = this.branchesDialog.getByRole('row', {
-      name: branch,
-      exact: true,
-    });
-    await row.getByRole('button', { name: 'Delete' }).click();
-    await row.getByRole('button', { name: 'Confirm' }).click();
-  }
-
-  /**
-   * Merges `branch` into the current branch, confirming the prompt.
-   * Requires `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to merge in
-   */
-  async mergeBranch(branch: string): Promise<void> {
-    await this.branchesDialog.getByLabel(branch, { exact: true }).getByRole('button', { name: 'Merge' }).click();
-    await this.page.getByRole('button', { name: 'Confirm' }).click();
-  }
-
-  /**
-   * Submits `branch` in the Branches modal's "New branch name" field
-   * without waiting for it to become the active branch — for names the app
-   * is expected to reject. Requires `openBranchesDialog()` to have been
-   * called first.
-   * @param branch - The branch name to attempt to create
-   */
-  async submitNewBranch(branch: string): Promise<void> {
-    await this.branchesDialog.getByRole('textbox', { name: 'New branch name:' }).fill(branch);
-    await this.branchesDialog.getByRole('button', { name: 'Create', exact: true }).click();
-  }
-
-  /**
-   * Reads the validation error shown under the Branches modal's "New
-   * branch name" field after a rejected `submitNewBranch()`. Waits for it
-   * to appear. Requires `openBranchesDialog()` to have been called first.
-   * @returns The error text
-   */
-  async getNewBranchError(): Promise<string> {
-    const error = this.branchesDialog.locator('form p');
-    await expect(error).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await error.innerText()).trim();
-  }
-
-  /**
-   * Reads the names listed under "Local Branches" (without the current
-   * branch's trailing " *"). Requires `openBranchesDialog()` to have been
-   * called first.
-   * @returns The local branch names
-   */
-  async getLocalBranches(): Promise<string[]> {
-    return this.readBranchRows('Branches list');
-  }
-
-  /**
-   * Reads the names listed under "Remote Branches" (remote-only branches).
-   * Waits for the "Fetching remote branches..." placeholder to clear.
-   * Requires `openBranchesDialog()` to have been called first.
-   * @returns The remote-only branch names
-   */
-  async getRemoteBranches(): Promise<string[]> {
-    await expect(this.branchesDialog.getByText('Fetching remote branches...')).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-    return this.readBranchRows('Remote Branches list');
-  }
-
-  /**
-   * Checks out a remote-only branch via its "Fetch and checkout" button and
-   * waits for it to become the active branch. Requires
-   * `openBranchesDialog()` to have been called first.
-   * @param branch - The remote-only branch to check out
-   */
-  async checkoutRemoteBranch(branch: string): Promise<void> {
-    await this.branchesDialog
-      .getByRole('grid', { name: 'Remote Branches list', exact: true })
-      .getByRole('row')
-      .filter({ hasText: branch })
-      .getByRole('button', { name: 'Fetch and checkout' })
-      .click();
-    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Resolves every conflicted file listed in the "Resolve conflicts" modal
-   * by taking the same side for each (via "Take all current/incoming
-   * changes" in the merge editor, confirming the prompt), then submits and waits for the modal to
-   * close. Call after `mergeBranch()` or `pull()` hit conflicts.
-   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
-   */
-  async resolveMergeConflicts(version: 'Current' | 'Incoming'): Promise<void> {
-    await expect(this.mergeConflictsDialog).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    const rows = this.mergeConflictsDialog.getByRole('grid', { name: 'Conflicted changes' }).getByRole('row');
-    const count = await rows.count();
-    for (let i = 0; i < count; i++) {
-      await rows.nth(i).click();
-      await this.mergeConflictsDialog
-        .getByRole('button', {
-          name: `Take all ${version.toLowerCase()} changes`,
-        })
-        .click();
-      await this.page.getByRole('button', { name: 'Confirm' }).click();
-    }
-    await this.mergeConflictsDialog.getByRole('button', { name: 'Resolve conflicts' }).click();
-    await expect(this.mergeConflictsDialog).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Closes the Branches modal.
-   */
-  async closeBranchesDialog(): Promise<void> {
-    await this.page.getByTestId('close-git-project-branches-modal').click();
-    await this.page
-      .getByTestId('git-project-branches-modal-overlay')
-      .waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT });
-  }
-
-  private async readChangeRows(list: GitChangeList): Promise<string[]> {
-    const rows = this.commitDialog.getByRole('grid', { name: list, exact: true }).locator('[role="row"][data-key]');
-    const texts = await rows.allInnerTexts();
-    return texts.map(text => text.split('\n')[0].trim());
-  }
-
-  private async readBranchRows(list: 'Branches list' | 'Remote Branches list'): Promise<string[]> {
-    const rows = this.branchesDialog.getByRole('grid', { name: list, exact: true }).locator('[role="row"][data-key]');
-    const texts = await rows.allInnerTexts();
-    return texts.map(text =>
-      text
-        .split('\n')[0]
-        .replace(/\s*\*$/, '')
-        .trim(),
-    );
-  }
-
-  private async openSyncMenu(): Promise<void> {
-    await this.syncDropdownButton.click();
-    await expect(this.syncMenu).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }

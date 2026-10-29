@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
-import { expect, test } from '../../../misc/fixtures';
+import { test } from "../../../misc/fixtures";
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
 import { McpClient } from '../../../models/mcp-client';
 import { Project } from '../../../models/project';
@@ -17,7 +18,7 @@ test('Verify an Entry Without a Usable Name Is Labeled by Its Position and Shows
       },
     },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
@@ -34,7 +35,7 @@ test('Verify a Long Error Panel Scrolls Inside Its Own Area Without Overlapping 
     'tools/list': { result: { tools: [validTool, ...badTools] } },
     'prompts/list': { result: { prompts: [{ name: 'valid-prompt' }] } },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 

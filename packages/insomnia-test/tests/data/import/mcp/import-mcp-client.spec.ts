@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  MCP_SERVER,
-  test,
-} from "../../../../misc/fixtures";
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../../../misc/fixtures";
 import { Project } from "../../../../models/project";
 
 const mcp = "Imported MCP Client";
@@ -32,7 +28,7 @@ test("Import MCP Client by Url", async ({ user }) => {
   const { importFlow, mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage, workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

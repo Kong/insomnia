@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
-import { expect, test } from '../../../misc/fixtures';
+import { test } from "../../../misc/fixtures";
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
 import { McpClient } from '../../../models/mcp-client';
 import { Project } from '../../../models/project';
@@ -17,7 +18,7 @@ test('Verify the Error Panel of a Partially Invalid List Follows Expand and Coll
     },
     'prompts/list': { result: { prompts: [{ name: 'valid-prompt' }] } },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
   await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);
@@ -40,7 +41,7 @@ test('Verify the Error Panel of an Empty List Stays Visible Without a Collapse C
   const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'tools/list': { result: { tools: 'not-an-array' } },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
   await mcpClientFlow.getListError(client, McpPrimitiveType.Tools);

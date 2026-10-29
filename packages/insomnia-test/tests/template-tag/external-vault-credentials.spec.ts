@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 import {
   AWSCredentialType,
   HashiCorpCredentialType,
@@ -8,7 +9,7 @@ import {
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { HttpRequest } from "../../models/http-request";
 import { Project } from "../../models/project";
@@ -19,10 +20,10 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
   const { workspaceFlow, httpRequestFlow, templateTagFlow, preferencesFlow } =
     user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -31,6 +32,8 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
   const gcpCredentialName = faker.string.alphanumeric(10);
   const hashicorpCredentialName = faker.string.alphanumeric(10);
   await preferencesFlow.set({
+    // Live Preview masks vault values as •••••• by default; the spec asserts the resolved value.
+    hideSecretValuesInPreviewAndConsole: false,
     cloudCredentials: [
       {
         provider: "aws",

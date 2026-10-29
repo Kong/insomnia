@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
 import { certPath } from "../../misc/certs";
-import { expect, MCP_SERVER_CUSTOM_CA_HTTPS, test } from "../../misc/fixtures";
+import { MCP_SERVER_CUSTOM_CA_HTTPS, test } from "../../misc/fixtures";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
 
@@ -11,7 +12,7 @@ test("Verify Custom CA Certificate Toggle Controls Trust For MCP Client Over TLS
 }) => {
   const { certificatesFlow, mcpClientFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

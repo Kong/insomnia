@@ -33,6 +33,11 @@ export class PreferencesFlow extends BaseFlow {
         settings.showLegacyUnitTests,
       );
     }
+    if (settings.hideSecretValuesInPreviewAndConsole !== undefined) {
+      await preferencesPage.setHideSecretValuesInPreviewAndConsole(
+        settings.hideSecretValuesInPreviewAndConsole,
+      );
+    }
     if (settings.dataFolders !== undefined) {
       for (const path of settings.dataFolders) {
         await preferencesPage.addDataFolder(path);
@@ -136,10 +141,6 @@ export class PreferencesFlow extends BaseFlow {
           await preferencesPage.getUrlBackendFormValues("LLM URL Active");
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, true);
       }
-    }
-    if (settings.aiSmartCommits !== undefined) {
-      await preferencesPage.openAiSettingsTab();
-      await preferencesPage.setSmartCommitsEnabled(settings.aiSmartCommits);
     }
     await preferencesPage.close();
     return new Settings({ aiUrlBackend: aiUrlBackendResult });

@@ -488,8 +488,13 @@ export class WorkspacePage extends BasePage {
    */
   async clickDelete(): Promise<void> {
     const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /^Delete/ }).click();
-    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    const deleteButton = dialog.getByRole("button", { name: /^Delete/ });
+    // The dialog can re-render right as it opens, swallowing the first
+    // click; press again while the button is still there.
+    await expect(async () => {
+      if (await deleteButton.isVisible()) await deleteButton.click({ timeout: 2000 });
+      await expect(dialog).toBeHidden({ timeout: 3000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT * 2 });
   }
 
   /**
@@ -774,7 +779,7 @@ export class WorkspacePage extends BasePage {
    * create menu" shortcut (Cmd+N on macOS, Ctrl+N elsewhere), opening the
    * Sidebar Shortcut Create Menu targeted at that folder/collection/project.
    * Confirmed live: the shortcut only opens the menu — it does not create
-   * anything by itself, unlike `workspaceFlow.create()`'s own "+"-button
+   * anything by itself, unlike `workspaceFlow.createCollection()`'s own "+"-button
    * dropdown path.
    * @param node - The node to select before opening the create menu
    */
@@ -1134,7 +1139,7 @@ export class WorkspacePage extends BasePage {
   /**
    * Renames a request in place via the sidebar's inline editable label
    * (double-click to edit, Enter to submit) — distinct from the
-   * context-menu "Rename" dialog `workspaceFlow.rename()` drives.
+   * context-menu "Rename" dialog `workspaceFlow.rename*()` drives.
    * @param name - The request's current name
    * @param newName - The name to give it
    */
@@ -1264,32 +1269,6 @@ export class WorkspacePage extends BasePage {
       .getByTestId("project-navigation-tree-container")
       .locator(`div[role="row"][data-key="${node._id}"]`);
     await expect(row).toHaveCount(0, { timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Selects a tree node's row, focuses the row itself (the shortcut ignores
-   * inner controls) and presses the sidebar's Delete shortcut, opening the
-   * node's delete confirmation dialog.
-   * @param node - The tree node to delete
-   */
-  async pressDeleteShortcut(node: TreeNode): Promise<void> {
-    const row = this.page
-      .getByTestId("project-navigation-tree-container")
-      .locator(`div[role="row"][data-key="${node._id}"]`);
-    await row.scrollIntoViewIfNeeded();
-    await row.click();
-    await row.focus();
-    await this.page.keyboard.press("Delete");
-  }
-
-  /**
-   * Counts the "resource not found" warning toasts currently on screen.
-   * @returns The number of matching toasts
-   */
-  async countResourceNotFoundToasts(): Promise<number> {
-    return this.page
-      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
-      .count();
   }
 
   /**
@@ -2254,5 +2233,31 @@ export class WorkspacePage extends BasePage {
 
   private async tabName(row: Locator): Promise<string> {
     return (await row.locator('span[class*="mx-[8px]"]').innerText()).trim();
+  }
+
+  /**
+   * Selects a tree node's row, focuses the row itself (the shortcut ignores
+   * inner controls) and presses the sidebar's Delete shortcut, opening the
+   * node's delete confirmation dialog.
+   * @param node - The tree node to delete
+   */
+  async pressDeleteShortcut(node: TreeNode): Promise<void> {
+    const row = this.page
+      .getByTestId("project-navigation-tree-container")
+      .locator(`div[role="row"][data-key="${node._id}"]`);
+    await row.scrollIntoViewIfNeeded();
+    await row.click();
+    await row.focus();
+    await this.page.keyboard.press("Delete");
+  }
+
+  /**
+   * Counts the "resource not found" warning toasts currently on screen.
+   * @returns The number of matching toasts
+   */
+  async countResourceNotFoundToasts(): Promise<number> {
+    return this.page
+      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
+      .count();
   }
 }

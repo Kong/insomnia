@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, HTTP_SERVER, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Folder } from "../../models/folder";
 import { Project } from "../../models/project";
@@ -13,14 +14,14 @@ test("Verify Deleting a Request, Folder and Collection With Open Tabs via the De
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const shortcutCollection = await workspaceFlow.create(
+  const shortcutCollection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
-  const menuCollection = await workspaceFlow.create(
+  const menuCollection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

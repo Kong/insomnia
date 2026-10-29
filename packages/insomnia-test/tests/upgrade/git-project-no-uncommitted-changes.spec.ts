@@ -1,8 +1,10 @@
+import { expect } from "@playwright/test";
+
 import { HttpMethod } from '../../enums/http-method';
 import { ProjectType } from '../../enums/project-types';
 import { UpgradePhase } from '../../enums/upgrade-phase';
 import { HTTP_SERVER } from '../../misc/fixtures';
-import { expect, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
 import type { UpgradeFixtures } from '../../misc/upgrade-fixture';
 import { upgradeFixtures, upgradePhase } from '../../misc/upgrade-fixture';
 import { Collection } from '../../models/collection';
@@ -23,8 +25,8 @@ testWithUpgrade(
     const { preferencesFlow, workspaceFlow, httpRequestFlow, gitSyncFlow } = user.flowManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const project = await workspaceFlow.create(new Project(projectName, ProjectType.Git), GIT_CREDENTIAL.name);
-    const collection = await workspaceFlow.create(project, new Collection(collectionName));
+    const project = await workspaceFlow.cloneGitProject(new Project(projectName, ProjectType.Git), GIT_CREDENTIAL.name);
+    const collection = await workspaceFlow.createCollection(project, new Collection(collectionName));
     await httpRequestFlow.create(collection, {
       name: requestName,
       method: HttpMethod.Get,

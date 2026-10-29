@@ -20,14 +20,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # Build the Insomnia binary once and cache it by commit SHA. All shards
   # restore the same cached binary instead of each building it.
-  #
-  # continue-on-error: true so a failure here never blocks the PR merge check
-  # and downstream jobs still run instead of being skipped.
   # ---------------------------------------------------------------------------
   build:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
       packages: read
@@ -109,23 +105,53 @@ jobs:
           USE_HARD_LINKS: 'false'
           # Package .map files so coverage reports show original (pre-compile) sources
           KEEP_SOURCEMAPS: 'true'
-        run: npx electron-builder build --config electron-builder.config.js --linux --dir --publish never
+        run: npx electron-builder build --config ../insomnia-test/electron-builder.config.js --linux --dir --publish never
 
   # ---------------------------------------------------------------------------
-  # Single source of truth for the shard count. Generates the matrix indices
-  # (1..N) so scaling up only requires changing SHARD_TOTAL.
+  # Counts the test cases with `playwright test --list` and derives the shard
+  # count as ceil(total / TESTS_PER_SHARD), then generates the matrix indices
+  # (1..N). Needs `build` only for the cached node_modules.
   # ---------------------------------------------------------------------------
   shards:
     name: Shard Matrix
+    needs: build
     runs-on: ubuntu-latest
     env:
-      SHARD_TOTAL: 32
+      TESTS_PER_SHARD: 10
     outputs:
       indices: ${{ steps.matrix.outputs.indices }}
-      total: ${{ env.SHARD_TOTAL }}
+      total: ${{ steps.matrix.outputs.total }}
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
       - id: matrix
-        run: echo "indices=$(seq 1 $SHARD_TOTAL | jq -sc .)" >> "$GITHUB_OUTPUT"
+        working-directory: packages/insomnia-test
+        run: |
+          count=$(npx playwright test --list 2>&1 | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+')
+          if [ -z "$count" ] || [ "$count" -lt 1 ]; then
+            echo "ERROR: could not determine test count"; exit 1
+          fi
+          total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
+          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard)"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
   # Run the whole suite across N shards in parallel. Each shard restores the
@@ -186,8 +212,6 @@ jobs:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
           COVERAGE: 'true'
-          # Upgrade specs run `npm ci` on an old tree and need to reach @kong/* on GitHub Packages
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       # Two paths here (not just coverage/raw/) because v8-report.json (see
@@ -293,15 +317,15 @@ jobs:
 
       # Uses our own line/statement/branch/function union across each shard's
       # own (already-correct) v8-json report, instead of monocart's built-in
-      # multi-shard raw-coverage merge (misc/merge-coverage.ts) — that merge
+      # multi-shard raw-coverage merge (misc/merge-coverage.js) — that merge
       # has a bug where combining a script's coverage across shards with very
       # different coverage levels can produce a result *lower* than any
-      # individual shard reported on its own. See misc/merge-coverage-union.ts
+      # individual shard reported on its own. See misc/merge-coverage-union.js
       # for the full writeup.
       - name: Merge coverage reports
         continue-on-error: true
         working-directory: packages/insomnia-test
-        run: npx esr misc/merge-coverage-union.ts ../../coverage-raw
+        run: node misc/merge-coverage-union.js ../../coverage-raw
 
       - name: Upload merged coverage report
         continue-on-error: true

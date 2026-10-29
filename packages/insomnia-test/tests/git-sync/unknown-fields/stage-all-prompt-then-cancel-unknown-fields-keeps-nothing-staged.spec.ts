@@ -4,9 +4,10 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from '../../../models/project';
 import { UNDISCARDABLE_WARNING_TEXT } from '../undiscardable-change/helpers';
 import { buildCollectionFileWithUnknownField } from './helpers';
@@ -22,7 +23,7 @@ test('Verify cancelling the unknown fields confirmation after accepting the stag
   await pushServerFile({ path: fileName, content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-unknown-fields-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, {
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, {
     cloneParentDir,
   });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);

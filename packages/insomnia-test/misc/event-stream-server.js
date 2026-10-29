@@ -1,12 +1,10 @@
 #!/usr/bin/env node
+'use strict';
 
-import fs from 'node:fs';
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import http from 'node:http';
-import https from 'node:https';
-import type { TLSSocket } from 'node:tls';
-
-import { certPath } from './certs';
+const http = require('node:http');
+const https = require('node:https');
+const fs = require('node:fs');
+const { certPath } = require('./certs');
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -16,7 +14,7 @@ const HTTPS_OPTIONS = {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 60_000;
 
-function delayResponse(req: IncomingMessage) {
+function delayResponse(req) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -25,8 +23,8 @@ function delayResponse(req: IncomingMessage) {
   return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
-async function handleRequest(req: IncomingMessage, res: ServerResponse) {
-  const url = new URL(req.url ?? '/', `${(req.socket as TLSSocket).encrypted ? 'https' : 'http'}://localhost`);
+async function handleRequest(req, res) {
+  const url = new URL(req.url, `${req.socket.encrypted ? 'https' : 'http'}://localhost`);
   process.stdout.write(`${req.method} ${url.pathname}\n`);
 
   const sseEventsMatch = req.method === 'GET' && url.pathname.match(/^\/sse-events\/(\d+)$/);
@@ -73,9 +71,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
 const server = http.createServer(handleRequest);
 const httpsServer = https.createServer(HTTPS_OPTIONS, handleRequest);
 
-server.listen(4050, () => {
+server.listen(4050, '127.0.0.1', () => {
   process.stdout.write('Listening at http://localhost:4050\n');
 });
-httpsServer.listen(4051, () => {
+httpsServer.listen(4051, '127.0.0.1', () => {
   process.stdout.write('Listening at https://localhost:4051\n');
 });

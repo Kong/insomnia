@@ -1,8 +1,10 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
+import { expect } from "@playwright/test";
+
 import { DeleteMode } from "../../enums/delete-mode";
-import { expect, resetCloudSyncState, test } from "../../misc/fixtures";
+import { resetCloudSyncState, test } from "../../misc/fixtures";
 
 test.afterAll(async () => {
   await resetCloudSyncState();

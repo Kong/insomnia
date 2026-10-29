@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, MCP_SERVER, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../misc/fixtures";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
 
@@ -11,7 +12,7 @@ test("Verify MCP Client Sends the Bearer Token Header Only When Authentication I
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

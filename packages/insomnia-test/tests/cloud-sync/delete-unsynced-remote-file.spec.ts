@@ -2,16 +2,10 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
-import {
-  expect,
-  getCloudSyncProjectInfo,
-  HTTP_SERVER,
-  resetCloudSyncState,
-  setCloudSyncArchiveFailure,
-  test,
-} from "../../misc/fixtures";
+import { getCloudSyncProjectInfo, HTTP_SERVER, resetCloudSyncState, setCloudSyncArchiveFailure, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test.afterAll(async () => {
@@ -58,7 +52,7 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   await setCloudSyncArchiveFailure(false);
 
   const newCollectionName = `Z ${faker.string.alphanumeric(8)}`;
-  const newCollection = await workspaceFlow.create(
+  const newCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(newCollectionName),
   ) as Collection;

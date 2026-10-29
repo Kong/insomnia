@@ -1,12 +1,11 @@
 #!/usr/bin/env node
+"use strict";
 
-import fs from "node:fs";
-import { createServer } from "node:http";
-import { createServer as createHttpsServer } from "node:https";
-
-import { Server } from "socket.io";
-
-import { certPath } from "./certs";
+const { createServer } = require("node:http");
+const { createServer: createHttpsServer } = require("node:https");
+const fs = require("node:fs");
+const { Server } = require("socket.io");
+const { certPath } = require("./certs");
 
 const PORT = process.env.SOCKET_PORT || 3000;
 const SECURE_PORT = process.env.SOCKET_SECURE_PORT || 3001;
@@ -52,12 +51,12 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '127.0.0.1', () => {
   process.stdout.write(
     `Socket.IO server listening at http://localhost:${PORT}\n`,
   );
 });
-httpsServer.listen(SECURE_PORT, () => {
+httpsServer.listen(SECURE_PORT, '127.0.0.1', () => {
   process.stdout.write(
     `Socket.IO server listening at https://localhost:${SECURE_PORT}\n`,
   );

@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { McpPrimitiveType } from "../../enums/mcp-capability";
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, MCP_SERVER, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../misc/fixtures";
 import { scriptMcpListServer } from "../../misc/mcp-list-server";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
@@ -30,7 +31,7 @@ test("Verify Loaded Pages Are Kept After Switching to Another MCP Client and Bac
       },
     },
   });
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { DialogDismissMethod } from "../../pages/cloud-sync.page";
 
@@ -11,7 +12,7 @@ test("Verify the dashboard's unsynced-file delete button only appears on unsynce
   const { cloudSyncPage } = user.pageManager;
 
   const project = await workspaceFlow.getProject({ name: "Personal Workspace" });
-  const localCollection = await workspaceFlow.create(
+  const localCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(faker.string.alphanumeric(10)),
   );

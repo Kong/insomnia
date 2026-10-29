@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL,test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { ENVIRONMENT_TYPE, EnvironmentKvPairDataType } from '../../../models/environment';
 import { Project } from '../../../models/project';
@@ -12,9 +13,9 @@ test('Verify discarding an environment card reverts its variable changes and lea
   const { cookiePage, environmentPage, gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  const project = await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const collectionBaseName = faker.string.alpha(10).toLowerCase();
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), collectionBaseName);
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), collectionBaseName);
   const baseName = faker.string.alpha(10);
   const subName = faker.string.alpha(10);
   const variable = (name: string, value: string) => ({ id: '', name, value, type: EnvironmentKvPairDataType.STRING });
@@ -22,12 +23,12 @@ test('Verify discarding an environment card reverts its variable changes and lea
   const changedName = faker.string.alpha(8);
   const removedName = faker.string.alpha(8);
   const originalVariables = [variable(keptName, 'kept'), variable(changedName, 'old'), variable(removedName, 'removed')];
-  const baseEnvironment = await environmentFlow.create(project, {
+  const baseEnvironment = await environmentFlow.createBaseEnvironment(project, {
     name: baseName,
     type: ENVIRONMENT_TYPE,
     kvPairData: originalVariables,
   });
-  await environmentFlow.create(baseEnvironment, {
+  await environmentFlow.createSubEnvironment(baseEnvironment, {
     name: subName,
     type: ENVIRONMENT_TYPE,
     kvPairData: [variable('subVar', 'old')],

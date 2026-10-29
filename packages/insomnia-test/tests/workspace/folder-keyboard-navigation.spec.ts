@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
 import { TreeNodeType } from "../../enums/tree-node-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Folder } from "../../models/folder";
 import { Project } from "../../models/project";
@@ -13,10 +14,10 @@ test("Verify arrow keys expand and collapse a sidebar folder", async ({
   const { workspaceFlow, folderFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -46,10 +47,10 @@ test("Verify Cmd/Ctrl+N opens the create menu targeted at the selected folder", 
   const { workspaceFlow, folderFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

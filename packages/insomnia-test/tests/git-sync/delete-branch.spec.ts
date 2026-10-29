@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { expect, getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Project } from '../../models/project';
 
 test(
@@ -11,7 +12,7 @@ test(
     const { gitSyncPage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+    await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
 
     const branchName = faker.string.alphanumeric(10);
     await gitSyncFlow.createBranch(branchName);

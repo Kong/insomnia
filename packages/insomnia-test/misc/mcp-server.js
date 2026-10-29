@@ -1,15 +1,13 @@
 #!/usr/bin/env node
+'use strict';
 
-import fs from 'node:fs';
-import https from 'node:https';
-
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express from 'express';
-import * as z from 'zod/v4';
-
-import { certPath } from './certs';
-import type { McpListConfig, McpListMethod, McpListReply } from './mcp-list-server';
+const https = require('node:https');
+const fs = require('node:fs');
+const express = require('express');
+const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
+const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
+const z = require('zod/v4');
+const { certPath } = require('./certs');
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -96,7 +94,7 @@ app.get('/', (_req, res) => {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 1000;
 
-function delayResponse(req: express.Request) {
+function delayResponse(req) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -152,13 +150,13 @@ app.get('/mcp', (_req, res) => {
 // `Reply` is `{ result }` (any JSON, sent verbatim) or `{ error: { code, message } }`.
 // For `pages`, the empty-string cursor is the first page.
 // ---------------------------------------------------------------------------
-const EMPTY_LISTS: Record<string, unknown> = {
+const EMPTY_LISTS = {
   'tools/list': { tools: [] },
   'resources/list': { resources: [] },
   'resources/templates/list': { resourceTemplates: [] },
   'prompts/list': { prompts: [] },
 };
-const listConfigs = new Map<string, McpListConfig>();
+const listConfigs = new Map();
 
 app.put('/mcp-list/:key/config', (req, res) => {
   listConfigs.set(req.params.key, req.body ?? {});
@@ -186,8 +184,8 @@ app.post('/mcp-list/:key', (req, res) => {
   }
   if (method in EMPTY_LISTS) {
     const config = listConfigs.get(req.params.key);
-    const script = config?.[method as McpListMethod];
-    const reply: McpListReply =
+    const script = config?.[method];
+    const reply =
       script === undefined
         ? { result: EMPTY_LISTS[method] }
         : 'pages' in script
@@ -214,12 +212,12 @@ const PORT = process.env.MCP_PORT || 4020;
 const SECURE_PORT = process.env.MCP_SECURE_PORT || 4021;
 const CUSTOM_CA_PORT = process.env.MCP_CUSTOM_CA_PORT || 4022;
 
-app.listen(PORT, () => {
+app.listen(PORT, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at http://localhost:${PORT}\n`);
 });
-https.createServer(HTTPS_OPTIONS, app).listen(SECURE_PORT, () => {
+https.createServer(HTTPS_OPTIONS, app).listen(SECURE_PORT, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at https://localhost:${SECURE_PORT}\n`);
 });
-https.createServer(CUSTOM_CA_HTTPS_OPTIONS, app).listen(CUSTOM_CA_PORT, () => {
+https.createServer(CUSTOM_CA_HTTPS_OPTIONS, app).listen(CUSTOM_CA_PORT, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at https://localhost:${CUSTOM_CA_PORT} (custom CA)\n`);
 });

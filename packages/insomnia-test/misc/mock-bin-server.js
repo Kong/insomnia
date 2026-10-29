@@ -1,13 +1,14 @@
 #!/usr/bin/env node
+'use strict';
 
-import http, { type IncomingMessage, type ServerResponse } from 'node:http';
+const http = require('node:http');
 
 const PORT = 4090;
 
-/** key: `${METHOD} ${compoundId}` -> HAR response */
-const bins = new Map<string, any>();
-/** key: `${METHOD} ${compoundId}` -> HAR log entries */
-const logs = new Map<string, any[]>();
+/** @type {Map<string, any>} key: `${METHOD} ${compoundId}` -> HAR response */
+const bins = new Map();
+/** @type {Map<string, any[]>} key: `${METHOD} ${compoundId}` -> HAR log entries */
+const logs = new Map();
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -35,20 +36,25 @@ const HOP_BY_HOP_HEADERS = new Set([
   'transfer-encoding',
 ]);
 
-const readBody = (req: IncomingMessage) =>
-  new Promise<string>(resolve => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+const readBody = req =>
+  new Promise(resolve => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
 
-const send = (res: ServerResponse, status: number, body: string, headers: Record<string, string> = {}) => {
-  res.writeHead(status, { ...CORS_HEADERS, ...headers });
+const send = (res, status, body, headers = {}) => {
+  res.writeHead(status, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'X-Content-Type-Options': 'nosniff',
+    ...CORS_HEADERS,
+    ...headers,
+  });
   res.end(body);
 };
 
-const handle = async (req: IncomingMessage, res: ServerResponse) => {
-  const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
+const handle = async (req, res) => {
+  const url = new URL(req.url, `http://localhost:${PORT}`);
   const method = (req.method || 'GET').toUpperCase();
 
   if (method === 'OPTIONS') {
@@ -63,7 +69,7 @@ const handle = async (req: IncomingMessage, res: ServerResponse) => {
     const body = JSON.stringify(SOURCE_RESPONSE_BODY);
     return send(res, SOURCE_RESPONSE_STATUS, body, {
       'Content-Type': 'application/json',
-      'Content-Length': String(Buffer.byteLength(body)),
+      'Content-Length': Buffer.byteLength(body),
       [SOURCE_RESPONSE_HEADER_NAME]: SOURCE_RESPONSE_HEADER_VALUE,
     });
   }
@@ -120,7 +126,7 @@ const handle = async (req: IncomingMessage, res: ServerResponse) => {
         'Content-Type': 'application/json',
       });
     }
-    const headers: Record<string, string> = {};
+    const headers = {};
     for (const { name, value } of har.headers || []) {
       if (name && !HOP_BY_HOP_HEADERS.has(name.toLowerCase())) headers[name] = value;
     }
@@ -144,13 +150,13 @@ const server = http.createServer((req, res) => {
   handle(req, res).catch(error => {
     console.error('[mock-bin-server]', error);
     if (!res.headersSent) {
-      send(res, 500, String(error && error.message));
+      send(res, 500, 'internal error');
     } else {
       res.end();
     }
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`[mock-bin-server] listening on :${PORT}`);
 });

@@ -2,10 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../../../../enums/content-type";
 import { ProjectType } from "../../../../../enums/project-types";
-import { expect, test } from "../../../../../misc/fixtures";
+import { test } from "../../../../../misc/fixtures";
 import { Project } from "../../../../../models/project";
 
 const wsdl = fs.readFileSync(path.join(__dirname, "calculator.wsdl"), "utf8");
@@ -15,7 +16,7 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
   const { httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

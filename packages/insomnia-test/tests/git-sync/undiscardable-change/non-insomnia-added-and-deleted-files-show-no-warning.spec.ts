@@ -3,10 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 
@@ -26,7 +27,7 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
     { cloneParentDir },
   );
   const deletedFile = faker.string.alpha(10).toLowerCase();
-  const deletedCollection = await workspaceFlow.create(
+  const deletedCollection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
     deletedFile,
@@ -35,7 +36,7 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   fs.appendFileSync(path.join(cloneDir, otherFileName), `  version: ${faker.string.numeric(3)}\n`);
   const addedFile = faker.string.alpha(11).toLowerCase();
-  await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), addedFile);
+  await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), addedFile);
   await workspaceFlow.delete(deletedCollection);
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged.length, {

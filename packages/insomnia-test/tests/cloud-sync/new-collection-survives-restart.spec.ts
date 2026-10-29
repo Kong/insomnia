@@ -2,10 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { SyncStatus } from "../../enums/sync-status";
-import { expect, HTTP_SERVER, test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test("Verify a new collection is not left in an unsynced state after an app restart", async ({
@@ -23,7 +24,7 @@ test("Verify a new collection is not left in an unsynced state after an app rest
   const collectionYName = `Y ${faker.string.alphanumeric(8)}`;
   let collectionYId: string | undefined;
   const creationLog = await appFlow.captureMainProcessLog(async () => {
-    const collectionY = await workspaceFlow.create(
+    const collectionY = await workspaceFlow.createCollection(
       project!,
       new Collection(collectionYName),
     );

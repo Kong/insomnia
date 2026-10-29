@@ -28,7 +28,7 @@ export const WS_SERVER_WSS = "wss://localhost:4041";
 export const SOCKET_SERVER = "ws://localhost:3000";
 export const SOCKET_SERVER_WSS = "wss://localhost:3001";
 /**
- * The namespace on `misc/socket-server.ts` that only accepts connections
+ * The namespace on `misc/socket-server.js` that only accepts connections
  * whose handshake auth token equals `SOCKET_SERVER_AUTH_TOKEN` — mirror any
  * change here into that file.
  */
@@ -38,7 +38,7 @@ export const SOCKET_SERVER_AUTH_TOKEN = "test-socket-io-token";
 export const MCP_SERVER = "http://localhost:4020/mcp";
 export const MCP_SERVER_HTTPS = "https://localhost:4021/mcp";
 export const MCP_SERVER_CUSTOM_CA_HTTPS = "https://localhost:4022/mcp";
-/** Base of `misc/mcp-server.ts`'s scriptable list-response endpoints, one per `/mcp-list/<key>`. */
+/** Base of `misc/mcp-server.js`'s scriptable list-response endpoints, one per `/mcp-list/<key>`. */
 export const MCP_LIST_SERVER = "http://localhost:4020/mcp-list";
 
 export const GRPC_SERVER = "localhost:9000";
@@ -50,7 +50,7 @@ export const GIT_SERVER = "http://localhost:4070";
 export const MOCK_BIN_SERVER = "http://localhost:4090";
 /**
  * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
- * route — mirror any change here into `misc/mock-bin-server.ts`.
+ * route — mirror any change here into `misc/mock-bin-server.js`.
  */
 export const MOCK_BIN_SOURCE_RESPONSE = {
   url: `${MOCK_BIN_SERVER}/source`,
@@ -60,7 +60,7 @@ export const MOCK_BIN_SOURCE_RESPONSE = {
 };
 
 /**
- * Fixed test credentials `misc/oauth2-server.ts` accepts for its
+ * Fixed test credentials `misc/oauth2-server.js` accepts for its
  * Authorization Code / Implicit / Client Credentials / Resource Owner
  * Password grants — mirror any change here into that file.
  */
@@ -69,8 +69,3 @@ export const OAUTH2_CLIENT_ID = "test-client-id";
 export const OAUTH2_CLIENT_SECRET = "test-client-secret";
 export const OAUTH2_USERNAME = "testuser";
 export const OAUTH2_PASSWORD = "testpass";
-
-// Which Insomnia the tests launch when INSOMNIA_BINARY is unset: false → the
-// installed /Applications/Insomnia.app, true → the sibling ../insomnia source
-// checkout (dev mode, served by a Vite dev server).
-export const USE_LOCAL_SOURCE = true;

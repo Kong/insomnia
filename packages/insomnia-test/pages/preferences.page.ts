@@ -664,23 +664,6 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
-   * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
-   * nothing when it already is. The switch is disabled until an LLM backend
-   * is active. Must be called with `openAiSettingsTab()` already open.
-   * @param enabled - The state to leave the switch in
-   */
-  async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
-    const smartCommitsSwitch = this.dialog
-      .locator("div.justify-between", { hasText: "Smart Commits" })
-      .last()
-      .getByRole("switch");
-    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
-      await smartCommitsSwitch.click({ force: true });
-    }
-    await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
-  }
-
-  /**
    * Reports whether a backend's nav button currently carries the "Active"
    * badge (i.e. it's the app's current LLM backend). Must be called with
    * `openAiSettingsTab()` already open.
@@ -896,6 +879,38 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
+   * A custom-styled checkbox (General tab,
+   * Settings.hideSecretValuesInPreviewAndConsole) whose native input
+   * ignores direct clicks — the wrapping label is the actual clickable
+   * target. Toggling it in either direction pops an informational alert
+   * ("Hiding Confidential Variables" / "Confidential Variables Are Now
+   * Visible"), which is dismissed here so it doesn't block later steps.
+   * On by default, which masks vault/secret values in the template tag
+   * Live Preview as `••••••`.
+   * @param enabled - Whether confidential values should be hidden in Preview/Console
+   */
+  async setHideSecretValuesInPreviewAndConsole(
+    enabled: boolean,
+  ): Promise<void> {
+    const label = this.dialog.locator("label", {
+      hasText: /^Hide Confidential values in Preview\/Console$/,
+    });
+    const input = label.locator('input[type="checkbox"]');
+    if ((await input.isChecked()) !== enabled) {
+      await label.click();
+      await expect(input).toBeChecked({
+        checked: enabled,
+        timeout: DEFAULT_TIMEOUT,
+      });
+      const alert = this.page
+        .getByRole("dialog")
+        .filter({ hasText: /Confidential Variables/ });
+      await alert.getByRole("button", { name: "Ok" }).click();
+      await expect(alert).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    }
+  }
+
+  /**
    * A custom-styled checkbox (General tab, Settings.filterResponsesByEnv)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target, same quirk as `setValidateSSL()`.
@@ -1074,5 +1089,22 @@ export class PreferencesPage extends BasePage {
     await modal.getByRole("button", { name: "OK" }).click();
     await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     return value;
+  }
+
+  /**
+   * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
+   * nothing when it already is. The switch is disabled until an LLM backend
+   * is active. Must be called with `openAiSettingsTab()` already open.
+   * @param enabled - The state to leave the switch in
+   */
+  async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
+    const smartCommitsSwitch = this.dialog
+      .locator("div.justify-between", { hasText: "Smart Commits" })
+      .last()
+      .getByRole("switch");
+    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
+      await smartCommitsSwitch.click({ force: true });
+    }
+    await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
   }
 }

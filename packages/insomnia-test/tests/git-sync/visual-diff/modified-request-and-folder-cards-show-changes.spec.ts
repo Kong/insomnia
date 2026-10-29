@@ -3,13 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ContentType } from '../../../enums/content-type';
 import { GitChangeList } from '../../../enums/git-change-list';
 import { HttpMethod } from '../../../enums/http-method';
 import { ProjectType } from '../../../enums/project-types';
 import { HTTP_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { Folder } from '../../../models/folder';
 import { HttpRequest } from '../../../models/http-request';
@@ -21,10 +22,10 @@ test('Verify a modified request card shows its old and new header values and eac
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-visual-diff-'));
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
+  const project = await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   const baseName = faker.string.alpha(10).toLowerCase();
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), baseName);
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), baseName);
   const oldUrl = `${HTTP_SERVER}/${faker.string.alphanumeric(10)}`;
   const newUrl = `${HTTP_SERVER}/${faker.string.alphanumeric(12)}`;
   const request = await httpRequestFlow.create(collection, new HttpRequest({ name: faker.string.alpha(10), url: oldUrl, method: HttpMethod.Get }));

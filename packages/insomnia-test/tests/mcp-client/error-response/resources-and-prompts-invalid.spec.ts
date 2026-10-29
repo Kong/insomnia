@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { McpPrimitiveType } from '../../../enums/mcp-capability';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, test } from "../../../misc/fixtures";
 import { scriptMcpListServer } from '../../../misc/mcp-list-server';
 import { McpClient } from '../../../models/mcp-client';
 import { Project } from '../../../models/project';
@@ -23,7 +24,7 @@ test('Verify Invalid resources/list and prompts/list Are Reported Like tools/lis
     },
     'prompts/list': { result: { prompts: 'none' } },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
@@ -48,7 +49,7 @@ test('Verify a prompts/list Whose prompts Is an Object Is a Whole-Response Error
   const url = await scriptMcpListServer(faker.string.alphanumeric(12), {
     'prompts/list': { result: { prompts: {} } },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 
@@ -67,7 +68,7 @@ test('Verify a Prompt with Bad arguments Is Skipped While Valid Prompts Are List
       },
     },
   });
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Local));
+  const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const client = await mcpClientFlow.create(project, new McpClient(faker.string.alphanumeric(10), url));
   await mcpClientFlow.connect(client);
 

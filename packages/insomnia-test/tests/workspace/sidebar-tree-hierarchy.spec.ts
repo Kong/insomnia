@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
 import { TreeNodeType } from "../../enums/tree-node-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection, Info, Specification } from "../../models/collection";
 import { Folder } from "../../models/folder";
 import { Project } from "../../models/project";
@@ -14,7 +15,7 @@ test("Verify requests and folders render as nested child rows under a spec-carry
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
   const { workspacePage, httpRequestPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const specPath = `/${faker.word.sample()}`;
@@ -29,7 +30,7 @@ test("Verify requests and folders render as nested child rows under a spec-carry
       },
     },
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10), spec),
   );

@@ -2,9 +2,10 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Project } from "../../../models/project";
 
 const UNIT_TEST_FIXTURE = fs.readFileSync(
@@ -20,7 +21,7 @@ test("Verify Unit Test Suite Run Results And Suite/Test Renaming", async ({
 }) => {
   const { workspaceFlow, importFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

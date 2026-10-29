@@ -1,9 +1,10 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import type { HttpRequest } from "../../models/http-request";
@@ -14,16 +15,16 @@ const url = `${HTTP_SERVER}/post`;
 test("Verify LiquidJS control flow tags render correctly", async ({ user }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
   const envValue = faker.string.alphanumeric(8);
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: "Base Environment",
     kvPairData: [
       {
@@ -59,10 +60,10 @@ test("Verify LiquidJS include/render/layout tags are blocked", async ({
 }) => {
   const { httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

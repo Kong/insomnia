@@ -22,6 +22,7 @@ import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import { SocketIORequestFlow } from "./socket-io-request.flow";
 import { TemplateTagFlow } from "./template-tag.flow";
+import { VariableSourceFlow } from "./variable-source.flow";
 import { WebSocketRequestFlow } from "./web-socket-request.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
@@ -45,6 +46,7 @@ export class FlowManager implements FlowContext {
   private _preferencesFlow?: PreferencesFlow;
   private _socketIoRequestFlow?: SocketIORequestFlow;
   private _templateTagFlow?: TemplateTagFlow;
+  private _variableSourceFlow?: VariableSourceFlow;
   private _webSocketRequestFlow?: WebSocketRequestFlow;
   private _workspaceFlow?: WorkspaceFlow;
 
@@ -204,6 +206,12 @@ export class FlowManager implements FlowContext {
     ));
   }
 
+  get variableSourceFlow(): VariableSourceFlow {
+    return (this._variableSourceFlow ??= instrumentWithSteps(
+      new VariableSourceFlow(this, this.pageManager),
+    ));
+  }
+
   get webSocketRequestFlow(): WebSocketRequestFlow {
     return (this._webSocketRequestFlow ??= instrumentWithSteps(
       new WebSocketRequestFlow(this, this.pageManager),
@@ -216,6 +224,7 @@ export class FlowManager implements FlowContext {
         this,
         this.pageManager,
         this.preferencesFlow,
+        this,
         this.gitRepoUrl,
       ),
     ));

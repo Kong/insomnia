@@ -1,4 +1,5 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
+import type { ResponseExportOption } from "../enums/response-export-option";
 import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
@@ -103,6 +104,36 @@ export class HttpRequestFlow extends BaseFlow {
     return httpRequestPage.auth.getOAuth2Tokens();
   }
 
+  /**
+   * Exports the response currently shown for the last-sent request to
+   * `filePath` via the response pane's "Preview" dropdown.
+   * @param option - The export menu item to click
+   * @param filePath - Absolute path the file should be written to
+   */
+  async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
+    await this.pageManager.responsePage.exportResponse(option, filePath);
+  }
+
+  /**
+   * Saves the large response currently shown for the last-sent request to
+   * `filePath` via the response pane's "Save To File" button.
+   * @param filePath - Absolute path the file should be written to
+   */
+  async saveResponseToFile(filePath: string): Promise<void> {
+    await this.pageManager.responsePage.saveResponseToFile(filePath);
+  }
+
+  /**
+   * Reads an export menu item's label and disabled state for the response
+   * currently shown.
+   * @param option - The export menu item to inspect
+   */
+  async getResponseExportOptionState(
+    option: ResponseExportOption,
+  ): Promise<{ text: string; disabled: boolean }> {
+    return this.pageManager.responsePage.getExportOptionState(option);
+  }
+
   private async applyRequestFields(
     page: HttpRequestPage,
     request: HttpRequest,
@@ -132,9 +163,9 @@ export class HttpRequestFlow extends BaseFlow {
   }
 
   /**
-   * Applies `authentication` to the request pane's Auth tab. Only OAuth
-   * 1.0 and OAuth 2.0 are wired up so far — other auth types will need
-   * their own Page setter before they can be added here.
+   * Applies `authentication` to the request pane's Auth tab. OAuth 1.0 is
+   * HTTP-only so it is handled here; every other type is delegated to
+   * `BaseFlow.applyAuthentication`.
    * @param page - The request page to apply authentication on
    * @param authentication - The authentication config to apply
    */
@@ -144,10 +175,9 @@ export class HttpRequestFlow extends BaseFlow {
   ): Promise<void> {
     if (authentication.type === "oauth1") {
       await page.auth.setOAuth1Fields(authentication);
+      return;
     }
-    if (authentication.type === "oauth2") {
-      await page.auth.setOAuth2Fields(authentication);
-    }
+    await this.applyAuthentication(page.auth, authentication);
   }
 
 }

@@ -2,7 +2,6 @@ import type { Collection } from "../models/collection";
 import {
   Environment,
   ENVIRONMENT_TYPE,
-  isEnvironmentItem,
 } from "../models/environment";
 import type { EventStreamRequest } from "../models/event-stream-request";
 import type { GraphQLRequest } from "../models/graphql-request";
@@ -34,26 +33,38 @@ export class EnvironmentFlow extends BaseFlow {
   }
 
   /**
-   * Creates/renames the workspace's Base Environment (when `parent` is a
-   * Project), or a sub-environment under it (when `parent` is an
-   * Environment), then applies `environment.kvPairData`.
-   * @param parent - A Project to create/rename the Base Environment, or an Environment to nest a sub-environment under
+   * Creates/renames the workspace's Base Environment under `parent`, then
+   * applies `environment.kvPairData`.
+   * @param parent - The Project to create/rename the Base Environment in
    * @param environment - The environment to create, including variables to set
    * @returns The created environment, with `containerName` populated
    */
-  async create(
-    parent: Project | Environment,
-    environment: Environment,
-  ): Promise<Environment> {
-    let containerName: string | undefined;
-    if (isEnvironmentItem(parent)) {
-      await this.createSubEnvironment(environment);
-      containerName = parent.containerName;
-    } else {
-      containerName = await this.createBaseEnvironment(parent, environment);
+  async createBaseEnvironment(parent: Project, environment: Environment): Promise<Environment> {
+    await this.workspaceFlow.createEnvironment(parent, environment);
+    if (environment.name !== BASE_ENVIRONMENT_NAME) {
+      await this.pageManager.environmentPage.renameEnvironment(
+        BASE_ENVIRONMENT_NAME,
+        environment.name,
+      );
     }
     const created = await this.applyVariables(environment);
-    return containerName ? Object.assign(created, { containerName }) : created;
+    return Object.assign(created, { containerName: environment.name });
+  }
+
+  /**
+   * Creates a sub-environment nested under `parent`, then applies
+   * `environment.kvPairData`.
+   * @param parent - The Environment to nest a sub-environment under; must be the object returned by `createBaseEnvironment()`
+   * @param environment - The sub-environment to create, including variables to set
+   * @returns The created environment, with `containerName` inherited from `parent` if set
+   */
+  async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
+    await this.pageManager.environmentPage.createSubEnvironment(
+      environment.name,
+      environment.isPrivate ?? false,
+    );
+    const created = await this.applyVariables(environment);
+    return parent.containerName ? Object.assign(created, { containerName: parent.containerName }) : created;
   }
 
   /**
@@ -136,6 +147,71 @@ export class EnvironmentFlow extends BaseFlow {
     await this.pageManager.environmentPage.selectCollectionEnvironment(name);
   }
 
+  /**
+   * Opens one environment picker on `collection`'s toolbar and reports
+   * which picker popovers are open, then dismisses it.
+   * @param collection - The collection whose toolbar holds the pickers
+   * @param picker - Which picker to open
+   * @returns The pickers that were open while `picker` was open
+   */
+  async getOpenPickersAfterOpening(
+    collection: Collection,
+    picker: "project" | "collection",
+  ): Promise<("project" | "collection")[]> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.openEnvironmentPicker(picker);
+    const open = await environmentPage.getOpenEnvironmentPickers();
+    await environmentPage.closeEnvironmentPicker();
+    return open;
+  }
+
+  /**
+   * Creates a Project Environment from `collection`'s project picker and
+   * reads the picker back, without linking the new environment.
+   * @param collection - The collection whose toolbar's project picker is used
+   * @param name - The new Project Environment's name
+   * @returns The picker's selection label and its listed option names
+   */
+  async addProjectEnvironmentFromPicker(
+    collection: Collection,
+    name: string,
+  ): Promise<{ selected: string; options: string[] }> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.addProjectEnvironment(name, collection.name);
+    return environmentPage.getProjectEnvironmentPickerState();
+  }
+
+  /**
+   * Creates a shared or private sub-environment inside `collection`'s own
+   * "Manage Environments" modal and reports whether it is marked private.
+   * @param collection - The collection whose own environments are managed
+   * @param environment - The sub-environment to create (`isPrivate` selects the button)
+   * @returns Whether the created environment row carries the private lock icon
+   */
+  async createCollectionSubEnvironment(
+    collection: Collection,
+    environment: Environment,
+  ): Promise<{ isPrivate: boolean }> {
+    const workspace = this.pageManager.workspacePage;
+    const environmentPage = this.pageManager.environmentPage;
+    const node = await workspace.resolveNode(collection);
+    await workspace.clickNode(node);
+
+    await environmentPage.openCollectionEnvironmentManager();
+    await environmentPage.createSubEnvironment(environment.name, environment.isPrivate ?? false);
+    const isPrivate = await environmentPage.isEnvironmentPrivate(environment.name);
+    await environmentPage.closeCollectionEnvironmentManager();
+    return { isPrivate };
+  }
+
   private async applyVariables(environment: Environment): Promise<Environment> {
     const environmentPage = this.pageManager.environmentPage;
     if (environment.kvPairData?.length) {
@@ -146,30 +222,6 @@ export class EnvironmentFlow extends BaseFlow {
     return this.assertCreated(
       await this.get(environment.name),
       environment.name,
-    );
-  }
-
-  private async createBaseEnvironment(
-    parent: Project,
-    environment: Environment,
-  ): Promise<string> {
-    await this.workspaceFlow.create(parent, {
-      name: environment.name,
-      type: ENVIRONMENT_TYPE,
-    });
-    if (environment.name !== BASE_ENVIRONMENT_NAME) {
-      await this.pageManager.environmentPage.renameEnvironment(
-        BASE_ENVIRONMENT_NAME,
-        environment.name,
-      );
-    }
-    return environment.name;
-  }
-
-  private async createSubEnvironment(environment: Environment): Promise<void> {
-    await this.pageManager.environmentPage.createSubEnvironment(
-      environment.name,
-      environment.isPrivate ?? false,
     );
   }
 }

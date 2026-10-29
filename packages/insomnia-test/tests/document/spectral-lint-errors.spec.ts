@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { LintSeverity } from "../../enums/lint-severity";
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 
@@ -12,7 +13,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   const { workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -58,7 +59,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference In A YAML Spec",
   const { workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

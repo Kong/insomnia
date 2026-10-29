@@ -1,8 +1,9 @@
 import { expect } from '@playwright/test';
 
 import { RequestState } from '../enums/request-state';
+import type { ResponseExportOption } from '../enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
-import type { ResponseView, ResponseHeader, ResponseTestResult, StreamEvent } from '../models/response';
+import type { ResponseHeader, ResponseTestResult, ResponseView, StreamEvent } from '../models/response';
 import { BasePage } from './base.page';
 
 export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';
@@ -317,11 +318,55 @@ export class ResponsePage extends BasePage {
 
   /**
    * Confirms a gRPC response has been rendered by waiting for the
-   * response status tag to become visible.
+   * response status tag to become visible. If an error dialog appears
+   * instead (gRPC business failures), throws using its text.
    */
   async navigateGrpc(): Promise<void> {
     const statusTag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
-    await expect(statusTag).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const dialog = this.page.getByRole('dialog').first();
+    await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
+  }
+
+  /**
+   * Exports the response currently shown via the "Preview" dropdown,
+   * writing it to `filePath` through a stubbed native save dialog.
+   * @param option - The export menu item to click
+   * @param filePath - Absolute path the stubbed save dialog should return
+   */
+  async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
+    await this.stubSaveDialog(filePath);
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    await this.page.getByRole('menuitem', { name: option }).click();
+  }
+
+  /**
+   * Clicks the "Save To File" button that only renders for responses over
+   * the large-response threshold, writing the raw body to `filePath`
+   * through a stubbed native save dialog.
+   * @param filePath - Absolute path the stubbed save dialog should return
+   */
+  async saveResponseToFile(filePath: string): Promise<void> {
+    await this.stubSaveDialog(filePath);
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Save To File' }).click();
+  }
+
+  /**
+   * Opens the "Preview" dropdown and reads one export item's label and
+   * whether it is disabled, then closes the dropdown.
+   * @param option - The export menu item to inspect
+   * @returns The item's visible text and whether it is rendered as disabled
+   */
+  async getExportOptionState(option: ResponseExportOption): Promise<{ text: string; disabled: boolean }> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    const item = this.page.getByRole('menuitem', { name: option });
+    await item.waitFor({ state: 'visible' });
+    const text = (await item.innerText()).replace(/\s+/g, ' ').trim();
+    const disabled = /cursor-not-allowed/.test((await item.getAttribute('class')) ?? '');
+    await this.page.keyboard.press('Escape');
+    return { text, disabled };
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {

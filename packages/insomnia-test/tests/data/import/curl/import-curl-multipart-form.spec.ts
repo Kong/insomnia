@@ -1,11 +1,14 @@
+import * as fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../../../enums/content-type";
 import { HttpMethod } from "../../../../enums/http-method";
 import { ProjectType } from "../../../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../../../misc/fixtures";
 import { Collection } from "../../../../models/collection";
 import type { CurlCommand } from "../../../../models/curl-command";
 import type { HttpRequest } from "../../../../models/http-request";
@@ -13,7 +16,7 @@ import { Project } from "../../../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 const title = faker.string.alphanumeric(8);
-const uploadFilePath = path.join(
+const fixtureFilePath = path.join(
   __dirname,
   "..",
   "..",
@@ -23,17 +26,23 @@ const uploadFilePath = path.join(
   "fixtures",
   "upload-sample.txt",
 );
-const command = `curl -X POST "${url}" -F "title=${title}" -F "upload=@${uploadFilePath}"`;
 
 test("Import HTTP Request by Curl Command With -F Builds a Multipart Form Body Including a File Field", async ({
   user,
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const uploadDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "insomnia-e2e-upload-"),
+  );
+  const uploadFilePath = path.join(uploadDir, "upload-sample.txt");
+  await fs.promises.copyFile(fixtureFilePath, uploadFilePath);
+  const command = `curl -X POST "${url}" -F "title=${title}" -F "upload=@${uploadFilePath}"`;
+
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

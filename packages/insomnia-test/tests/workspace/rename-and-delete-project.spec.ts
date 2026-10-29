@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Project } from "../../models/project";
 
 test("Verify Renaming And Deleting A Project Via The Dashboard", async ({
@@ -11,7 +12,7 @@ test("Verify Renaming And Deleting A Project Via The Dashboard", async ({
 
   const oldName = faker.string.alphanumeric(10);
   const newName = faker.string.alphanumeric(10);
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(oldName, ProjectType.Local),
   );
 

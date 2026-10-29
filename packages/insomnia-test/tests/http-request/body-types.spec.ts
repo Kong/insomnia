@@ -1,11 +1,12 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { HttpRequest } from "../../models/http-request";
 import { Project } from "../../models/project";
@@ -23,10 +24,10 @@ const uploadFilePath = path.join(
 test("Send HTTP Request with x-www-form-urlencoded Body", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -72,10 +73,10 @@ test("Send HTTP Request with x-www-form-urlencoded Body", async ({ user }) => {
 test("Send HTTP Request with JSON Body", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -105,10 +106,10 @@ test("Send HTTP Request with JSON Body", async ({ user }) => {
 test("Send HTTP Request with XML Body", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -139,10 +140,10 @@ test("Send HTTP Request with XML Body", async ({ user }) => {
 test("Send HTTP Request with No Body explicitly selected", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -173,12 +174,15 @@ test("Send HTTP Request with No Body explicitly selected", async ({ user }) => {
 test("Send HTTP Request with multipart/form-data Body including a file field", async ({
   user,
 }) => {
-  const { workspaceFlow, httpRequestFlow } = user.flowManager;
+  const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  // Insomnia only reads files from allow-listed directories (Preferences -> General -> Security).
+  await preferencesFlow.set({ dataFolders: [path.dirname(uploadFilePath)] });
+
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

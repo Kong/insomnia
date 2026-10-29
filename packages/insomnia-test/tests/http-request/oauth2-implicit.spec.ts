@@ -1,13 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import {
-  expect,
-  OAUTH2_CLIENT_ID,
-  OAUTH2_SERVER,
-  test,
-} from "../../misc/fixtures";
+import { OAUTH2_CLIENT_ID, OAUTH2_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { AuthTypeOAuth2 } from "../../models/http-request";
 import { Project } from "../../models/project";
@@ -17,10 +13,10 @@ test("Verify Implicit grant with response type ID Token fetches only an identity
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -42,10 +38,9 @@ test("Verify Implicit grant with response type ID Token fetches only an identity
 
   const tokens = await httpRequestFlow.fetchOAuth2Tokens(request);
 
-  // Confirmed live: with no separate access_token in the fragment, the
-  // app falls back to displaying the identity token in the Access Token
-  // field too (labeled "never expires" rather than an actual TTL),
-  // rather than leaving it blank.
+  // With no separate access_token in the fragment, the app displays the
+  // identity token in the Access Token field too, rather than leaving it
+  // blank.
   expect(tokens.identityToken).not.toBe("");
   expect(tokens.accessToken).toBe(tokens.identityToken);
 });
@@ -55,10 +50,10 @@ test("Verify Implicit grant with response type ID and Access Token authorizes th
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

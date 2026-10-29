@@ -20,8 +20,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      // Keep sourcemaps when KEEP_SOURCEMAPS=true so E2E coverage can be mapped back to the original source
-      filter: process.env.KEEP_SOURCEMAPS === 'true' ? ['**/*'] : ['**/*', '!**/*.map'],
+      filter: ['**/*', '!**/*.map'],
     },
     './package.json',
   ],

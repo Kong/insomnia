@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 
@@ -11,10 +12,10 @@ test("Verify collection/request create and delete persist correctly while offlin
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collectionA = await workspaceFlow.create(
+  const collectionA = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -26,7 +27,7 @@ test("Verify collection/request create and delete persist correctly while offlin
 
   await user.page.context().setOffline(true);
 
-  const collectionB = await workspaceFlow.create(
+  const collectionB = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

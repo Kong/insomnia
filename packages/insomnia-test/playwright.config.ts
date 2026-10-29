@@ -3,14 +3,25 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import { ensureCerts } from "./misc/certs";
-import { USE_LOCAL_SOURCE } from "./misc/constants";
 
-// Which app the tests launch is picked by USE_LOCAL_SOURCE in misc/constants.ts
-// (INSOMNIA_BINARY, which CI always sets, overrides it). When it launches the
-// sibling ../insomnia source checkout, that app's renderer loads from the Vite
-// dev server below, so it has to be up before any test's Electron instance
-// launches.
-const isDevMode = !process.env.INSOMNIA_BINARY && USE_LOCAL_SOURCE;
+// By default, misc/fixtures.ts launches the app straight out of the
+// sibling ../insomnia source checkout (its local `electron` binary against
+// packages/insomnia) instead of a packaged build — so the app under test
+// always reflects whatever's currently checked out there, not whichever
+// build happened to get installed last. That app's renderer loads from
+// this Vite dev server, so it has to be up before any test's Electron
+// instance launches.
+//
+// Opts out automatically whenever INSOMNIA_BINARY is set (CI always sets
+// it, pointing at that run's freshly built/cached binary — see
+// .github/workflows/playwright.yml), or explicitly via
+// INSOMNIA_DEV_MODE=false/0 to fall back to the packaged
+// /Applications/Insomnia.app build locally without pointing at a specific
+// binary.
+const isDevMode =
+  !process.env.INSOMNIA_BINARY &&
+  process.env.INSOMNIA_DEV_MODE !== "false" &&
+  process.env.INSOMNIA_DEV_MODE !== "0";
 const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
 
 // The mock servers' TLS/mTLS key pairs are generated rather than committed.
@@ -42,49 +53,49 @@ export default defineConfig({
 
   webServer: [
     {
-      command: "npx esr misc/mock-api.ts",
+      command: "node misc/mock-api.js",
       url: "http://localhost:4010/v3/users/me",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/event-stream-server.ts",
+      command: "node misc/event-stream-server.js",
       url: "http://localhost:4050/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/echo-server.ts",
+      command: "node misc/echo-server.js",
       url: "http://localhost:4060/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/socket-server.ts",
+      command: "node misc/socket-server.js",
       url: "http://localhost:3000/socket.io/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/ws-echo-server.ts",
+      command: "node misc/ws-echo-server.js",
       url: "http://localhost:4040",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/mcp-server.ts",
+      command: "node misc/mcp-server.js",
       url: "http://localhost:4020/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/grpc-server.ts",
+      command: "node misc/grpc-server.js",
       port: 9000,
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/git-server.ts",
+      command: "node misc/git-server.js",
       url: "http://localhost:4070/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
@@ -92,13 +103,13 @@ export default defineConfig({
       stderr: "ignore",
     },
     {
-      command: "npx esr misc/oauth2-server.ts",
+      command: "node misc/oauth2-server.js",
       url: "http://localhost:4080/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "npx esr misc/mock-bin-server.ts",
+      command: "node misc/mock-bin-server.js",
       url: "http://localhost:4090/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,

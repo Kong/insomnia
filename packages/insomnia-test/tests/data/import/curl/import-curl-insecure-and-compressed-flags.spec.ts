@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../../../enums/http-method";
 import { ProjectType } from "../../../../enums/project-types";
-import { expect, HTTP_SERVER_HTTPS,test } from "../../../../misc/fixtures";
+import { HTTP_SERVER_HTTPS, test } from "../../../../misc/fixtures";
 import { Collection } from "../../../../models/collection";
 import type { CurlCommand } from "../../../../models/curl-command";
 import type { HttpRequest } from "../../../../models/http-request";
@@ -21,10 +22,10 @@ test("Import HTTP Request by Curl Command With -k/--insecure and --compressed Fl
 
   await preferencesFlow.set({ validateSSL: false });
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

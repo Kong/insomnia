@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { ProjectType } from '../../../enums/project-types';
 import { seedCloudSyncProject } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { Project } from '../../../models/project';
 import { buildCloudSyncDocs } from '../../cloud-sync/unknown-fields/helpers';
@@ -18,7 +19,7 @@ test('Verify Cloud Sync and Git Sync unknown fields warnings stay independent in
   const { content, requestName: gitRequestName } = buildCollectionFileWithUnknownField(gitCollectionName);
   await pushServerFile({ path: fileName, content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged, { timeout: DEFAULT_TIMEOUT })
     .toContain(fileName);
@@ -38,7 +39,7 @@ test('Verify Cloud Sync and Git Sync unknown fields warnings stay independent in
   const cloudCollection = await workspaceFlow.getCollection({ name: cloudCollectionName });
   const request = await httpRequestFlow.get(requestName, cloudCollection);
   const renamed = faker.string.alphanumeric(10);
-  await workspaceFlow.rename(request!, renamed);
+  await workspaceFlow.renameRequest(request!, renamed);
   await cloudSyncPage.openCommitDialog();
   await cloudSyncPage.openChangeDiff(renamed);
   const cloudState = {

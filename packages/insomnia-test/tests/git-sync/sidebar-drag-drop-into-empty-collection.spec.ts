@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../enums/http-method';
 import { ProjectType } from '../../enums/project-types';
 import { TreeNodeType } from '../../enums/tree-node-types';
 import { HTTP_SERVER } from '../../misc/fixtures';
-import { expect, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
@@ -15,16 +16,16 @@ test(
     const { workspacePage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-    const project = await workspaceFlow.create(
+    const project = await workspaceFlow.cloneGitProject(
       new Project(faker.string.alphanumeric(10), ProjectType.Git),
       GIT_CREDENTIAL.name,
     );
-    const sourceCollection = await workspaceFlow.create(
+    const sourceCollection = await workspaceFlow.createCollection(
       project,
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),
     );
-    const emptyCollection = await workspaceFlow.create(
+    const emptyCollection = await workspaceFlow.createCollection(
       project,
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),

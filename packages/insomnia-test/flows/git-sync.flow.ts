@@ -130,103 +130,6 @@ export class GitSyncFlow extends BaseFlow {
   }
 
   /**
-   * Like `commitStaged()`, but for staged files with unknown fields: after
-   * clicking Commit, continues past the "Unrecognized Fields" confirmation
-   * before reading the resulting commit back from History.
-   * @param message - The commit message
-   * @returns The created Commit, with `id` populated
-   */
-  async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
-    const { gitSyncPage } = this.pageManager;
-    await gitSyncPage.openCommitDialog();
-    await gitSyncPage.commitStaged(message);
-    await gitSyncPage.confirmUnknownFieldsCommit();
-    await gitSyncPage.waitForCommitToFinish();
-    if (await gitSyncPage.isCommitDialogOpen()) {
-      await gitSyncPage.closeCommitDialog();
-    }
-
-    await gitSyncPage.openHistory();
-    const latest = await gitSyncPage.getLatestCommit();
-    await gitSyncPage.closeHistory();
-
-    return this.assertCreated(
-      latest
-        ? Object.assign(new Commit(latest.message), { id: latest.id })
-        : undefined,
-      message,
-    );
-  }
-
-  /**
-   * Opens a file's diff and discards it, confirming the dialog, without
-   * waiting for the file to leave the unstaged list (so it also works for a
-   * change that comes straight back), then closes the modal.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   */
-  async discardChangeAfterReview(fileName: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    await gitSyncPage.openCommitDialog();
-    await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.openDiscardConfirmation(fileName);
-    await gitSyncPage.confirmDiscard();
-    await gitSyncPage.closeCommitDialog();
-  }
-
-  /**
-   * Opens the Commit modal (if it isn't already open), selects a file in
-   * the given list and switches its diff pane to the Visual (Beta) view.
-   * @param list - Which list the file is in
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   */
-  async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    if (!(await gitSyncPage.isCommitDialogOpen())) {
-      await gitSyncPage.openCommitDialog();
-    }
-    await gitSyncPage.openChangeDiff(list, fileName);
-    await gitSyncPage.switchDiffView(GitDiffView.Visual);
-  }
-
-  /**
-   * Stages one entity from its card in the Visual view of an unstaged file.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   */
-  async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.stageEntity(entityName, typeLabel);
-  }
-
-  /**
-   * Unstages one entity from its card in the Visual view of a staged file.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   */
-  async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Staged, fileName);
-    await gitSyncPage.unstageEntity(entityName, typeLabel);
-  }
-
-  /**
-   * Discards one entity from its card in the Visual view of an unstaged
-   * file, confirming the prompt.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   */
-  async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.startEntityDiscard(entityName, typeLabel);
-    await gitSyncPage.confirmEntityDiscard(entityName, typeLabel);
-  }
-
-  /**
    * Discards every uncommitted local change.
    */
   async discardAllChanges(): Promise<void> {
@@ -353,5 +256,102 @@ export class GitSyncFlow extends BaseFlow {
     await gitSyncPage.checkoutBranch(switchToBranch);
     await gitSyncPage.deleteBranch(branch);
     await gitSyncPage.closeBranchesDialog();
+  }
+
+  /**
+   * Like `commitStaged()`, but for staged files with unknown fields: after
+   * clicking Commit, continues past the "Unrecognized Fields" confirmation
+   * before reading the resulting commit back from History.
+   * @param message - The commit message
+   * @returns The created Commit, with `id` populated
+   */
+  async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
+    const { gitSyncPage } = this.pageManager;
+    await gitSyncPage.openCommitDialog();
+    await gitSyncPage.commitStaged(message);
+    await gitSyncPage.confirmUnknownFieldsCommit();
+    await gitSyncPage.waitForCommitToFinish();
+    if (await gitSyncPage.isCommitDialogOpen()) {
+      await gitSyncPage.closeCommitDialog();
+    }
+
+    await gitSyncPage.openHistory();
+    const latest = await gitSyncPage.getLatestCommit();
+    await gitSyncPage.closeHistory();
+
+    return this.assertCreated(
+      latest
+        ? Object.assign(new Commit(latest.message), { id: latest.id })
+        : undefined,
+      message,
+    );
+  }
+
+  /**
+   * Opens a file's diff and discards it, confirming the dialog, without
+   * waiting for the file to leave the unstaged list (so it also works for a
+   * change that comes straight back), then closes the modal.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async discardChangeAfterReview(fileName: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await gitSyncPage.openCommitDialog();
+    await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.openDiscardConfirmation(fileName);
+    await gitSyncPage.confirmDiscard();
+    await gitSyncPage.closeCommitDialog();
+  }
+
+  /**
+   * Opens the Commit modal (if it isn't already open), selects a file in
+   * the given list and switches its diff pane to the Visual (Beta) view.
+   * @param list - Which list the file is in
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   */
+  async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    if (!(await gitSyncPage.isCommitDialogOpen())) {
+      await gitSyncPage.openCommitDialog();
+    }
+    await gitSyncPage.openChangeDiff(list, fileName);
+    await gitSyncPage.switchDiffView(GitDiffView.Visual);
+  }
+
+  /**
+   * Stages one entity from its card in the Visual view of an unstaged file.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.stageEntity(entityName, typeLabel);
+  }
+
+  /**
+   * Unstages one entity from its card in the Visual view of a staged file.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Staged, fileName);
+    await gitSyncPage.unstageEntity(entityName, typeLabel);
+  }
+
+  /**
+   * Discards one entity from its card in the Visual view of an unstaged
+   * file, confirming the prompt.
+   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
+   * @param entityName - The entity's name as shown on its card
+   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
+   */
+  async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
+    const { gitSyncPage } = this.pageManager;
+    await this.openVisualDiff(GitChangeList.Unstaged, fileName);
+    await gitSyncPage.startEntityDiscard(entityName, typeLabel);
+    await gitSyncPage.confirmEntityDiscard(entityName, typeLabel);
   }
 }

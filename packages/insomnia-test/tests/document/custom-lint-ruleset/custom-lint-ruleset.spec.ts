@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
 import { RulesetType } from "../../../enums/ruleset-type";
-import { expect, test } from "../../../misc/fixtures";
+import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
@@ -18,11 +19,11 @@ test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invali
 
   const { workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(
       faker.string.alphanumeric(10),
@@ -67,11 +68,11 @@ test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invali
 
   const { workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(
       faker.string.alphanumeric(10),

@@ -3,11 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { GitDiffView } from '../../../enums/git-diff-view';
 import { ProjectType } from '../../../enums/project-types';
-import { buildCollectionFile, DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { buildCollectionFile, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from '../../../models/project';
 
 test('Verify the Visual view shows a notice instead of cards for a conflicted file, a file that does not match the Insomnia file format and non-Insomnia files', async ({ user }) => {
@@ -30,7 +31,7 @@ test('Verify the Visual view shows a notice instead of cards for a conflicted fi
   }
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-visual-diff-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   const conflicted = `${original}<<<<<<< HEAD\n  - url: https://ours.example.com\n=======\n  - url: https://theirs.example.com\n>>>>>>> main\n`;
   fs.writeFileSync(path.join(cloneDir, conflictFile), conflicted);

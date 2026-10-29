@@ -19,6 +19,7 @@ export class GrpcRequestPage extends RequestPage {
   protected readonly SEND_BUTTON = `${this.PANE} button:has-text("Send"), ${this.PANE} button:has-text("Start")`;
   protected readonly urlBarId = "grpc-url";
   protected readonly persistedDbFile = "insomnia.GrpcRequest.db";
+  protected readonly hasTrailingBlankRow = false;
   protected readonly persistedRowPaths = ["metadata"];
 
   /**

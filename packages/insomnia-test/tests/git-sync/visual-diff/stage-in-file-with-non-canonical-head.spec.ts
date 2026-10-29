@@ -4,11 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../../enums/http-method';
 import { ProjectType } from '../../../enums/project-types';
 import { HTTP_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile,test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { HttpRequest } from '../../../models/http-request';
 import { Project } from '../../../models/project';
 import { buildReorderedCollectionFile } from '../undiscardable-change/helpers';
@@ -27,7 +28,7 @@ test('Verify staging one request in a file whose HEAD is not canonical only stag
   }
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-visual-diff-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   const editedUrl = `${HTTP_SERVER}/${faker.string.alphanumeric(10)}`;
   await httpRequestFlow.get(new HttpRequest({ name: requestName, url: '', method: HttpMethod.Get }));

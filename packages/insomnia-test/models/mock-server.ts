@@ -1,4 +1,6 @@
-export class MockServer {
+import type { MockServer as AppMockServer } from "insomnia-data";
+
+export class MockServer implements Pick<AppMockServer, "name" | "url"> {
   id?: string;
 
   constructor(

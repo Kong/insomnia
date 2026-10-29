@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, expect, seedCloudSyncProject, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, seedCloudSyncProject, test } from "../../../misc/fixtures";
 import { buildCloudSyncDocs } from './helpers';
 
 test('Verify a Cloud Sync document whose remote version has unknown fields shows the warning, highlight and commit confirmation', async ({
@@ -17,7 +18,7 @@ test('Verify a Cloud Sync document whose remote version has unknown fields shows
   const collection = await workspaceFlow.getCollection({ name: collectionName });
   const request = await httpRequestFlow.get(requestName, collection);
   const renamed = faker.string.alphanumeric(10);
-  await workspaceFlow.rename(request!, renamed);
+  await workspaceFlow.renameRequest(request!, renamed);
 
   await cloudSyncPage.openCommitDialog();
   await cloudSyncPage.openChangeDiff(renamed);

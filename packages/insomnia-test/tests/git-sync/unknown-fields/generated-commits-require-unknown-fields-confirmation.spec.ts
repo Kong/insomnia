@@ -4,10 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../../enums/project-types';
 import { MOCK_LLM_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from '../../../models/project';
 import { buildCollectionFileWithUnknownField } from './helpers';
 
@@ -28,7 +29,7 @@ test('Verify committing AI generated commits that include a file with unknown fi
   await pushServerFile({ path: fileName, content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-unknown-fields-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, {
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, {
     cloneParentDir,
   });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);

@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { expect, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
+import { GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
 import { Collection } from '../../models/collection';
 import { Project } from '../../models/project';
 
@@ -9,14 +10,14 @@ test('Verify staging and unstaging individual changes only commits the staged fi
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.cloneGitProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
   );
   const stagedFile = faker.string.alpha(10).toLowerCase();
   const unstagedFile = faker.string.alpha(11).toLowerCase();
-  await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), stagedFile);
-  await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), unstagedFile);
+  await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), stagedFile);
+  await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), unstagedFile);
 
   const initialChanges = await gitSyncFlow.getChanges();
   await gitSyncFlow.stageChanges([stagedFile, unstagedFile]);

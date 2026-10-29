@@ -1,26 +1,27 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, MOCK_API_SERVER,test } from "../../misc/fixtures";
+import { MOCK_API_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import { Project } from "../../models/project";
 
 const variableName = "unlinked";
 
-test("Verify Linked Environment Variable Causes Error", async ({ user }) => {
+test("Verify Unlinked Environment Variable Causes Error", async ({ user }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
-  await environmentFlow.create(project, {
+  await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

@@ -1,11 +1,10 @@
-import crypto from "node:crypto";
-
-import express from "express";
+const crypto = require("node:crypto");
+const express = require("express");
 
 const PORT = process.env.OAUTH2_PORT || 4080;
 
 // Fixed test credentials, the same "no interactive login step" convention
-// as misc/git-server.ts's testuser/testpass — mirrored as exported
+// as misc/git-server.js's testuser/testpass — mirrored as exported
 // constants in misc/fixtures.ts, which is the source specs import from.
 const CLIENT_ID = "test-client-id";
 const CLIENT_SECRET = "test-client-secret";
@@ -38,7 +37,7 @@ const refreshTokens = new Map(); // token -> { clientId, scope }
 // under workers > 1 don't stomp on each other's entries.
 const tokenRequestLog = new Map();
 
-function base64url(buf: Buffer) {
+function base64url(buf) {
   return buf
     .toString("base64")
     .replace(/\+/g, "-")
@@ -46,14 +45,14 @@ function base64url(buf: Buffer) {
     .replace(/=+$/, "");
 }
 
-function randomToken(prefix: string) {
+function randomToken(prefix) {
   return `${prefix}_${base64url(crypto.randomBytes(24))}`;
 }
 
 // A minimal unsigned JWT ("alg": "none") — Insomnia's Auth tab only ever
 // displays/stores this string, it never verifies the signature, so a real
 // signing key would add complexity with no test value.
-function fakeIdToken(sub: string, aud: string) {
+function fakeIdToken(sub, aud) {
   const header = base64url(
     Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })),
   );
@@ -67,7 +66,7 @@ function fakeIdToken(sub: string, aud: string) {
 // header or via client_id/client_secret in the body — Insomnia's
 // "Credentials" dropdown ("As Basic Auth Header" / "In Request Body")
 // toggles between the two, so the mock must accept both.
-function verifyClient(req: express.Request) {
+function verifyClient(req) {
   const authHeader = req.headers.authorization || "";
   if (authHeader.startsWith("Basic ")) {
     const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
@@ -97,7 +96,7 @@ app.get("/authorize", (req, res) => {
     state,
     code_challenge,
     code_challenge_method,
-  } = req.query as Record<string, string | undefined>;
+  } = req.query;
 
   if (client_id !== CLIENT_ID) {
     return res.status(400).send("invalid client_id");
@@ -285,7 +284,7 @@ app.post("/token", (req, res) => {
 });
 
 // A protected resource for send()-time verification that a fetched access
-// token is actually usable end-to-end, mirroring misc/echo-server.ts's
+// token is actually usable end-to-end, mirroring misc/echo-server.js's
 // own request-echo pattern.
 app.get("/resource", (req, res) => {
   const authHeader = req.headers.authorization || "";
@@ -316,7 +315,7 @@ app.get("/_debug/last-token-request", (req, res) => {
 
 app.get("/health", (req, res) => res.send("ok"));
 
-app.listen(PORT, () => {
+app.listen(PORT, '127.0.0.1', () => {
   process.stdout.write(
     `OAuth2 mock server listening at http://localhost:${PORT}\n`,
   );

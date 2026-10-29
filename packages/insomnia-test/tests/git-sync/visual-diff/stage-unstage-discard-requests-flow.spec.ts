@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { HttpMethod } from '../../../enums/http-method';
 import { ProjectType } from '../../../enums/project-types';
 import { HTTP_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { HttpRequest } from '../../../models/http-request';
 import { Project } from '../../../models/project';
@@ -14,9 +15,9 @@ test('Verify staging, unstaging and discarding individual requests from the Visu
   const { gitSyncPage, httpRequestPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  const project = await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const baseName = faker.string.alpha(10).toLowerCase();
-  const collection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), baseName);
+  const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), baseName);
   const fileName = `${baseName}.yaml`;
   const requests: HttpRequest[] = [];
   for (let i = 0; i < 6; i++) {

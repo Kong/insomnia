@@ -1,9 +1,10 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../../../enums/project-types";
-import { expect, test } from "../../../../../misc/fixtures";
+import { test } from "../../../../../misc/fixtures";
 import { Project } from "../../../../../models/project";
 
 test("Verify Importing v5 Files With Legacy Non-Prefixed Ids Keeps Every Request Visible, Editable and Uniquely Identified", async ({
@@ -19,7 +20,7 @@ test("Verify Importing v5 Files With Legacy Non-Prefixed Ids Keeps Every Request
     mcpClientFlow,
   } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   await importFlow.importFile(
@@ -45,9 +46,8 @@ test("Verify Importing v5 Files With Legacy Non-Prefixed Ids Keeps Every Request
 
   const renamedRootName = faker.string.alphanumeric(10);
   const renamedNestedName = faker.string.alphanumeric(10);
-  const renamedRoot = await workspaceFlow.rename(rootRequest!, renamedRootName);
-  const renamedNested = await workspaceFlow.rename(
-    nestedRequest!,
+  const renamedRoot = await workspaceFlow.renameRequest(rootRequest!, renamedRootName);
+  const renamedNested = await workspaceFlow.renameRequest(nestedRequest!,
     renamedNestedName,
   );
 

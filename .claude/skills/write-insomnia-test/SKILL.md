@@ -15,6 +15,8 @@ This repo is strictly layered: `tests/*.spec.ts` → `flows/*.flow.ts` → `page
 
 When a step can be done through a `xxxFlow` method, call that — never reach for the equivalent `pageManager.xxxPage` method just because it's more direct. A Flow method already sequences the right Page calls (and any related field the action implies — e.g. `HttpRequestFlow.create()` also applying auth/params/headers, not just the URL) in the order the app actually expects; composing a spec straight out of Page calls risks silently skipping or reordering a step the Flow would have handled correctly. This is also why a genuinely new spec almost always destructures a Flow instance first and a Page instance only if step 3 shows the action has no Flow wrapper — never the other way around.
 
+Flow methods are explicit, not overloaded: each distinct action has its own named method (`workspaceFlow.createProject()` / `.openLocalGitFolder()` / `.cloneGitProject()` / `.createCollection()`, `exportFlow.exportCollection()` / `.exportProject()`, `workspaceFlow.renameRequest()` …) so a call site shows which flow it triggers. When adding a new Flow method, give it its own name rather than another `typeof`/`instanceof`-dispatched overload of an existing one.
+
 Call `pageManager.xxxPage` directly only for the specific action `reference.md` shows has no Flow method covering it (e.g. `pageManager.<domain>RequestPage.setMethod()` — no Flow method changes an already-created request's method) — and only that one call, not the surrounding sequence a Flow method already exists for.
 
 ## Scope constraint: `tests/` only, nothing lower-layer — except a genuine bug
@@ -66,7 +68,6 @@ Before deciding on a file name or writing any code, decide in this priority orde
 2. **Easy to extend** — the new test point can be folded into an existing test with a small, natural change: another `kvPairData` entry, another item in an existing loop of inputs/params, another assertion on a response the test already fetches, a slightly broadened one-sentence test name that still honestly describes what the test now does. **When this is possible, prefer it over writing a new file** — even if the result isn't byte-for-byte the test's originally-written intent, a low-effort edit that keeps the test coherent and its name accurate counts as reuse, not scope creep.
 3. **New file** — only when neither of the above applies: the scenario needs a materially different precondition, a different action, or a differently-shaped expected outcome that can't be folded into an existing test without contorting it (a second unrelated assertion block, forcing in an unrelated setup path, a name that would need "and" to stay honest). Place it per step 7 in that case.
 
-- **Check sibling family directories of related features, not only the one you're writing into** — e.g. an unknown-fields scenario that shows or hides the INS-3830 undiscardable warning overlaps `tests/git-sync/undiscardable-change/`. If a sibling spec already reaches the same state and asserts the same thing, don't repeat it; fold the new (often negative) assertions into that spec instead. A test plan's case list (Confluence/Jira) usually has more rows than distinct scenarios — rows that share a precondition and run one after another (stage → cancel → confirm → verify; edit → discard → re-check) belong in one chained spec, with a name that stays honest.
 - Find candidates by listing and skimming existing specs under `tests/<domain>/` (and `tests/data/import/<source>/`/`tests/data/export/` for import/export scenarios) — `ls tests/<domain>/`, then `Read` any file whose name or content sounds related to the requested scenario.
 - **Never merge two genuinely distinct scenarios into one test just to cut file count.** Option 2 is for widening a test's existing test point with more data or assertions of the same shape, not for bolting an unrelated behavior onto it. If the fold would need a second, differently-shaped assertion block or a different action entirely, that's two test points — use option 3, per the single-sentence-intent rule (step 8); a broken assertion should always tell you unambiguously which behavior regressed.
 - When reuse or extension applies, say so in the TodoWrite plan (step 5) as "edit existing file X to also cover Y" rather than "create new file," and skip step 7's file-naming step for that scenario.
@@ -81,7 +82,6 @@ Find the domain's row/section: the Flow property name on `flowManager`, the Flow
 - If it genuinely requires a new UI interaction with no existing Flow method → **per the Scope Constraint above, this skill does not add it.** Stop, name the exact gap (e.g. "no Flow method disconnects and reconnects a WebSocket request — closest is `disconnect()`, which doesn't reopen the connection"), and let the user decide how to proceed instead of extending Model/Page/Flow yourself.
 - If the right Flow/Page method already exists but doesn't do what it claims (a genuine bug, not a missing feature) → this is the one case the Scope Constraint's exception covers. Confirm it's really broken (not just unsupported) via step 6, fix it minimally in place, and report the bug and the fix to the user.
 - Never hand-write `test.step(...)` — every Page/Flow method is auto-instrumented by `misc/step-instrumentation.ts`.
-- **Instrumentation gotcha when Page/Flow code is being changed (a bug fix, or a framework change the user explicitly asked for):** `misc/step-instrumentation.ts` wraps *every* method on a Page/Flow instance — public **and private** — in an `async` function, so it always returns a `Promise`. The only Page methods it skips are those named `get[A-Z]…` (and a small `EXCLUDED_METHODS` list). A Page helper that returns a `Locator` (e.g. `getCapabilityItem(type)`) must therefore be named `getXxx`; named anything else, callers get `TypeError: x.locator is not a function` / `expect(...) can only be used with Locator object`. Prefer public Page readers that return plain values (`Promise<number | boolean | string[] | {…}>`) over exposing Locators, and assert on them with `expect.poll(() => page.method()).toBe(...)`.
 
 ### 5. Write out the plan and reasoning, then track it with TodoWrite
 
@@ -121,8 +121,6 @@ try {
 
 Save both files to the scratchpad directory (never under `tests/` — they're debug artifacts, not fixtures), then `Read` the HTML file and the screenshot right away as part of the same turn — don't just log that they were captured and move on. The point is to go straight from "it timed out" to a concrete diagnosis (missing `data-testid`, an unexpected dialog, a route that never resolved) in the same investigation pass, before deciding whether step 4's gap/bug call applies.
 
-Electron screenshots often come back blank — read the failure's `error-context.md` (an ARIA snapshot of the page at the failure, in `test-results/<test>/`) instead, and redirect noisy runs to a file in the scratchpad (`npx playwright test … --reporter=list > $SCRATCH/out.txt 2>&1`, then `grep` it) because esbuild warnings drown the output. A throwaway probe may also `console.log` the card/DOM text and shell out to `git -C <cloneDir> status/diff` to see what the app really wrote.
-
 Skip this step when nothing about the real app's live behavior is in question.
 
 ### 7. Place and name the file
@@ -130,15 +128,16 @@ Skip this step when nothing about the real app's live behavior is in question.
 - This step only applies once step 2 has concluded the scenario needs a genuinely new file — don't re-decide placement for something you're extending in place.
 - Main path (create → act → assert, the "everything works" case): `tests/<domain>/happy-path.spec.ts`. If one already exists for that domain, do not overwrite it with a different scenario — add a new, separately named file instead (a same-intent extension belongs under step 2, not here).
 - Edge case / error scenario: `tests/<domain>/<scenario-described-in-kebab-case>.spec.ts` — name the file after the scenario itself (e.g. `unlinked-environment-variable.spec.ts`), never `test1.spec.ts` or similar.
-- **A family of related specs for one feature/ticket** (several edge-case files that all drive the same scripted mock server, e.g. one per case of a test plan) may live in a subdirectory of the domain (`tests/mcp-client/error-response/`, `tests/git-sync/undiscardable-change/`, `tests/git-sync/visual-diff/`, `tests/git-sync/unknown-fields/`, `tests/cloud-sync/unknown-fields/`) — one spec file per case, named after the scenario. Shared setup (a `connectTo(user, config)`-style helper, canned payloads, expected-title helpers) goes in a non-spec `helpers.ts` next to them (it isn't matched by the `*.spec.ts` test pattern); adjust relative imports by one extra `../`. Don't use this for a single spec — that stays a plain file under `tests/<domain>/`. Keep `helpers.ts` lean: a helper shorter than ~15 lines is written inline in the spec(s) that use it (a local `const` if reused within one test), and any `interface`/type describing test data goes to `models/` (one file per concept), never into `helpers.ts`. Before adding a spec to such a family, check whether an existing one can absorb the new test point (same setup, same assertion shape) — fold it in rather than adding a file; keep specs separate when one is `test.fail()`.
 - `tests/data/import/` and `tests/data/export/` sit together under `tests/data/` since both drive Preferences -> Data; `tests/data/import/` is further split by source: `file/`, `url/`, `curl/`, `clipboard/`, `mcp/`.
 - **If the test needs a fixture file** (a JSON/YAML/WSDL/etc. imported or read via `path.join(__dirname, "...")`), give the spec its own directory named after the spec file (without `.spec.ts`), and put the spec and every fixture it uses inside that directory together — e.g. `tests/data/import/file/import-open-api/import-open-api.spec.ts` + `tests/data/import/file/import-open-api/httpbingo-get.json`. Adjust the relative import depth to `misc/fixtures`/`enums/`/`models/` by one extra `../` versus a plain domain-level spec, since the file now sits one directory deeper. A spec with no fixture stays a plain file directly under `tests/<domain>/` (or `tests/data/import/<source>/`) — don't create a directory for it.
 
 ### 8. Follow this skeleton
 
 ```ts
-import { expect, test } from "../../misc/fixtures"; // adjust relative depth to the actual file location
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
+
+import { test } from "../../misc/fixtures"; // adjust relative depth to the actual file location
 import { ProjectType } from "../../enums/project-types";
 import { Project } from "../../models/project";
 import { Collection } from "../../models/collection";
@@ -148,10 +147,10 @@ test("<one sentence, imperative, e.g. 'Verify XXX'>", async ({ user }) => {
   const { workspaceFlow, xxxRequestFlow } = user.flowManager; // pull exactly the flows reference.md lists for this domain
   const { xxxPage } = user.pageManager; // only if you need direct Page access (e.g. no Flow method covers it) — name the exact Page(s), never the whole object
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -166,10 +165,10 @@ Rules that apply to every test:
 
 - Every variable name/string that could collide across tests (project/collection/request names, custom header values, etc.) must come from `faker` (`faker.string.alphanumeric(10)` and friends) — never hardcode.
 - Every fixed UI value (HTTP method, content type, project type, context-menu item, import source) must come from `enums/`, never a magic string.
-- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `expect`/`test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. See the Mock servers table in `reference.md` for the full constant list.
+- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. See the Mock servers table in `reference.md` for the full constant list.
 - When asserting the shape of a constructed object, use `satisfies <Model>` (not `as`) so TypeScript catches misspelled/nonexistent fields at write time — see the real example in `tests/environment/sub-environment-variable-priority.spec.ts:59`.
 - Model fields are exactly what's in `models/*.ts` / `reference.md` — don't add fields "because it seems logical."
-- **Prefer a plain object literal over `new <Model>(...)` for every Model whose constructor takes a single init object** — `Settings`, `Environment`, `HttpRequest`/`GraphQLRequest`/`GrpcRequest`/`WebSocketRequest`/`SocketIORequest`, `Cookie`, etc. (e.g. `{ validateSSL: false }`, not `new Settings({ validateSSL: false })`; `{ name, kvPairData: [...] }`, not `new Environment({ name, kvPairData: [...] })`). `new <Model>(...)` is only correct for the handful of Models with *positional* constructor args instead of an init object — `Project`, `Collection`, `Document`, `McpClient` (e.g. `new Project(name, ProjectType)` above) — those have no literal equivalent. See the full rule in `reference.md`.
+- **Prefer a plain object literal over `new <Model>(...)` for every Model whose constructor takes a single init object** — `Settings`, `Environment`, `HttpRequest`/`GraphQLRequest`/`GrpcRequest`/`WebSocketRequest`/`SocketIORequest`, `Cookie`, etc. (e.g. `{ validateSSL: false }`, not `new Settings({ validateSSL: false })`; `{ name, kvPairData: [...] }`, not `new Environment({ name, kvPairData: [...] })`). `new <Model>(...)` is only correct for the handful of Models with *positional* constructor args instead of an init object — `Project`, `Collection`, `McpClient`, `Folder`, `MockServer` (e.g. `new Project(name, ProjectType)` above) — those have no literal equivalent. See the full rule in `reference.md`.
 - **Never add comments to the spec file.** The test name plus the composed Flow calls should read clearly on their own; don't explain *what* a step does or *why* an edge case exists in a `//` comment above it — that belongs in the PR description or commit message, not the file. (The `// adjust relative depth...` and numbered `// 1./2./3.` comments in the skeleton below are annotations for *this document*, describing the skeleton to you — never copy them literally into a real spec file.)
 - **Never destructure the whole `pageManager` or `flowManager` object** (`const { pageManager } = user;` / `const { flowManager } = user;`) just to reach `pageManager.xxxPage.method()`/`flowManager.xxxFlow.method()` inline later — that pierces through the wrapper only to shorten nothing and hides which Pages/Flows the test actually touches. Always destructure the exact named instances you need at the top, the same way for both: `const { xxxRequestFlow } = user.flowManager;` and `const { xxxPage } = user.pageManager;`, then call `xxxPage.method()` directly. Same rule for one-off inline access — never `user.pageManager.xxxPage...`/`user.flowManager.xxxFlow...` reached for mid-body; pull it into the top-of-test destructuring instead, even for a single use.
 
@@ -208,15 +207,15 @@ This is distinct from the Scope Constraint's exception above — that one is abo
 
 Format blank lines in the action-step section by which flow instance is being called, not one-blank-line-per-statement:
 
-- **No blank line** between consecutive statements that call the *same* flow instance — e.g. `environmentFlow.create(...)` immediately followed by `environmentFlow.link(...)`, or a run of `socketIoRequestFlow.create(...)` / `.connect(...)` / `.sendMessage(...)` / `.disconnect(...)`.
+- **No blank line** between consecutive statements that call the *same* flow instance — e.g. `environmentFlow.createBaseEnvironment(...)` immediately followed by `environmentFlow.link(...)`, or a run of `socketIoRequestFlow.create(...)` / `.connect(...)` / `.sendMessage(...)` / `.disconnect(...)`.
 - **One blank line** exactly where the next statement switches to a *different* flow instance (`workspaceFlow` → `environmentFlow` → `socketIoRequestFlow`, etc.) — this is what visually marks the domain/setup boundaries in the test body.
 - **A plain variable declaration (no flow call) belongs to whichever flow group it's nearest to** — specifically, the group that *consumes* it. It's not its own group and doesn't get a blank line before or after it relative to that group; the blank line goes only between it and the *previous* flow group. E.g. `const names = Array.from({ length: 5 }, () => faker.person.firstName())` that only feeds the next block's `grpcRequestFlow.create(...)`/`.streamMessage(...)` calls sits immediately above them, with the blank line placed before `names`, not after it.
 - This composes with §9: inside the trailing assertion block, consecutive `expect(...)` calls also get no blank line between them — one flowing block of assertions, not one per line.
 
 ```ts
-const collection = await workspaceFlow.create(project, new Collection(name));
+const collection = await workspaceFlow.createCollection(project, new Collection(name));
 
-const environment = await environmentFlow.create(project, { ... });
+const environment = await environmentFlow.createBaseEnvironment(project, { ... });
 await environmentFlow.link(collection, environment);                  // same flow as above — no blank line
 
 const names = Array.from({ length: 5 }, () => faker.person.firstName()); // feeds the group below — no blank line after it
@@ -237,7 +236,7 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No file outside `tests/` was created or modified, unless it was a confirmed bug fix under the Scope Constraint's exception — any *gap* found in `flows/`/`pages/`/`models/` was reported to the user, not patched.
 - [ ] If a framework bug was fixed: it was confirmed as broken (not merely unsupported) via a probe, the fix was minimal and targeted at that bug only (no unrelated refactors/new methods), the probe was re-run to confirm the fix, and the bug + fix were called out to the user as their own item.
 - [ ] If the test documents a real Insomnia *app* bug (not a framework bug, per §9a): it asserts the expected/correct behavior (never the current buggy one), starts with `test.fail();`, and confirmed via a real run that it reports as an expected failure ("✘" but counted as passed), not a hard failure.
-- [ ] `import { expect, test }` comes from the relative path to `misc/fixtures` (not `@playwright/test`) — except Git Sync specs, which import `test`/`expect`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures` (see `reference.md`). A helper `helpers.ts` next to them still takes `HTTP_SERVER`/`UserSession` from `misc/fixtures` (git-fixtures doesn't re-export them).
+- [ ] `import { expect } from "@playwright/test"` directly (`misc/fixtures` does not re-export it), and `test` comes from the relative path to `misc/fixtures` — except Git Sync specs, which import `test`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures` (see `reference.md`).
 - [ ] The test function takes only `{ user }` — no `workspaceFlow`/`pageManager`/other per-flow fixture in the parameter list.
 - [ ] Every Flow/Page method and every Model field used actually exists in `reference.md` or the real source file — nothing invented.
 - [ ] Every direct `pageManager.xxxPage` call was necessary because no Flow method covers that action (per "Prefer Flow methods over direct Page access") — never a Page call standing in for a step a Flow method already does.

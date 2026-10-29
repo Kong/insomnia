@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 import {
   ENVIRONMENT_TYPE,
   EnvironmentKvPairDataType,
@@ -14,13 +15,13 @@ test("Verify Variables on the Project Environment Page Are Attributed to the Pro
   const { workspaceFlow, environmentFlow } = user.flowManager;
   const { environmentPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const baseName = faker.string.alphanumeric(10);
   const subName = faker.string.alphanumeric(10);
   const baseVariable = `base_${faker.string.alphanumeric(8)}`;
-  const baseEnvironment = await environmentFlow.create(project, {
+  const baseEnvironment = await environmentFlow.createBaseEnvironment(project, {
     name: baseName,
     type: ENVIRONMENT_TYPE,
     kvPairData: [
@@ -32,7 +33,7 @@ test("Verify Variables on the Project Environment Page Are Attributed to the Pro
       },
     ],
   });
-  await environmentFlow.create(baseEnvironment, {
+  await environmentFlow.createSubEnvironment(baseEnvironment, {
     name: subName,
     kvPairData: [
       {

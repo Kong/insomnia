@@ -1,16 +1,15 @@
 // Merges the `coverage/raw` directory each CI shard uploads (see
 // misc/coverage.ts and .github/workflows/insomnia-test.yml's parallel-test
 // job) into a single report. Usage:
-//   esr misc/merge-coverage.ts <dir-containing-one-raw-subdir-per-shard>
-import fs from "node:fs";
-import path from "node:path";
-
-import { CoverageReport } from "monocart-coverage-reports";
+//   node misc/merge-coverage.js <dir-containing-one-raw-subdir-per-shard>
+const path = require("node:path");
+const fs = require("node:fs");
+const { CoverageReport } = require("monocart-coverage-reports");
 
 const downloadsDir = process.argv[2];
 if (!downloadsDir) {
   console.error(
-    "Usage: esr misc/merge-coverage.ts <dir-containing-one-raw-subdir-per-shard>",
+    "Usage: node misc/merge-coverage.js <dir-containing-one-raw-subdir-per-shard>",
   );
   process.exit(1);
 }
@@ -32,7 +31,7 @@ new CoverageReport({
   reports: ["v8", "console-summary"],
 })
   .generate()
-  .catch((err: unknown) => {
+  .catch((err) => {
     console.error(err);
     process.exit(1);
   });

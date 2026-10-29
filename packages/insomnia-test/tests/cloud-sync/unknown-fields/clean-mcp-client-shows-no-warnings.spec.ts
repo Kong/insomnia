@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, expect, MCP_SERVER, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../../misc/fixtures";
 import { McpClient } from '../../../models/mcp-client';
 import { commitEachChange, NO_ROW_WARNINGS, readRowWarnings } from './helpers';
 
@@ -18,7 +19,7 @@ test('Verify a Cloud Sync MCP client committed and then edited shows no unknown 
   await commitEachChange(cloudSyncPage, initialChangeNames);
 
   const renamed = faker.string.alphanumeric(10);
-  await workspaceFlow.rename(client, renamed);
+  await workspaceFlow.renameMcpClient(client, renamed);
   await mcpClientFlow.get(renamed);
   await mcpClientPage.setUrl(`${MCP_SERVER}?${faker.string.alpha(6)}=1`);
   await cloudSyncPage.openCommitDialog();

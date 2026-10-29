@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { TreeNodeType } from "../../enums/tree-node-types";
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 test("Verify dragging a request out of a Cloud Sync collection into an empty Cloud Sync collection", async ({
@@ -17,7 +18,7 @@ test("Verify dragging a request out of a Cloud Sync collection into an empty Clo
     "My Collection R1",
   );
   const project = await workspaceFlow.getProject({ name: "Personal Workspace" });
-  const emptyCollection = await workspaceFlow.create(
+  const emptyCollection = await workspaceFlow.createCollection(
     project!,
     new Collection(faker.string.alphanumeric(10)),
   );

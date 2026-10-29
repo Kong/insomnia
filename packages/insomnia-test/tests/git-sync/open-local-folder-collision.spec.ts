@@ -3,9 +3,10 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, test } from "../../misc/git-fixtures";
+import { test } from "../../misc/git-fixtures";
 import { Project } from "../../models/project";
 
 test(
@@ -17,12 +18,12 @@ test(
     const folderPath = fs.mkdtempSync(
       path.join(os.tmpdir(), "insomnia-open-local-folder-collision-"),
     );
-    await workspaceFlow.create(
+    await workspaceFlow.openLocalGitFolder(
       new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath),
     );
 
     await expect(async () => {
-      return workspaceFlow.create(
+      return workspaceFlow.openLocalGitFolder(
         new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath),
       );
     }).rejects.toThrow();

@@ -1,13 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../../enums/project-types";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  GIT_CREDENTIAL,
-  pushServerFile,
-  test,
-} from "../../../misc/git-fixtures";
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from "../../../models/project";
 import { buildReorderedCollectionFile } from "./helpers";
 
@@ -23,7 +18,7 @@ test("Verify committing a hand-reordered file once leaves the working tree clean
     content: buildReorderedCollectionFile(faker.string.alpha(10)).content,
   });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(
+  await workspaceFlow.cloneGitProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
   );

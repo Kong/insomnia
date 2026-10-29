@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, expect, seedCloudSyncProject, test } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, seedCloudSyncProject, test } from "../../../misc/fixtures";
 import { EnvironmentKvPairDataType } from '../../../models/environment';
 import { buildCloudSyncDocs } from './helpers';
 

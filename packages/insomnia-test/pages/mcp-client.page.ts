@@ -1,9 +1,9 @@
-import { expect, type Locator } from '@playwright/test';
+import { expect, type Locator } from "@playwright/test";
 
-import type { McpListAction} from '../enums/mcp-capability';
-import { type McpCapabilityType, type McpPrimitiveType } from '../enums/mcp-capability';
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from '../misc/constants';
-import { RequestPage } from './request.page';
+import type { McpListAction } from "../enums/mcp-capability";
+import type { McpCapabilityType, McpPrimitiveType } from "../enums/mcp-capability";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
+import { RequestPage } from "./request.page";
 
 /** The error panel embedded in a capability item's row. */
 export interface McpCapabilityError {
@@ -14,11 +14,11 @@ export interface McpCapabilityError {
 
 export class McpClientPage extends RequestPage {
   private readonly CALL_TOOL_BUTTON = `${this.TABPANEL} button:has-text("Call Tool")`;
-  private readonly FILTER_INPUT = 'input[aria-label="Server Capability filter"]';
-  private readonly SIDEBAR = '#sidebar-mcp-gridlist';
+  private readonly FILTER_INPUT =
+    'input[aria-label="Server Capability filter"]';
+  private readonly SIDEBAR = "#sidebar-mcp-gridlist";
   private readonly TOOL_ROW = `${this.SIDEBAR} [role="row"][data-key^="tools_"]`;
-  private readonly ACTIONS_MENU = '[aria-label="Mcp Actions Menu"]';
-  protected readonly urlBarId = 'mcp-url-bar';
+  protected readonly urlBarId = "mcp-url-bar";
 
   /**
    * Clicks Disconnect and waits for the button to flip back to "Connect".
@@ -28,14 +28,19 @@ export class McpClientPage extends RequestPage {
    * @param callback - A callback retried via expect().toPass() before disconnecting
    * @param timeout - The maximum time to retry the callback, in milliseconds
    */
-  override async disconnect(callback: () => Promise<void> | void = () => {}, timeout = DEFAULT_TIMEOUT): Promise<void> {
+  override async disconnect(
+    callback: () => Promise<void> | void = () => {},
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
     await expect(async () => {
       await callback();
     }).toPass({ timeout });
 
-    const connectButton = this.page.locator(this.PANE).getByRole('button', { name: /^(Connect|Disconnect)$/ });
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
     await connectButton.click({ force: true });
-    await expect(connectButton).toHaveText('Connect', {
+    await expect(connectButton).toHaveText("Connect", {
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -45,7 +50,7 @@ export class McpClientPage extends RequestPage {
    * currently selected tool with its configured arguments.
    */
   async callTool(): Promise<void> {
-    await this.switchTab('params');
+    await this.switchTab("params");
     await this.page.locator(this.CALL_TOOL_BUTTON).click();
   }
 
@@ -55,7 +60,9 @@ export class McpClientPage extends RequestPage {
    * @param name - The name of the tool to select
    */
   async clickTool(name: string): Promise<void> {
-    await this.page.locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`).click();
+    await this.page
+      .locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`)
+      .click();
   }
 
   /**
@@ -74,7 +81,9 @@ export class McpClientPage extends RequestPage {
           tools = (
             await this.page
               .locator(this.TOOL_ROW)
-              .evaluateAll(rows => rows.map(row => row.getAttribute('aria-label') ?? ''))
+              .evaluateAll((rows) =>
+                rows.map((row) => row.getAttribute("aria-label") ?? ""),
+              )
           ).filter(Boolean);
           return tools.length;
         },
@@ -95,15 +104,6 @@ export class McpClientPage extends RequestPage {
   }
 
   /**
-   * Types into the server capability filter input, narrowing the sidebar
-   * primitives by name.
-   * @param text - The filter text to enter
-   */
-  async setCapabilityFilter(text: string): Promise<void> {
-    await this.page.locator(this.FILTER_INPUT).fill(text);
-  }
-
-  /**
    * Sets the value of a tool argument input on the "params" tab. Arguments
    * are rendered as a JSON-schema form, so each field's input is located
    * by an id of `root_<name>`.
@@ -111,10 +111,21 @@ export class McpClientPage extends RequestPage {
    * @param value - The value to fill into the argument's input
    */
   async setToolArgument(name: string, value: string): Promise<void> {
-    await this.switchTab('params');
+    await this.switchTab("params");
     const input = this.page.locator(`${this.TABPANEL} #root_${name}`);
     await input.click();
     await input.fill(value);
+  }
+
+  private readonly ACTIONS_MENU = '[aria-label="Mcp Actions Menu"]';
+
+  /**
+   * Types into the server capability filter input, narrowing the sidebar
+   * primitives by name.
+   * @param text - The filter text to enter
+   */
+  async setCapabilityFilter(text: string): Promise<void> {
+    await this.page.locator(this.FILTER_INPUT).fill(text);
   }
 
   /**

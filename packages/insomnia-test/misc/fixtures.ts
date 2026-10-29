@@ -24,7 +24,7 @@ export * from "./constants";
 export { launchInsomniaElectron, SESSION_ID };
 
 /**
- * Toggles misc/mock-api.ts's `features.gitSync.enabled` flag, which the app
+ * Toggles misc/mock-api.js's `features.gitSync.enabled` flag, which the app
  * reads once at startup to decide whether the Git project type is offered
  * at all. Must be called from a `test.beforeAll()` (before the `insomnia`
  * fixture launches Electron for the first test in the file) — toggling it
@@ -45,7 +45,7 @@ export async function setGitSyncFeatureFlag(enabled: boolean): Promise<void> {
 }
 
 /**
- * Toggles misc/mock-api.ts's storage-rule `enableGitSync` flag, which the
+ * Toggles misc/mock-api.js's storage-rule `enableGitSync` flag, which the
  * app reads once at startup to decide whether Git projects are disabled by
  * org storage policy. Same pre-launch timing/reset requirements and
  * per-worker scoping as `setGitSyncFeatureFlag()`.
@@ -60,7 +60,7 @@ export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
 }
 
 /**
- * Toggles misc/mock-api.ts's `GET /v1/user/entitlements` response, which the
+ * Toggles misc/mock-api.js's `GET /v1/user/entitlements` response, which the
  * app reads on startup to decide whether the account holds the Konnect
  * control-planes entitlement — the Konnect organization ("Control Planes")
  * only appears in the organization switcher once this (or a local Konnect
@@ -77,7 +77,7 @@ export async function setKonnectEntitlement(enabled: boolean): Promise<void> {
 }
 
 /**
- * Resets misc/mock-api.ts's Cloud Sync mutable state (new snapshots/blobs,
+ * Resets misc/mock-api.js's Cloud Sync mutable state (new snapshots/blobs,
  * deleted-project ids, "remote has new commit" flag) back to its seeded
  * defaults, scoped to this worker's SESSION_ID — mirrors the isolation
  * `setGitSyncFeatureFlag()` already gets, so this never touches another
@@ -96,7 +96,7 @@ export async function resetCloudSyncState(): Promise<void> {
 }
 
 /**
- * Stalls `misc/mock-api.ts`'s Cloud Sync GraphQL responses for this worker's
+ * Stalls `misc/mock-api.js`'s Cloud Sync GraphQL responses for this worker's
  * session by `ms` before replying, until called again with `0` — a test-only
  * concurrency knob (INS-2026), not a real network fault. Unlike the other
  * mock servers' `x-reply-delay-ms` header, these GraphQL calls are made by
@@ -134,7 +134,7 @@ export async function setCloudSyncGraphQLDelay(
 }
 
 /**
- * Reads back misc/mock-api.ts's log of every Cloud Sync GraphQL request this
+ * Reads back misc/mock-api.js's log of every Cloud Sync GraphQL request this
  * worker's session has made so far, in arrival order — each entry is
  * `{ operationName, projectId, at }`, where `projectId` is whatever the
  * request actually carried as `variables.id`/`.projectId`/`.teamProjectId`
@@ -162,7 +162,7 @@ export async function getCloudSyncGraphQLRequestLog(): Promise<
 }
 
 /**
- * Forces `misc/mock-api.ts`'s `projectArchive` GraphQL mutation to return an
+ * Forces `misc/mock-api.js`'s `projectArchive` GraphQL mutation to return an
  * error instead of succeeding, for this worker's session — a test-only
  * failure knob (INS-2026 case 5) simulating a failed dashboard delete (e.g.
  * offline or revoked access) without an actual network fault. Call with
@@ -180,7 +180,7 @@ export async function setCloudSyncArchiveFailure(
 }
 
 /**
- * Reads back one of `misc/mock-api.ts`'s seeded Cloud Sync fixture projects
+ * Reads back one of `misc/mock-api.js`'s seeded Cloud Sync fixture projects
  * by name (`"My Collection R1"`, `"My Environment"`, `"My MCP Client"`, or
  * `"Ghost Collection"` — a project pre-seeded with a mismatched
  * `rootDocumentId`, simulating the INS-2026 bug's end state) — its own
@@ -203,7 +203,7 @@ export async function getCloudSyncProjectInfo(name: string): Promise<{
 }
 
 /**
- * Adds a remote-only Cloud Sync project to misc/mock-api.ts for this
+ * Adds a remote-only Cloud Sync project to misc/mock-api.js for this
  * worker's session, with a single "Initial Snapshot" holding `docs` exactly
  * as given — so a spec controls what the remote blobs contain, e.g. a
  * request with a field this version of Insomnia doesn't know, or one that
@@ -224,7 +224,7 @@ export async function seedCloudSyncProject(
 }
 
 /**
- * Resets misc/mock-api.ts's Vault Key mutable state (the stored SRP
+ * Resets misc/mock-api.js's Vault Key mutable state (the stored SRP
  * salt/verifier from a prior generate/reset, and any in-flight unlock
  * exchange), scoped to this worker's SESSION_ID — same isolation as
  * `resetCloudSyncState()`. The `insomnia` fixture already calls this before
@@ -273,6 +273,7 @@ export const test = base.extend<Fixtures>({
       crypto.randomUUID(),
     );
     await use(dataPath);
+    fs.rmSync(dataPath, { recursive: true, force: true });
   },
 
   // Its own fixture so a spec that needs the real v13 onboarding/login
@@ -299,7 +300,7 @@ export const test = base.extend<Fixtures>({
   // `userSession.vaultSalt`, which alone is enough to make Preferences'
   // Vault Key panel show "Enter Vault Key" instead of "Generate Vault Key"
   // (see `pages/preferences.page.ts`'s vault key methods), without needing
-  // a `vaultKey` override too. `misc/mock-api.ts` runs a real SRP exchange
+  // a `vaultKey` override too. `misc/mock-api.js` runs a real SRP exchange
   // against whatever salt/verifier a spec's own `preferencesFlow` calls
   // establish — this fixture only ever seeds the renderer's *local* belief
   // that a salt exists, not the mock server's stored verifier.
@@ -438,6 +439,7 @@ export const test = base.extend<Fixtures>({
   user: async (
     { window, insomnia, gitCloneUrl, dataPath, skipOnboarding, vaultKey, vaultSalt },
     use,
+    testInfo,
   ) => {
     const pageManager = new PageManager(window, insomnia);
     const flowManager = new FlowManager(pageManager, insomnia, gitCloneUrl, {
@@ -450,6 +452,27 @@ export const test = base.extend<Fixtures>({
     await disableFocusModeDefault(flowManager);
     await use({ page: window, pageManager, flowManager });
     await closeOpenStepGroup();
+
+    // A test that called AppFlow.restart() leaves the relaunched app
+    // behind — the `insomnia`/`window` fixtures only know the original
+    // handles. Collect its coverage and close it here, before they tear down.
+    const currentApp = flowManager.electronApp;
+    if (currentApp && currentApp !== insomnia) {
+      const currentWindow = await currentApp
+        .firstWindow({ timeout: DEFAULT_TIMEOUT })
+        .catch(() => null);
+      if (currentWindow) {
+        if (testInfo.status !== testInfo.expectedStatus) {
+          await testInfo.attach("screenshot-after-restart", {
+            body: await currentWindow.screenshot().catch(() => Buffer.alloc(0)),
+            contentType: "image/png",
+          });
+        }
+        await collectWindowCoverage(currentWindow);
+      }
+      await collectHiddenWindowCoverage(currentApp);
+      await currentApp.close().catch(() => {});
+    }
   },
 });
 
@@ -472,4 +495,3 @@ export async function disableFocusModeDefault(
   });
 }
 
-export { expect } from "@playwright/test";

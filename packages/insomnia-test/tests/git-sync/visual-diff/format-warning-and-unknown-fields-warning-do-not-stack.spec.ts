@@ -3,13 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { GitDiffView } from '../../../enums/git-diff-view';
 import { HttpMethod } from '../../../enums/http-method';
 import { ProjectType } from '../../../enums/project-types';
 import { HTTP_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { HttpRequest } from '../../../models/http-request';
 import { Project } from '../../../models/project';
 import { buildReorderedCollectionFile } from '../undiscardable-change/helpers';
@@ -28,7 +29,7 @@ test('Verify a file whose committed version is not in the format Insomnia writes
   await pushServerFile({ path: unknownFieldsFile, content: unknownFields.content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-visual-diff-'));
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, { cloneParentDir });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   const editedUrl = `${HTTP_SERVER}/${faker.string.alphanumeric(10)}`;
   for (const requestName of [reordered.requestName, unknownFieldsRequestName]) {

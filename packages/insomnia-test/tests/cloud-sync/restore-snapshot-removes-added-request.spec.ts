@@ -1,12 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  HTTP_SERVER,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
 import type { Collection } from "../../models/collection";
 
 test("Verify restoring an earlier snapshot removes a request added and committed after it on a Cloud-synced workspace", async ({
@@ -27,6 +23,13 @@ test("Verify restoring an earlier snapshot removes a request added and committed
   await cloudSyncFlow.commit(addedName, faker.lorem.sentence());
 
   await cloudSyncFlow.restoreSnapshot("Initial Snapshot");
+  // The restore lands asynchronously and a reload before then aborts it, so
+  // wait for the live sidebar to reflect it before reloading.
+  await expect
+    .poll(() => httpRequestFlow.get(addedName, collection), {
+      timeout: DEFAULT_TIMEOUT,
+    })
+    .toBeUndefined();
   await user.page.reload();
 
   await expect

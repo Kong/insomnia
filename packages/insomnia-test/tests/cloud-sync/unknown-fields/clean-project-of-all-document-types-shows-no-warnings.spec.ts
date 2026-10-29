@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from '../../../enums/http-method';
-import { DEFAULT_TIMEOUT, expect, HTTP_SERVER, test, WS_SERVER } from '../../../misc/fixtures';
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test, WS_SERVER } from "../../../misc/fixtures";
 import { Collection } from '../../../models/collection';
 import { EnvironmentKvPairDataType } from '../../../models/environment';
 import { Folder } from '../../../models/folder';
@@ -23,7 +24,7 @@ test('Verify a Cloud Sync collection committed with every document type shows no
 
   const project = await workspaceFlow.getProject({ name: 'Personal Workspace' });
   const collectionName = faker.string.alphanumeric(10);
-  const collection = await workspaceFlow.create(project!, new Collection(collectionName));
+  const collection = await workspaceFlow.createCollection(project!, new Collection(collectionName));
   const folder = await folderFlow.create(collection as Collection, new Folder(faker.string.alphanumeric(10)));
   const httpRequest = await httpRequestFlow.create(collection as Collection, {
     name: faker.string.alphanumeric(10),
@@ -70,11 +71,11 @@ test('Verify a Cloud Sync collection committed with every document type shows no
   const renamedNames: string[] = [];
   for (const request of renamedRequests) {
     const renamed = faker.string.alphanumeric(10);
-    await workspaceFlow.rename(request, renamed);
+    await workspaceFlow.renameRequest(request, renamed);
     renamedNames.push(renamed);
   }
   const renamedCollectionName = faker.string.alphanumeric(10);
-  await workspaceFlow.rename(collection as Collection, renamedCollectionName);
+  await workspaceFlow.renameCollection(collection as Collection, renamedCollectionName);
   await folderFlow.setScripts(folder, { preRequest: faker.string.alpha(10) });
   await cookieFlow.link(collection as Collection, [
     { key: faker.string.alpha(6), value: faker.string.alpha(6), domain: 'localhost', path: '/' },

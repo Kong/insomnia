@@ -2,16 +2,9 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import {
-  expect,
-  getCloudSyncGraphQLRequestLog,
-  MOCK_API_SERVER,
-  resetCloudSyncState,
-  SESSION_ID,
-  setCloudSyncGraphQLDelay,
-  test,
-} from "../../misc/fixtures";
+import { getCloudSyncGraphQLRequestLog, MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, setCloudSyncGraphQLDelay, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 
 // Every Cloud Sync workspace used to share one VCS singleton, so creating a sibling
@@ -134,7 +127,7 @@ test("Verify creating a new collection does not misattribute a concurrent pull's
   // the same shared Team Project — entirely local, so it runs to completion
   // well inside X's stalled window.
   const collectionYName = `Y ${faker.string.alphanumeric(8)}`;
-  const collectionY = await workspaceFlow.create(
+  const collectionY = await workspaceFlow.createCollection(
     project!,
     new Collection(collectionYName),
   );

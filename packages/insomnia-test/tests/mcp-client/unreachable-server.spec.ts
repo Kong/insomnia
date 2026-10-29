@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, expect, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
 
@@ -13,7 +14,7 @@ test("Verify Connecting to an Unreachable MCP Server Lists No Tools", async ({
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -21,7 +22,7 @@ test("Verify Connecting to an Unreachable MCP Server Lists No Tools", async ({
     project,
     new McpClient(faker.string.alphanumeric(10), unreachableUrl),
   );
-  await mcpClientFlow.connect(mcpClient);
+  await mcpClientFlow.connect(mcpClient, { expectConnected: false });
 
   await expect(mcpClientFlow.getTools(mcpClient)).rejects.toThrow();
   await expect

@@ -1,16 +1,12 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
 import { certPath } from "../../misc/certs";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  HTTP_SERVER_MTLS,
-  test,
-} from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, HTTP_SERVER_MTLS, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { Project } from "../../models/project";
 
@@ -27,10 +23,10 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     dataFolders: [path.join(__dirname, "../../misc/fixtures")],
   });
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

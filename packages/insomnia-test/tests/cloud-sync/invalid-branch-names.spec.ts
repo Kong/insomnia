@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "../../misc/fixtures";
+import { test } from "../../misc/fixtures";
 
 const CHARSET_ERROR =
   "Branch names must be at least 3 characters long and can only contain English letters, numbers, period (.), hyphen (-), underscore (_) and forward slash (/)";

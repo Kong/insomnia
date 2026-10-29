@@ -1,16 +1,16 @@
-import { expect } from '@playwright/test';
+import { expect } from "@playwright/test";
 
-import { type McpCapabilityType, McpListAction } from '../enums/mcp-capability';
-import { DEFAULT_TIMEOUT } from '../misc/constants';
-import { McpClient } from '../models/mcp-client';
-import type { Project } from '../models/project';
-import type { ResponseView } from '../models/response';
-import type { OAuth2Tokens } from '../pages/auth-tab.page';
-import type { McpCapabilityError } from '../pages/mcp-client.page';
-import type { PageManager } from '../pages/page-manager';
-import { BaseFlow } from './base.flow';
-import type { FlowContext } from './flow-context';
-import type { WorkspaceFlow } from './workspace.flow';
+import { type McpCapabilityType, McpListAction } from "../enums/mcp-capability";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { McpClient } from "../models/mcp-client";
+import type { Project } from "../models/project";
+import type { ResponseView } from "../models/response";
+import type { OAuth2Tokens } from "../pages/auth-tab.page";
+import type { McpCapabilityError } from "../pages/mcp-client.page";
+import type { PageManager } from "../pages/page-manager";
+import { BaseFlow } from "./base.flow";
+import type { FlowContext } from "./flow-context";
+import type { WorkspaceFlow } from "./workspace.flow";
 
 export class McpClientFlow extends BaseFlow {
   /**
@@ -104,26 +104,30 @@ export class McpClientFlow extends BaseFlow {
   /**
    * Opens the given MCP Client node and clicks its connect action.
    * @param client - The MCP Client to connect
+   * @param options - Forwarded to the page's `connect()`
    */
-  async connect(client: McpClient): Promise<void> {
+  async connect(
+    client: McpClient,
+    options?: { expectConnected?: boolean },
+  ): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
     const node = await workspace.findItemNode(client);
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
-    await mcpClientPage.connect();
+    await mcpClientPage.connect(options);
   }
 
   /**
    * Creates an MCP Client node under `parent` (delegating the tree creation
-   * to `workspaceFlow.create`), then opens it and sets its URL.
+   * to `workspaceFlow.createMcpClient`), then opens it and sets its URL.
    * @param parent - The project to create the MCP Client under
    * @param client - The MCP Client to create, including its URL
    * @returns The created MCP Client, with `id` populated
    */
   async create(parent: Project, client: McpClient): Promise<McpClient> {
-    await this.workspaceFlow.create(parent, client);
+    await this.workspaceFlow.createMcpClient(parent, client);
 
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
@@ -133,8 +137,16 @@ export class McpClientFlow extends BaseFlow {
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
     // The tree node is the MCP workspace; the URL lives on its McpRequest child.
-    const requestId = await this.waitForChildDocId('insomnia.McpRequest.db', node!._id);
-    await this.waitForUrlPersisted('insomnia.McpRequest.db', mcpClientPage, requestId, client.url);
+    const requestId = await this.waitForChildDocId(
+      "insomnia.McpRequest.db",
+      node!._id,
+    );
+    await this.waitForUrlPersisted(
+      "insomnia.McpRequest.db",
+      mcpClientPage,
+      requestId,
+      client.url,
+    );
     if (client.authentication) {
       await this.applyAuthentication(mcpClientPage.auth, client.authentication);
     }
@@ -148,8 +160,10 @@ export class McpClientFlow extends BaseFlow {
    * @param item - The MCP Client name, or an object with name and optional id to match
    * @returns The matching McpClient with `id` and `url` populated, or undefined if not found
    */
-  async get(item: string | { name: string; id?: string }): Promise<McpClient | undefined> {
-    const identity = typeof item === 'string' ? { name: item } : item;
+  async get(
+    item: string | { name: string; id?: string },
+  ): Promise<McpClient | undefined> {
+    const identity = typeof item === "string" ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 

@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
-import { expect, MOCK_BIN_SERVER, test } from "../../misc/fixtures";
+import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
 import { MockServer } from "../../models/mock-server";
 import { Project } from "../../models/project";
 
@@ -9,7 +10,7 @@ test("Verify Create Self-Hosted Mock Server", async ({ user }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

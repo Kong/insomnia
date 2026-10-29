@@ -5,7 +5,7 @@
 // itself.
 //
 // Why: monocart's own multi-run V8 coverage merge (lib/utils/merge/merge.js,
-// used by misc/merge-coverage.ts) has a bug where merging a script's coverage
+// used by misc/merge-coverage.js) has a bug where merging a script's coverage
 // from shards with very different coverage levels can produce a result LOWER
 // than any individual shard — a union should only ever grow. Confirmed via a
 // minimal repro (same `id`/`sourcePath`, same `total`, but merged `covered`
@@ -28,9 +28,9 @@
 // isn't done here. statements/branches/functions keep real summed counts.
 //
 // Usage:
-//   esr misc/merge-coverage-union.ts <dir-containing-one-raw-subdir-per-shard>
-import fs from "node:fs";
-import path from "node:path";
+//   node misc/merge-coverage-union.js <dir-containing-one-raw-subdir-per-shard>
+const fs = require("node:fs");
+const path = require("node:path");
 
 // monocart-coverage-reports only exposes "." (plus ./converter, ./util) via
 // its package.json "exports" map, so lib/v8/v8.js and lib/reports/
@@ -44,45 +44,18 @@ const { consoleSummaryReport } = require(path.join(mcrLibDir, "reports", "consol
 const downloadsDir = process.argv[2];
 if (!downloadsDir) {
   console.error(
-    "Usage: esr misc/merge-coverage-union.ts <dir-containing-one-raw-subdir-per-shard>",
+    "Usage: node misc/merge-coverage-union.js <dir-containing-one-raw-subdir-per-shard>",
   );
   process.exit(1);
 }
 
-interface CoverageRange {
-  start: number;
-  end: number;
-  count: number;
-  none?: boolean;
-  [key: string]: unknown;
-}
-
-interface CoverageFile {
-  sourcePath: string;
-  url: string;
-  data: {
-    bytes?: CoverageRange[];
-    statements?: CoverageRange[];
-    branches?: CoverageRange[];
-    functions?: CoverageRange[];
-    lines?: Record<string, number | string>;
-    extras?: unknown;
-  };
-  [key: string]: any;
-}
-
-interface ShardReport {
-  files: CoverageFile[];
-  [key: string]: any;
-}
-
-function findShardReports(dir: string) {
+function findShardReports(dir) {
   const shardDirs = fs
     .readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(dir, entry.name));
 
-  const reportPaths: string[] = [];
+  const reportPaths = [];
   for (const shardDir of shardDirs) {
     // Each shard's whole `coverage/` dir (raw/ plus the sibling v8-report.json
     // — see .github/workflows/insomnia-test.yml's "Upload coverage (raw)"
@@ -97,7 +70,7 @@ function findShardReports(dir: string) {
   return reportPaths;
 }
 
-function loadShardReports(dir: string): ShardReport[] {
+function loadShardReports(dir) {
   const reportPaths = findShardReports(dir);
   if (!reportPaths.length) {
     console.error(`No shard v8-report.json files found under ${dir}`);
@@ -112,8 +85,8 @@ function loadShardReports(dir: string): ShardReport[] {
 // Branches can carry a `none: true` entry (monocart's "no branch taken"
 // placeholder) sharing the same start/end as a real branch entry — keep
 // those distinct or they collide.
-function unionRanges(rangeListsAcrossShards: CoverageRange[][]) {
-  const byKey = new Map<string, CoverageRange>();
+function unionRanges(rangeListsAcrossShards) {
+  const byKey = new Map();
   for (const ranges of rangeListsAcrossShards) {
     for (const range of ranges) {
       const key = `${range.start}-${range.end}-${Boolean(range.none)}`;
@@ -141,12 +114,12 @@ function unionRanges(rangeListsAcrossShards: CoverageRange[][]) {
 // slightly undercounts lines only covered in pieces across different shards,
 // but — unlike the upstream bug — it can only grow as more shards are added,
 // never shrink.
-function isLineFullyCovered(value: number | string) {
+function isLineFullyCovered(value) {
   return typeof value === "number" && value > 0;
 }
 
-function unionLines(lineMapsAcrossShards: Record<string, number | string>[]) {
-  const merged: Record<string, number> = {};
+function unionLines(lineMapsAcrossShards) {
+  const merged = {};
   for (const lines of lineMapsAcrossShards) {
     for (const [line, value] of Object.entries(lines)) {
       merged[line] = merged[line] || isLineFullyCovered(value) ? 1 : 0;
@@ -155,8 +128,8 @@ function unionLines(lineMapsAcrossShards: Record<string, number | string>[]) {
   return merged;
 }
 
-function mergeFiles(shardReports: ShardReport[]) {
-  const bySourcePath = new Map<string, { first: CoverageFile; occurrences: CoverageFile[] }>();
+function mergeFiles(shardReports) {
+  const bySourcePath = new Map();
 
   for (const report of shardReports) {
     for (const file of report.files) {
@@ -164,7 +137,7 @@ function mergeFiles(shardReports: ShardReport[]) {
       if (!bySourcePath.has(key)) {
         bySourcePath.set(key, { first: file, occurrences: [file] });
       } else {
-        bySourcePath.get(key)!.occurrences.push(file);
+        bySourcePath.get(key).occurrences.push(file);
       }
     }
   }
@@ -177,7 +150,7 @@ function mergeFiles(shardReports: ShardReport[]) {
     const functions = unionRanges(occurrences.map((f) => f.data.functions || []));
     const lines = unionLines(occurrences.map((f) => f.data.lines || {}));
 
-    const summarizeRanges = (ranges: CoverageRange[]) => ({
+    const summarizeRanges = (ranges) => ({
       total: ranges.length,
       covered: ranges.filter((r) => r.count > 0).length,
     });

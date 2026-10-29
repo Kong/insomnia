@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ContentType } from '../../../enums/content-type';
 import { GitChangeList } from '../../../enums/git-change-list';
@@ -8,7 +9,7 @@ import { MockBodyType } from '../../../enums/mock-body-type';
 import { ProjectType } from '../../../enums/project-types';
 import { MCP_SERVER } from '../../../misc/constants';
 import { HTTP_SERVER, MOCK_BIN_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, WS_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
 import { Collection } from '../../../models/collection';
 import { HttpRequest } from '../../../models/http-request';
 import { McpClient } from '../../../models/mcp-client';
@@ -22,9 +23,9 @@ test('Verify the diff pane defaults to Text and every new entity card shows its 
   const { gitSyncPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  const project = await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  const project = await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   const httpBaseName = faker.string.alpha(10).toLowerCase();
-  const httpCollection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), httpBaseName);
+  const httpCollection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), httpBaseName);
   await gitSyncFlow.commit(faker.string.alphanumeric(10));
   const httpRequest = await httpRequestFlow.create(
     httpCollection,
@@ -47,7 +48,7 @@ test('Verify the diff pane defaults to Text and every new entity card shows its 
     }),
   );
   const realtimeBaseName = faker.string.alpha(10).toLowerCase();
-  const realtimeCollection = await workspaceFlow.create(project, new Collection(faker.string.alphanumeric(10)), realtimeBaseName);
+  const realtimeCollection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), realtimeBaseName);
   const webSocketRequest = await webSocketRequestFlow.create(
     realtimeCollection,
     new WebSocketRequest({

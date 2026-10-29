@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER, test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection, Info, Specification } from "../../models/collection";
 import { Project } from "../../models/project";
 
@@ -12,7 +13,7 @@ test("Verify the sidebar focus mode onboarding popover shows once and stays dism
   const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
   const { workspacePage, preferencesPage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const specPath = `/${faker.word.sample()}`;
@@ -27,11 +28,11 @@ test("Verify the sidebar focus mode onboarding popover shows once and stays dism
       },
     },
   );
-  const collection1 = await workspaceFlow.create(
+  const collection1 = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10), spec),
   );
-  const collection2 = await workspaceFlow.create(
+  const collection2 = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -86,10 +87,10 @@ test("Verify the sidebar focus mode onboarding popover never shows while the set
 
   await preferencesFlow.set({ sidebarFocusForCollections: false });
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

@@ -3,9 +3,10 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { ProjectType } from '../../enums/project-types';
-import { expect, test } from '../../misc/git-fixtures';
+import { test } from '../../misc/git-fixtures';
 import { Project } from '../../models/project';
 
 test(
@@ -14,7 +15,7 @@ test(
     const { workspaceFlow } = user.flowManager;
 
     const folderPath = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-open-local-folder-'));
-    await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath));
+    await workspaceFlow.openLocalGitFolder(new Project(faker.string.alphanumeric(10), ProjectType.Git, folderPath));
 
     await expect.poll(() => fs.existsSync(path.join(folderPath, '.git'))).toBe(true);
   },

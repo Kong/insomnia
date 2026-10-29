@@ -1,16 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import {
-  expect,
-  OAUTH2_CLIENT_ID,
-  OAUTH2_CLIENT_SECRET,
-  OAUTH2_PASSWORD,
-  OAUTH2_SERVER,
-  OAUTH2_USERNAME,
-  test,
-} from "../../misc/fixtures";
+import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_PASSWORD, OAUTH2_SERVER, OAUTH2_USERNAME, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import type { AuthTypeOAuth2 } from "../../models/http-request";
 import { Project } from "../../models/project";
@@ -21,10 +14,10 @@ test("Verify Resource Owner Password Credentials grant fetches tokens with no po
 }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

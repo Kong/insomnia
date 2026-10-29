@@ -2,7 +2,7 @@ import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { ClientCertificate } from "../models/certificate";
+import type { ClientCertificate } from "../models/client-certificate";
 import { BasePage } from "./base.page";
 
 export class CertificatesPage extends BasePage {
@@ -106,34 +106,6 @@ export class CertificatesPage extends BasePage {
     await this.setRowEnabled(this.clientCertificateRow(host), enabled);
   }
 
-  /**
-   * Toggles the workspace CA Certificate's Enabled/Disabled state. A no-op
-   * if it already matches `enabled`.
-   * @param enabled - Whether the CA certificate should be enabled
-   */
-  async setCaCertificateEnabled(enabled: boolean): Promise<void> {
-    await this.setRowEnabled(this.caCertificateRow(), enabled);
-  }
-
-  /**
-   * Toggles the MCP Client "Manage Certificates" dialog's "SSL Certificate
-   * Validation" switch (`McpRequest.sslValidation`). A no-op if it already
-   * matches `enabled`.
-   * @param enabled - Whether SSL certificate validation should be enabled
-   */
-  async setSslValidationEnabled(enabled: boolean): Promise<void> {
-    const toggle = this.dialog.locator(
-      '[data-test-id="mcp-reject-unauthorized-toggle"]',
-    );
-    const current = (await toggle.innerText()) === "Enabled";
-    if (current !== enabled) {
-      await toggle.click();
-      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
-        timeout: DEFAULT_TIMEOUT,
-      });
-    }
-  }
-
   private async setRowEnabled(row: Locator, enabled: boolean): Promise<void> {
     const toggle = row.getByRole("button", { name: /^(Enabled|Disabled)$/ });
     const current = (await toggle.innerText()) === "Enabled";
@@ -166,5 +138,33 @@ export class CertificatesPage extends BasePage {
    */
   private clientCertificateRow(host: string): Locator {
     return this.dialog.locator('[role="row"]').filter({ hasText: host });
+  }
+
+  /**
+   * Toggles the workspace CA Certificate's Enabled/Disabled state. A no-op
+   * if it already matches `enabled`.
+   * @param enabled - Whether the CA certificate should be enabled
+   */
+  async setCaCertificateEnabled(enabled: boolean): Promise<void> {
+    await this.setRowEnabled(this.caCertificateRow(), enabled);
+  }
+
+  /**
+   * Toggles the MCP Client "Manage Certificates" dialog's "SSL Certificate
+   * Validation" switch (`McpRequest.sslValidation`). A no-op if it already
+   * matches `enabled`.
+   * @param enabled - Whether SSL certificate validation should be enabled
+   */
+  async setSslValidationEnabled(enabled: boolean): Promise<void> {
+    const toggle = this.dialog.locator(
+      '[data-test-id="mcp-reject-unauthorized-toggle"]',
+    );
+    const current = (await toggle.innerText()) === "Enabled";
+    if (current !== enabled) {
+      await toggle.click();
+      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
+        timeout: DEFAULT_TIMEOUT,
+      });
+    }
   }
 }

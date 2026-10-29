@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
 import { ProjectType } from "../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import type { HttpRequest } from "../../models/http-request";
@@ -15,10 +16,10 @@ test("Verify a disabled sub-environment variable falls back to the base environm
 }) => {
   const { environmentFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -26,7 +27,7 @@ test("Verify a disabled sub-environment variable falls back to the base environm
   const baseValue = faker.string.alphanumeric(10);
   const subValue = faker.string.alphanumeric(10);
 
-  const base = await environmentFlow.create(project, {
+  const base = await environmentFlow.createBaseEnvironment(project, {
     name: "Base Environment",
     kvPairData: [
       {
@@ -38,7 +39,7 @@ test("Verify a disabled sub-environment variable falls back to the base environm
       },
     ],
   });
-  const sub = await environmentFlow.create(base, {
+  const sub = await environmentFlow.createSubEnvironment(base, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

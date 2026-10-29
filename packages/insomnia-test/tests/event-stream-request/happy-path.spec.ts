@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
 import { RequestState } from "../../enums/request-state";
-import { EVENT_STREAM_SERVER,expect, test } from "../../misc/fixtures";
+import { EVENT_STREAM_SERVER, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
 import { EnvironmentKvPairDataType } from "../../models/environment";
 import { EventStreamMethod } from "../../models/event-stream-request";
@@ -15,15 +16,15 @@ test("Verify Create Event Stream Request", async ({ user }) => {
     user.flowManager;
   const { responsePage, workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
 
-  const environment = await environmentFlow.create(project, {
+  const environment = await environmentFlow.createBaseEnvironment(project, {
     name: faker.string.alphanumeric(10),
     kvPairData: [
       {

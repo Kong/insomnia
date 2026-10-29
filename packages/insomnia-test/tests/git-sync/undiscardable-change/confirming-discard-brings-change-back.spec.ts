@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from '../../../enums/git-change-list';
 import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, expect, GIT_CREDENTIAL, pushServerFile, test } from '../../../misc/git-fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Project } from '../../../models/project';
 import { buildReorderedCollectionFile } from './helpers';
 
@@ -16,7 +17,7 @@ test('Verify confirming discard on a hand-reordered file brings the same change 
     content: buildReorderedCollectionFile(faker.string.alpha(10)).content,
   });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged, {
       timeout: DEFAULT_TIMEOUT,

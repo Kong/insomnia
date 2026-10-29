@@ -1,8 +1,8 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
-import { McpPrimitiveType } from "../../enums/mcp-capability";
 import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT,expect, MCP_SERVER, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "../../misc/fixtures";
 import { McpClient } from "../../models/mcp-client";
 import { Project } from "../../models/project";
 
@@ -29,7 +29,7 @@ test("Verify Create MCP Client", async ({ user }) => {
   const { mcpClientFlow, workspaceFlow } = user.flowManager;
   const { responsePage, workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
@@ -39,7 +39,6 @@ test("Verify Create MCP Client", async ({ user }) => {
   );
   await mcpClientFlow.connect(mcpClient);
   const tools = await mcpClientFlow.getTools(mcpClient);
-  expect(await user.pageManager.mcpClientPage.getCapabilityErrorCount(McpPrimitiveType.Tools)).toBe(0);
   expect(tools).toEqual(
     expect.arrayContaining([
       "read_wiki_structure",

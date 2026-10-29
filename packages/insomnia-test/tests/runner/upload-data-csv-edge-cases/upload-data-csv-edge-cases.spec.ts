@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../../enums/http-method";
 import { ProjectType } from "../../../enums/project-types";
-import { expect, HTTP_SERVER, test } from "../../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
@@ -13,10 +14,10 @@ const url = `${HTTP_SERVER}/post`;
 test("Verify a quoted CSV field containing a comma is uploaded as a single value without shifting later columns", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -44,10 +45,10 @@ test("Verify a quoted CSV field containing a comma is uploaded as a single value
 test("Verify escaped double quotes inside a quoted CSV field are unescaped to a literal quote", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -73,10 +74,10 @@ test("Verify escaped double quotes inside a quoted CSV field are unescaped to a 
 test("Verify a CSV row with fewer cells than the header defaults the missing trailing cell to an empty string", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -112,10 +113,10 @@ test("Verify a CSV row with fewer cells than the header defaults the missing tra
 test("Verify a newline inside a quoted CSV field is preserved as part of a single value instead of splitting into an extra row", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );
@@ -143,10 +144,10 @@ test("Verify a newline inside a quoted CSV field is preserved as part of a singl
 test("Verify a trailing blank line in the CSV file does not produce an extra bogus iteration", async ({ user }) => {
   const { workspaceFlow, httpRequestFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-  const collection = await workspaceFlow.create(
+  const collection = await workspaceFlow.createCollection(
     project,
     new Collection(faker.string.alphanumeric(10)),
   );

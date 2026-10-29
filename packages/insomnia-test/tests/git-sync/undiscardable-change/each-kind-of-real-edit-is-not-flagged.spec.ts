@@ -1,16 +1,11 @@
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { GitChangeList } from "../../../enums/git-change-list";
 import { HttpMethod } from "../../../enums/http-method";
 import { ProjectType } from "../../../enums/project-types";
 import { HTTP_SERVER } from "../../../misc/constants";
-import {
-  DEFAULT_TIMEOUT,
-  expect,
-  GIT_CREDENTIAL,
-  pushServerFile,
-  test,
-} from "../../../misc/git-fixtures";
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 import { buildReorderedCollectionFile } from "./helpers";
@@ -27,7 +22,7 @@ test("Verify each kind of real edit on a reordered file is not flagged as only r
   const { content, requestName } = buildReorderedCollectionFile(collectionName);
   await pushServerFile({ path: fileName, content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
-  await workspaceFlow.create(
+  await workspaceFlow.cloneGitProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Git),
     GIT_CREDENTIAL.name,
   );
@@ -36,7 +31,7 @@ test("Verify each kind of real edit on a reordered file is not flagged as only r
     new Collection(collectionName),
   );
   const edits = [
-    () => workspaceFlow.rename(request!, faker.string.alphanumeric(10)),
+    () => workspaceFlow.renameRequest(request!, faker.string.alphanumeric(10)),
     () => httpRequestPage.setUrl(`${HTTP_SERVER}/${faker.string.alpha(10)}`),
     () => httpRequestPage.setMethod(HttpMethod.Post),
     () =>

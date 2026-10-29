@@ -1,14 +1,12 @@
 #!/usr/bin/env node
+'use strict';
 
-import fs from 'node:fs';
-import http, { type IncomingMessage, type ServerResponse } from 'node:http';
-import https from 'node:https';
-import path from 'node:path';
-import type { TLSSocket } from 'node:tls';
-
-import { buildSchema,graphql } from 'graphql';
-
-import { certPath } from './certs';
+const http = require('node:http');
+const https = require('node:https');
+const fs = require('node:fs');
+const path = require('node:path');
+const { graphql, buildSchema } = require('graphql');
+const { certPath } = require('./certs');
 
 const PETSTORE_SWAGGER = fs.readFileSync(path.join(__dirname, 'fixtures', 'petstore-swagger.json'), 'utf8');
 
@@ -57,10 +55,10 @@ const GRAPHQL_EPISODES = [
 ];
 
 const GRAPHQL_ROOT = {
-  characters: ({ filter }: { filter?: { status?: string } }) => ({
+  characters: ({ filter }) => ({
     results: filter?.status ? GRAPHQL_CHARACTERS.filter(c => c.status === filter.status) : GRAPHQL_CHARACTERS,
   }),
-  episode: ({ id }: { id: number }) => GRAPHQL_EPISODES.find(e => e.id === id) ?? null,
+  episode: ({ id }) => GRAPHQL_EPISODES.find(e => e.id === id) ?? null,
 };
 
 const HTTPS_OPTIONS = {
@@ -83,10 +81,10 @@ const MTLS_HTTPS_OPTIONS = {
   rejectUnauthorized: true,
 };
 
-function readBody(req: IncomingMessage) {
-  return new Promise<string>((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
@@ -95,7 +93,7 @@ function readBody(req: IncomingMessage) {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 60_000;
 
-function delayResponse(req: IncomingMessage) {
+function delayResponse(req) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -104,8 +102,8 @@ function delayResponse(req: IncomingMessage) {
   return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
-function parseCookies(header?: string) {
-  const cookies: Record<string, string> = {};
+function parseCookies(header) {
+  const cookies = {};
   if (!header) return cookies;
   for (const pair of header.split(';')) {
     const idx = pair.indexOf('=');
@@ -115,8 +113,8 @@ function parseCookies(header?: string) {
   return cookies;
 }
 
-async function handleRequest(req: IncomingMessage, res: ServerResponse) {
-  const url = new URL(req.url ?? '/', `${(req.socket as TLSSocket).encrypted ? 'https' : 'http'}://localhost`);
+async function handleRequest(req, res) {
+  const url = new URL(req.url, `${req.socket.encrypted ? 'https' : 'http'}://localhost`);
   process.stdout.write(`${req.method} ${url.pathname}\n`);
   await delayResponse(req);
 
@@ -135,14 +133,14 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     try {
       json = JSON.parse(raw);
     } catch {}
-    const args: Record<string, string | string[]> = {};
+    const args = {};
     for (const [k, v] of url.searchParams) {
       if (args[k] === undefined) {
         args[k] = v;
       } else if (Array.isArray(args[k])) {
-        (args[k] as string[]).push(v);
+        args[k].push(v);
       } else {
-        args[k] = [args[k] as string, v];
+        args[k] = [args[k], v];
       }
     }
     res.writeHead(200, {
@@ -248,6 +246,16 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
+  if (req.method === 'GET' && url.pathname === '/large-json') {
+    const items = Array.from({ length: 100_000 }, (_, i) => ({ id: i, name: `item-${i}`, value: 'x'.repeat(100) }));
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(JSON.stringify({ items }));
+    return;
+  }
+
   if (req.method === 'GET' && url.pathname === '/status/404') {
     res.writeHead(404, {
       'Content-Type': 'application/json',
@@ -279,15 +287,16 @@ const httpsServer = https.createServer(HTTPS_OPTIONS, handleRequest);
 const customCaHttpsServer = https.createServer(CUSTOM_CA_HTTPS_OPTIONS, handleRequest);
 const mtlsHttpsServer = https.createServer(MTLS_HTTPS_OPTIONS, handleRequest);
 
-server.listen(4060, () => {
+// Dual-stack so http://[::1]:4060 (ipv6-local-address.spec.ts) is reachable as well as 127.0.0.1.
+server.listen(4060, '::', () => {
   process.stdout.write('Listening at http://localhost:4060\n');
 });
-httpsServer.listen(4061, () => {
+httpsServer.listen(4061, '127.0.0.1', () => {
   process.stdout.write('Listening at https://localhost:4061\n');
 });
-customCaHttpsServer.listen(4062, () => {
+customCaHttpsServer.listen(4062, '127.0.0.1', () => {
   process.stdout.write('Listening at https://localhost:4062 (custom CA)\n');
 });
-mtlsHttpsServer.listen(4063, () => {
+mtlsHttpsServer.listen(4063, '127.0.0.1', () => {
   process.stdout.write('Listening at https://localhost:4063 (mTLS)\n');
 });

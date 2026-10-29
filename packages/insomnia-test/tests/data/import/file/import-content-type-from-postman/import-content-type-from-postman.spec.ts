@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../../../../enums/http-method";
 import { ProjectType } from "../../../../../enums/project-types";
-import { expect, HTTP_SERVER,test } from "../../../../../misc/fixtures";
+import { HTTP_SERVER, test } from "../../../../../misc/fixtures";
 import type { HttpRequest } from "../../../../../models/http-request";
 import { Project } from "../../../../../models/project";
 
@@ -13,7 +14,7 @@ test("Import Generates Content-Type Header From Postman File", async ({
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 

@@ -2,10 +2,11 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { expect } from "@playwright/test";
 
 import { ProjectType } from "../../enums/project-types";
 import { waitForExportedFile } from "../../misc/export-file";
-import { expect, MOCK_BIN_SERVER, test } from "../../misc/fixtures";
+import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
 import { MockServer } from "../../models/mock-server";
 import { Project } from "../../models/project";
 
@@ -15,7 +16,7 @@ test("Verify Exported Mock Server Can Be Imported Into Another Project", async (
   const { importFlow, mockServerFlow, workspaceFlow } = user.flowManager;
   const { workspacePage } = user.pageManager;
 
-  const project = await workspaceFlow.create(
+  const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   const server = await mockServerFlow.create(
@@ -33,7 +34,7 @@ test("Verify Exported Mock Server Can Be Imported Into Another Project", async (
   await mockServerFlow.export(server, filePath);
   const exported = await waitForExportedFile(filePath);
 
-  const targetProject = await workspaceFlow.create(
+  const targetProject = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
   await importFlow.importFile(targetProject, filePath);
