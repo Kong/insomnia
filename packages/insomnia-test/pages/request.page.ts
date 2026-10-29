@@ -492,6 +492,9 @@ export abstract class RequestPage extends TabPanelPage {
         // One row at a time, waiting for each save to land: re-typing every
         // missing row back-to-back would recreate the stale-row-list race.
         for (const { pair, index } of missing) {
+          // Let the revalidation from the previous save reach the editor
+          // first, or this edit builds on a stale row list and reverts it.
+          await this.waitForRendererIdle();
           const row = rows.nth(index);
           await this.setCodeMirrorValue(
             row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
@@ -503,6 +506,7 @@ export abstract class RequestPage extends TabPanelPage {
           );
           await this.syncRowToggle(row, pair);
           await this.waitForPairPersisted(pair).catch(() => undefined);
+          await this.waitForRendererIdle();
         }
       }
       expect(missing.map(({ pair }) => pair.name)).toEqual([]);

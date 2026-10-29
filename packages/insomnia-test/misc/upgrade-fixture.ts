@@ -75,6 +75,13 @@ function installApp(treeDir: string, appSha: string): void {
   fs.mkdirSync(treeDir, { recursive: true });
   extract(appSha, treeDir);
 
+  // Old trees verify the bundled plugins in postinstall, which fails when the private plugin packages are unavailable.
+  const rootPackageFile = path.join(treeDir, 'package.json');
+  fs.writeFileSync(
+    rootPackageFile,
+    fs.readFileSync(rootPackageFile, 'utf8').replace(' && npm run verify-bundle-plugins -w insomnia', ''),
+  );
+
   run('npm', ['ci'], treeDir);
   run(process.execPath, [path.join(treeDir, 'node_modules', 'electron', 'install.js')], treeDir);
 
