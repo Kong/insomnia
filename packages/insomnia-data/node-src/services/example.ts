@@ -81,6 +81,7 @@ export async function createFromRequest(
     pathParameters: parentRequest.pathParameters,
     headers: parentRequest.headers,
     body: parentRequest.body,
+    authentication: parentRequest.authentication,
     ...payload.request,
   };
 
