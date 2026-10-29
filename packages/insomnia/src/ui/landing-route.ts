@@ -1,8 +1,10 @@
 import { models, services } from 'insomnia-data';
+import { href, redirect } from 'react-router';
 
 import { accountServerDataKey, accountServerDataQuery, type OrganizationData } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
+import { logout } from '~/ui/account/session';
 import { serverQueryClient } from '~/ui/context/app/server-data-context';
 import {
   findMigrationTargetSpaceId,
@@ -68,17 +70,11 @@ async function runAccountPreparation(sessionId: string, accountId: string) {
 let accountPreparation: { sessionId: string; promise: Promise<void> } | null = null;
 
 /**
- * Prepares the signed-in account once per session, before anything in an organization runs:
- * awaited by the organization layout's middleware, which every route inside an organization —
- * including `/organization` itself — passes through. Covers entries that skip `/organization`
- * too, such as deep links opened while the app is still on the onboarding or git migration screen.
+ * Prepares the signed-in account once per session, before anything in an organization runs (see
+ * `enterOrganization`). Covers entries that skip `/organization` too, such as deep links opened
+ * while the app is still on the onboarding or git migration screen.
  */
-export async function prepareAccount() {
-  const { id: sessionId, accountId } = await services.userSession.get();
-  // Logged out (the scratchpad): there is no account to prepare.
-  if (!sessionId) {
-    return;
-  }
+export async function prepareAccount(sessionId: string, accountId: string) {
   // Concurrent callers share the run.
   if (accountPreparation?.sessionId !== sessionId) {
     const promise = runAccountPreparation(sessionId, accountId).catch(error => {
@@ -94,9 +90,27 @@ export async function prepareAccount() {
 }
 
 /**
+ * The organization layout's middleware: runs before the loaders and actions of every route inside
+ * an organization — `/organization` itself included — however it was entered. Signed out, only the
+ * scratchpad is reachable; signed in, the account is prepared (a no-op after the first time in a
+ * session).
+ */
+export async function enterOrganization(organizationId: string | undefined) {
+  const { id: sessionId, accountId } = await services.userSession.get();
+  if (!sessionId) {
+    if (organizationId && models.organization.isScratchpadOrganizationId(organizationId)) {
+      return;
+    }
+    await logout();
+    throw redirect(href('/auth/login'));
+  }
+  await prepareAccount(sessionId, accountId);
+}
+
+/**
  * Where a signed-in user lands without a target organization (`/organization`): on launch, after
  * signing in, and every other "take me somewhere sensible" entry. The account is already prepared
- * by the organization layout's middleware (`prepareAccount`), so the organization list is loaded
+ * by the organization layout's middleware (`enterOrganization`), so the organization list is loaded
  * and the projects are where they belong.
  */
 export async function resolveLandingRoute(accountId: string) {

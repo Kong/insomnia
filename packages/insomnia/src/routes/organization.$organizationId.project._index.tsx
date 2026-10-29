@@ -8,7 +8,6 @@ import { organizationDataQuery } from '~/common/app-data';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
-import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { DelayedLoadingIndicator, MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
@@ -39,13 +38,6 @@ const isFirstAccountLanding = (accountId: string | null | undefined) => {
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
-
-  const { id: sessionId } = await services.userSession.get();
-
-  if (!sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
 
   // Deliberately reads the database rather than the organization data cache: this route is where
   // the app lands right after deleting the last project, before the cache has heard about it.
