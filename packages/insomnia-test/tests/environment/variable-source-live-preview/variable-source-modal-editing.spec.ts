@@ -32,7 +32,7 @@ test("Verify the tag modal's source follows the edited template and hides for no
   );
   await variableSourceFlow.selectModalVariable(
     { label: "-- Custom --" },
-    "my%20custom%20template%20logic",
+    "Failed to render environment variables: 'my custom template logic'",
   );
   const plainText = await variableSourceFlow.setModalTemplate("plain text", "plain text");
   const inheritedKey = await variableSourceFlow.setModalTemplate("{{ constructor }}");
