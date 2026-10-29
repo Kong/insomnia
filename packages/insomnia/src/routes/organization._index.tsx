@@ -1,17 +1,12 @@
 import { services } from 'insomnia-data';
-import { href, redirect } from 'react-router';
+import { redirect } from 'react-router';
 
-import * as session from '~/ui/account/session';
 import { resolveLandingRoute } from '~/ui/landing-route';
 
 import type { Route } from './+types/organization._index';
 
+// Signed in: the organization layout's middleware already sent a signed-out user to the login page.
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { id: sessionId, accountId } = await services.userSession.get();
-  if (sessionId) {
-    return redirect(await resolveLandingRoute(accountId));
-  }
-
-  await session.logout();
-  return redirect(href('/auth/login'));
+  const { accountId } = await services.userSession.get();
+  return redirect(await resolveLandingRoute(accountId));
 }

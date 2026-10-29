@@ -19,6 +19,7 @@ vi.mock('insomnia-api', async importOriginal => ({
   getCurrentPlan: vi.fn(async () => ({ planId: 'plan_1' })),
 }));
 vi.mock('~/konnect/migrate-konnect-organization', () => ({ migrateKonnectProjectsIfUnambiguous: vi.fn() }));
+vi.mock('~/ui/account/session', () => ({ logout: vi.fn() }));
 vi.mock('~/ui/organization-utils', () => ({
   findMigrationTargetSpaceId: vi.fn(() => 'org_target'),
   getKonnectOrganizationEscapeRoute: vi.fn(),
@@ -36,6 +37,7 @@ import { models, services } from 'insomnia-data';
 
 import { accountServerDataKey } from '~/common/organization';
 import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
+import { logout } from '~/ui/account/session';
 import { serverQueryClient } from '~/ui/context/app/server-data-context';
 import {
   getKonnectOrganizationEscapeRoute,
@@ -44,7 +46,7 @@ import {
 } from '~/ui/organization-utils';
 import { getInitialRouteForOrganization } from '~/ui/utils/router';
 
-import { prepareAccount, resolveLandingRoute, resolveOrganizationLandingRoute } from './landing-route';
+import { enterOrganization, prepareAccount, resolveLandingRoute, resolveOrganizationLandingRoute } from './landing-route';
 
 const ACCOUNT_ID = 'acct_1';
 const ORGANIZATION_ID = 'org_1';
@@ -75,7 +77,6 @@ describe('prepareAccount', () => {
 
   beforeEach(() => {
     sessionId = `sess_${++sessionCount}`;
-    vi.mocked(services.userSession.get).mockResolvedValue({ id: sessionId, accountId: ACCOUNT_ID } as any);
     vi.mocked(services.organization.list).mockResolvedValue(ORGANIZATIONS);
     stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS });
   });
@@ -87,7 +88,7 @@ describe('prepareAccount', () => {
   });
 
   it('uses the persisted organization list without fetching it', async () => {
-    await prepareAccount();
+    await prepareAccount(sessionId, ACCOUNT_ID);
 
     expect(services.organization.list).not.toHaveBeenCalled();
     expect(serverQueryClient.getQueryData(accountServerDataKey(ACCOUNT_ID))).toMatchObject({
@@ -99,7 +100,7 @@ describe('prepareAccount', () => {
   it('fetches the organization list when none is persisted, writing it through', async () => {
     stubLocalStorage({});
 
-    await prepareAccount();
+    await prepareAccount(sessionId, ACCOUNT_ID);
 
     expect(services.organization.list).toHaveBeenCalledTimes(1);
     expect(store.get(SPACES_KEY)).toBe(CACHED_ORGANIZATIONS);
@@ -112,7 +113,7 @@ describe('prepareAccount', () => {
     vi.mocked(services.organization.list).mockRejectedValue(new Error('offline'));
 
     const expectFailure = async () => {
-      const result = expect(prepareAccount()).rejects.toThrow('offline');
+      const result = expect(prepareAccount(sessionId, ACCOUNT_ID)).rejects.toThrow('offline');
       await vi.runAllTimersAsync();
       await result;
     };
@@ -133,7 +134,7 @@ describe('prepareAccount', () => {
     vi.mocked(refreshKonnectAccess).mockImplementation(async () => void order.push('konnect-access'));
     vi.mocked(migrateProjectsUnderOrganization).mockImplementation(async () => void order.push('projects'));
 
-    await prepareAccount();
+    await prepareAccount(sessionId, ACCOUNT_ID);
 
     expect(order).toEqual(['konnect', 'konnect-access', 'projects']);
   });
@@ -144,27 +145,63 @@ describe('prepareAccount', () => {
     vi.mocked(refreshKonnectAccess).mockRejectedValueOnce(new Error('access'));
     vi.mocked(migrateProjectsUnderOrganization).mockRejectedValueOnce(new Error('projects'));
 
-    await expect(prepareAccount()).resolves.toBeUndefined();
+    await expect(prepareAccount(sessionId, ACCOUNT_ID)).resolves.toBeUndefined();
     expect(migrateProjectsUnderOrganization).toHaveBeenCalled();
   });
 
   it('runs once per session, including concurrent calls', async () => {
-    await Promise.all([prepareAccount(), prepareAccount()]);
-    await prepareAccount();
+    await Promise.all([prepareAccount(sessionId, ACCOUNT_ID), prepareAccount(sessionId, ACCOUNT_ID)]);
+    await prepareAccount(sessionId, ACCOUNT_ID);
     expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(1);
 
-    vi.mocked(services.userSession.get).mockResolvedValue({ id: `${sessionId}_next`, accountId: ACCOUNT_ID } as any);
-    await prepareAccount();
+    await prepareAccount(`${sessionId}_next`, ACCOUNT_ID);
     expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(2);
   });
 
-  it('does nothing when logged out', async () => {
+});
+
+describe('enterOrganization', () => {
+  let sessionCount = 0;
+
+  beforeEach(() => {
+    vi.mocked(services.organization.list).mockResolvedValue(ORGANIZATIONS);
+    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS });
+  });
+
+  afterEach(() => {
+    serverQueryClient.clear();
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('prepares the account when signed in', async () => {
+    const sessionId = `sess_enter_${++sessionCount}`;
+    vi.mocked(services.userSession.get).mockResolvedValue({ id: sessionId, accountId: ACCOUNT_ID } as any);
+
+    await enterOrganization(ORGANIZATION_ID);
+
+    expect(migrateProjectsUnderOrganization).toHaveBeenCalledWith('org_target', sessionId);
+    expect(logout).not.toHaveBeenCalled();
+  });
+
+  it('lets a signed-out user into the scratchpad without preparing anything', async () => {
     vi.mocked(services.userSession.get).mockResolvedValue({ id: '', accountId: '' } as any);
 
-    await prepareAccount();
+    await enterOrganization(models.organization.SCRATCHPAD_ORGANIZATION_ID);
 
+    expect(logout).not.toHaveBeenCalled();
     expect(services.organization.list).not.toHaveBeenCalled();
-    expect(migrateKonnectProjectsIfUnambiguous).not.toHaveBeenCalled();
+    expect(migrateProjectsUnderOrganization).not.toHaveBeenCalled();
+  });
+
+  it.each([ORGANIZATION_ID, undefined])('sends a signed-out user to the login page (organization %s)', async id => {
+    vi.mocked(services.userSession.get).mockResolvedValue({ id: '', accountId: '' } as any);
+
+    const error = await enterOrganization(id).catch(error_ => error_);
+
+    expect(logout).toHaveBeenCalledTimes(1);
+    expect(error).toBeInstanceOf(Response);
+    expect((error as Response).headers.get('Location')).toBe('/auth/login');
     expect(migrateProjectsUnderOrganization).not.toHaveBeenCalled();
   });
 });

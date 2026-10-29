@@ -1,11 +1,10 @@
 import type { Project } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { useEffect } from 'react';
-import { href, Outlet, redirect, useOutletContext, useParams } from 'react-router';
+import { href, Outlet, useOutletContext, useParams } from 'react-router';
 
 import { organizationDataQuery } from '~/common/app-data';
 import { invariant } from '~/common/utils/invariant';
-import { logout } from '~/ui/account/session';
 import { MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
 import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useActiveProject } from '~/ui/hooks/use-active-project';
@@ -18,13 +17,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
-
-  const { id: sessionId } = await services.userSession.get();
-
-  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
 
   // Prefetch only. The component reads the project from the cache and handles a missing one.
   await dbQueryClient.ensureQueryData(organizationDataQuery(organizationId));
