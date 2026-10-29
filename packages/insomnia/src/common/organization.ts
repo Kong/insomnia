@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query';
 import { type CurrentPlan, getCurrentPlan, getUserProfile, type Organization, type User } from 'insomnia-api';
 import { services } from 'insomnia-data';
 
@@ -10,9 +11,7 @@ export interface OrganizationData {
 }
 
 // Fetches the organization triple (organizations / user / current plan) from the
-// cloud API in parallel. Shared by both the TanStack query (the source of truth for
-// React consumers) and `syncOrganizations` (the localStorage write path still used by
-// the non-React readers). Throws if any of the three fail their invariant.
+// cloud API in parallel. Throws if any of the three fail their invariant.
 export async function fetchOrganizationData(sessionId: string): Promise<OrganizationData> {
   const [organizations, user, currentPlan] = await Promise.all([
     services.organization.list(),
@@ -53,12 +52,27 @@ export function readOrganizationDataFromLocalStorage(accountId: string): Organiz
   };
 }
 
-// This is reusable action/loader implementations.
-export async function syncOrganizations(sessionId: string, accountId: string) {
-  try {
-    const data = await fetchOrganizationData(sessionId);
-    writeOrganizationDataToLocalStorage(accountId, data);
-  } catch (error) {
-    console.log('[organization] Failed to load Organizations', error);
-  }
-}
+export const accountServerDataKey = (accountId: string) => ['account-server-data', accountId] as const;
+
+/**
+ * The account's organizations / user / current plan, shared by the React hooks
+ * (`useOrganizations`…) and non-React callers (`serverQueryClient.ensureQueryData(...)`), so both
+ * read and refresh one cache.
+ * localStorage is its persistence layer: it seeds the query when the query is first used (cache
+ * first, so landing never waits for the network when a list is cached) and every fetch writes
+ * through to it for the remaining non-React readers. Without a cached organization list there is
+ * no seed, so the first read fetches.
+ */
+export const accountServerDataQuery = (accountId: string, sessionId: string) =>
+  queryOptions({
+    queryKey: accountServerDataKey(accountId),
+    queryFn: async () => {
+      const result = await fetchOrganizationData(sessionId);
+      writeOrganizationDataToLocalStorage(accountId, result);
+      return result;
+    },
+    initialData: () => {
+      const cached = readOrganizationDataFromLocalStorage(accountId);
+      return cached.organizations.length ? cached : undefined;
+    },
+  });

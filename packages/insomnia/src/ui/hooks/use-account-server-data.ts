@@ -1,32 +1,11 @@
-import { queryOptions } from '@tanstack/react-query';
 import type { CurrentPlan, Organization, User } from 'insomnia-api';
 import { useCallback } from 'react';
 
-import {
-  fetchOrganizationData,
-  type OrganizationData,
-  readOrganizationDataFromLocalStorage,
-  writeOrganizationDataToLocalStorage,
-} from '~/common/organization';
+import { accountServerDataKey, accountServerDataQuery, type OrganizationData } from '~/common/organization';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import { useServerQuery } from '~/ui/hooks/use-query';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useKonnectOrganization } from '~/ui/organization-utils';
-
-// Account-scoped server data (organizations / user / current plan).
-const accountServerDataKey = (accountId: string) => ['account-server-data', accountId] as const;
-
-// Shared by the hook below and non-React callers (`serverQueryClient.fetchQuery(...)`).
-// The queryFn writes the result through to localStorage for the remaining non-React readers.
-export const accountServerDataQuery = (accountId: string, sessionId: string) =>
-  queryOptions({
-    queryKey: accountServerDataKey(accountId),
-    queryFn: async () => {
-      const result = await fetchOrganizationData(sessionId);
-      writeOrganizationDataToLocalStorage(accountId, result);
-      return result;
-    },
-  });
 
 const loggedOutData: OrganizationData = { organizations: [], user: undefined, currentPlan: undefined };
 
@@ -56,11 +35,12 @@ function useAccountServerData<TData>(select: (data: OrganizationData) => TData):
   const isLoggedIn = !!sessionId;
 
   const { data } = useServerQuery({
+    // Seeded from localStorage by the query options, and already loaded by the organization
+    // layout's middleware (`prepareAccount`) before any organization route renders.
     ...accountServerDataQuery(accountId, sessionId),
-    // Seed from localStorage for an instant first paint (matching the old loader, which read
-    // localStorage synchronously). When logged out we intentionally keep `user`/`currentPlan`
-    // undefined so consumers can distinguish "no user".
-    initialData: () => (isLoggedIn ? readOrganizationDataFromLocalStorage(accountId) : loggedOutData),
+    // When logged out we intentionally keep `user`/`currentPlan` undefined so consumers can
+    // distinguish "no user".
+    ...(isLoggedIn ? {} : { initialData: loggedOutData }),
     enabled: isLoggedIn,
     select,
   });

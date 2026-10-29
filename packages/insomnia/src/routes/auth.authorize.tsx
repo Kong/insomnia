@@ -4,12 +4,13 @@ import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
-import { syncOrganizations } from '~/common/organization';
+import { accountServerDataQuery } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import { getVaultKeyFromStorage } from '~/common/utils/vault';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
+import { serverQueryClient } from '~/ui/context/app/server-data-context';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { validateVaultKey } from '~/ui/vault-key.client';
 
@@ -64,7 +65,12 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   // `/organization` lands with the cached organization list, which here dates from an earlier
   // session and may still hold organizations the account has since left. Signing in already waits
   // on the network, so refresh it first.
-  await syncOrganizations(sessionId, accountId);
+  // Always a real fetch: the query is stale as soon as it is loaded.
+  try {
+    await serverQueryClient.fetchQuery(accountServerDataQuery(accountId, sessionId));
+  } catch (error) {
+    console.log('[organization] Failed to load Organizations', error);
+  }
 
   return redirect('/organization');
 }
