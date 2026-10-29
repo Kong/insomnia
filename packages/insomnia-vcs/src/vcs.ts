@@ -1324,13 +1324,15 @@ export class VCS {
 
   async _getBranch(name: string): Promise<Branch | null> {
     const encoded = encodeBranchName(name);
+    const branch: Branch | null = await getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encoded}.json`);
 
-    // `/` is encoded as `~` on disk, so unvalidated names (e.g. `a~b`) could alias another branch's file
-    if (VCS.validateBranchName(name)) {
+    // `/` is encoded as `~` on disk, so `a~b` would alias the file of `a/b`. Only return a record that
+    // names itself, rather than rejecting by validator, so branches that predate the validator stay usable
+    if (branch === null || branch.name !== name) {
       return null;
     }
 
-    return getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encoded}.json`);
+    return branch;
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1430,10 +1432,9 @@ export class VCS {
   }
 
   async _removeBranch(branch: Branch) {
-    const errMsg = VCS.validateBranchName(branch.name);
-
-    if (errMsg) {
-      throw new Error(errMsg);
+    // Only an existing record that names itself is removed (see _getBranch), so legacy names can be deleted but `a~b` can't hit `a/b`
+    if ((await this._getBranch(branch.name)) === null) {
+      throw new Error(`Branch does not exist with name ${branch.name}`);
     }
 
     return getStore().removeItem(
