@@ -2,18 +2,10 @@ import React, { type FC, type ReactNode, useCallback } from 'react';
 
 import { toKebabCase } from '~/common/misc';
 import { invariant } from '~/common/utils/invariant';
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { showModal } from '~/ui/components/modals';
 import { CodePromptModal } from '~/ui/components/modals/code-prompt-modal';
-import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
+import { useAuthEditor } from '../use-auth-editor';
 import { AuthRow } from './auth-row';
 
 const PRIVATE_KEY_PLACEHOLDER = `
@@ -36,20 +28,13 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
-  const patcher = reqData ? patchRequest : patchRequestGroup;
-
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, patchAuthentication } = useAuthEditor();
   invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
 
   const privateKey = authentication[property];
   const onChange = useCallback(
-    (value: string) =>
-      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication }),
-    [_id, authentication, patcher, property],
+    (value: string) => patchAuthentication({ [property]: value }),
+    [patchAuthentication, property],
   );
 
   const editPrivateKey = () => {

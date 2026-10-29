@@ -43,6 +43,7 @@ describe('Example Service', () => {
         parameters: [],
         headers: [],
         body: {},
+        authentication: {},
       },
       response: {
         statusCode: 200,
@@ -241,6 +242,7 @@ describe('Example Service validated write paths', () => {
         parameters: [],
         headers: [],
         body: {},
+        authentication: {},
       },
       response: {
         statusCode: 200,
@@ -511,6 +513,7 @@ describe('Request Service createFromExample', () => {
         parameters: [],
         headers: [],
         body: {},
+        authentication: {},
       } satisfies Partial<ExampleRequest>,
     })) as Example;
 

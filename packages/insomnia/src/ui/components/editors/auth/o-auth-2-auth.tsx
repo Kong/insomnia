@@ -36,6 +36,7 @@ import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
+import { useAuthEditor } from './use-auth-editor';
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
 
@@ -390,9 +391,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 };
 
 export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: boolean; disabled?: boolean }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, isExample } = useAuthEditor();
   const [sessionCleared, setSessionCleared] = useState(false);
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
@@ -414,7 +413,9 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
           </AuthAccordion>
         </AuthTableBody>
         <div className="pad">
-          <OAuth2Tokens hideRefresh />
+          {/* Tokens are stored per request and refreshed through IPC with the
+              request id, which an example does not have. */}
+          {!isExample && <OAuth2Tokens hideRefresh />}
         </div>
       </>
     );
@@ -454,9 +455,11 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
           }
         </AuthAccordion>
       </AuthTableBody>
-      <div className="pad">
-        <OAuth2Tokens />
-      </div>
+      {!isExample && (
+        <div className="pad">
+          <OAuth2Tokens />
+        </div>
+      )}
     </>
   );
 };

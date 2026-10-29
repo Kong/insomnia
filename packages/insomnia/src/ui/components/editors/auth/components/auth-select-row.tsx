@@ -3,16 +3,8 @@ import React, { type ChangeEvent, type FC, type ReactNode, useCallback } from 'r
 
 import { toKebabCase } from '~/common/misc';
 import { getAuthObjectOrNull } from '~/network/authentication';
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { useRequestGroupPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 
+import { useAuthEditor } from '../use-auth-editor';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -27,13 +19,7 @@ interface Props {
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
-  const patcher = reqData ? patchRequest : patchRequestGroup;
-
-  const { authentication, _id } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
+  const { authentication, patchAuthentication } = useAuthEditor();
   const authOrNull = getAuthObjectOrNull(authentication);
   const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + '' : options[0].value;
 
@@ -44,9 +30,9 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
       if (updatedValue === 'true' || updatedValue === 'false') {
         updatedValue = JSON.parse(updatedValue);
       }
-      patcher(_id, { authentication: { ...authentication, [property]: updatedValue } as typeof authentication });
+      patchAuthentication({ [property]: updatedValue });
     },
-    [patcher, _id, authentication, property],
+    [patchAuthentication, property],
   );
 
   return (

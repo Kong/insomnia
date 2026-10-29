@@ -292,6 +292,7 @@ spec:
           parameters: [],
           headers: [{ name: 'Content-Type', value: 'application/json' }],
           body: { mimeType: 'application/json', text: '{"name": "foo"}' },
+          authentication: {},
         },
         response: {
           statusCode: 201,
@@ -524,7 +525,7 @@ collection:
         name: '200 OK',
         parentId: req1._id,
         metaSortKey: -100,
-        request: { method: 'GET', url: 'https://api.example.com/1', parameters: [], headers: [], body: {} },
+        request: { method: 'GET', url: 'https://api.example.com/1', parameters: [], headers: [], body: {}, authentication: {} },
         response: { statusCode: 200, statusMessage: 'OK', headers: [], body: 'one' },
       });
       await services.example.create({
@@ -532,7 +533,7 @@ collection:
         name: '404 Not Found',
         parentId: req2._id,
         metaSortKey: -100,
-        request: { method: 'GET', url: 'https://api.example.com/2', parameters: [], headers: [], body: {} },
+        request: { method: 'GET', url: 'https://api.example.com/2', parameters: [], headers: [], body: {}, authentication: {} },
         response: { statusCode: 404, statusMessage: 'Not Found', headers: [], body: 'two' },
       });
 
@@ -590,6 +591,7 @@ collection:
           pathParameters: [{ name: 'id', value: '1' }],
           headers: [],
           body: {},
+          authentication: {},
         },
         response: { statusCode: 200, statusMessage: 'OK', headers: [], body: 'first' },
       });
@@ -605,6 +607,7 @@ collection:
           pathParameters: [{ name: 'id', value: '2' }],
           headers: [],
           body: {},
+          authentication: {},
         },
         response: { statusCode: 404, statusMessage: 'Not Found', headers: [], body: 'second' },
       });

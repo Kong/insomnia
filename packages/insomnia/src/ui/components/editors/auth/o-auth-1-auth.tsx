@@ -9,19 +9,12 @@ import {
   SIGNATURE_METHOD_RSA_SHA1,
 } from '~/common/constants';
 
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
+import { useAuthEditor } from './use-auth-editor';
 
 const blankForDefault = 'Leave blank for default';
 export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth1SignatureMethod }[] = [
@@ -44,9 +37,8 @@ export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth
 ];
 
 export const OAuth1Auth: FC = () => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const authentication = (reqData?.activeRequest || groupData.activeRequestGroup).authentication as AuthTypeOAuth1;
+  const { authentication: rawAuthentication } = useAuthEditor();
+  const authentication = rawAuthentication as AuthTypeOAuth1;
 
   const { signatureMethod } = authentication;
   return (

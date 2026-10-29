@@ -42,6 +42,7 @@ export async function createFromExample(exampleId: string, expectedParentId: str
     pathParameters: example.request.pathParameters ?? parentRequest.pathParameters,
     headers: example.request.headers,
     body: example.request.body,
+    authentication: example.request.authentication as Request['authentication'],
     metaSortKey,
   });
 }
