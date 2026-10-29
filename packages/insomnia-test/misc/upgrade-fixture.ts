@@ -3,10 +3,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { UpgradePhase } from '@package/enums/upgrade-phase';
 import type { TestInfo } from '@playwright/test';
 
-const TEST_PACKAGE = path.resolve(import.meta.dirname, '..');
+import { UpgradePhase } from '../enums/upgrade-phase';
+
+const TEST_PACKAGE = path.resolve(__dirname, '..');
 const REPO_ROOT = path.resolve(TEST_PACKAGE, '..', '..');
 const TREES_DIR = process.env.INSOMNIA_VERSIONS_DIR ?? path.join(os.tmpdir(), 'insomnia-test-versions');
 const PHASE_DEV_SERVER_PORT = process.env.INSOMNIA_UPGRADE_DEV_PORT ?? '3434';
@@ -20,6 +21,8 @@ const UPGRADE_DATA_PATH_ENV = 'INSOMNIA_UPGRADE_DATA_PATH';
 /**
  * Marks a test as belonging to one phase of an upgrade case: the fixtures skip it in the other phase.
  * Pass the result as the test's details: `test('...', upgradePhase(UpgradePhase.Before), async () => {})`.
+ * @param phase - The phase the test runs in
+ * @returns Playwright test details carrying the phase as a tag
  */
 export function upgradePhase(phase: UpgradePhase): { tag: string } {
   return { tag: phase };

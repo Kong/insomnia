@@ -553,4 +553,148 @@ export class EnvironmentPage extends BasePage {
       .getByRole("menuitemradio", { name: TYPE_LABELS[type] })
       .click();
   }
+
+  private readonly collectionEnvironmentDialog = this.page.getByRole("dialog", {
+    name: "Manage Environments",
+  });
+
+  /**
+   * Opens the current workspace's own "Manage API collection environments"
+   * editor from the "Select an API Collection Environment" popover and
+   * waits for the "Manage Environments" dialog. Its Base Environment is
+   * selected by default; the dialog is not under the `#pane-one` the other
+   * variable methods read, so use `addCollectionEnvironmentVariable()` here.
+   */
+  async openCollectionEnvironmentEditor(): Promise<void> {
+    await this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER).click();
+    await this.page
+      .getByRole("button", { name: "Manage API collection environments" })
+      .click();
+    await expect(this.collectionEnvironmentDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Hovers the first rendered variable chip whose template references
+   * `variable` until its source tooltip appears, then reads the tooltip.
+   * The chip can be rebuilt right after the editor mounts, silently
+   * dropping the pointer, so the hover is retried until the tooltip shows.
+   * @param variable - The variable name referenced by the chip's template
+   * @param inDialog - Whether to look inside the open "Manage Environments" dialog instead of the whole page
+   * @returns The tooltip's trimmed text, e.g. "Project Environment : Base Environment"
+   */
+  async hoverVariableSource(
+    variable: string,
+    inDialog = false,
+  ): Promise<string> {
+    const root = inDialog ? this.collectionEnvironmentDialog : this.page;
+    const chip = root.locator(`[data-template*="${variable}"]`).first();
+    await chip.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    const tooltip = this.page.getByTestId("variable-source-tooltip");
+    await expect(async () => {
+      await this.page.mouse.move(0, 0);
+      await chip.hover();
+      await expect(tooltip).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return (await tooltip.innerText()).trim();
+  }
+
+  /**
+   * Clicks "Open" inside the currently shown variable source tooltip.
+   */
+  async openVariableSource(): Promise<void> {
+    await this.page
+      .getByTestId("variable-source-tooltip")
+      .getByTestId("variable-source-tooltip-open")
+      .click();
+  }
+
+  /**
+   * Presses the shortcut that opens the "Manage Environments" dialog on a
+   * project environment page (which hides the picker) and waits for it.
+   */
+  async openManageEnvironmentsDialogByShortcut(): Promise<void> {
+    await this.page.locator(".app").press("ControlOrMeta+e");
+    await expect(this.collectionEnvironmentDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Clicks an environment's row inside the open "Manage Environments" dialog.
+   * @param name - The environment row's accessible name
+   */
+  async selectEnvironmentInDialog(name: string): Promise<void> {
+    await this.collectionEnvironmentDialog
+      .getByRole("row", { name })
+      .click();
+  }
+
+  /**
+   * Whether an environment row in the "Environments" grid is selected.
+   * @param name - The environment row's accessible name
+   * @param inDialog - Whether to read the row inside the open "Manage Environments" dialog instead of the page's own grid
+   */
+  async isEnvironmentRowSelected(
+    name: string,
+    inDialog = false,
+  ): Promise<boolean> {
+    const root = inDialog
+      ? this.collectionEnvironmentDialog
+      : this.page.getByRole("grid", { name: "Environments" });
+    return (
+      (await root.getByRole("row", { name }).first().getAttribute("aria-selected")) ===
+      "true"
+    );
+  }
+
+  /**
+   * Counts the "Manage Environments" dialogs currently mounted.
+   */
+  async countManageEnvironmentsDialogs(): Promise<number> {
+    return this.collectionEnvironmentDialog.count();
+  }
+
+  /**
+   * Fills the last (empty) row of the open "Manage Environments" dialog
+   * with `variable`, then closes the dialog and the picker popover behind it.
+   * Requires `openCollectionEnvironmentEditor()` to have been called first.
+   * @param variable - The variable's name and value to add
+   */
+  async addCollectionEnvironmentVariable(
+    variable: EnvironmentKvPairData,
+  ): Promise<void> {
+    const listbox = this.collectionEnvironmentDialog.getByRole("listbox", {
+      name: "Environment Key Value Pair",
+    });
+    const key = await listbox
+      .locator('[role="option"]')
+      .last()
+      .getAttribute("data-key");
+    const row = listbox.locator(`[role="option"][data-key="${key}"]`);
+    await this.setCodeMirrorValue(
+      row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
+      variable.name,
+    );
+    await this.setCodeMirrorValue(
+      row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
+      variable.value,
+    );
+    await this.collectionEnvironmentDialog
+      .getByRole("button", { name: "Close", exact: true })
+      .click();
+    await expect(this.collectionEnvironmentDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const picker = this.page.getByRole("listbox", {
+      name: "Select an API Collection Environment",
+    });
+    await expect(async () => {
+      if (await picker.isVisible()) {
+        await this.page.keyboard.press("Escape");
+      }
+      await expect(picker).toBeHidden({ timeout: 2000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
 }

@@ -17,10 +17,13 @@ export type McpListConfig = Partial<Record<McpListMethod, McpListScript>> & {
 };
 
 /**
- * Gives a test its own scriptable endpoint on `misc/mcp-server.ts` and
+ * Gives a test its own scriptable endpoint on `misc/mcp-server.js` and
  * scripts what its list requests answer. List methods left out of `config`
  * answer with a valid empty list. Call again with the same `key` to switch
  * the behavior (e.g. between two Refresh clicks).
+ * @param key - Unique per test, so parallel/leftover state never leaks
+ * @param config - The scripted reply per list method
+ * @returns The URL to point the MCP Client at
  */
 export async function scriptMcpListServer(key: string, config: McpListConfig): Promise<string> {
   const url = `${MCP_LIST_SERVER}/${key}`;

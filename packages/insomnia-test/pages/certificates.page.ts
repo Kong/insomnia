@@ -139,4 +139,32 @@ export class CertificatesPage extends BasePage {
   private clientCertificateRow(host: string): Locator {
     return this.dialog.locator('[role="row"]').filter({ hasText: host });
   }
+
+  /**
+   * Toggles the workspace CA Certificate's Enabled/Disabled state. A no-op
+   * if it already matches `enabled`.
+   * @param enabled - Whether the CA certificate should be enabled
+   */
+  async setCaCertificateEnabled(enabled: boolean): Promise<void> {
+    await this.setRowEnabled(this.caCertificateRow(), enabled);
+  }
+
+  /**
+   * Toggles the MCP Client "Manage Certificates" dialog's "SSL Certificate
+   * Validation" switch (`McpRequest.sslValidation`). A no-op if it already
+   * matches `enabled`.
+   * @param enabled - Whether SSL certificate validation should be enabled
+   */
+  async setSslValidationEnabled(enabled: boolean): Promise<void> {
+    const toggle = this.dialog.locator(
+      '[data-test-id="mcp-reject-unauthorized-toggle"]',
+    );
+    const current = (await toggle.innerText()) === "Enabled";
+    if (current !== enabled) {
+      await toggle.click();
+      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
+        timeout: DEFAULT_TIMEOUT,
+      });
+    }
+  }
 }
