@@ -1,10 +1,12 @@
 import { expect } from "@playwright/test";
 
+import { type McpCapabilityType, McpListAction } from "../enums/mcp-capability";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { McpClient } from "../models/mcp-client";
 import type { Project } from "../models/project";
 import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
+import type { McpCapabilityError } from "../pages/mcp-client.page";
 import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
 import type { FlowContext } from "./flow-context";
@@ -190,5 +192,80 @@ export class McpClientFlow extends BaseFlow {
     await workspace.clickNode(node!);
     await mcpClientPage.navigate();
     return mcpClientPage.getTools();
+  }
+
+  /**
+   * Opens the given MCP Client node and reads the error panel of one of its
+   * sidebar capability items, waiting for it to appear.
+   * @param client - The MCP Client to inspect
+   * @param type - Which capability item (Tools / Resources / Prompts) to read
+   * @returns The panel's title and per-entry bullets
+   */
+  async getListError(client: McpClient, type: McpCapabilityType): Promise<McpCapabilityError> {
+    await this.open(client);
+    return this.pageManager.mcpClientPage.getCapabilityError(type);
+  }
+
+  /**
+   * Opens the given MCP Client node and collapses or expands one of its
+   * sidebar capability items.
+   * @param client - The MCP Client to operate on
+   * @param type - Which capability item to toggle
+   */
+  async toggleCapability(client: McpClient, type: McpCapabilityType): Promise<void> {
+    await this.open(client);
+    await this.pageManager.mcpClientPage.toggleCapability(type);
+  }
+
+  /**
+   * Opens the given MCP Client node and re-runs one capability item's list
+   * request via its actions menu, re-deriving its entries and error.
+   * @param client - The MCP Client to operate on
+   * @param type - Which capability item to refresh
+   */
+  async refresh(client: McpClient, type: McpCapabilityType): Promise<void> {
+    await this.open(client);
+    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.Reload);
+  }
+
+  /**
+   * Opens the given MCP Client node and requests the next page of one capability
+   * item's list via its actions menu (offered once the server returned a
+   * `nextCursor`).
+   * @param client - The MCP Client to operate on
+   * @param type - Which capability item to load more of
+   */
+  async loadMore(client: McpClient, type: McpCapabilityType): Promise<void> {
+    await this.open(client);
+    await this.pageManager.mcpClientPage.clickCapabilityAction(type, McpListAction.LoadMore);
+  }
+
+  /**
+   * Opens the given MCP Client node and reads which list action one of its
+   * capability items currently offers.
+   * @param client - The MCP Client to inspect
+   * @param type - Which capability item's actions menu to read
+   * @returns `Refresh`, or `Load More` while a `nextCursor` is pending
+   */
+  async getListAction(client: McpClient, type: McpCapabilityType): Promise<McpListAction> {
+    await this.open(client);
+    return this.pageManager.mcpClientPage.getCapabilityActionName(type);
+  }
+
+  /**
+   * Opens the given MCP Client node and filters its sidebar primitives by name.
+   * @param client - The MCP Client to operate on
+   * @param text - The filter text to enter
+   */
+  async filterCapabilities(client: McpClient, text: string): Promise<void> {
+    await this.open(client);
+    await this.pageManager.mcpClientPage.setCapabilityFilter(text);
+  }
+
+  private async open(client: McpClient): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.findItemNode(client);
+    await workspace.clickNode(node!);
+    await this.pageManager.mcpClientPage.navigate();
   }
 }
