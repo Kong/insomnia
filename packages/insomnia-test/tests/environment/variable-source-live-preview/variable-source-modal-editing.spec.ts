@@ -30,7 +30,10 @@ test("Verify the tag modal's source follows the edited template and hides for no
     "{{ _.subOnlyVar }}",
     "subOnly_base",
   );
-  await variableSourceFlow.selectModalVariable({ label: "-- Custom --" });
+  await variableSourceFlow.selectModalVariable(
+    { label: "-- Custom --" },
+    "my%20custom%20template%20logic",
+  );
   const plainText = await variableSourceFlow.setModalTemplate("plain text", "plain text");
   const inheritedKey = await variableSourceFlow.setModalTemplate("{{ constructor }}");
   const padded = await variableSourceFlow.setModalTemplate("{{  _.subOnlyVar  }}", "subOnly_base");
