@@ -1,7 +1,50 @@
-import type { Request } from 'insomnia-data';
+import type { Example, Request } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 const { type, name } = models.request;
+
+/**
+ * Promote an Example back into a first-class Request, created right after the
+ * example's parent request among its HTTP request siblings (midpoint of the
+ * parent's and the next sibling's metaSortKey). Refuses unknown examples and
+ * examples that no longer live under `expectedParentId`.
+ */
+export async function createFromExample(exampleId: string, expectedParentId: string) {
+  const example = await db.findOne<Example>(models.example.type, { _id: exampleId });
+  if (!example) {
+    throw new Error('Example not found');
+  }
+  if (example.parentId !== expectedParentId) {
+    throw new Error(`Example ${exampleId} does not belong to request ${expectedParentId}`);
+  }
+
+  const parentRequest = await getById(example.parentId);
+  if (!parentRequest) {
+    throw new Error('Request not found');
+  }
+
+  // Land right after the parent request among its HTTP request siblings
+  // (midpoint of the parent's and the next sibling's metaSortKey).
+  const siblings = await findByParentId(parentRequest.parentId);
+  const [nextRequest] = siblings
+    .filter(sibling => sibling.metaSortKey > parentRequest.metaSortKey)
+    .sort((a, b) => a.metaSortKey - b.metaSortKey);
+  const nextSortKey = nextRequest ? nextRequest.metaSortKey : parentRequest.metaSortKey + 100;
+  const metaSortKey = parentRequest.metaSortKey + (nextSortKey - parentRequest.metaSortKey) / 2;
+
+  return create({
+    parentId: parentRequest.parentId,
+    name: example.name || parentRequest.name,
+    description: example.description,
+    method: example.request.method,
+    url: example.request.url,
+    parameters: example.request.parameters,
+    pathParameters: example.request.pathParameters ?? parentRequest.pathParameters,
+    headers: example.request.headers,
+    body: example.request.body,
+    metaSortKey,
+  });
+}
 
 export function create(patch: Partial<Request> = {}) {
   if (!patch.parentId) {

@@ -78,6 +78,9 @@ export const ExampleNode = ({ item, depthOffset = 0 }: ExampleNodeProps) => {
       {!isEditable && (
         <ExampleActionsDropdown
           example={doc}
+          organizationId={item.organizationId}
+          projectId={project._id}
+          workspaceId={workspace._id}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
         />

@@ -64,6 +64,14 @@ test.describe('Examples', () => {
     await expect.soft(page).toHaveURL(/\/debug\/request\/req_/);
     await expect.soft(page.getByText('Example not found')).toHaveCount(0);
 
+    // Promote an example into a standalone request via its context menu
+    await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
+    await page.getByRole('menuitemradio', { name: 'Create Request from Example' }).click();
+    // The created request is a normal request: the example editor is left and
+    // the request pane with its Send button is shown.
+    await expect.soft(page).toHaveURL(/\/debug\/request\/req_/);
+    await expect.soft(page.getByRole('button', { name: 'Send' })).toBeVisible();
+
     // Drag-to-reorder between sibling examples is not covered here: react-aria
     // uses native HTML5 drag events, which Playwright cannot synthesize with
     // mouse primitives. Verify manually: drag one example row onto another in
