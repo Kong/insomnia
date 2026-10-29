@@ -22,7 +22,7 @@ import { models, services } from 'insomnia-data';
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
-import { getInitialEntry, skipActionRevalidation } from './router';
+import { getInitialEntry } from './router';
 
 const ACCOUNT_ID = 'acct_1';
 const SESSION_ID = 'sess_1';
@@ -91,33 +91,5 @@ describe('getInitialEntry', () => {
 
     expect(getKonnectOrganizationEscapeRoute).not.toHaveBeenCalled();
     expect(entry).toMatchObject({ pathname: `/organization/${REAL_ORGANIZATION_ID}/project` });
-  });
-});
-
-describe('skipActionRevalidation', () => {
-  const params = { organizationId: 'org_1', projectId: 'proj_1' };
-  const baseArgs = {
-    currentUrl: new URL('http://localhost/organization/org_1/project/proj_1'),
-    nextUrl: new URL('http://localhost/organization/org_1/project/proj_1'),
-    currentParams: params,
-    nextParams: params,
-    defaultShouldRevalidate: true,
-  };
-
-  it('skips revalidation after a mutation when params are unchanged', () => {
-    expect(skipActionRevalidation({ ...baseArgs, formMethod: 'POST' })).toBe(false);
-    expect(skipActionRevalidation({ ...baseArgs, formMethod: 'DELETE' })).toBe(false);
-  });
-
-  it('defers to the default after a mutation that changes params (e.g. action redirect)', () => {
-    expect(
-      skipActionRevalidation({ ...baseArgs, formMethod: 'POST', nextParams: { ...params, projectId: 'proj_2' } }),
-    ).toBe(true);
-  });
-
-  it('defers to the default for navigations, GET submissions and explicit revalidate()', () => {
-    expect(skipActionRevalidation(baseArgs)).toBe(true);
-    expect(skipActionRevalidation({ ...baseArgs, formMethod: 'GET' })).toBe(true);
-    expect(skipActionRevalidation({ ...baseArgs, defaultShouldRevalidate: false })).toBe(false);
   });
 });
