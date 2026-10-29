@@ -26,9 +26,10 @@ describe('fsClient symlink handling', () => {
   // isomorphic-git calls symlink(target, filepath) with the stored blob text as target.
   it('creates the link at filepath with the target text stored verbatim', async () => {
     const client = fsClient(base);
-    await client.promises.symlink('../shared/x', 'link');
-    expect(fs.readlinkSync(path.join(base, 'link'))).toBe('../shared/x');
-    expect(await client.promises.readlink('link')).toBe('../shared/x');
+    await client.promises.mkdir('sub');
+    await client.promises.symlink('../shared/x', 'sub/link');
+    expect(fs.readlinkSync(path.join(base, 'sub/link'))).toBe('../shared/x');
+    expect(await client.promises.readlink('sub/link')).toBe('../shared/x');
     await client.promises.symlink('inner/file.txt', 'rel');
     expect(fs.readlinkSync(path.join(base, 'rel'))).toBe('inner/file.txt');
   });
@@ -42,7 +43,7 @@ describe('fsClient symlink handling', () => {
 
   it('refuses writes, mkdir and reads through a symlinked directory that points outside base', async () => {
     const client = fsClient(base);
-    await client.promises.symlink(outside, 'esc');
+    fs.symlinkSync(outside, path.join(base, 'esc'));
     await expect(client.promises.writeFile('esc/pwn.txt', 'x')).rejects.toThrow();
     await expect(client.promises.mkdir('esc/sub')).rejects.toThrow();
     expect(fs.readdirSync(outside)).toEqual([]);
@@ -55,17 +56,19 @@ describe('fsClient symlink handling', () => {
   it('refuses writing through a symlinked leaf, including a dangling one, pointing outside base', async () => {
     const client = fsClient(base);
     fs.writeFileSync(path.join(outside, 'target.txt'), 'orig');
-    await client.promises.symlink(path.join(outside, 'target.txt'), 'leaf');
+    fs.symlinkSync(path.join(outside, 'target.txt'), path.join(base, 'leaf'));
     await expect(client.promises.writeFile('leaf', 'pwn')).rejects.toThrow();
     expect(fs.readFileSync(path.join(outside, 'target.txt'), 'utf8')).toBe('orig');
-    await client.promises.symlink(path.join(outside, 'new.txt'), 'dangling');
+    fs.symlinkSync(path.join(outside, 'new.txt'), path.join(base, 'dangling'));
     await expect(client.promises.writeFile('dangling', 'pwn')).rejects.toThrow();
     expect(fs.existsSync(path.join(outside, 'new.txt'))).toBe(false);
   });
 
-  it('allows an outward-pointing link to be created, inspected and removed without following it', async () => {
+  it('refuses to create an outward-pointing link, but can inspect and remove an existing one without following it', async () => {
     const client = fsClient(base);
-    await client.promises.symlink(outside, 'esc');
+    await expect(client.promises.symlink(outside, 'new-esc')).rejects.toThrow();
+    expect(fs.existsSync(path.join(base, 'new-esc'))).toBe(false);
+    fs.symlinkSync(outside, path.join(base, 'esc'));
     expect((await client.promises.lstat('esc')).isSymbolicLink()).toBe(true);
     expect(await client.promises.readlink('esc')).toBe(outside);
     await client.promises.unlink('esc');
@@ -125,7 +128,7 @@ describe('fsClient symlink handling', () => {
       // checkout is expected to fail once the escaping entry is refused
     }
     expect(fs.readdirSync(outside)).toEqual([]);
-    // the link itself must have been written verbatim in base
-    expect(fs.readlinkSync(path.join(base, 'esc'))).toBe(outside);
+    // the escaping link must not have been created
+    expect(fs.existsSync(path.join(base, 'esc'))).toBe(false);
   });
 });

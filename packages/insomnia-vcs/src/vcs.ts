@@ -319,7 +319,15 @@ export class VCS {
     if (branchName.includes('..')) {
       return 'Branch names must not contain consecutive periods (..)';
     }
+    // The atomic-write temp file is `<name>.json.<uuid>.tmp` (+46 bytes) and must fit in NAME_MAX (255)
+    if (branchName.length > MAX_BRANCH_NAME_LENGTH) {
+      return `Branch names must be at most ${MAX_BRANCH_NAME_LENGTH} characters long`;
+    }
     const parts = branchName.split('/');
+    // Windows resolves these (with or without an extension) to legacy DOS devices
+    if (parts.some(part => /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(part.split('.')[0]))) {
+      return 'Branch names must not contain a Windows reserved device name (e.g. con, nul, aux, prn, com1, lpt1)';
+    }
     if (parts.length > 1) {
       for (const part of parts) {
         if (part.startsWith('.')) {
@@ -414,8 +422,8 @@ export class VCS {
     console.log(`[sync] Switched to branch ${branchName}`);
     // Remove all dirty items from the delta so we keep them around
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
-      remove: await this._getBlobs(remove.map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert),
+      remove: await this._getDeltaDocs(remove),
     };
   }
 
@@ -494,7 +502,7 @@ export class VCS {
     console.log(`[sync] Rolled back to ${snapshotId}`);
     const upsert = [...delta.update, ...delta.add];
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert),
       remove,
     };
   }
@@ -688,6 +696,13 @@ export class VCS {
   }
 
   async customFetch(localBranchName: string, remoteBranchName: string) {
+    // Validate before storing anything so a rejected name can't leave snapshots stored without their branch
+    const localNameError = VCS.validateBranchName(localBranchName);
+
+    if (localNameError) {
+      throw new Error(localNameError);
+    }
+
     const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
 
     if (!remoteBranch) {
@@ -822,8 +837,8 @@ export class VCS {
     // Remove all dirty items from the delta so we keep them around
     const dirtyMap = generateCandidateMap(dirty);
     return {
-      upsert: await this._getBlobs(upsert.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
-      remove: await this._getBlobs(remove.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert.filter(e => !dirtyMap[e.key])),
+      remove: await this._getDeltaDocs(remove.filter(e => !dirtyMap[e.key])),
     };
   }
 
@@ -1307,7 +1322,14 @@ export class VCS {
   }
 
   async _getBranch(name: string): Promise<Branch | null> {
-    return getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encodeBranchName(name)}.json`);
+    const encoded = encodeBranchName(name);
+
+    // `/` is encoded as `~` on disk, so unvalidated names (e.g. `a~b`) could alias another branch's file
+    if (VCS.validateBranchName(name)) {
+      return null;
+    }
+
+    return getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encoded}.json`);
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1407,6 +1429,13 @@ export class VCS {
   }
 
   async _removeBranch(branch: Branch) {
+    encodeBranchName(branch.name);
+    const errMsg = VCS.validateBranchName(branch.name);
+
+    if (errMsg) {
+      throw new Error(errMsg);
+    }
+
     return getStore().removeItem(
       `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name)}.json`,
     );
@@ -1418,6 +1447,20 @@ export class VCS {
 
   async _getBlob(blobId: string) {
     return getStore().getItem(blobKey(this._backendProjectId(), blobId)) as Promise<BaseModel | null>;
+  }
+
+  /**
+   * Resolves the docs of state entries for a delta. The state key is validated by the sync server but
+   * the blob content is opaque to it, so a doc whose `_id` differs from its key must be refused here.
+   */
+  async _getDeltaDocs(entries: { key: string; blob: string }[]) {
+    const docs = await this._getBlobs(entries.map(e => e.blob));
+    docs.forEach((doc, i) => {
+      if (doc && doc._id !== entries[i].key) {
+        throw new Error(`Refusing synced document: _id "${String(doc._id)}" does not match state key "${entries[i].key}"`);
+      }
+    });
+    return docs;
   }
 
   async _getBlobs(ids: string[]) {
@@ -1483,6 +1526,8 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
 
   return hash.digest('hex');
 }
+
+const MAX_BRANCH_NAME_LENGTH = 200;
 
 function encodeBranchName(branchName: string) {
   // Branch names can come from the sync server; never let one influence the path beyond its own file name
