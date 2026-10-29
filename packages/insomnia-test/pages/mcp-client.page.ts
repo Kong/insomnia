@@ -1,7 +1,16 @@
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
+import type { McpListAction } from "../enums/mcp-capability";
+import type { McpCapabilityType, McpPrimitiveType } from "../enums/mcp-capability";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { RequestPage } from "./request.page";
+
+/** The error panel embedded in a capability item's row. */
+export interface McpCapabilityError {
+  title: string;
+  /** One per bullet: the entry's label and its schema issue. */
+  entries: { label: string; reason: string }[];
+}
 
 export class McpClientPage extends RequestPage {
   private readonly CALL_TOOL_BUTTON = `${this.TABPANEL} button:has-text("Call Tool")`;
@@ -106,5 +115,195 @@ export class McpClientPage extends RequestPage {
     const input = this.page.locator(`${this.TABPANEL} #root_${name}`);
     await input.click();
     await input.fill(value);
+  }
+
+  private readonly ACTIONS_MENU = '[aria-label="Mcp Actions Menu"]';
+
+  /**
+   * Types into the server capability filter input, narrowing the sidebar
+   * primitives by name.
+   * @param text - The filter text to enter
+   */
+  async setCapabilityFilter(text: string): Promise<void> {
+    await this.page.locator(this.FILTER_INPUT).fill(text);
+  }
+
+  /**
+   * The capability item (Tools / Resources / Prompts) row in the sidebar.
+   * @param type - Which capability item to locate
+   */
+  private getCapabilityItem(type: McpCapabilityType): Locator {
+    return this.page.locator(`${this.SIDEBAR} [data-testid="test-root_${type}"]`);
+  }
+
+  /**
+   * The error panel embedded in a capability item's row.
+   * @param type - Which capability item's panel to locate
+   */
+  private getCapabilityErrorPanel(type: McpCapabilityType): Locator {
+    return this.getCapabilityItem(type).locator('.notice.error');
+  }
+
+  /**
+   * How many error panels a capability item's row currently shows (0 or 1).
+   * @param type - Which capability item to check
+   */
+  async getCapabilityErrorCount(type: McpCapabilityType): Promise<number> {
+    return this.getCapabilityErrorPanel(type).count();
+  }
+
+  /**
+   * Whether the sidebar currently lists the given capability item at all.
+   * @param type - Which capability item to check
+   */
+  async hasCapability(type: McpCapabilityType): Promise<boolean> {
+    return (await this.getCapabilityItem(type).count()) > 0;
+  }
+
+  /**
+   * The on-screen rectangle of a capability item's row (including its embedded
+   * error panel), waiting for it to be visible.
+   * @param type - Which capability item to measure
+   */
+  async getCapabilityBounds(type: McpCapabilityType): Promise<{ y: number; height: number }> {
+    const capabilityItem = this.getCapabilityItem(type);
+    await expect(capabilityItem).toBeVisible({ timeout: ACTION_TIMEOUT });
+    return (await capabilityItem.boundingBox())!;
+  }
+
+  /**
+   * The on-screen rectangle of a capability item's error panel, waiting for it to
+   * be visible.
+   * @param type - Which capability item's panel to measure
+   */
+  async getCapabilityErrorBounds(type: McpCapabilityType): Promise<{ y: number; height: number }> {
+    const panel = this.getCapabilityErrorPanel(type);
+    await expect(panel).toBeVisible({ timeout: ACTION_TIMEOUT });
+    return (await panel.boundingBox())!;
+  }
+
+  /**
+   * Whether the error panel's content overflows its own area, i.e. it
+   * scrolls instead of growing over the rows below.
+   * @param type - Which capability item's panel to check
+   */
+  async isCapabilityErrorScrollable(type: McpCapabilityType): Promise<boolean> {
+    return this.getCapabilityErrorPanel(type)
+      .locator('.overflow-y-auto')
+      .evaluate(el => el.scrollHeight > el.clientHeight);
+  }
+
+  /**
+   * Reads the error panel of a capability item, waiting for it to appear.
+   * @param type - Which capability item to read
+   * @returns The panel's title and its per-entry bullets (empty for a title-only panel)
+   */
+  async getCapabilityError(type: McpCapabilityType): Promise<McpCapabilityError> {
+    const panel = this.getCapabilityErrorPanel(type);
+    await expect(panel).toBeVisible({ timeout: ACTION_TIMEOUT });
+    const title = (await panel.locator('p').first().innerText()).trim();
+    const entries = await panel.locator('li').evaluateAll(items =>
+      items.map(item => {
+        const label = item.querySelector('span')?.textContent ?? '';
+        const text = item.textContent ?? '';
+        return {
+          label: label.trim(),
+          reason: text.slice(label.length).replace(/^:\s*/, '').trim(),
+        };
+      }),
+    );
+    return { title, entries };
+  }
+
+  /**
+   * Reads the names of the rows of one primitive kind currently listed in
+   * the sidebar, without waiting (unlike `getTools()`), so an empty list is
+   * a valid answer. Collapsed capability items list nothing.
+   * @param type - The primitive kind whose rows to read
+   */
+  async getPrimitives(type: McpPrimitiveType): Promise<string[]> {
+    return (
+      await this.page
+        .locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`)
+        .evaluateAll(rows => rows.map(row => row.getAttribute('aria-label') ?? ''))
+    ).filter(Boolean);
+  }
+
+  /**
+   * Clicks one primitive row by its position among the rows of its kind, so
+   * same-name rows can be told apart.
+   * @param type - The primitive kind whose row to click
+   * @param index - Zero-based position among that kind's rows, in sidebar order
+   */
+  async clickPrimitiveAt(type: McpPrimitiveType, index: number): Promise<void> {
+    await this.page.locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`).nth(index).click();
+  }
+
+  /**
+   * Reads, per row of one primitive kind in sidebar order, whether the row carries the selected-row highlight (the app sets no aria-selected on these rows).
+   * @param type - The primitive kind whose rows to read
+   */
+  async getPrimitiveSelection(type: McpPrimitiveType): Promise<boolean[]> {
+    return this.page
+      .locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`)
+      .evaluateAll(rows => rows.map(row => row.classList.contains('bg-(--hl-sm)')));
+  }
+
+  /**
+   * Reads the argument field names of the currently selected tool from the "params" tab.
+   */
+  async getToolArgumentNames(): Promise<string[]> {
+    await this.switchTab('params');
+    return this.page
+      .locator(`${this.TABPANEL} [id^="root_"]`)
+      .evaluateAll(fields => fields.map(field => field.id.replace(/^root_/, '')));
+  }
+
+  /**
+   * Whether a capability item shows an expand/collapse caret. Empty capability items
+   * (e.g. a whole-response failure) have none.
+   * @param type - Which capability item to check
+   */
+  async hasCaret(type: McpCapabilityType): Promise<boolean> {
+    return (await this.getCapabilityItem(type).locator('svg.w-4[data-icon^="caret"]').count()) > 0;
+  }
+
+  /**
+   * Toggles a capability item between expanded and collapsed by clicking its row
+   * header (above the error panel, so the panel never intercepts the click).
+   * @param type - Which capability item to toggle
+   */
+  async toggleCapability(type: McpCapabilityType): Promise<void> {
+    await this.getCapabilityItem(type).click({ position: { x: 60, y: 10 } });
+  }
+
+  /**
+   * Opens a capability item's actions menu and clicks the given entry. The menu
+   * button only shows while its row is hovered/focused, so hover first.
+   * @param type - Which capability item's menu to open
+   * @param action - `Refresh`, or `Load More` once the server returned a `nextCursor`
+   */
+  async clickCapabilityAction(type: McpCapabilityType, action: McpListAction): Promise<void> {
+    const capabilityItem = this.getCapabilityItem(type);
+    await capabilityItem.hover({ position: { x: 60, y: 10 } });
+    await capabilityItem.locator(`[data-testid="Dropdown-${type}"]`).click();
+    await this.page.locator(this.ACTIONS_MENU).locator(`[role^="menuitem"][aria-label="${action}"]`).click();
+  }
+
+  /**
+   * Reads which list action a capability item's menu currently offers: `Refresh`,
+   * or `Load More` while the server's last page carried a `nextCursor`.
+   * Opens the menu to read it and closes it again.
+   * @param type - Which capability item's menu to read
+   */
+  async getCapabilityActionName(type: McpCapabilityType): Promise<McpListAction> {
+    const capabilityItem = this.getCapabilityItem(type);
+    await capabilityItem.hover({ position: { x: 60, y: 10 } });
+    await capabilityItem.locator(`[data-testid="Dropdown-${type}"]`).click();
+    const item = this.page.locator(this.ACTIONS_MENU).locator('[role^="menuitem"]').first();
+    const name = (await item.innerText()).trim() as McpListAction;
+    await this.page.keyboard.press('Escape');
+    await expect(item).toBeHidden();
+    return name;
   }
 }
