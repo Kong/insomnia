@@ -1,23 +1,34 @@
-import type { RequestHeader } from 'insomnia-data';
+import {
+  type McpRequest,
+  models,
+  type Request,
+  type RequestGroup,
+  type RequestHeader,
+  type SocketIORequest,
+  type WebSocketRequest,
+  type Workspace,
+} from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
-import { useParams } from 'react-router';
 
 import { getAppVersion } from '~/common/constants';
-import { invariant } from '~/common/utils/invariant';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import { useExampleEditorContext } from '../../context/example-editor-context';
-import { useRequestGroupPatcher, useRequestPatcher, useWorkspacePatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
-interface Props {
+type HeaderDocument = Request | RequestGroup | Workspace | WebSocketRequest | SocketIORequest | McpRequest;
+
+export interface HeaderPatch {
   headers: RequestHeader[];
+  disableUserAgentHeader?: boolean;
+}
+
+interface Props {
+  request: HeaderDocument;
+  onChange: (patch: HeaderPatch) => void;
   bulk: boolean;
   isDisabled?: boolean;
-  requestType: 'Request' | 'RequestGroup' | 'Workspace' | 'WebSocketRequest' | 'McpRequest';
-  disableUserAgentHeader?: boolean;
   onDescriptionToggle?: () => void;
 }
 export const readOnlyWebsocketPairs = [
@@ -34,31 +45,13 @@ export const readOnlyHttpPairs = [
   { name: 'User-Agent', value: 'insomnia/' + getAppVersion(), canDisable: true },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
-export const RequestHeadersEditor: FC<Props> = ({
-  headers,
-  bulk,
-  isDisabled,
-  requestType,
-  disableUserAgentHeader,
-  onDescriptionToggle,
-}) => {
-  const exampleEditor = useExampleEditorContext();
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
-  const patchWorkspace = useWorkspacePatcher();
-  const isRequestGroup = requestType === 'RequestGroup';
-  const isWorkspace = requestType === 'Workspace';
-  const routePatcher = isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest;
-  const patcher = exampleEditor ? exampleEditor.patchRequest : routePatcher;
-  const isWebSocketRequest = requestType === 'WebSocketRequest';
-  const { requestId, requestGroupId, workspaceId } = useParams() as {
-    requestId?: string;
-    requestGroupId?: string;
-    workspaceId?: string;
-  };
-  const routeId = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
-  const id = exampleEditor ? exampleEditor.exampleId : routeId;
-  invariant(id, 'Request, RequestGroup or Workspace ID is required');
+export const RequestHeadersEditor: FC<Props> = ({ request, onChange, bulk, isDisabled, onDescriptionToggle }) => {
+  const headers = request.headers || [];
+  const id = request._id;
+  const isRequestGroup = models.requestGroup.isRequestGroup(request);
+  const isWorkspace = models.workspace.isWorkspace(request);
+  const isWebSocketRequest = models.webSocketRequest.isWebSocketRequest(request);
+  const disableUserAgentHeader = 'disableUserAgentHeader' in request ? request.disableUserAgentHeader : undefined;
   const showUserAgentReadOnly =
     !isRequestGroup && !isWorkspace && !headers.some(h => h.name.toLowerCase() === 'user-agent');
   const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs).filter(
@@ -71,12 +64,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       // If the user just removed their last User-Agent header, default the read-only row to
       // disabled rather than letting it silently start sending `insomnia/<version>`.
       if (!isRequestGroup && !isWorkspace && hadUserAgent && !hasUserAgent) {
-        patcher(id, { headers: newHeaders, disableUserAgentHeader: true });
+        onChange({ headers: newHeaders, disableUserAgentHeader: true });
       } else {
-        patcher(id, { headers: newHeaders });
+        onChange({ headers: newHeaders });
       }
     },
-    [headers, isRequestGroup, isWorkspace, patchRequest, id, patcher],
+    [headers, isRequestGroup, isWorkspace, onChange],
   );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
@@ -147,9 +140,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       readOnlyPairs={readOnlyPairs}
       readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
       onReadOnlyDisabledChange={
-        showUserAgentReadOnly && !exampleEditor
-          ? (_name, disabled) => patcher(id, { disableUserAgentHeader: disabled })
-          : undefined
+        showUserAgentReadOnly ? (_name, disabled) => onChange({ headers, disableUserAgentHeader: disabled }) : undefined
       }
       onDescriptionToggle={onDescriptionToggle}
     />
