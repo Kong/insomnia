@@ -1,9 +1,9 @@
-import type { Organization } from 'insomnia-api';
 import { models, services } from 'insomnia-data';
 
-import { syncOrganizations } from '~/common/organization';
+import { accountServerDataKey, accountServerDataQuery, type OrganizationData } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
+import { serverQueryClient } from '~/ui/context/app/server-data-context';
 import {
   findMigrationTargetSpaceId,
   getKonnectOrganizationEscapeRoute,
@@ -12,8 +12,10 @@ import {
 } from '~/ui/organization-utils';
 import { getInitialRouteForOrganization } from '~/ui/utils/router';
 
-const readCachedOrganizations = (accountId: string) =>
-  JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
+// The organization list as last loaded into the shared query, which the organization layout keeps
+// refreshing in the background.
+const getLoadedOrganizations = (accountId: string) =>
+  serverQueryClient.getQueryData<OrganizationData>(accountServerDataKey(accountId))?.organizations ?? [];
 
 /**
  * Where to land when entering the given organization (`/organization/:organizationId`): escapes a
@@ -32,16 +34,14 @@ export async function resolveOrganizationLandingRoute(
   return escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace }));
 }
 
-// Uses the cached organization list and only fetches it when there is none, since nothing could be
-// picked without it; the organization layout refreshes it in the background either way. Then runs the account-wide migrations, which only touch local data: the landing
+// Loads the organization list cache first: the persisted one when there is one, otherwise fetched,
+// since nothing could be picked without it; the organization layout refreshes it in the background
+// either way. Then runs the account-wide migrations, which only touch local data: the landing
 // depends on where they put the projects, and Konnect access is resolved after its migration so
 // render-time readers of it can stay synchronous. The ambiguous Konnect migration is left for the
 // organization layout to surface.
 async function runAccountPreparation(sessionId: string, accountId: string) {
-  if (!readCachedOrganizations(accountId).length) {
-    await syncOrganizations(sessionId, accountId);
-  }
-  const organizations = readCachedOrganizations(accountId);
+  const { organizations } = await serverQueryClient.ensureQueryData(accountServerDataQuery(accountId, sessionId));
   invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
 
   // Failures are logged rather than thrown: a failed migration leaves the data as it was, which is
@@ -96,11 +96,11 @@ export async function prepareAccount() {
 /**
  * Where a signed-in user lands without a target organization (`/organization`): on launch, after
  * signing in, and every other "take me somewhere sensible" entry. The account is already prepared
- * by the organization layout's middleware (`prepareAccount`), so the cached organization list is
- * there and the projects are where they belong.
+ * by the organization layout's middleware (`prepareAccount`), so the organization list is loaded
+ * and the projects are where they belong.
  */
 export async function resolveLandingRoute(accountId: string) {
-  const organizations = readCachedOrganizations(accountId);
+  const organizations = getLoadedOrganizations(accountId);
   invariant(organizations.length, 'Failed to fetch organizations. Check your network connection and try again.');
 
   const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');

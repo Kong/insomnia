@@ -1,4 +1,4 @@
-import type { Organization } from 'insomnia-api';
+import type * as InsomniaApi from 'insomnia-api';
 import type * as InsomniaData from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,10 +6,18 @@ vi.mock('insomnia-data', async importOriginal => {
   const actual = await importOriginal<typeof InsomniaData>();
   return {
     ...actual,
-    services: { ...actual.services, userSession: { ...actual.services.userSession, get: vi.fn() } },
+    services: {
+      ...actual.services,
+      userSession: { ...actual.services.userSession, get: vi.fn() },
+      organization: { ...actual.services.organization, list: vi.fn() },
+    },
   };
 });
-vi.mock('~/common/organization', () => ({ syncOrganizations: vi.fn() }));
+vi.mock('insomnia-api', async importOriginal => ({
+  ...(await importOriginal<typeof InsomniaApi>()),
+  getUserProfile: vi.fn(async () => ({ id: 'user_1' })),
+  getCurrentPlan: vi.fn(async () => ({ planId: 'plan_1' })),
+}));
 vi.mock('~/konnect/migrate-konnect-organization', () => ({ migrateKonnectProjectsIfUnambiguous: vi.fn() }));
 vi.mock('~/ui/organization-utils', () => ({
   findMigrationTargetSpaceId: vi.fn(() => 'org_target'),
@@ -26,8 +34,9 @@ vi.mock('~/ui/utils/router', () => ({
 
 import { models, services } from 'insomnia-data';
 
-import { syncOrganizations } from '~/common/organization';
+import { accountServerDataKey } from '~/common/organization';
 import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
+import { serverQueryClient } from '~/ui/context/app/server-data-context';
 import {
   getKonnectOrganizationEscapeRoute,
   migrateProjectsUnderOrganization,
@@ -42,7 +51,7 @@ const ORGANIZATION_ID = 'org_1';
 const OTHER_ORGANIZATION_ID = 'org_2';
 const KONNECT_ORGANIZATION_ID = models.organization.getKonnectOrganizationId(ACCOUNT_ID);
 const SPACES_KEY = `${ACCOUNT_ID}:spaces`;
-const ORGANIZATIONS = [{ id: ORGANIZATION_ID }, { id: OTHER_ORGANIZATION_ID }] as Organization[];
+const ORGANIZATIONS = [{ id: ORGANIZATION_ID }, { id: OTHER_ORGANIZATION_ID }] as InsomniaApi.Organization[];
 const CACHED_ORGANIZATIONS = JSON.stringify(ORGANIZATIONS);
 
 let store: Map<string, string>;
@@ -67,11 +76,12 @@ describe('prepareAccount', () => {
   beforeEach(() => {
     sessionId = `sess_${++sessionCount}`;
     vi.mocked(services.userSession.get).mockResolvedValue({ id: sessionId, accountId: ACCOUNT_ID } as any);
-    vi.mocked(syncOrganizations).mockReset();
+    vi.mocked(services.organization.list).mockResolvedValue(ORGANIZATIONS);
     stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS });
   });
 
   afterEach(() => {
+    serverQueryClient.clear();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
@@ -79,28 +89,39 @@ describe('prepareAccount', () => {
   it('uses the persisted organization list without fetching it', async () => {
     await prepareAccount();
 
-    expect(syncOrganizations).not.toHaveBeenCalled();
+    expect(services.organization.list).not.toHaveBeenCalled();
+    expect(serverQueryClient.getQueryData(accountServerDataKey(ACCOUNT_ID))).toMatchObject({
+      organizations: ORGANIZATIONS,
+    });
     expect(migrateProjectsUnderOrganization).toHaveBeenCalledWith('org_target', sessionId);
   });
 
-  it('fetches the organization list when none is persisted', async () => {
+  it('fetches the organization list when none is persisted, writing it through', async () => {
     stubLocalStorage({});
-    vi.mocked(syncOrganizations).mockImplementation(async () => {
-      store.set(SPACES_KEY, CACHED_ORGANIZATIONS);
-    });
 
     await prepareAccount();
 
-    expect(syncOrganizations).toHaveBeenCalledWith(sessionId, ACCOUNT_ID);
+    expect(services.organization.list).toHaveBeenCalledTimes(1);
+    expect(store.get(SPACES_KEY)).toBe(CACHED_ORGANIZATIONS);
     expect(migrateProjectsUnderOrganization).toHaveBeenCalled();
   });
 
-  it('fails when no organization list can be fetched, and tries again on the next call', async () => {
+  it('fails when no organization list can be fetched, after the client retries, and tries again on the next call', async () => {
+    vi.useFakeTimers();
     stubLocalStorage({});
+    vi.mocked(services.organization.list).mockRejectedValue(new Error('offline'));
 
-    await expect(prepareAccount()).rejects.toThrow('Failed to fetch organizations');
-    await expect(prepareAccount()).rejects.toThrow('Failed to fetch organizations');
-    expect(syncOrganizations).toHaveBeenCalledTimes(2);
+    const expectFailure = async () => {
+      const result = expect(prepareAccount()).rejects.toThrow('offline');
+      await vi.runAllTimersAsync();
+      await result;
+    };
+    await expectFailure();
+    // The server client's default `retry: 2`.
+    expect(services.organization.list).toHaveBeenCalledTimes(3);
+    await expectFailure();
+    expect(services.organization.list).toHaveBeenCalledTimes(6);
+    vi.useRealTimers();
   });
 
   it('runs the Konnect migration, then Konnect access, then the project migration', async () => {
@@ -142,7 +163,7 @@ describe('prepareAccount', () => {
 
     await prepareAccount();
 
-    expect(syncOrganizations).not.toHaveBeenCalled();
+    expect(services.organization.list).not.toHaveBeenCalled();
     expect(migrateKonnectProjectsIfUnambiguous).not.toHaveBeenCalled();
     expect(migrateProjectsUnderOrganization).not.toHaveBeenCalled();
   });
@@ -151,12 +172,19 @@ describe('prepareAccount', () => {
 describe('resolveLandingRoute', () => {
   beforeEach(() => {
     vi.mocked(getKonnectOrganizationEscapeRoute).mockResolvedValue(null);
-    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS });
+    serverQueryClient.setQueryData(accountServerDataKey(ACCOUNT_ID), { organizations: ORGANIZATIONS });
+    stubLocalStorage({});
   });
 
   afterEach(() => {
+    serverQueryClient.clear();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+  });
+
+  it('reads the loaded organization list, not the persisted one', async () => {
+    // e.g. localStorage cleared mid-session
+    expect(await resolveLandingRoute(ACCOUNT_ID)).toBe(`/organization/${ORGANIZATION_ID}/project?workspace`);
   });
 
   it('lands in the first organization, restoring its last workspace', async () => {
@@ -166,19 +194,19 @@ describe('resolveLandingRoute', () => {
   });
 
   it('restores the last visited organization when it is known', async () => {
-    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS, lastVisitedOrganizationId: OTHER_ORGANIZATION_ID });
+    stubLocalStorage({ lastVisitedOrganizationId: OTHER_ORGANIZATION_ID });
 
     expect(await resolveLandingRoute(ACCOUNT_ID)).toBe(`/organization/${OTHER_ORGANIZATION_ID}/project?workspace`);
   });
 
   it('ignores a last visited organization that is no longer in the list', async () => {
-    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS, lastVisitedOrganizationId: 'org_gone' });
+    stubLocalStorage({ lastVisitedOrganizationId: 'org_gone' });
 
     expect(await resolveLandingRoute(ACCOUNT_ID)).toBe(`/organization/${ORGANIZATION_ID}/project?workspace`);
   });
 
   it('escapes to a real organization when the last-visited Konnect organization is no longer visible', async () => {
-    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS, lastVisitedOrganizationId: KONNECT_ORGANIZATION_ID });
+    stubLocalStorage({ lastVisitedOrganizationId: KONNECT_ORGANIZATION_ID });
     vi.mocked(getKonnectOrganizationEscapeRoute).mockResolvedValue(`/organization/${ORGANIZATION_ID}`);
 
     const route = await resolveLandingRoute(ACCOUNT_ID);
@@ -190,14 +218,13 @@ describe('resolveLandingRoute', () => {
   });
 
   it('still restores the Konnect organization when it remains visible', async () => {
-    stubLocalStorage({ [SPACES_KEY]: CACHED_ORGANIZATIONS, lastVisitedOrganizationId: KONNECT_ORGANIZATION_ID });
+    stubLocalStorage({ lastVisitedOrganizationId: KONNECT_ORGANIZATION_ID });
 
     expect(await resolveLandingRoute(ACCOUNT_ID)).toBe(`/organization/${KONNECT_ORGANIZATION_ID}/project?workspace`);
   });
 
   it('prefers the organization requested before signing in, once', async () => {
     stubLocalStorage({
-      [SPACES_KEY]: CACHED_ORGANIZATIONS,
       lastVisitedOrganizationId: ORGANIZATION_ID,
       specificOrgRedirectAfterAuthorize: OTHER_ORGANIZATION_ID,
     });
