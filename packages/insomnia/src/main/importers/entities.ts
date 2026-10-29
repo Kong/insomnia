@@ -44,7 +44,24 @@ export interface QueryString extends Comment {
   name: string;
 }
 
-export type ImportRequestType = 'environment' | 'request' | 'request_group' | 'workspace';
+export type ImportRequestType = 'environment' | 'request' | 'request_group' | 'workspace' | 'example';
+
+export interface ExampleRequest {
+  method: string;
+  url: string;
+  parameters: Parameter[];
+  pathParameters?: PathParameters[];
+  headers: Header[];
+  body: Body;
+  authentication: RequestAuthentication | {};
+}
+
+export interface ExampleResponse {
+  statusCode: number;
+  statusMessage: string;
+  headers: { name: string; value: string }[];
+  body: string;
+}
 
 export interface ImportRequest extends Comment {
   _id?: string;
@@ -71,6 +88,8 @@ export interface ImportRequest extends Comment {
   afterResponseScript?: string;
   metaSortKey?: number;
   scope?: string;
+  request?: ExampleRequest;
+  response?: ExampleResponse;
 }
 
 interface ConvertErrorResult {

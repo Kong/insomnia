@@ -634,4 +634,182 @@ describe('postman', () => {
       expect(postman.importRequestItem({ request: { description: null } }, 'n/a').description).toBe('');
     });
   });
+
+  describe('examples', () => {
+    const collectionWithExamples = (responses: unknown[], version = 'v2.1.0') =>
+      ({
+        info: {
+          name: 'Postman Schema',
+          schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
+        },
+        item: [
+          {
+            name: 'Request 1',
+            request: { method: 'POST', url: 'https://example.com/api' },
+            response: responses,
+          },
+        ],
+      }) as unknown as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+    it('converts saved responses with originalRequest into example resources', () => {
+      const schema = collectionWithExamples([
+        {
+          name: 'Sample response',
+          code: 200,
+          status: 'OK',
+          header: [
+            { key: 'Content-Type', value: 'application/json' },
+            { key: 'X-Rate-Limit', value: '10' },
+          ],
+          body: '{"ok":true}',
+          originalRequest: {
+            method: 'POST',
+            url: {
+              raw: 'https://example.com/api?x=1',
+              query: [{ key: 'x', value: '1' }],
+            },
+            header: [{ key: 'Accept', value: 'application/json' }],
+            body: { mode: 'raw', raw: '{"a":1}', options: { raw: { language: 'json' } } },
+          },
+        },
+      ]);
+      const result = new ImportPostman(schema).importCollection();
+
+      const request = result.find(item => item._type === 'request');
+      const example = result.find(item => item._type === 'example');
+
+      expect(request).toBeDefined();
+      expect(example).toMatchObject({
+        parentId: request?._id,
+        _type: 'example',
+        name: 'Sample response',
+        request: {
+          method: 'POST',
+          url: 'https://example.com/api',
+          parameters: [{ name: 'x', value: '1', disabled: false }],
+          headers: [
+            { name: 'Accept', value: 'application/json' },
+            // Content-Type is added for raw bodies, same as for imported requests
+            { name: 'Content-Type', value: 'application/json' },
+          ],
+          body: { mimeType: 'application/json', text: '{"a":1}' },
+          authentication: {},
+        },
+        response: {
+          statusCode: 200,
+          statusMessage: 'OK',
+          headers: [
+            { name: 'Content-Type', value: 'application/json' },
+            { name: 'X-Rate-Limit', value: '10' },
+          ],
+          body: '{"ok":true}',
+        },
+      });
+      expect(typeof example?.metaSortKey).toBe('number');
+    });
+
+    it('inherits the parent request auth unless the response defines its own', () => {
+      const schema = {
+        info: {
+          name: 'Postman Schema',
+          schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+        },
+        item: [
+          {
+            name: 'Request with auth',
+            request: {
+              method: 'GET',
+              url: 'https://example.com/api',
+              auth: { type: 'bearer', bearer: [{ key: 'token', value: 'parent-token', type: 'string' }] },
+            },
+            response: [
+              {
+                name: 'Inherits auth',
+                code: 200,
+                status: 'OK',
+                originalRequest: { method: 'GET', url: 'https://example.com/api' },
+              },
+              {
+                name: 'Own auth',
+                code: 401,
+                status: 'Unauthorized',
+                originalRequest: {
+                  method: 'GET',
+                  url: 'https://example.com/api',
+                  auth: { type: 'bearer', bearer: [{ key: 'token', value: 'own-token', type: 'string' }] },
+                },
+              },
+            ],
+          },
+        ],
+      } as unknown as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+      const result = new ImportPostman(schema).importCollection();
+      const examples = result.filter(item => item._type === 'example');
+
+      expect(examples).toHaveLength(2);
+      expect(examples[0].request?.authentication).toMatchObject({ type: 'bearer', token: 'parent-token' });
+      expect(examples[1].request?.authentication).toMatchObject({ type: 'bearer', token: 'own-token' });
+    });
+
+    it('skips responses without originalRequest', () => {
+      const schema = collectionWithExamples([
+        { name: 'Saved without original request', code: 200, status: 'OK', body: 'ok' },
+      ]);
+      const result = new ImportPostman(schema).importCollection();
+
+      expect(result.find(item => item._type === 'example')).toBeUndefined();
+      expect(result.filter(item => item._type === 'request')).toHaveLength(1);
+    });
+
+    it('falls back to "<code> <status>" and "Example" for missing response names', () => {
+      const schema = collectionWithExamples([
+        { code: 404, status: 'Not Found', originalRequest: { method: 'GET', url: 'https://example.com' } },
+        { originalRequest: { method: 'GET', url: 'https://example.com' } },
+      ]);
+      const examples = new ImportPostman(schema).importCollection().filter(item => item._type === 'example');
+
+      expect(examples.map(({ name }) => name)).toEqual(['404 Not Found', 'Example']);
+    });
+
+    it('defaults a null body to an empty string and defends against malformed headers', () => {
+      const schema = collectionWithExamples([
+        {
+          code: 200,
+          status: 'OK',
+          header: 'unexpected-string',
+          body: null,
+          originalRequest: { method: 'GET', url: 'https://example.com' },
+        },
+        {
+          originalRequest: { method: 'GET', url: 'https://example.com' },
+          header: [null, 'plain-string-header', { key: 'Content-Type', value: 'text/html' }],
+        },
+      ]);
+      const examples = new ImportPostman(schema).importCollection().filter(item => item._type === 'example');
+
+      expect(examples).toHaveLength(2);
+      expect(examples[0].response).toEqual({
+        statusCode: 200,
+        statusMessage: 'OK',
+        headers: [],
+        body: '',
+      });
+      expect(examples[0].metaSortKey).not.toEqual(examples[1].metaSortKey);
+      expect(examples[1].response).toMatchObject({
+        statusCode: 200,
+        headers: [{ name: 'Content-Type', value: 'text/html' }],
+        body: '',
+      });
+    });
+
+    it('defaults the status code to 200 when the response has no code', () => {
+      const schema = collectionWithExamples([
+        { status: 'OK', originalRequest: { method: 'GET', url: 'https://example.com' } },
+      ]);
+      const example = new ImportPostman(schema).importCollection().find(item => item._type === 'example');
+
+      expect(example?.response).toMatchObject({ statusCode: 200, statusMessage: 'OK' });
+    });
+  });
 });
