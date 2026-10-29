@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
+import { syncOrganizations } from '~/common/organization';
 import { invariant } from '~/common/utils/invariant';
 import { getVaultKeyFromStorage } from '~/common/utils/vault';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -59,6 +60,11 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   } catch (err) {
     console.error(err);
   }
+
+  // `/organization` lands with the cached organization list, which here dates from an earlier
+  // session and may still hold organizations the account has since left. Signing in already waits
+  // on the network, so refresh it first.
+  await syncOrganizations(sessionId, accountId);
 
   return redirect('/organization');
 }
