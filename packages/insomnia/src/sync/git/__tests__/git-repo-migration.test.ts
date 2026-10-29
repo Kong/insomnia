@@ -112,6 +112,80 @@ describe('migrateRepoStructureIfNeeded', () => {
     expect(content).toBe('name: My Workspace\n');
   });
 
+  // Regression: gitFilePath is derived from an imported workspace/collection
+  // name, which isn't sanitized against path separators. If a symlinked
+  // directory sits under baseDir (e.g. left over from an earlier state), a
+  // gitFilePath with a subdirectory segment must never let the workspace
+  // export land outside baseDir via that symlink — even though the old
+  // check (`absPath.startsWith(baseDir + path.sep)`) is purely lexical and
+  // would have let it through.
+  it('refuses to write a workspace export through a symlinked intermediate directory', async () => {
+    const outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-git-migration-outside-'));
+    try {
+      const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
+      vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: Escaping Workspace\n');
+
+      await fs.promises.symlink(outsideDir, path.join(baseDir, 'linked-dir'));
+
+      await services.gitRepository.create({ _id: 'git_repo_h' });
+      await services.project.create({ _id: 'proj_h', name: 'Test Project' });
+      const workspace = await services.workspace.create({
+        _id: 'wrk_h',
+        name: 'Escaping Workspace',
+        parentId: 'proj_h',
+        scope: 'collection',
+      });
+      const meta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+      await services.workspaceMeta.update(meta, { gitFilePath: 'linked-dir/escaped.yaml' });
+
+      const { logs, logger } = makeLogger();
+      await migrateRepoStructureIfNeeded(baseDir, 'proj_h', 'git_repo_h', logger);
+
+      expect(await fileExists(path.join(outsideDir, 'escaped.yaml'))).toBe(false);
+      expect(logs.some(l => l.includes('Skipping unsafe gitFilePath'))).toBe(true);
+    } finally {
+      await fs.promises.rm(outsideDir, { recursive: true, force: true });
+    }
+  });
+
+  // Regression: the atomic-write tmp file (`<file>.migration.tmp`) lives in
+  // the repo, so a repo-planted symlink at that exact name must not be
+  // written through to a file outside baseDir.
+  it.skipIf(process.platform === 'win32')(
+    'does not write through a symlink planted at the migration tmp path',
+    async () => {
+      const outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-git-migration-outside-'));
+      try {
+        const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
+        vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: Tmp Symlink Workspace\n');
+
+        const outsideFile = path.join(outsideDir, 'victim.txt');
+        await fs.promises.writeFile(outsideFile, 'original');
+        await fs.promises.symlink(outsideFile, path.join(baseDir, 'insomnia.wrk_tmp.yaml.migration.tmp'));
+
+        await services.gitRepository.create({ _id: 'git_repo_tmp' });
+        await services.project.create({ _id: 'proj_tmp', name: 'Test Project' });
+        await services.workspace.create({
+          _id: 'wrk_tmp',
+          name: 'Tmp Symlink Workspace',
+          parentId: 'proj_tmp',
+          scope: 'collection',
+        });
+
+        const { logger } = makeLogger();
+        await migrateRepoStructureIfNeeded(baseDir, 'proj_tmp', 'git_repo_tmp', logger);
+
+        expect(await fs.promises.readFile(outsideFile, 'utf8')).toBe('original');
+        // The planted link is replaced, not followed, so the export still lands in-repo.
+        const exported = path.join(baseDir, 'insomnia.wrk_tmp.yaml');
+        expect((await fs.promises.lstat(exported)).isSymbolicLink()).toBe(false);
+        expect(await fs.promises.readFile(exported, 'utf8')).toBe('name: Tmp Symlink Workspace\n');
+      } finally {
+        await fs.promises.rm(outsideDir, { recursive: true, force: true });
+      }
+    },
+  );
+
   it('does not include the repo ID in any log message', async () => {
     await services.gitRepository.create({ _id: 'git_repo_f' });
     await mkDir(path.join(baseDir, 'git'));
