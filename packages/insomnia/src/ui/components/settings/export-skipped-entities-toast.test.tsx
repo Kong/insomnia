@@ -73,4 +73,14 @@ describe('showExportSkippedEntitiesToast', () => {
     expect(description).not.toContain('Six');
     expect(description).toContain('and 2 more');
   });
+
+  it('keeps the no-file-written line visible when the entity list is truncated', () => {
+    const errors = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'].map(name => skip(name));
+    showExportSkippedEntitiesToast([{ result: result({ yaml: '', errors }) }]);
+
+    const description = renderedDescription();
+    expect(description).toContain('export failed, no file was written');
+    expect(description).toContain('Five (Request)');
+    expect(description).toContain('and 2 more');
+  });
 });

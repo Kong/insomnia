@@ -26,23 +26,29 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
 
   // Keyed by outcome and error position: entity ids may be missing (section-level errors)
   // and the same entity id can appear in more than one outcome.
-  const lines = skipped.flatMap(({ workspaceName, result }, outcomeIndex) => {
+  const failures: { key: string; line: string }[] = [];
+  const entityLines: { key: string; line: string }[] = [];
+
+  skipped.forEach(({ workspaceName, result }, outcomeIndex) => {
     const prefix = workspaceName ? `${workspaceName}: ` : '';
 
-    const entityLines = result.errors.map((error, errorIndex) => ({
-      key: `${outcomeIndex}:${errorIndex}`,
-      line: `${prefix}${error.name} (${error.entityType}) — ${error.issues[0]?.message ?? 'failed schema validation'}`,
-    }));
+    // A workspace that produced nothing still has to say so, and it is never truncated.
+    if (result.yaml === '') {
+      failures.push({ key: `${outcomeIndex}:export-failed`, line: `${prefix}export failed, no file was written` });
+    }
 
-    // A workspace that produced nothing still has to say which entities are to blame.
-    return result.yaml === ''
-      ? [{ key: `${outcomeIndex}:export-failed`, line: `${prefix}export failed, no file was written` }, ...entityLines]
-      : entityLines;
+    result.errors.forEach((error, errorIndex) => {
+      entityLines.push({
+        key: `${outcomeIndex}:${errorIndex}`,
+        line: `${prefix}${error.name} (${error.entityType}) — ${error.issues[0]?.message ?? 'failed schema validation'}`,
+      });
+    });
   });
 
   const skippedCount = skipped.reduce((total, outcome) => total + outcome.result.errors.length, 0);
   // Nothing written at all is a failure, not a completion with a caveat.
   const nothingWritten = skipped.every(({ result }) => result.yaml === '');
+  const hiddenCount = Math.max(0, entityLines.length - MAX_LISTED_SKIPPED_ENTITIES);
 
   // The YAML itself is left out — it can be megabytes and the toast already carries the user-facing report.
   console.error(
@@ -65,12 +71,13 @@ export const showExportSkippedEntitiesToast = (outcomes: ExportOutcome[]) => {
       title: nothingWritten ? 'Export failed, nothing was written' : `Export completed with ${skippedCount} skipped ${skippedCount === 1 ? 'entity' : 'entities'}`,
       description: (
         <div className="flex flex-col gap-1">
-          {lines.slice(0, MAX_LISTED_SKIPPED_ENTITIES).map(({ key, line }) => (
+          {failures.map(({ key, line }) => (
             <span key={key}>{line}</span>
           ))}
-          {lines.length > MAX_LISTED_SKIPPED_ENTITIES && (
-            <span>{`and ${lines.length - MAX_LISTED_SKIPPED_ENTITIES} more`}</span>
-          )}
+          {entityLines.slice(0, MAX_LISTED_SKIPPED_ENTITIES).map(({ key, line }) => (
+            <span key={key}>{line}</span>
+          ))}
+          {hiddenCount > 0 && <span>{`and ${hiddenCount} more`}</span>}
         </div>
       ),
     },

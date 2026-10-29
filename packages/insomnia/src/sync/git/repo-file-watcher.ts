@@ -144,8 +144,8 @@ class RepoFileWatcher {
 
   /**
    * Files that could not be synced: import conflicts/parse errors, or incomplete exports.
-   * Keyed by normalised absolute path. Cleared when the file is
-   * successfully imported or deleted.
+   * Keyed by normalised absolute path. Import problems are cleared when the file is imported,
+   * export problems when a flush writes it, and all of them when it is deleted.
    */
   private problemFiles = new Map<string, FileIssue>();
 
@@ -903,7 +903,12 @@ class RepoFileWatcher {
       return null;
     }
 
-    this.clearProblem(normalised);
+    // A successful import resolves import problems only. An export problem explains why the
+    // DB is still ahead of the file on disk, so it is cleared by a successful flush instead.
+    const problem = this.problemFiles.get(normalised);
+    if (!problem || problem.kind === 'conflict' || problem.kind === 'parse-error') {
+      this.clearProblem(normalised);
+    }
     return docs;
   }
 
