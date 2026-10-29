@@ -34,7 +34,7 @@ import type { InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
-import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
@@ -55,6 +55,7 @@ import { UnsyncedFileDeleteButton } from '~/ui/components/unsynced-file-delete-b
 import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
@@ -84,7 +85,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 const noLocalFiles: InsomniaFile[] = [];
 
 const Component = () => {
-  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
+  const { activeProject, activeProjectGitRepository } = useActiveProject()!;
   const { isKonnectOrganization } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;

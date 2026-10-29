@@ -33,6 +33,7 @@ import type { FileIssueKind } from '~/sync/git/repo-file-watcher';
 import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useDBQuery } from '~/ui/hooks/use-query';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
@@ -352,24 +353,13 @@ export function useWorkspaceLoaderData() {
   const loaderData = useRouteLoaderData<typeof clientLoader>(
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   );
-  const { organizationId = '', projectId } = useParams();
+  const { organizationId = '' } = useParams();
   const { data: organizationData } = useDBQuery({
     ...organizationDataQuery(organizationId),
     enabled: Boolean(loaderData && organizationId),
   });
 
-  const projectWithGitRepository = loaderData
-    ? organizationData?.projects.find(p => p._id === projectId)
-    : undefined;
-  const activeProject = useMemo(() => {
-    if (!projectWithGitRepository) {
-      return;
-    }
-    // Strip the joined repository: consumers pass the project to `services.project.update`, which
-    // would otherwise persist it onto the project doc.
-    const { gitRepository, ...project } = projectWithGitRepository;
-    return project as Project;
-  }, [projectWithGitRepository]);
+  const activeProject = useActiveProject()?.activeProject;
   const projects = organizationData?.projects;
 
   return useMemo(

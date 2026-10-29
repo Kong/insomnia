@@ -1,6 +1,6 @@
-import type { GitRepository, Project } from 'insomnia-data';
+import type { Project } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { href, Outlet, redirect, useOutletContext, useParams } from 'react-router';
 
 import { organizationDataQuery } from '~/common/app-data';
@@ -9,8 +9,8 @@ import { useRootLoaderData } from '~/root';
 import { logout } from '~/ui/account/session';
 import { MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
 import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
-import { useDBQuery } from '~/ui/hooks/use-query';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
@@ -29,34 +29,6 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   // Prefetch only. The component reads the project from the cache and handles a missing one.
   await dbQueryClient.ensureQueryData(organizationDataQuery(organizationId));
   return null;
-}
-
-/**
- * The active project, derived from the organization data query (prefetched by the loader above), so
- * it follows `db.changes` — e.g. a project renamed or turned local by the startup sync — without the
- * loader having to re-run. Returns undefined outside a project route, like the loader data used to.
- * Inside the project's content `activeProject` is always set: the route renders the content only
- * while the project exists.
- */
-export function useProjectLoaderData():
-  | { activeProject: Project | undefined; activeProjectGitRepository: GitRepository | undefined }
-  | undefined {
-  const { organizationId = '', projectId } = useParams();
-  const { data } = useDBQuery({ ...organizationDataQuery(organizationId), enabled: Boolean(organizationId && projectId) });
-  const projectWithGitRepository = projectId ? data?.projects.find(p => p._id === projectId) : undefined;
-
-  return useMemo(() => {
-    if (!projectId) {
-      return;
-    }
-    if (!projectWithGitRepository) {
-      return { activeProject: undefined, activeProjectGitRepository: undefined };
-    }
-    // Strip the joined repository: consumers pass the project to `services.project.update`, which
-    // would otherwise persist it onto the project doc.
-    const { gitRepository, ...activeProject } = projectWithGitRepository;
-    return { activeProject: activeProject as Project, activeProjectGitRepository: gitRepository };
-  }, [projectId, projectWithGitRepository]);
 }
 
 // Where to go when the project in the URL does not exist (anymore): stay inside the current
@@ -89,7 +61,7 @@ const Component = () => {
     projectId: string;
   };
 
-  const { activeProject } = useProjectLoaderData() ?? {};
+  const { activeProject } = useActiveProject() ?? {};
   const { userSession } = useRootLoaderData()!;
 
   const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);

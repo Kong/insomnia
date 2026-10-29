@@ -6,12 +6,12 @@ import * as reactUse from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '~/common/constants';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useSyncProjects } from '~/ui/hooks/use-startup-sync';
@@ -93,7 +93,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   };
 
   const { userSession } = useRootLoaderData()!;
-  const projectData = useProjectLoaderData();
+  const projectData = useActiveProject();
   const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
