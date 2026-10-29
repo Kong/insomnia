@@ -14,10 +14,6 @@ vi.mock('insomnia-data', () => ({
   services: { userSession: { get: vi.fn() } },
 }));
 vi.mock('~/common/project', () => ({ syncProjects: vi.fn() }));
-vi.mock('~/ui/organization-utils', () => ({
-  findMigrationTargetSpaceId: vi.fn(() => 'org_target'),
-  migrateProjectsUnderOrganization: vi.fn(),
-}));
 vi.mock('~/ui/hooks/use-query', () => ({
   useServerMutation: (options: Parameters<typeof useMutation>[0]) => useMutation(options, queryClient),
   useServerQuery: (options: Parameters<typeof useQuery>[0]) => useQuery(options, queryClient),
@@ -26,7 +22,6 @@ vi.mock('~/ui/hooks/use-query', () => ({
 import { services } from 'insomnia-data';
 
 import { syncProjects } from '~/common/project';
-import { migrateProjectsUnderOrganization } from '~/ui/organization-utils';
 
 import { useStartupSync, useStartupSyncStatus } from './use-startup-sync';
 
@@ -62,8 +57,6 @@ describe('useStartupSync', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.mocked(services.userSession.get).mockResolvedValue({ id: 'sess_1', accountId: 'acct_1' } as any);
     vi.mocked(syncProjects).mockResolvedValue();
-    vi.mocked(migrateProjectsUnderOrganization).mockResolvedValue();
-    window.localStorage.setItem('acct_1:spaces', JSON.stringify([{ id: 'org_1' }]));
     container = document.createElement('div');
     root = createRoot(container);
   });
@@ -71,36 +64,16 @@ describe('useStartupSync', () => {
   afterEach(() => {
     act(() => root.unmount());
     queryClient.clear();
-    window.localStorage.clear();
     vi.clearAllMocks();
     vi.restoreAllMocks();
   });
 
-  it('runs the migration and the project sync once per organization, despite the StrictMode double effect', async () => {
+  it('syncs the projects once per organization, despite the StrictMode double effect', async () => {
     await render('org_1');
 
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(1);
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledWith('org_target', 'sess_1');
     expect(syncProjects).toHaveBeenCalledTimes(1);
     expect(syncProjects).toHaveBeenCalledWith('org_1');
     expect(result.current?.status).toBe('idle');
-  });
-
-  it('syncs the projects only after the migration has finished', async () => {
-    let finishMigration = () => {};
-    vi.mocked(migrateProjectsUnderOrganization).mockReturnValue(
-      new Promise<void>(resolve => {
-        finishMigration = resolve;
-      }),
-    );
-
-    await render('org_1');
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(1);
-    expect(syncProjects).not.toHaveBeenCalled();
-
-    await act(async () => finishMigration());
-    await flush();
-    expect(syncProjects).toHaveBeenCalledWith('org_1');
   });
 
   it('syncs an organization entered later, but not one already synced in this session', async () => {
@@ -120,12 +93,11 @@ describe('useStartupSync', () => {
 
     await render('org_scratchpad');
 
-    expect(migrateProjectsUnderOrganization).not.toHaveBeenCalled();
     expect(syncProjects).not.toHaveBeenCalled();
     expect(result.current?.status).toBe('idle');
   });
 
-  it('reports an error without retrying by itself, even on remount, and a retry runs the full task set again', async () => {
+  it('reports an error without retrying by itself, even on remount, and a retry syncs again', async () => {
     vi.mocked(syncProjects).mockRejectedValueOnce(new Error('network'));
 
     await render('org_1');
@@ -141,7 +113,7 @@ describe('useStartupSync', () => {
     await act(async () => result.current?.retry());
     await flush();
 
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(2);
+    expect(syncProjects).toHaveBeenCalledTimes(2);
     expect(syncProjects).toHaveBeenLastCalledWith('org_1');
     expect(result.current?.status).toBe('idle');
   });
