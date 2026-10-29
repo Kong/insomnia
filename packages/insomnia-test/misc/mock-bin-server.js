@@ -122,7 +122,7 @@ const handle = async (req, res) => {
 
     const har = bins.get(key);
     if (!har) {
-      return send(res, 404, JSON.stringify({ error: 'no mock route for', key }), {
+      return send(res, 404, JSON.stringify({ error: 'no mock route' }), {
         'Content-Type': 'application/json',
       });
     }
