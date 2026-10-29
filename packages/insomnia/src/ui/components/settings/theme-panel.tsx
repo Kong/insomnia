@@ -4,6 +4,7 @@ import { Button, Checkbox, Label } from 'react-aria-components';
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 
 import { useThemes } from '../../hooks/theme';
+import { baseTheme } from '../../plugins/misc';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
@@ -15,25 +16,38 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
     viewBox="0 0 500 300"
     style={
       {
-        '--color-bg': theme.theme.background?.default,
-        '--color-success': theme.theme.background?.success,
-        '--color-info': theme.theme.background?.info,
-        '--color-warning': theme.theme.background?.warning,
-        '--color-danger': theme.theme.background?.danger,
-        '--color-surprise': theme.theme.background?.surprise,
+        '--color-bg': theme.theme.background?.default ?? baseTheme.background.default,
+        '--color-success': theme.theme.background?.success ?? baseTheme.background.success,
+        '--color-info': theme.theme.background?.info ?? baseTheme.background.info,
+        '--color-warning': theme.theme.background?.warning ?? baseTheme.background.warning,
+        '--color-danger': theme.theme.background?.danger ?? baseTheme.background.danger,
+        '--color-surprise': theme.theme.background?.surprise ?? baseTheme.background.surprise,
+        '--hl-md': theme.theme.highlight?.md ?? baseTheme.highlight.md,
       } as React.CSSProperties
     }
   >
     <g>
       {/* App Header */}
       <g className="theme--app-header--sub">
-        <rect x="0" y="0" width="100%" height="10%" style={{ fill: 'var(--color-bg)' }} />
+        <rect
+          x="0"
+          y="0"
+          width="100%"
+          height="10%"
+          style={{ fill: theme.theme.styles?.appHeader?.background?.default ?? 'var(--color-bg)' }}
+        />
       </g>
 
       {/* Panes */}
       <g className="theme--pane--sub">
         {/* Response Area */}
-        <rect x="0" y="10%" width="100%" height="100%" style={{ fill: 'var(--color-bg)' }} />
+        <rect
+          x="0"
+          y="10%"
+          width="100%"
+          height="100%"
+          style={{ fill: theme.theme.styles?.pane?.background?.default ?? 'var(--color-bg)' }}
+        />
 
         {/* URL Bars */}
         <rect
@@ -42,17 +56,39 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
           width="100%"
           height="10%"
           className="theme--pane__header--sub"
-          style={{ fill: 'var(--color-bg)' }}
+          style={{
+            fill:
+              theme.theme.styles?.paneHeader?.background?.default ??
+              theme.theme.styles?.pane?.background?.default ??
+              'var(--color-bg)',
+          }}
         />
         {/* Send Button */}
         <g>
-          <rect x="53%" y="10%" width="9%" height="10%" style={{ fill: 'var(--color-surprise)' }} />
+          <rect
+            x="53%"
+            y="10%"
+            width="9%"
+            height="10%"
+            style={{
+              fill:
+                theme.theme.styles?.paneHeader?.background?.surprise ??
+                theme.theme.styles?.pane?.background?.surprise ??
+                'var(--color-surprise)',
+            }}
+          />
         </g>
       </g>
 
       {/* Sidebar */}
       <g className="theme--sidebar--sub">
-        <rect x="0" y="10%" width="25%" height="100%" style={{ fill: 'var(--color-bg)' }} />
+        <rect
+          x="0"
+          y="10%"
+          width="25%"
+          height="100%"
+          style={{ fill: theme.theme.styles?.sidebar?.background?.default ?? 'var(--color-bg)' }}
+        />
       </g>
 
       {/* Lines */}
