@@ -17,7 +17,7 @@ const maliciousBlobIds: Record<string, string> = {
   'absolute path': '/tmp/ESCAPED_PROOF.txt',
   'backslash traversal': 'zz\\..\\..\\..\\..\\..\\..\\ESCAPED_PROOF.txt',
   'NUL byte': 'ab\0/../../../../../../ESCAPED_PROOF.txt',
-  'non-hex characters': 'z'.repeat(40),
+  uppercase: 'B'.repeat(40),
   'too short': 'abcd',
   'too long': 'a'.repeat(41),
   'empty': '',

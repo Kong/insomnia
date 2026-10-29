@@ -23,7 +23,7 @@ const maliciousSnapshotIds: Record<string, string> = {
   'absolute path': '/tmp/ESCAPED_PROOF',
   'backslash traversal': '..\\..\\..\\..\\..\\ESCAPED_PROOF',
   'NUL byte': 'ab\0/../../../../../ESCAPED_PROOF',
-  'non-hex characters': 'z'.repeat(40),
+  uppercase: 'B'.repeat(40),
   'wrong length': 'abcd',
 };
 
