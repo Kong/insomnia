@@ -5,6 +5,7 @@ import {
   type GetPromptRequest,
   type ListPromptsRequest,
   type ListResourcesRequest,
+  type ListToolsRequest,
   type ReadResourceRequest,
   type SubscribeRequest,
   type UnsubscribeRequest,
@@ -15,10 +16,11 @@ import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { getActiveMcpClient, getReadyActiveMcpConnectionContext, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { CommonMcpOptions, McpMessageEventWithoutBase } from '~/main/mcp/types';
 
-export const listTools = async (options: CommonMcpOptions) => {
-  const mcpClient = getActiveMcpClient(options.requestId);
+export const listTools = async (options: CommonMcpOptions & ListToolsRequest['params']) => {
+  const { requestId, ...params } = options;
+  const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
-    const tools = await mcpClient.listTools();
+    const tools = await mcpClient.listTools(params);
     return tools;
   }
   return null;
@@ -36,9 +38,10 @@ export const callTool = async (options: CommonMcpOptions & CallToolRequest['para
 };
 
 export const listPrompts = async (options: CommonMcpOptions & ListPromptsRequest['params']) => {
-  const mcpClient = getActiveMcpClient(options.requestId);
+  const { requestId, ...params } = options;
+  const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
-    const prompts = await mcpClient.listPrompts();
+    const prompts = await mcpClient.listPrompts(params);
     return prompts;
   }
   return null;

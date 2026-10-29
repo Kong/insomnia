@@ -36,7 +36,7 @@ export interface InsomniaFile {
   hasUnpushedChanges?: boolean;
   gitFilePath?: string | null;
   fileIssue?: {
-    kind: 'conflict' | 'parse-error' | 'export-error';
+    kind: 'conflict' | 'parse-error' | 'export-error' | 'write-blocked';
     message: string;
   };
 }

@@ -50,13 +50,14 @@ import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { type ExportEntityError, getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
+import { writeFileWithinDir } from '../../main/safe-fs-write';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
 const GIT_DIR = '.git';
 
-export type FileIssueKind = 'conflict' | 'parse-error' | 'export-error';
+export type FileIssueKind = 'conflict' | 'parse-error' | 'export-error' | 'write-blocked';
 
 export interface FileIssue {
   /** Absolute path to the problematic file. */
@@ -273,10 +274,11 @@ class RepoFileWatcher {
 
     await Promise.all(
       workspaces.map(async workspace => {
+        let absPath = path.resolve(this.repoDir, `insomnia.${workspace._id}.yaml`);
         try {
           const meta = await services.workspaceMeta.getByParentId(workspace._id);
           const gitFilePath = meta?.gitFilePath ?? `insomnia.${workspace._id}.yaml`;
-          const absPath = path.resolve(this.repoDir, gitFilePath);
+          absPath = path.resolve(this.repoDir, gitFilePath);
 
           // Path-traversal guard
           if (isPathOutsideRepo(this.repoDir, absPath)) return;
@@ -315,7 +317,7 @@ class RepoFileWatcher {
           }
 
           await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-          await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+          await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
           const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
@@ -331,6 +333,13 @@ class RepoFileWatcher {
           );
         } catch (err) {
           console.warn('[repo-file-watcher] flushNewerDbWorkspacesToDisk error for workspace', workspace._id, err);
+          const normalised = path.normalize(absPath);
+          this.addProblem(normalised, {
+            filePath: normalised,
+            relPath: this.toPosixRelPath(normalised),
+            kind: 'write-blocked',
+            message: err instanceof Error ? err.message : String(err),
+          });
         }
       }),
     );
@@ -346,7 +355,9 @@ class RepoFileWatcher {
    * Also detects workspace YAML files that were removed from disk (e.g. deleted
    * on the remote) and removes the corresponding workspaces from the DB.
    */
-  async importAllFiles(options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
+  async importAllFiles(
+    options: { removeLocalOnlyOrphans?: boolean; skipOrphanRemoval?: boolean } = {},
+  ): Promise<void> {
     if (this.stopped) {
       return;
     }
@@ -373,7 +384,11 @@ class RepoFileWatcher {
     }
 
     // Detect deleted files: workspaces in DB whose YAML is no longer on disk.
-    this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
+    // Skip on blocked writes — disk state may appear deleted but only due to
+    // refused replacement writes.
+    if (!options.skipOrphanRemoval) {
+      this.queue.enqueue(() => this.removeOrphanedWorkspaces(yamlFiles, options.removeLocalOnlyOrphans));
+    }
 
     await this.queue.waitUntilDone();
   }
@@ -519,7 +534,7 @@ class RepoFileWatcher {
         continue;
       }
 
-      if (this.hasProblem(absPath)) {
+      if (this.hasBlockingProblem(absPath)) {
         continue;
       }
 
@@ -561,8 +576,7 @@ class RepoFileWatcher {
         }
 
         await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-        await fs.promises.writeFile(absPath, yamlContent, 'utf8');
-        this.clearProblem(absPath);
+        await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
@@ -572,8 +586,15 @@ class RepoFileWatcher {
         this.lastKnownGitFilePath.set(workspace._id, absPath);
         // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
         this.lastSyncMtime.set(absPath, Date.now());
+        this.clearProblem(absPath);
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
+        this.addProblem(absPath, {
+          filePath: absPath,
+          relPath: this.toPosixRelPath(absPath),
+          kind: 'write-blocked',
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   }
@@ -588,7 +609,7 @@ class RepoFileWatcher {
 
     try {
       if (!ruleset) {
-        if (this.hasProblem(absPath)) {
+        if (this.hasBlockingProblem(absPath)) {
           return;
         }
 
@@ -606,7 +627,7 @@ class RepoFileWatcher {
       // e.g. a previously-invalid committed file that the user has now replaced
       // via upload. Clear it here, because the fs.watch echo of the write below
       // is dedup-skipped and never reaches importFile's clearProblem path.
-      if (this.hasProblem(absPath)) {
+      if (this.hasBlockingProblem(absPath)) {
         this.clearProblem(absPath);
         this.notifyRenderer();
       }
@@ -616,12 +637,19 @@ class RepoFileWatcher {
         return;
       }
 
-      await fs.promises.writeFile(absPath, ruleset.rulesetContent, 'utf8');
+      await writeFileWithinDir(this.repoDir, absPath, ruleset.rulesetContent);
       this.lastWrittenHash.set(absPath, hash);
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(absPath, stat.mtimeMs);
+      this.clearProblem(absPath);
     } catch (err) {
       console.warn('[repo-file-watcher] Could not flush project lint ruleset to disk:', err);
+      this.addProblem(absPath, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'write-blocked',
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -1158,7 +1186,7 @@ class RepoFileWatcher {
       }
 
       await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-      await fs.promises.writeFile(absPath, yamlContent, 'utf8');
+      await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
       const normalised = path.normalize(absPath);
       this.clearProblem(normalised);
@@ -1166,6 +1194,7 @@ class RepoFileWatcher {
       const stat = await fs.promises.stat(absPath);
       this.lastSyncMtime.set(normalised, stat.mtimeMs);
       this.lastKnownGitFilePath.set(workspace._id, normalised);
+      this.clearProblem(normalised);
 
       console.log(
         '[repo-file-watcher] Preserved local-only workspace on disk:',
@@ -1174,6 +1203,13 @@ class RepoFileWatcher {
       );
     } catch (err) {
       console.warn('[repo-file-watcher] Could not preserve local-only workspace on disk:', workspace._id, err);
+      const normalised = path.normalize(absPath);
+      this.addProblem(normalised, {
+        filePath: normalised,
+        relPath: this.toPosixRelPath(normalised),
+        kind: 'write-blocked',
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -1218,7 +1254,8 @@ class RepoFileWatcher {
   private reportExportProblem(absPath: string, errors: ExportEntityError[]): void {
     const normalised = path.normalize(absPath);
     // A blocking import problem already explains why this file is out of sync.
-    if (this.problemFiles.has(normalised)) {
+    // An earlier export error does not: it may list different entities.
+    if (this.hasBlockingProblem(normalised)) {
       return;
     }
 
@@ -1247,12 +1284,23 @@ class RepoFileWatcher {
 
   /**
    * Return true when a normalized file path has a blocking import problem.
-   * Export errors are informational: the file on disk is still valid, and the
-   * next successful export must be allowed to clear the issue and write.
+   * `export-error` and `write-blocked` are informational: the file on disk is
+   * still valid and the next successful export or write must be allowed to
+   * retry and clear the issue.
    */
-  private hasProblem(normalisedPath: string): boolean {
-    const issue = this.problemFiles.get(normalisedPath);
-    return issue !== undefined && issue.kind !== 'export-error';
+  private hasBlockingProblem(normalisedPath: string): boolean {
+    const problem = this.problemFiles.get(normalisedPath);
+    return problem !== undefined && problem.kind !== 'export-error' && problem.kind !== 'write-blocked';
+  }
+
+  /** Record a write refused for resolving outside the git working directory. */
+  reportWriteBlocked(absPath: string, relPath: string, message: string): void {
+    this.addProblem(path.normalize(absPath), {
+      filePath: absPath,
+      relPath,
+      kind: 'write-blocked',
+      message,
+    });
   }
 
   /** Return the current problems mapped to workspace-level issues. */
@@ -1383,7 +1431,10 @@ export class RepoFileWatcherRegistry {
    * Call after bulk git operations (clone, pull, merge, checkout) so the DB
    * reflects the new disk state. Content-hash dedup makes repeated calls cheap.
    */
-  importAllFiles(repoId: string, options: { removeLocalOnlyOrphans?: boolean } = {}): Promise<void> {
+  importAllFiles(
+    repoId: string,
+    options: { removeLocalOnlyOrphans?: boolean; skipOrphanRemoval?: boolean } = {},
+  ): Promise<void> {
     const watcher = this.watchers.get(repoId);
     if (!watcher) {
       return Promise.resolve();
@@ -1401,5 +1452,10 @@ export class RepoFileWatcherRegistry {
       return [];
     }
     return watcher.getProblems();
+  }
+
+  /** Record a blocked write for the given repo. No-op if the watcher isn't running. */
+  reportWriteBlocked(repoId: string, absPath: string, relPath: string, message: string): void {
+    this.watchers.get(repoId)?.reportWriteBlocked(absPath, relPath, message);
   }
 }

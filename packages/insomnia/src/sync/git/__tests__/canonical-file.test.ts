@@ -9,7 +9,12 @@ import YAML from 'yaml';
 import { database as db } from '../../../common/database';
 import { migrateToLatestYaml } from '../../../common/insomnia-schema-migrations';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../../common/insomnia-v5';
-import { getCanonicalInsomniaFileContent, isUndiscardableChange } from '../canonical-file';
+import {
+  canonicalizeInsomniaFileContent,
+  getCanonicalInsomniaFileContent,
+  getInsomniaFileFormatIssue,
+  isUndiscardableChange,
+} from '../canonical-file';
 
 const FIXTURE_DIR = path.join(__dirname, '..', '..', '..', 'common', '__fixtures__', 'insomnia-v5-roundtrip');
 // Skip fixtures that are raw OpenAPI documents rather than Insomnia files
@@ -85,6 +90,102 @@ describe('canonical-file', () => {
     await db.init({ inMemoryOnly: true }, true);
   });
 
+  describe('canonicalizeInsomniaFileContent', () => {
+    it('drops what splicing leaves behind and the export never writes, like an empty `children`', async () => {
+      const document = YAML.parse(reorderedCollection);
+      document.collection[0].children = [];
+      const spliced = YAML.stringify(document);
+
+      const canonicalContent = await canonicalizeInsomniaFileContent(spliced);
+
+      expect(canonicalContent).not.toContain('children: []');
+      expect(canonicalContent).toBe(await exportThroughDatabase(spliced));
+    });
+
+    it('returns content it cannot replay unchanged', async () => {
+      const notInsomnia = 'extends: spectral:oas\n';
+
+      expect(await canonicalizeInsomniaFileContent(notInsomnia)).toBe(notInsomnia);
+    });
+
+    // Environments are optional in every workspace scope, so an MCP client file whose
+    // workspace has no base environment is replayed by the export instead of being skipped.
+    it('replays an MCP client file without a base environment', async () => {
+      const mcpClient = `type: mcpClient.insomnia/5.0
+name: MCP
+meta:
+  id: wrk_mcp
+  created: 1000
+  modified: 1000
+mcpRequest:
+  name: MCP
+  url: npx server
+  transportType: stdio
+  meta:
+    id: mcp-req_1
+    created: 1000
+    modified: 1000
+`;
+
+      const canonicalContent = await getCanonicalInsomniaFileContent(mcpClient);
+      expect(canonicalContent).not.toBeNull();
+      expect(canonicalContent).toBe(await exportThroughDatabase(mcpClient));
+    });
+
+    it('returns content unchanged when the replay fills in an entity it does not have', async () => {
+      // A deleted mock file with only the server removal staged so far
+      const mockWithoutServer = `type: mock.insomnia.rest/5.0
+schema_version: "5.1"
+name: Mock
+meta:
+  id: wrk_mock
+  created: 1000
+  modified: 1000
+routes:
+  - name: /
+    meta:
+      id: mock-route_1
+      created: 1000
+      modified: 1000
+    method: GET
+`;
+
+      expect(await getCanonicalInsomniaFileContent(mockWithoutServer)).toContain('__MOCK_SERVER_ID__');
+      expect(await canonicalizeInsomniaFileContent(mockWithoutServer)).toBe(mockWithoutServer);
+    });
+  });
+
+  describe('getInsomniaFileFormatIssue', () => {
+    it('finds no issue in a file Insomnia wrote itself', async () => {
+      expect(await getInsomniaFileFormatIssue(await exportThroughDatabase(reorderedCollection))).toBeNull();
+    });
+
+    it('flags a valid file Insomnia would write differently, eg. one edited by hand', async () => {
+      const exported = await exportThroughDatabase(reorderedCollection);
+      const withComment = exported.replace('collection:\n', 'collection:\n  # added by hand\n');
+      const withDuplicateId = buildCollection([
+        { id: 'fld_a', name: 'Folder A', created: 2000 },
+        { id: 'fld_a', name: 'Folder A copy', created: 3000 },
+      ]);
+
+      expect(await getInsomniaFileFormatIssue(reorderedCollection)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withComment)).toBe('non-canonical');
+      expect(await getInsomniaFileFormatIssue(withDuplicateId)).toBe('non-canonical');
+    });
+
+    it('flags an Insomnia file that does not match the file format', async () => {
+      const notAList = 'type: collection.insomnia.rest/5.0\nname: C\ncollection: not a list\n';
+
+      expect(await getInsomniaFileFormatIssue(notAList)).toBe('invalid');
+    });
+
+    it('ignores empty sides and files that are not Insomnia files', async () => {
+      expect(await getInsomniaFileFormatIssue(null)).toBeNull();
+      expect(await getInsomniaFileFormatIssue('')).toBeNull();
+      expect(await getInsomniaFileFormatIssue('openapi: 3.0.0\ninfo:\n  title: Spec\n')).toBeNull();
+    });
+  });
+
   describe('getCanonicalInsomniaFileContent', () => {
     it.each(insomniaFixtures)(
       'matches the real import/export pipeline for %s',
@@ -115,6 +216,19 @@ describe('canonical-file', () => {
 
     it('is stable for content Insomnia generated itself', async () => {
       const canonicalContent = await getCanonicalInsomniaFileContent(reorderedCollection);
+      expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
+    });
+
+    it('keeps confidentialKeys through the round-trip so the flag survives Git Sync', async () => {
+      const content = `${buildCollection([{ id: 'fld_a', name: 'Folder A', created: 2000 }])}  data:
+    token: secret
+    host: example.com
+  confidentialKeys:
+    - token
+`;
+      const canonicalContent = await getCanonicalInsomniaFileContent(content);
+      expect(canonicalContent).toBe(await exportThroughDatabase(content));
+      expect(YAML.parse(canonicalContent!).environments.confidentialKeys).toEqual(['token']);
       expect(await getCanonicalInsomniaFileContent(canonicalContent!)).toBe(canonicalContent);
     });
 

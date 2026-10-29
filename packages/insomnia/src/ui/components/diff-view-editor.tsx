@@ -48,6 +48,9 @@ export const DiffEditor = ({
       renderSideBySide: true,
       useInlineViewWhenSpaceIsLimited: true,
       readOnly: true,
+      // Indentation is structure in YAML (eg. a request moved out of a folder is
+      // an indentation-only change), so it must not be hidden as whitespace noise.
+      ignoreTrimWhitespace: false,
       scrollBeyondLastLine: false,
       automaticLayout: true,
       contextmenu: false,

@@ -8,6 +8,7 @@ import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
+import type { BlockedWrite } from '~/sync/git/fs-client';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
@@ -128,6 +129,8 @@ interface BaseOpts {
     | (git.PromiseFsClient & {
         startCollectWriteAction?: (oriWriteFileMap: WriteFileMap) => void;
         stopCollectWriteAction?: () => void;
+        startCollectBlockedWrites?: (target: BlockedWrite[]) => void;
+        stopCollectBlockedWrites?: () => void;
       });
   http: git.HttpClient;
   onMessage: (message: string) => void;
@@ -348,7 +351,7 @@ export class GitVCS {
 
     // Use isomorphic-git's walk API to traverse the HEAD, WORKDIR, and STAGE trees for the given file.
     // This is adapted from isomorphic-git's statusMatrix logic.
-    const [blobs]: [[string, string, string, string]] = await git.walk({
+    const [blobs]: [[string, string, string, string, string, string, string]] = await git.walk({
       ...baseOpts,
       // trees: HEAD (last commit), WORKDIR (current files), STAGE (index)
       trees: [git.TREE({ ref: 'HEAD' }), git.WORKDIR(), git.STAGE()],
@@ -451,7 +454,7 @@ export class GitVCS {
         });
 
         // Return an array: [filepath, headContent, workdirContent, stageContent]
-        return [filepath, ...blobsAsStrings];
+        return [filepath, ...blobsAsStrings, headOid ?? null, workdirOid ?? null, stageOid ?? null];
       },
     });
 
@@ -469,6 +472,11 @@ export class GitVCS {
       stage: cleanedStage, // Content from staging area (index)
       rawHead: blobs[1], // Content from HEAD exactly as committed, before migration/normalization
       rawStage: blobs[3], // Content from staging area exactly as staged, before migration/normalization
+      oids: {
+        head: blobs[4],
+        workdir: blobs[5],
+        stage: blobs[6],
+      },
     };
 
     return diff;
@@ -1288,6 +1296,11 @@ export class GitVCS {
     }
 
     const writeFileMap = {};
+    // Collects paths refused by the containment guard during checkout (see
+    // fs-client.ts). Shared across the CheckoutConflictError retry below, so
+    // dedupe by relPath before returning.
+    const blockedWrites: BlockedWrite[] = [];
+    const dedupedBlockedWrites = () => Array.from(new Map(blockedWrites.map(b => [b.relPath, b])).values());
 
     try {
       if (
@@ -1296,6 +1309,12 @@ export class GitVCS {
       ) {
         this._baseOpts.fs.startCollectWriteAction(writeFileMap);
       }
+      if (
+        'startCollectBlockedWrites' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.startCollectBlockedWrites === 'function'
+      ) {
+        this._baseOpts.fs.startCollectBlockedWrites(blockedWrites);
+      }
       // Try to pull changes from the remote repository
       await git.pull({
         ...this._baseOpts,
@@ -1303,6 +1322,10 @@ export class GitVCS {
         remote: 'origin',
         singleBranch: true,
       });
+
+      if (blockedWrites.length > 0) {
+        return { success: false, blockedWrites: dedupedBlockedWrites() };
+      }
 
       return { success: true };
     } catch (err) {
@@ -1329,6 +1352,11 @@ export class GitVCS {
           });
 
           console.log('[git] Pull successful after resolving checkout conflicts');
+
+          if (blockedWrites.length > 0) {
+            return { success: false, blockedWrites: dedupedBlockedWrites() };
+          }
+
           return { success: true };
         } catch (retryError) {
           console.error('[git] Retry pull failed after resolving checkout conflicts:', retryError);
@@ -1358,6 +1386,12 @@ export class GitVCS {
         typeof this._baseOpts.fs.stopCollectWriteAction === 'function'
       ) {
         this._baseOpts.fs.stopCollectWriteAction();
+      }
+      if (
+        'stopCollectBlockedWrites' in this._baseOpts.fs &&
+        typeof this._baseOpts.fs.stopCollectBlockedWrites === 'function'
+      ) {
+        this._baseOpts.fs.stopCollectBlockedWrites();
       }
     }
   }
@@ -2079,6 +2113,29 @@ export class GitVCS {
     for (const change of changes) {
       await git.resetIndex({ ...this._baseOpts, filepath: change.path });
     }
+  }
+
+  // Sets the git index entry for `filepath` to `content` directly, independent of
+  // whatever is currently on disk in the working directory. Used to stage/unstage a
+  // single entity out of a file that bundles many entities (eg. a whole workspace
+  // export) without staging the rest of that file's changes. `null` removes the
+  // file from the index, leaving the working directory untouched.
+  async stagePartialContent(filepath: string, content: string | null) {
+    const normalizedFilepath = convertToPosixSep(path.join('.', filepath));
+    if (content === null) {
+      await git.remove({ ...this._baseOpts, filepath: normalizedFilepath });
+      return;
+    }
+    const oid = await git.writeBlob({ ...this._baseOpts, blob: new TextEncoder().encode(content) });
+    await git.updateIndex({ ...this._baseOpts, filepath: normalizedFilepath, oid, add: true });
+  }
+
+  // Overwrites the working-directory copy of `filepath` with `content`, leaving
+  // the index untouched. Used to discard a single entity's unstaged changes out
+  // of a file that bundles many entities.
+  async discardPartialContent(filepath: string, content: string) {
+    // @ts-expect-error -- TSCONVERSION
+    await this._baseOpts.fs.promises.writeFile(filepath, content, 'utf8');
   }
 
   async discardChanges(changes: { path: string; status: Status }[]) {

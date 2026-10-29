@@ -570,6 +570,29 @@ describe('RequestCollectionSchema (recursive union)', () => {
     expect(parsed).toHaveLength(5);
   });
 
+  // The union is not discriminated: without a `meta.id` prefix to go on, the only thing keeping
+  // a Socket.IO item out of the WebSocket branch (which would strip its Socket.IO-only keys) are
+  // the `z.undefined()` guards.
+  it('keeps eventListeners on a Socket.IO item that has no meta', () => {
+    const item = makeSocketIORequest({ meta: undefined });
+    const [parsed] = RequestCollectionSchema.parse([item]);
+    expect(parsed).toMatchObject({ eventListeners: [{ id: 'ev1', eventName: 'join' }] });
+  });
+
+  // `eventListeners` is dropped so the body guard is the only thing rejecting the WebSocket
+  // branch here — otherwise this would pass on the strength of the eventListeners guard alone
+  it('keeps the body of a Socket.IO item that has no meta', () => {
+    const item = makeSocketIORequest({
+      meta: undefined,
+      eventListeners: undefined,
+      body: { eventName: 'chat', ack: true, args: [{ id: 'a1', value: '"hi"', mode: 'application/json' }] },
+    });
+    const [parsed] = RequestCollectionSchema.parse([item]);
+    expect(parsed).toMatchObject({
+      body: { eventName: 'chat', ack: true, args: [{ id: 'a1', value: '"hi"', mode: 'application/json' }] },
+    });
+  });
+
   it('rejects leaf nodes with forbidden props (e.g., children on Request)', () => {
     const bad = structuredClone(makeHttpRequest());
     // @ts-expect-error - children is not allowed on Request

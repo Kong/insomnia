@@ -108,6 +108,12 @@ jobs:
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
 
+      - name: Work around stapling issue (actions/runner-images#14924)
+        if: runner.os == 'macOS'
+        run: |
+          echo "block return out quick proto udp from any to any port 443" | sudo pfctl -f -
+          sudo pfctl -E
+
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
         if: runner.os == 'macOS'

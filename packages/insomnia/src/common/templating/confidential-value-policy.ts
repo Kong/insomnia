@@ -16,6 +16,10 @@ export const CONFIDENTIAL_MASK_VALUE = '••••••';
 // at the adapter boundary before any provider fetch occurs.
 const BUNDLED_EXTERNAL_VAULT_TAG = 'vault';
 
+export function isExternalVaultTag(pluginName: string, tagName: string | undefined): boolean {
+  return pluginName === EXTERNAL_VAULT_PLUGIN_NAME && tagName === BUNDLED_EXTERNAL_VAULT_TAG;
+}
+
 export function getConfidentialValuePolicy({
   purpose,
   hideSecretValues,
@@ -72,4 +76,19 @@ export function shouldMaskExternalVaultTag({
       forceReveal: settings?.forceReveal,
     }) === 'mask'
   );
+}
+
+/**
+ * Whether a preview's reveal toggle should be shown after a render. The toggle only does something
+ * when the masked render hid a confidential value. A revealed render shows real values and can't
+ * tell, so it keeps the previous verdict (the toggle stays visible to hide the value again).
+ */
+export function shouldShowRevealToggle(
+  previous: boolean,
+  { isRevealed, preview }: { isRevealed: boolean; preview?: string },
+): boolean {
+  if (isRevealed) {
+    return previous;
+  }
+  return !!preview?.includes(CONFIDENTIAL_MASK_VALUE);
 }

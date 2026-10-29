@@ -7,6 +7,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { ErrorBoundary } from '../error-boundary';
 import { TagEditor } from '../templating/tag-editor';
 import { VariableEditor } from '../templating/variable-editor';
 
@@ -19,7 +20,6 @@ interface State {
   template: string;
   onDone: (arg: string) => void;
   editorId?: string;
-  variableSource?: VariableSourceMeta;
   onOpenSource?: (source: VariableSourceMeta) => void;
 }
 
@@ -27,7 +27,6 @@ interface NunjucksModalOptions {
   template: string;
   onDone: (arg: string) => void;
   editorId?: string;
-  variableSource?: VariableSourceMeta;
   onOpenSource?: (source: VariableSourceMeta) => void;
 }
 
@@ -51,15 +50,15 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       hide: () => {
         modalRef.current?.hide();
       },
-      show: ({ onDone, template, editorId, variableSource, onOpenSource }) => {
+      show: ({ onDone, template, editorId, onOpenSource }) => {
         setState({
           isTag: template.indexOf('{%') === 0,
           template,
           onDone,
           editorId,
-          variableSource,
           onOpenSource,
         });
+        setIsRendering(false);
         modalRef.current?.show();
       },
     }),
@@ -74,16 +73,14 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   };
 
   const { workspace } = props;
-  const { template, isTag, variableSource, onOpenSource } = state;
+  const { template, isTag, onOpenSource } = state;
   const title = isTag ? 'Tag' : 'Variable';
-  // Null-checks only; the Open button's own render guard decides when the action is
-  // offered, and the hook validates the source is navigable.
-  const openSource = () => {
-    if (!variableSource || !onOpenSource) {
+  const openSource = (source: VariableSourceMeta) => {
+    if (!onOpenSource) {
       return;
     }
     modalRef.current?.hide();
-    onOpenSource(variableSource);
+    onOpenSource(source);
   };
   let editor: JSX.Element | null = null;
   editor = isTag ? (
@@ -96,12 +93,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       onRenderingChange={isRendering => setIsRendering(isRendering)}
     />
   ) : (
-    <VariableEditor
-      onChange={handleTemplateChange}
-      defaultValue={template}
-      variableSource={variableSource}
-      onOpenSource={openSource}
-    />
+    <VariableEditor onChange={handleTemplateChange} defaultValue={template} onOpenSource={openSource} />
   );
 
   return (
@@ -124,7 +116,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
             modalRef.current?.hide();
           }}
         >
-          {editor}
+          <ErrorBoundary>{editor}</ErrorBoundary>
         </form>
       </ModalBody>
       <ModalFooter>

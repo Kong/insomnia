@@ -32,6 +32,7 @@ export function init(): BaseSettings {
     autocompleteDelay: 1200,
     clearOAuth2SessionOnRestart: true,
     darkTheme: getAppDefaultDarkTheme(),
+    debugMode: false,
     deviceId: null,
     disableHtmlPreviewJs: false,
     disableResponsePreviewLinks: false,

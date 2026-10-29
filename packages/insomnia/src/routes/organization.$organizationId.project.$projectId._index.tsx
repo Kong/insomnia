@@ -68,6 +68,7 @@ const FILE_ISSUE_LABELS = {
   conflict: 'Merge in progress',
   'parse-error': 'Invalid schema',
   'export-error': 'Export failed',
+  'write-blocked': 'Write blocked',
 } as const;
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {

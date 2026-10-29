@@ -15,6 +15,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
+import {
+  createSensitiveValueCollector,
+  redactResponsePatch,
+  redactTestResults,
+  redactText,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
+import { collectConfidentialRawValues } from '~/common/render';
+import type { RenderContextAncestor } from '~/common/templating/types';
 import { parseGraphQLReqeustBody } from '~/common/utils/graph-ql';
 import { invariant } from '~/common/utils/invariant';
 import type { ResponsePatch } from '~/main/network/libcurl-promise';
@@ -130,6 +139,28 @@ export const sendActionImplementation = async (options: {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
+  const collector = createSensitiveValueCollector(requestData.settings.hideSecretValuesInPreviewAndConsole ?? true);
+  if (collector) {
+    // Pre-fill with every isConfidential:true KV pair's raw value across all five
+    // environment layers, before the pre-request script (and its own early-exit paths:
+    // a thrown error, or skipRequest) ever runs. Render below registers the same values
+    // again (now rendered) — harmless, the collector dedupes via a Set.
+    collectConfidentialRawValues(
+      {
+        ancestors: requestData.ancestors as RenderContextAncestor[],
+        rootEnvironment: requestData.baseEnvironment,
+        subEnvironment: requestData.environment,
+        rootGlobalEnvironment: requestData.activeGlobalBaseEnvironment,
+        subGlobalEnvironment: requestData.activeGlobalEnvironment,
+      },
+      collector,
+    );
+  }
+  // Constructed up-front (before either script runs) rather than after render, so both
+  // script executions and the curl send below can share one redacting runtime. redact()
+  // reads the collector's live contents at call time, so values registered later by
+  // render/vault-decrypt/tag-execution are still picked up on every subsequent write.
+  const redactingRuntime = withRedaction(runtime, collector);
   const transientVariables = nullableTransientVariables || {
     ...models.environment.init(),
     _id: uuidv4(),
@@ -148,7 +179,8 @@ export const sendActionImplementation = async (options: {
     userUploadEnvironment,
     iteration,
     iterationCount,
-    runtime,
+    redactingRuntime,
+    collector,
   );
 
   if ('error' in mutatedContext) {
@@ -158,7 +190,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: mutatedContext.error,
+        error: redactText(mutatedContext.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -207,6 +239,7 @@ export const sendActionImplementation = async (options: {
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     transientVariables: mutatedContext.transientVariables,
     ignoreUndefinedEnvVariable,
+    sensitiveValueCollector: collector,
   });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
   window.main.completeExecutionStep({ requestId });
@@ -222,7 +255,7 @@ export const sendActionImplementation = async (options: {
     mutatedContext.settings,
     requestData.timelinePath,
     requestData.responseId,
-    runtime,
+    redactingRuntime,
   );
   window.main.completeExecutionStep({ requestId });
 
@@ -233,7 +266,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: response.error,
+        error: redactText(response.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -265,7 +298,8 @@ export const sendActionImplementation = async (options: {
     response,
     iteration,
     iterationCount,
-    runtime,
+    runtime: redactingRuntime,
+    sensitiveValueCollector: collector,
   });
 
   if ('error' in postMutatedContext) {
@@ -275,7 +309,7 @@ export const sendActionImplementation = async (options: {
         parentId: requestId,
         environmentId: requestData.environment._id,
         statusMessage: 'Error',
-        error: postMutatedContext.error,
+        error: redactText(postMutatedContext.error, collector),
         timelinePath: requestData.timelinePath,
       },
       requestData.settings.maxHistoryResponses,
@@ -290,24 +324,37 @@ export const sendActionImplementation = async (options: {
   const preTestResults = mutatedContext.requestTestResults || [];
   const postTestResults = postMutatedContext?.requestTestResults || [];
   if (testResultCollector) {
-    testResultCollector.results = [...testResultCollector.results, ...preTestResults, ...postTestResults];
+    // Mirrors the Response document below: these results are persisted again, in the
+    // RunnerTestResult document the collection runner writes at the end of its run.
+    testResultCollector.results = [
+      ...testResultCollector.results,
+      ...redactTestResults([...preTestResults, ...postTestResults], collector),
+    ];
     const timingSteps = await window.main.getExecution({ requestId });
     testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
       return acc + (cur.duration || 0);
     }, 0);
     testResultCollector.responseId = response._id;
-    testResultCollector.requestUrl = renderedRequest.url || testResultCollector.requestUrl;
+    // The fallback keeps the runner's own initial value, which is the request's *unrendered*
+    // URL (`{{ _.base }}/login`) -- not a rendered secret, and request-result-card renders it
+    // through RenderedText, which applies the preview policy.
+    testResultCollector.requestUrl = redactText(renderedRequest.url, collector) || testResultCollector.requestUrl;
     testResultCollector.statusCode = baseResponsePatch.statusCode || 0;
     testResultCollector.statusMessage = baseResponsePatch.statusMessage || '';
     testResultCollector.size = baseResponsePatch.bytesRead || 0;
   }
-  const responsePatch = postMutatedContext
-    ? {
-        ...baseResponsePatch,
-        // both pre-request and after-response test results are collected
-        requestTestResults: [...preTestResults, ...postTestResults],
-      }
-    : baseResponsePatch;
+  // Redacted once here so both write points below -- services.response.create and, when the
+  // body is saved to a file, writeToDownloadPath -- persist the same redacted patch.
+  const responsePatch = redactResponsePatch(
+    postMutatedContext
+      ? {
+          ...baseResponsePatch,
+          // both pre-request and after-response test results are collected
+          requestTestResults: [...preTestResults, ...postTestResults],
+        }
+      : baseResponsePatch,
+    collector,
+  );
 
   if (!shouldWriteToFile) {
     const response = await services.response.create(responsePatch, requestData.settings.maxHistoryResponses);

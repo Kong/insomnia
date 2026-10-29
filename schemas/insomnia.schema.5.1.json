@@ -310,6 +310,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -369,6 +375,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -892,6 +904,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -951,6 +969,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -1525,6 +1549,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1584,6 +1614,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2119,8 +2155,7 @@
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string",
-                  "pattern": "^mcp-req.*"
+                  "type": "string"
                 },
                 "created": {
                   "type": "number"
@@ -2348,6 +2383,12 @@
                       "json",
                       "kv"
                     ]
+                  },
+                  "confidentialKeys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2407,6 +2448,12 @@
                 "json",
                 "kv"
               ]
+            },
+            "confidentialKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2434,8 +2481,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^greq.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"
@@ -2554,8 +2600,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^req.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"
@@ -3866,8 +3911,53 @@
                   }
                 ]
               },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^ws-payload.*"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string"
+                  },
+                  "eventName": {},
+                  "ack": {},
+                  "args": {}
+                }
+              },
               "children": {},
-              "method": {}
+              "method": {},
+              "eventListeners": {}
             }
           },
           {
@@ -4476,6 +4566,67 @@
               "disableUserAgentHeader": {
                 "type": "boolean"
               },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^socket-io-payload.*"
+                      },
+                      "created": {
+                        "type": "number"
+                      },
+                      "modified": {
+                        "type": "number"
+                      },
+                      "isPrivate": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "sortKey": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "eventName": {
+                    "type": "string"
+                  },
+                  "ack": {
+                    "type": "boolean"
+                  },
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "mode": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  },
+                  "name": {},
+                  "value": {},
+                  "mode": {}
+                }
+              },
               "children": {},
               "method": {}
             }
@@ -4490,8 +4641,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^fld.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"
@@ -5067,6 +5217,12 @@
                     "type": "null"
                   }
                 ]
+              },
+              "confidentialKeys": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
               "method": {},
               "url": {},

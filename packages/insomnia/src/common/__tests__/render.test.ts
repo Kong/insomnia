@@ -5,6 +5,7 @@ import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
+import { createSensitiveValueCollector } from '../network/sensitive-value-collector';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -887,6 +888,292 @@ describe('render tests', () => {
     });
   });
 
+  describe('collectConfidentialRawValues()', () => {
+    it('registers raw STRING confidential values from all five layers', () => {
+      const rootGlobalEnvironment = envBuilder
+        .data({ globalToken: 'global-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_global',
+            name: 'globalToken',
+            value: 'global-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const rootEnvironment = envBuilder
+        .data({ token: 'root-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_root',
+            name: 'token',
+            value: 'root-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const subEnvironment = envBuilder
+        .data({ subToken: 'sub-secret' })
+        .kvPairData([
+          {
+            id: 'envPair_sub',
+            name: 'subToken',
+            value: 'sub-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+      const ancestors = [
+        {
+          ...reqGroupBuilder.environment({ folderToken: 'folder-secret' }).build(),
+          kvPairData: [
+            {
+              id: 'envPair_folder',
+              name: 'folderToken',
+              value: 'folder-secret',
+              type: EnvironmentKvPairDataType.STRING,
+              enabled: true,
+              isConfidential: true,
+            },
+          ],
+        },
+      ];
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues(
+        { ancestors, rootEnvironment, subEnvironment, rootGlobalEnvironment },
+        collector,
+      );
+
+      expect(collector.redact('global-secret root-secret sub-secret folder-secret')).toBe(
+        '•••••• •••••• •••••• ••••••',
+      );
+    });
+
+    it('registers each leaf of a JSON confidential row', () => {
+      const config = { token: 'nested-secret', nested: { deep: 'deep-secret' } };
+      const rootEnvironment = envBuilder
+        .data({ config })
+        .kvPairData([
+          {
+            id: 'envPair_config',
+            name: 'config',
+            value: JSON.stringify(config),
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('nested-secret and deep-secret')).toBe('•••••• and ••••••');
+    });
+
+    it('registers numeric leaves of a JSON confidential row', () => {
+      const credentials = { pin: 1234, meta: { retries: 7 } };
+      const rootEnvironment = envBuilder
+        .data({ credentials })
+        .kvPairData([
+          {
+            id: 'envPair_credentials',
+            name: 'credentials',
+            value: JSON.stringify(credentials),
+            type: EnvironmentKvPairDataType.JSON,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('pin=1234 retries=7')).toBe('pin=•••••• retries=••••••');
+    });
+
+    it('takes the value from data rather than from the KV row', () => {
+      // The two diverge once a script has written to the environment: `data` holds what the
+      // script left behind, while kvPairData is only regenerated afterwards by
+      // savePatchesMadeByScript. The collector has to match what render will actually use.
+      const rootEnvironment = envBuilder
+        .data({ token: 'value-from-data' })
+        .kvPairData([
+          {
+            id: 'envPair_root',
+            name: 'token',
+            value: 'stale-value-from-kv-row',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.redact('value-from-data')).toBe('••••••');
+      expect(collector.redact('stale-value-from-kv-row')).toBe('stale-value-from-kv-row');
+    });
+
+    it('applies last-enabled-wins for duplicate names, like getDataFromKVPair', () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'effective-value' })
+        .kvPairData([
+          {
+            id: 'envPair_first',
+            name: 'token',
+            value: 'overridden-value',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_second',
+            name: 'token',
+            value: 'effective-value',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      // The last enabled row is the one that lands in data, and it isn't confidential.
+      expect(collector.isEmpty).toBe(true);
+    });
+
+    it('ignores non-confidential, disabled, and SECRET rows', () => {
+      const rootEnvironment = envBuilder
+        .data({ token: 'not-confidential' })
+        .kvPairData([
+          {
+            id: 'envPair_public',
+            name: 'token',
+            value: 'not-confidential',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: false,
+          },
+          {
+            id: 'envPair_disabled',
+            name: 'disabledToken',
+            value: 'disabled-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: false,
+            isConfidential: true,
+          },
+          {
+            id: 'envPair_secret',
+            name: 'vaultToken',
+            value: 'vault-secret',
+            type: EnvironmentKvPairDataType.SECRET,
+            enabled: true,
+            isConfidential: false,
+          },
+        ])
+        .build();
+
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({ rootEnvironment }, collector);
+
+      expect(collector.isEmpty).toBe(true);
+    });
+
+    it('does nothing when given no layers', () => {
+      const collector = createSensitiveValueCollector(true)!;
+      renderUtils.collectConfidentialRawValues({}, collector);
+
+      expect(collector.isEmpty).toBe(true);
+    });
+  });
+
+  describe('registerConfidentialValues()', () => {
+    // These mirror how tryToExecuteScript calls it after a script runs: the data is the
+    // script's output, the kvPairData is the untouched original carrying the flags.
+    const confidentialRow = (id: string, name: string, value: string) => ({
+      id,
+      name,
+      value,
+      type: EnvironmentKvPairDataType.STRING,
+      enabled: true,
+      isConfidential: true,
+    });
+
+    it('registers a value the script wrote into a confidential key', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { token: 'token-set-by-script' },
+            kvPairData: [confidentialRow('envPair_root', 'token', 'token-before-script')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('token-set-by-script')).toBe('••••••');
+    });
+
+    it('does not register a key the script invented, which has no KV row', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { token: 'known-secret', brandNewKey: 'invented-by-script' },
+            kvPairData: [confidentialRow('envPair_root', 'token', 'known-secret')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('invented-by-script')).toBe('invented-by-script');
+      expect(collector.redact('known-secret')).toBe('••••••');
+    });
+
+    it('registers across several layers, including a folder layer', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues(
+        [
+          {
+            data: { globalToken: 'global-secret' },
+            kvPairData: [confidentialRow('envPair_global', 'globalToken', 'global-secret')],
+          },
+          {
+            data: { folderToken: 'folder-secret' },
+            kvPairData: [confidentialRow('envPair_folder', 'folderToken', 'folder-secret')],
+          },
+        ],
+        collector,
+      );
+
+      expect(collector.redact('global-secret folder-secret')).toBe('•••••• ••••••');
+    });
+
+    it('ignores a layer without kvPairData, such as transient variables', () => {
+      const collector = createSensitiveValueCollector(true)!;
+
+      renderUtils.registerConfidentialValues([{ data: { localVar: 'not-confidential' } }], collector);
+
+      expect(collector.isEmpty).toBe(true);
+    });
+  });
+
   describe('render()', () => {
     it('correctly renders simple Object', async () => {
       const newObj = await renderUtils.render(
@@ -1128,7 +1415,113 @@ describe('render tests', () => {
     });
   });
 
+  describe('getRenderedRequestAndContext()', () => {
+    const renderBasicAuthRequest = async (isConfidential: boolean) => {
+      const workspace = await services.workspace.create();
+      const environment = await services.environment.create({
+        parentId: workspace._id,
+        data: { password: 'top-secret' },
+        kvPairData: [
+          {
+            id: 'envPair_password',
+            name: 'password',
+            value: 'top-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential,
+          },
+        ],
+      });
+      const request = await services.request.create({
+        parentId: workspace._id,
+        url: 'http://localhost',
+        authentication: { type: 'basic', username: 'user', password: '{{ _.password }}' },
+      });
+      const collector = createSensitiveValueCollector(true)!;
+      await renderUtils.getRenderedRequestAndContext({
+        request,
+        environment: environment._id,
+        purpose: 'send',
+        sensitiveValueCollector: collector,
+      });
+      return collector;
+    };
+
+    it('registers the derived Basic Auth header when a credential is confidential', async () => {
+      const collector = await renderBasicAuthRequest(true);
+
+      expect(collector.values).toContain(`Basic ${btoa('user:top-secret')}`);
+    });
+
+    it('does not register the Basic Auth header when no credential is confidential', async () => {
+      const collector = await renderBasicAuthRequest(false);
+
+      expect(collector.values).not.toContain(`Basic ${btoa('user:top-secret')}`);
+    });
+
+    it('does not prepend a default scheme to a URL that starts with the mask', async () => {
+      const workspace = await services.workspace.create();
+      const environment = await services.environment.create({
+        parentId: workspace._id,
+        data: { baseUrl: 'https://api.example.com' },
+        kvPairData: [
+          {
+            id: 'envPair_baseUrl',
+            name: 'baseUrl',
+            value: 'https://api.example.com',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ],
+      });
+      const request = await services.request.create({ parentId: workspace._id, url: '{{ _.baseUrl }}/users' });
+
+      const { request: renderedRequest } = await renderUtils.getRenderedRequestAndContext({
+        request,
+        environment: environment._id,
+        purpose: 'preview',
+      });
+
+      expect(renderedRequest.url).toBe('••••••/users');
+    });
+  });
+
   describe('getRenderContext()', () => {
+    it('attributes the environments of a project environment workspace to the project', async () => {
+      // The project environment page renders its own workspace, so its base and sub
+      // environments arrive as the workspace's own layers rather than as project ones.
+      const environmentWorkspace = {
+        _id: 'wrk_render_environment_workspace_test',
+        type: models.workspace.type,
+        scope: 'environment',
+        parentId: 'proj_test',
+      };
+      const baseEnvironment = envBuilder
+        ._id('env_base_render_environment_workspace_test')
+        .name('base')
+        .data({ fromBase: 'base' })
+        .build();
+      const subEnvironment = envBuilder
+        ._id('env_sub_render_environment_workspace_test')
+        .name('sub')
+        .data({ fromSub: 'sub' })
+        .build();
+
+      const context = await renderUtils.getRenderContext({
+        environment: subEnvironment,
+        baseEnvironment,
+        ancestors: [environmentWorkspace] as unknown as RenderContextAncestor[],
+        purpose: 'preview',
+      });
+
+      const { keyContext, keyContextMeta } = context.getKeysContext();
+      expect(keyContext['_.fromBase']).toBe('Project Environment : base');
+      expect(keyContext['_.fromSub']).toBe('Project Environment : sub');
+      expect(keyContextMeta?.['_.fromBase']?.environmentId).toBe(baseEnvironment._id);
+      expect(keyContextMeta?.['_.fromSub']?.environmentId).toBe(subEnvironment._id);
+    });
+
     it('keys source from the closest folder when nested folders define the same variable', async () => {
       const workspace = { _id: 'wrk_render_source_test', type: models.workspace.type, parentId: 'proj_test' };
       const outerFolder = reqGroupBuilder.environment({ foo: 'outer' }).name('outer').build();
