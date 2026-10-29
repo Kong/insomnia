@@ -1,6 +1,7 @@
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from 'insomnia/src/common/constants';
 import { forceBracketNotation } from 'insomnia/src/common/templating/utils';
 import type { AuthTypeOAuth2 } from 'insomnia-data';
+import { models } from 'insomnia-data';
 import { fakerFunctions } from 'insomnia-data/common';
 
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
@@ -15,6 +16,7 @@ import type {
   HttpsSchemaGetpostmanComJsonCollectionV200 as V200Schema,
   Item as V200Item,
   Request1 as V200Request1,
+  Response as V200Response,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
   Variable1 as V200Variable1,
@@ -30,6 +32,7 @@ import type {
   Item as V210Item,
   QueryParam,
   Request1 as V210Request1,
+  Response as V210Response,
   UrlEncodedParameter as V210UrlEncodedParameter,
   Variable1 as V210Variable1,
 } from './postman-2.1.types';
@@ -51,6 +54,8 @@ type FormParameter = V200FormParameter | V210FormParameter;
 
 type Item = V200Item | V210Item;
 
+type Response = V200Response | V210Response;
+
 type Folder = V200Folder | V210Folder;
 
 type Header = V200Header | V210Header;
@@ -59,6 +64,7 @@ type UrlVariable = V200Variable1 | V210Variable1;
 
 let requestCount = 1;
 let requestGroupCount = 1;
+let exampleCount = 1;
 const fakerTags = Object.keys(fakerFunctions);
 const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
 // example: { 'guid' : '{% faker 'guid' %}' }
@@ -163,7 +169,8 @@ export class ImportPostman {
   importItems = (items: PostmanCollection['item'], parentId = '__WORKSPACE_ID__'): ImportRequest[] => {
     return items.reduce((accumulator: ImportRequest[], item: Item | Folder) => {
       if (Object.prototype.hasOwnProperty.call(item, 'request')) {
-        return [...accumulator, this.importRequestItem(item as Item, parentId)];
+        const request = this.importRequestItem(item as Item, parentId);
+        return [...accumulator, request, ...this.importItemExamples(item as Item, request)];
       }
 
       const requestGroup = this.importFolderItem(item as Folder, parentId);
@@ -302,6 +309,120 @@ export class ImportPostman {
           value: transformPostmanToNunjucksString(value as string),
         }) as PathParameters,
     );
+  };
+
+  importItemExamples = (item: Item, request: ImportRequest): ImportRequest[] => {
+    const requestId = request._id;
+    const responses = item.response;
+
+    if (!requestId || !Array.isArray(responses)) {
+      return [];
+    }
+
+    return responses.reduce((accumulator: ImportRequest[], response: unknown, index: number) => {
+      const example = this.importExample(response, requestId, index, request.authentication);
+      return example ? [...accumulator, example] : accumulator;
+    }, []);
+  };
+
+  importExample = (
+    response: unknown,
+    requestId: string,
+    index: number,
+    parentAuthentication?: ImportRequest['authentication'],
+  ): ImportRequest | null => {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    // Parsed Postman collection data; the generated schema types model its shape
+    const postmanResponse = response as Response;
+    const { originalRequest, code, status, body: responseBody } = postmanResponse;
+
+    if (!originalRequest || typeof originalRequest === 'string') {
+      return null;
+    }
+
+    const { authentication, headers } = this.importAuthentication(
+      originalRequest.auth,
+      (originalRequest.header ?? []) as Header[],
+    );
+
+    let parameters = [] as Parameter[];
+
+    if (typeof originalRequest.url === 'object' && originalRequest.url?.query) {
+      parameters = this.importParameters(originalRequest.url?.query);
+    }
+
+    let pathParameters = [] as PathParameters[];
+
+    if (typeof originalRequest.url === 'object' && originalRequest.url?.variable) {
+      pathParameters = this.importPathParameters(originalRequest.url.variable);
+    }
+
+    const body = this.importBody(originalRequest.body);
+    const exampleHeaders = headers.map(({ key, value, disabled, description }) => ({
+      name: transformPostmanToNunjucksString(key),
+      value: transformPostmanToNunjucksString(value),
+      ...(disabled !== undefined ? { disabled } : {}),
+      ...(description !== undefined ? { description: postmanDescriptionToString(description) } : {}),
+    }));
+
+    // Add Content-Type header for raw body because we don't add it automatically when sending the request
+    if (
+      !exampleHeaders.find(({ name }) => name.toLowerCase() === 'content-type') &&
+      typeof body === 'object' &&
+      body?.mimeType
+    ) {
+      exampleHeaders.push({
+        name: 'Content-Type',
+        value: body.mimeType === 'application/graphql' ? 'application/json' : body.mimeType,
+      });
+    }
+
+    const fallbackName = [code, status].filter(part => part !== undefined && part !== null && part !== '').join(' ');
+
+    return {
+      parentId: requestId,
+      _id: `__EX_${exampleCount++}__`,
+      _type: 'example',
+      name: (typeof postmanResponse.name === 'string' && postmanResponse.name) || fallbackName || 'Example',
+      description: '',
+      request: {
+        method: originalRequest.method || 'GET',
+        url: transformPostmanToNunjucksString(this.importUrl(originalRequest.url)),
+        parameters,
+        pathParameters,
+        headers: exampleHeaders,
+        body: this.importBody(originalRequest.body) ?? {},
+        // Postman examples inherit auth from their request; only a response's
+        // own originalRequest auth overrides it.
+        authentication: originalRequest.auth == null ? (parentAuthentication ?? {}) : authentication,
+      },
+      response: {
+        statusCode: typeof code === 'number' ? code : 200,
+        statusMessage: typeof status === 'string' ? status : '',
+        headers: this.importResponseHeaders(postmanResponse.header),
+        body: typeof responseBody === 'string' ? responseBody : '',
+      },
+      metaSortKey: -1 * Date.now() - index,
+    };
+  };
+
+  importResponseHeaders = (headers: Response['header']): { name: string; value: string }[] => {
+    if (!Array.isArray(headers)) {
+      return [];
+    }
+    // Postman headers can be objects or plain strings, and the whole list may be a string or null
+    return headers
+      .filter((header): header is Header => !!header && typeof header === 'object')
+      .map(({ key, value }) => ({
+        name: typeof key === 'string' ? key : '',
+        value: typeof value === 'string' ? value : '',
+      }))
+      // Same rule as saving a live response: session cookies must not travel
+      // with the collection.
+      .filter(({ name }) => !models.example.EXAMPLE_RESPONSE_HEADER_DENYLIST.includes(name.toLowerCase()));
   };
 
   importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
@@ -964,6 +1085,7 @@ export class ImportPostman {
 export const convert: Converter = rawData => {
   requestCount = 1;
   requestGroupCount = 1;
+  exampleCount = 1;
 
   try {
     const collection = JSON.parse(rawData) as PostmanCollection;
