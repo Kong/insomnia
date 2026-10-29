@@ -1,6 +1,5 @@
 import { redirect } from 'react-router';
 
-import { syncProjects } from '~/common/project';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 import { getInitialRouteForOrganization } from '~/ui/utils/router';
 
@@ -17,11 +16,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     return redirect(escapeRoute);
   }
 
-  try {
-    await syncProjects(organizationId);
-  } catch {
-    console.log('[project] Could not fetch remote projects.');
-  }
+  // Lands with local data: the organization's projects sync in the background once it is entered,
+  // and the empty project view waits for that sync.
   const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
   return redirect(initialOrganizationRoute);
 }

@@ -28,13 +28,17 @@ import { services } from 'insomnia-data';
 import { syncProjects } from '~/common/project';
 import { migrateProjectsUnderOrganization } from '~/ui/organization-utils';
 
-import { useStartupSync } from './use-startup-sync';
+import { useStartupSync, useStartupSyncStatus } from './use-startup-sync';
 
 let root: Root;
 let container: HTMLDivElement;
 const result: { current: ReturnType<typeof useStartupSync> | null } = { current: null };
+const rawStatus: { current: ReturnType<typeof useStartupSyncStatus> | null } = { current: null };
 
 const Harness = ({ organizationId }: { organizationId: string }) => {
+  // Read before the layout's own read, like the empty project view (a child, whose render and
+  // effects come before the organization layout's).
+  rawStatus.current = useStartupSyncStatus(organizationId);
   result.current = useStartupSync(organizationId);
   return null;
 };
@@ -150,5 +154,25 @@ describe('useStartupSync', () => {
 
     await render('org_2');
     expect(result.current?.status).toBe('idle');
+  });
+
+  it('exposes the raw status: pending from the first render until the run settles, then success', async () => {
+    let finishSync = () => {};
+    vi.mocked(syncProjects).mockReturnValue(
+      new Promise<void>(resolve => {
+        finishSync = resolve;
+      }),
+    );
+
+    await act(async () => {
+      root.render(<Harness organizationId="org_1" />);
+    });
+    expect(rawStatus.current).toBe('pending');
+    await flush();
+    expect(rawStatus.current).toBe('pending');
+
+    await act(async () => finishSync());
+    await flush();
+    expect(rawStatus.current).toBe('success');
   });
 });
