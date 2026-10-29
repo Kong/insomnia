@@ -18,7 +18,7 @@ interface SignUpTipDismissedState {
 }
 
 export const shouldShowSignUpTip = (state: SignUpTipDismissedState | undefined, now: number) => {
-  if (!state || !state.dismissed) {
+  if (!state || !state.dismissed || !Number.isFinite(state.dismissedAt)) {
     return true;
   }
 
