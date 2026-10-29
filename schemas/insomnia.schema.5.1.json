@@ -3465,6 +3465,447 @@
                               }
                             }
                           }
+                        },
+                        "authentication": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "oauth2"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "grantType": {
+                                      "type": "string",
+                                      "enum": [
+                                        "authorization_code",
+                                        "client_credentials",
+                                        "password",
+                                        "implicit",
+                                        "refresh_token",
+                                        "mcp_auth_flow"
+                                      ]
+                                    },
+                                    "accessTokenUrl": {
+                                      "type": "string"
+                                    },
+                                    "authorizationUrl": {
+                                      "type": "string"
+                                    },
+                                    "clientId": {
+                                      "type": "string"
+                                    },
+                                    "clientSecret": {
+                                      "type": "string"
+                                    },
+                                    "clientIdIssuedAt": {
+                                      "type": "number"
+                                    },
+                                    "clientSecretExpiresAt": {
+                                      "type": "number"
+                                    },
+                                    "audience": {
+                                      "type": "string"
+                                    },
+                                    "scope": {
+                                      "type": "string"
+                                    },
+                                    "resource": {
+                                      "type": "string"
+                                    },
+                                    "username": {
+                                      "type": "string"
+                                    },
+                                    "password": {
+                                      "type": "string"
+                                    },
+                                    "redirectUrl": {
+                                      "type": "string"
+                                    },
+                                    "useDefaultBrowser": {
+                                      "type": "boolean"
+                                    },
+                                    "credentialsInBody": {
+                                      "type": "boolean"
+                                    },
+                                    "state": {
+                                      "type": "string"
+                                    },
+                                    "code": {
+                                      "type": "string"
+                                    },
+                                    "accessToken": {
+                                      "type": "string"
+                                    },
+                                    "refreshToken": {
+                                      "type": "string"
+                                    },
+                                    "tokenPrefix": {
+                                      "type": "string"
+                                    },
+                                    "usePkce": {
+                                      "type": "boolean"
+                                    },
+                                    "pkceMethod": {
+                                      "type": "string"
+                                    },
+                                    "responseType": {
+                                      "type": "string",
+                                      "enum": [
+                                        "code",
+                                        "id_token",
+                                        "id_token token",
+                                        "none",
+                                        "token"
+                                      ]
+                                    },
+                                    "launchBrowserManually": {
+                                      "type": "boolean"
+                                    },
+                                    "origin": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "grantType"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "basic"
+                                    },
+                                    "useISO88591": {
+                                      "type": "boolean"
+                                    },
+                                    "username": {
+                                      "type": "string"
+                                    },
+                                    "password": {
+                                      "type": "string"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "bearer"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "token": {
+                                      "type": "string"
+                                    },
+                                    "prefix": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "digest"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "username": {
+                                      "type": "string"
+                                    },
+                                    "password": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "hawk"
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "type": "string"
+                                    },
+                                    "ext": {
+                                      "type": "string"
+                                    },
+                                    "validatePayload": {
+                                      "type": "boolean"
+                                    },
+                                    "algorithm": {
+                                      "type": "string",
+                                      "enum": [
+                                        "sha1",
+                                        "sha256"
+                                      ]
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "id",
+                                    "key",
+                                    "algorithm"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "oauth1"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "signatureMethod": {
+                                      "type": "string",
+                                      "enum": [
+                                        "HMAC-SHA1",
+                                        "HMAC-SHA256",
+                                        "RSA-SHA1",
+                                        "PLAINTEXT"
+                                      ]
+                                    },
+                                    "consumerKey": {
+                                      "type": "string"
+                                    },
+                                    "consumerSecret": {
+                                      "type": "string"
+                                    },
+                                    "tokenKey": {
+                                      "type": "string"
+                                    },
+                                    "tokenSecret": {
+                                      "type": "string"
+                                    },
+                                    "privateKey": {
+                                      "type": "string"
+                                    },
+                                    "version": {
+                                      "type": "string"
+                                    },
+                                    "nonce": {
+                                      "type": "string"
+                                    },
+                                    "timestamp": {
+                                      "type": "string"
+                                    },
+                                    "callback": {
+                                      "type": "string"
+                                    },
+                                    "realm": {
+                                      "type": "string"
+                                    },
+                                    "verifier": {
+                                      "type": "string"
+                                    },
+                                    "includeBodyHash": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "iam"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "accessKeyId": {
+                                      "type": "string"
+                                    },
+                                    "secretAccessKey": {
+                                      "type": "string"
+                                    },
+                                    "sessionToken": {
+                                      "type": "string"
+                                    },
+                                    "region": {
+                                      "type": "string"
+                                    },
+                                    "service": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "netrc"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "asap"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "issuer": {
+                                      "type": "string"
+                                    },
+                                    "subject": {
+                                      "type": "string"
+                                    },
+                                    "audience": {
+                                      "type": "string"
+                                    },
+                                    "additionalClaims": {
+                                      "type": "string"
+                                    },
+                                    "privateKey": {
+                                      "type": "string"
+                                    },
+                                    "keyId": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "issuer",
+                                    "audience",
+                                    "privateKey",
+                                    "keyId"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "none"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "apikey"
+                                    },
+                                    "key": {
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "string"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "addTo": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "ntlm"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "username": {
+                                      "type": "string"
+                                    },
+                                    "password": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "const": "singleToken"
+                                    },
+                                    "disabled": {
+                                      "type": "boolean"
+                                    },
+                                    "token": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {}
+                            }
+                          ]
                         }
                       },
                       "required": [

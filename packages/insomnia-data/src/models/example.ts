@@ -31,6 +31,7 @@ export const baseExampleRequestSchema = baseRequestSchema.pick({
   pathParameters: true,
   headers: true,
   body: true,
+  authentication: true,
 });
 export type ExampleRequest = z.infer<typeof baseExampleRequestSchema>;
 
@@ -120,6 +121,7 @@ export function init(): BaseExample {
       pathParameters: undefined,
       headers: [],
       body: {},
+      authentication: {},
     },
     response: {
       statusCode: 200,
@@ -218,6 +220,7 @@ export function rewriteReferences(example: Example, idMapping: Map<string, strin
           'parameters',
           'pathParameters',
           'headers',
+          'authentication',
         ],
         idMapping,
       ),

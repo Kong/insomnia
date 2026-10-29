@@ -12,7 +12,6 @@ import {
   Select,
   SelectValue,
 } from 'react-aria-components';
-import { useParams } from 'react-router';
 
 import {
   type AuthTypes,
@@ -21,7 +20,7 @@ import {
   SIGNATURE_METHOD_HMAC_SHA1,
 } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { useAuthEditor } from '../editors/auth/use-auth-editor';
 import { Icon } from '../icon';
 
 function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication | {}): RequestAuthentication {
@@ -152,15 +151,7 @@ export const AuthDropdown: FC<Props> = ({
   hideOthers = false,
   hideInherit = false,
 }) => {
-  const { requestId, requestGroupId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId?: string;
-    requestGroupId?: string;
-  };
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
+  const { replaceAuthentication } = useAuthEditor();
   const onClick = useCallback(
     async (type: AuthTypes | 'inherit') => {
       const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type || '';
@@ -168,11 +159,9 @@ export const AuthDropdown: FC<Props> = ({
         return;
       }
       const selectedInherit = type === 'inherit';
-      const newAuthentication = selectedInherit ? {} : castOneAuthTypeToAnother(type, authentication || {});
-      requestId && patchRequest(requestId, { authentication: newAuthentication });
-      requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
+      replaceAuthentication(selectedInherit ? {} : castOneAuthTypeToAnother(type, authentication || {}));
     },
-    [authentication, patchRequest, patchRequestGroup, requestGroupId, requestId],
+    [authentication, replaceAuthentication],
   );
 
   const selectedAuthType = getAuthObjectOrNull(authentication)?.type || 'inherit';

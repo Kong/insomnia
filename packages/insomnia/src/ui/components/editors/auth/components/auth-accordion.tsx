@@ -1,12 +1,8 @@
 import classnames from 'classnames';
 import type { RequestAccordionKeys } from 'insomnia-data';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, useState } from 'react';
 
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { useAuthEditor } from '../use-auth-editor';
 
 interface Props {
   label: string;
@@ -14,17 +10,23 @@ interface Props {
 }
 
 export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const expanded = !reqData || Boolean(reqData.activeRequestMeta?.expandedAccordionKeys[accordionKey]);
-  const patchRequestMeta = useRequestMetaPatcher();
+  const { isExample, expandedAccordionKeys, patchMeta } = useAuthEditor();
+  // Examples have no request meta, so their expansion stays local.
+  const [exampleExpanded, setExampleExpanded] = useState(true);
+  const expanded = isExample
+    ? exampleExpanded
+    : !expandedAccordionKeys || Boolean(expandedAccordionKeys[accordionKey]);
   const toggle = () => {
-    reqData &&
-      patchRequestMeta(reqData.activeRequest._id, {
-        expandedAccordionKeys: {
-          ...reqData.activeRequestMeta?.expandedAccordionKeys,
-          [accordionKey]: !expanded,
-        },
-      });
+    if (isExample) {
+      setExampleExpanded(current => !current);
+      return;
+    }
+    patchMeta({
+      expandedAccordionKeys: {
+        ...expandedAccordionKeys,
+        [accordionKey]: !expanded,
+      },
+    });
   };
 
   return (

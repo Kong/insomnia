@@ -292,6 +292,7 @@ function mapExampleResourcesToInsomniaExamples(examples: Example[]): Insomnia_Ex
       pathParameters: example.request.pathParameters,
       headers: mapHeaders(example.request.headers),
       body: mapBody(example.request.body),
+      authentication: example.request.authentication,
     },
     response: {
       statusCode: example.response.statusCode,
@@ -778,6 +779,7 @@ function getCollection(
                 pathParameters: example.request?.pathParameters || [],
                 headers: mapHeaders(example.request?.headers),
                 body: mapBody(example.request?.body),
+                authentication: example.request?.authentication || {},
               },
               response: {
                 statusCode: example.response?.statusCode || 200,

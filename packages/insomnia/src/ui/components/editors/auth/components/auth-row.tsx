@@ -1,15 +1,9 @@
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
+
+import { useAuthEditor } from '../use-auth-editor';
 
 interface Props {
   labelFor: string;
@@ -19,9 +13,7 @@ interface Props {
 }
 
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { authentication } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
+  const { authentication } = useAuthEditor();
   const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
   return (
     <tr key={labelFor}>
