@@ -30,7 +30,6 @@ import {
   METHOD_LIST_RESOURCES,
   METHOD_LIST_TOOLS,
 } from '~/common/mcp-utils';
-import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -57,6 +56,7 @@ import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-respon
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const emptyServerData: McpServerData = {
   serverCapabilities: getDefaultServerCapabilities(),
