@@ -80,4 +80,40 @@ export class CertificatesFlow extends BaseFlow {
     const node = await workspace.resolveNode(item);
     await workspace.clickNode(node);
   }
+
+  /**
+   * Toggles `item`'s workspace-wide CA Certificate's Enabled/Disabled
+   * state, opening the "Manage Certificates" dialog from `item`'s location.
+   * @param item - The Collection/request whose location the dialog is opened from
+   * @param enabled - Whether the CA certificate should be enabled
+   */
+  async setCaCertificateEnabled(
+    item: CertificateTarget,
+    enabled: boolean,
+  ): Promise<void> {
+    await this.openTarget(item);
+
+    const { certificatesPage } = this.pageManager;
+    await certificatesPage.open();
+    await certificatesPage.setCaCertificateEnabled(enabled);
+    await certificatesPage.close();
+  }
+
+  /**
+   * Toggles an MCP Client's "SSL Certificate Validation" switch, opening
+   * the "Manage Certificates" dialog from the client's location.
+   * @param client - The MCP Client whose dialog is opened
+   * @param enabled - Whether SSL certificate validation should be enabled
+   */
+  async setSslValidationEnabled(
+    client: McpClient,
+    enabled: boolean,
+  ): Promise<void> {
+    await this.openTarget(client);
+
+    const { certificatesPage } = this.pageManager;
+    await certificatesPage.open();
+    await certificatesPage.setSslValidationEnabled(enabled);
+    await certificatesPage.close();
+  }
 }
