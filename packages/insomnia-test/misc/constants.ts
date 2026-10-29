@@ -37,6 +37,9 @@ export const SOCKET_SERVER_AUTH_TOKEN = "test-socket-io-token";
 
 export const MCP_SERVER = "http://localhost:4020/mcp";
 export const MCP_SERVER_HTTPS = "https://localhost:4021/mcp";
+export const MCP_SERVER_CUSTOM_CA_HTTPS = "https://localhost:4022/mcp";
+/** Base of `misc/mcp-server.js`'s scriptable list-response endpoints, one per `/mcp-list/<key>`. */
+export const MCP_LIST_SERVER = "http://localhost:4020/mcp-list";
 
 export const GRPC_SERVER = "localhost:9000";
 export const GRPC_SERVER_TLS = "grpcs://localhost:9001";

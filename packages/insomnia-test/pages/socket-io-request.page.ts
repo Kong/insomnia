@@ -1,3 +1,6 @@
+import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { RequestHeader,SocketIOMessage } from "../models/socket-io-request";
 import { RequestPage } from "./request.page";
 
@@ -68,5 +71,18 @@ export class SocketIORequestPage extends RequestPage {
     await panel
       .getByRole("textbox", { name: "Event Name" })
       .fill(message.eventName);
+  }
+
+  /**
+   * Clicks Connect and waits for the button to flip to "Disconnect", so a
+   * following send doesn't race the handshake and get dropped.
+   */
+  async connect(): Promise<void> {
+    await super.connect();
+    await expect(
+      this.page
+        .locator(this.PANE)
+        .getByRole("button", { name: "Disconnect", exact: true }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }
