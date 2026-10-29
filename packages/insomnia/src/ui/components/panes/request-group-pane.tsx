@@ -157,7 +157,11 @@ export const RequestGroupPane: FC = () => {
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
           <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-            <RequestHeadersEditor bulk={false} headers={folderHeaders} requestType="RequestGroup" />
+            <RequestHeadersEditor
+              bulk={false}
+              request={activeRequestGroup}
+              onChange={patch => patchGroup(activeRequestGroup._id, { headers: patch.headers })}
+            />
           </ErrorBoundary>
         </TabPanel>
         <TabPanel className="w-full flex-1" id="scripts">
