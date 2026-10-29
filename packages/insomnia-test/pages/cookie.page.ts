@@ -19,7 +19,7 @@ function parseCookieLine(line: string): Cookie {
       const [name, value] = attr.split("=");
       if (name === "Domain") cookie.domain = value;
       else if (name === "Path") cookie.path = value;
-      else if (name === "Expires") cookie.expires = value;
+      else if (name === "Expires") cookie.expires = value === "Infinity" ? "Infinity" : new Date(value);
     }
   }
   return cookie;
