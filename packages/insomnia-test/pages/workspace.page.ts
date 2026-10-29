@@ -2234,4 +2234,30 @@ export class WorkspacePage extends BasePage {
   private async tabName(row: Locator): Promise<string> {
     return (await row.locator('span[class*="mx-[8px]"]').innerText()).trim();
   }
+
+  /**
+   * Selects a tree node's row, focuses the row itself (the shortcut ignores
+   * inner controls) and presses the sidebar's Delete shortcut, opening the
+   * node's delete confirmation dialog.
+   * @param node - The tree node to delete
+   */
+  async pressDeleteShortcut(node: TreeNode): Promise<void> {
+    const row = this.page
+      .getByTestId("project-navigation-tree-container")
+      .locator(`div[role="row"][data-key="${node._id}"]`);
+    await row.scrollIntoViewIfNeeded();
+    await row.click();
+    await row.focus();
+    await this.page.keyboard.press("Delete");
+  }
+
+  /**
+   * Counts the "resource not found" warning toasts currently on screen.
+   * @returns The number of matching toasts
+   */
+  async countResourceNotFoundToasts(): Promise<number> {
+    return this.page
+      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
+      .count();
+  }
 }
