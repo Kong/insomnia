@@ -155,6 +155,14 @@ export const canHostExamples = (request: {
   );
 
 /**
+ * Response headers that must never be stored in an example: `set-cookie` is
+ * session state that Try it would otherwise replay, and `content-length` is
+ * derived from the body. Shared by the save-as-example and Postman import
+ * paths.
+ */
+export const EXAMPLE_RESPONSE_HEADER_DENYLIST = ['content-length', 'set-cookie'];
+
+/**
  * A patch accepts any subset of a snapshot. Defaults are dropped while mapping
  * the shape: an absent key must stay absent, otherwise merging one field would
  * overwrite its siblings with default values (a `{ url }` patch would reset the
