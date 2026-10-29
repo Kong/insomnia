@@ -50,8 +50,8 @@ import { database as db } from '../../common/database';
 import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
-import { writeFileWithinDir } from '../../main/safe-fs-write';
 import { assertSafeSyncedDoc } from '../../common/synced-doc-validation';
+import { writeFileWithinDir } from '../../main/safe-fs-write';
 import { assertRealPathContained } from './contained-path';
 import { SyncQueue } from './sync-queue';
 

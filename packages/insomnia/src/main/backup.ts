@@ -8,8 +8,8 @@ import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
 import { getClientString } from '../common/constants';
-import { assertPathWithinDir } from './safe-fs-write';
 import { isPathInsideDir } from './ipc/path-guard';
+import { assertPathWithinDir } from './safe-fs-write';
 
 export async function backupIfNewerVersionAvailable() {
   try {
