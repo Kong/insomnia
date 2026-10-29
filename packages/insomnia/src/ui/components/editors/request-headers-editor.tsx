@@ -8,6 +8,7 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
+import { useExampleEditorContext } from '../../context/example-editor-context';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -41,13 +42,16 @@ export const RequestHeadersEditor: FC<Props> = ({
   disableUserAgentHeader,
   onDescriptionToggle,
 }) => {
-  const patchRequest = useRequestPatcher();
+  const exampleEditor = useExampleEditorContext();
+  const routePatchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const isRequestGroup = requestType === 'RequestGroup';
-  const patcher = isRequestGroup ? patchRequestGroup : patchRequest;
+  const routePatcher = isRequestGroup ? patchRequestGroup : routePatchRequest;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
   const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
-  const id = isRequestGroup ? requestGroupId : requestId;
+  const routeId = isRequestGroup ? requestGroupId : requestId;
+  const id = exampleEditor ? exampleEditor.exampleId : routeId;
+  const patcher = exampleEditor ? exampleEditor.patchRequest : routePatcher;
   invariant(id, 'Request or RequestGroup ID is required');
   const showUserAgentReadOnly = !isRequestGroup && !headers.some(h => h.name.toLowerCase() === 'user-agent');
   const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs).filter(
@@ -60,12 +64,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       // If the user just removed their last User-Agent header, default the read-only row to
       // disabled rather than letting it silently start sending `insomnia/<version>`.
       if (!isRequestGroup && hadUserAgent && !hasUserAgent) {
-        patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
+        patcher(id, { headers: newHeaders, disableUserAgentHeader: true });
       } else {
         patcher(id, { headers: newHeaders });
       }
     },
-    [headers, id, isRequestGroup, patcher, patchRequest],
+    [headers, id, isRequestGroup, patcher],
   );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
@@ -136,7 +140,9 @@ export const RequestHeadersEditor: FC<Props> = ({
       readOnlyPairs={readOnlyPairs}
       readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
       onReadOnlyDisabledChange={
-        showUserAgentReadOnly ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled }) : undefined
+        showUserAgentReadOnly && !exampleEditor
+          ? (_name, disabled) => patcher(id, { disableUserAgentHeader: disabled })
+          : undefined
       }
       onDescriptionToggle={onDescriptionToggle}
     />

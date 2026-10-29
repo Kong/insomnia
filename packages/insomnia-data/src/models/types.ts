@@ -38,6 +38,7 @@ export type { ProtoDirectory } from './proto-directory';
 export type { ProtoFile } from './proto-file';
 export type { Cookie, CookieJar } from './cookie-jar';
 export type { Environment, EnvironmentKvPairData, UserUploadEnvironment } from './environment';
+export type { Example, ExamplePatch, ExampleRequest, ExampleResponse, ExampleSummary } from './example';
 // Keep these enums in the shared entrypoint: unlike type-only exports, enums also exist at runtime,
 // so they must be re-exported as values here to preserve a single import path for both type and value usage.
 export { EnvironmentType, EnvironmentKvPairDataType } from './environment';

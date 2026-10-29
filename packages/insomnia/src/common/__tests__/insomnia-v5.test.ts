@@ -256,6 +256,124 @@ spec:
       });
     });
 
+    it('exports examples nested under their request', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_example_test',
+        name: 'Example Test Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.request.create({
+        _id: 'req_example_test',
+        name: 'Example Test Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/users',
+        method: 'POST',
+        headers: [{ name: 'Content-Type', value: 'application/json' }],
+        body: { mimeType: 'application/json', text: '{"name": "foo"}' },
+        metaSortKey: 0,
+      });
+
+      await services.environment.create({
+        _id: 'env_example_test',
+        name: 'Base Environment',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.example.create({
+        _id: 'exp_example_test',
+        name: '200 OK',
+        parentId: 'req_example_test',
+        request: {
+          method: 'POST',
+          url: 'https://api.example.com/users',
+          parameters: [],
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          body: { mimeType: 'application/json', text: '{"name": "foo"}' },
+        },
+        response: {
+          statusCode: 201,
+          statusMessage: 'Created',
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          body: '{"id": "1"}',
+        },
+        metaSortKey: 0,
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection[0].examples).toEqual([
+        {
+          name: '200 OK',
+          meta: expect.objectContaining({ id: 'exp_example_test' }),
+          request: expect.objectContaining({
+            method: 'POST',
+            url: 'https://api.example.com/users',
+            body: { mimeType: 'application/json', text: '{"name": "foo"}', params: undefined },
+          }),
+          response: {
+            statusCode: 201,
+            statusMessage: 'Created',
+            headers: [{ name: 'Content-Type', value: 'application/json' }],
+            body: '{"id": "1"}',
+          },
+        },
+      ]);
+    });
+
+    it('imports request examples as Example resources', () => {
+      const v5Data = `
+type: collection.insomnia.rest/5.0
+name: Test Collection
+meta:
+  id: wrk_import_example
+collection:
+  - name: Users
+    meta:
+      id: req_import_example
+    method: POST
+    url: https://api.example.com/users
+    examples:
+      - name: 200 OK
+        meta:
+          id: exp_import_example
+        request:
+          method: POST
+          url: https://api.example.com/users
+          headers:
+            - name: Content-Type
+              value: application/json
+        response:
+          statusCode: 200
+          statusMessage: OK
+          headers:
+            - name: Content-Type
+              value: application/json
+          body: '{"id": "1"}'
+`;
+      const resources = importInsomniaV5Data(v5Data);
+      const example = resources.find(resource => resource.type === 'Example');
+      expect(example).toMatchObject({
+        _id: 'exp_import_example',
+        parentId: 'req_import_example',
+        name: '200 OK',
+        request: expect.objectContaining({
+          method: 'POST',
+          url: 'https://api.example.com/users',
+        }),
+        response: expect.objectContaining({
+          statusCode: 200,
+          body: '{"id": "1"}',
+        }),
+      });
+    });
+
     // Check exported key order for workspaces
     it.each(['collection', 'design', 'environment'] as const)(
       'exports environments with a stable key order for %s scope',
@@ -367,6 +485,169 @@ spec:
       const parsed = YAML.parse(result);
       expect(parsed.collection).toHaveLength(1);
       expect(parsed.collection[0].name).toBe('Request 1');
+    });
+
+    it('nests examples under their parent request when exporting a subset of requests', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_example_filter',
+        name: 'Example Filter Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_example_filter',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      const req1 = await services.request.create({
+        _id: 'req_example_filter_1',
+        name: 'Request 1',
+        parentId: workspace._id,
+        url: 'https://api.example.com/1',
+        method: 'GET',
+        metaSortKey: -200,
+      });
+      const req2 = await services.request.create({
+        _id: 'req_example_filter_2',
+        name: 'Request 2',
+        parentId: workspace._id,
+        url: 'https://api.example.com/2',
+        method: 'GET',
+        metaSortKey: -100,
+      });
+
+      await services.example.create({
+        _id: 'exp_example_filter_1',
+        name: '200 OK',
+        parentId: req1._id,
+        metaSortKey: -100,
+        request: { method: 'GET', url: 'https://api.example.com/1', parameters: [], headers: [], body: {} },
+        response: { statusCode: 200, statusMessage: 'OK', headers: [], body: 'one' },
+      });
+      await services.example.create({
+        _id: 'exp_example_filter_2',
+        name: '404 Not Found',
+        parentId: req2._id,
+        metaSortKey: -100,
+        request: { method: 'GET', url: 'https://api.example.com/2', parameters: [], headers: [], body: {} },
+        response: { statusCode: 404, statusMessage: 'Not Found', headers: [], body: 'two' },
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [req1._id],
+      });
+
+      const parsed = YAML.parse(result);
+      // Only the filtered request is exported, with its own examples nested;
+      // the excluded request's examples must not appear as stray top-level items.
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Request 1');
+      expect(parsed.collection[0].examples).toHaveLength(1);
+      expect(parsed.collection[0].examples[0].meta.id).toBe('exp_example_filter_1');
+
+      const flatTypes = (parsed.collection[0].examples as { _type?: string }[]).map(example => example._type);
+      expect(flatTypes).not.toContain('example');
+    });
+
+    it('roundtrips multiple examples through export → import → export', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_example_rt',
+        name: 'Example Roundtrip Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+
+      await services.environment.create({
+        _id: 'env_example_rt',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+
+      await services.request.create({
+        _id: 'req_example_rt',
+        name: 'Roundtrip Request',
+        parentId: workspace._id,
+        url: 'https://api.example.com/users/:id',
+        method: 'POST',
+        metaSortKey: 0,
+      });
+
+      await services.example.create({
+        _id: 'exp_example_rt_1',
+        name: '200 OK',
+        parentId: 'req_example_rt',
+        metaSortKey: -200,
+        request: {
+          method: 'POST',
+          url: 'https://api.example.com/users/:id',
+          parameters: [],
+          pathParameters: [{ name: 'id', value: '1' }],
+          headers: [],
+          body: {},
+        },
+        response: { statusCode: 200, statusMessage: 'OK', headers: [], body: 'first' },
+      });
+      await services.example.create({
+        _id: 'exp_example_rt_2',
+        name: '404 Not Found',
+        parentId: 'req_example_rt',
+        metaSortKey: -100,
+        request: {
+          method: 'POST',
+          url: 'https://api.example.com/users/:id',
+          parameters: [],
+          pathParameters: [{ name: 'id', value: '2' }],
+          headers: [],
+          body: {},
+        },
+        response: { statusCode: 404, statusMessage: 'Not Found', headers: [], body: 'second' },
+      });
+
+      const firstExport = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+      });
+
+      // Import the export back (mirroring import.ts: strip `_type`, give the
+      // workspace its project parent) and re-export from the imported data.
+      const importedResources = importInsomniaV5Data(firstExport).map(resource => {
+        const { _type, ...model } = resource as (typeof resource) & { _type?: string };
+        return model;
+      });
+      const importedWorkspace = importedResources.find(resource => resource.type === 'Workspace');
+      expect(importedWorkspace).toBeDefined();
+      // The import keeps the source ids, so drop the originals (cascading to
+      // their descendants) before inserting the imported data.
+      await services.workspace.remove(workspace);
+      for (const resource of importedResources) {
+        await db.insert(resource.type === 'Workspace' ? { ...resource, parentId: 'proj_test' } : resource);
+      }
+
+      const secondExport = await getInsomniaV5DataExport({
+        workspaceId: importedWorkspace!._id,
+        includePrivateEnvironments: false,
+      });
+
+      const first = YAML.parse(firstExport);
+      const second = YAML.parse(secondExport);
+      // The roundtrip must be lossless, including example metaSortKey and
+      // request pathParameters.
+      expect(second.collection).toEqual(first.collection);
+      expect(second.collection[0].examples).toHaveLength(2);
+      expect(second.collection[0].examples.map((example: { meta: { sortKey: number } }) => example.meta.sortKey)).toEqual([
+        -200,
+        -100,
+      ]);
+      expect(second.collection[0].examples.map((example: { request: { pathParameters?: unknown[] } }) => example.request.pathParameters)).toEqual([
+        [{ name: 'id', value: '1' }],
+        [{ name: 'id', value: '2' }],
+      ]);
     });
 
     it('handles design workspace correctly', async () => {

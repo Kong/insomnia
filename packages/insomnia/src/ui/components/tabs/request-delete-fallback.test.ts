@@ -1,7 +1,7 @@
 import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
-import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
+import { getExampleDeleteFallbackUrl, getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
 import type { BaseTab } from './tab';
 
 const makeTab = (overrides: Partial<BaseTab> = {}): BaseTab => ({
@@ -34,6 +34,32 @@ describe('isRequestLikeDocType', () => {
     models.unitTestSuite.type,
   ])('returns false for %s', docType => {
     expect(isRequestLikeDocType(docType)).toBe(false);
+  });
+});
+
+describe('getExampleDeleteFallbackUrl', () => {
+  it('points at the parent request, keyed off the closing tab workspace', () => {
+    const closingTab = makeTab({ type: 'example', id: 'exp_1', workspaceId: 'wrk_other' });
+
+    const url = getExampleDeleteFallbackUrl({
+      parentId: 'req_1',
+      closingTab,
+      organizationId: 'org_1',
+      projectId: 'proj_1',
+    });
+
+    expect(url).toBe('/organization/org_1/project/proj_1/workspace/wrk_other/debug/request/req_1');
+  });
+
+  it('returns undefined without a closing tab or a parent request', () => {
+    const closingTab = makeTab({ type: 'example', id: 'exp_1' });
+
+    expect(
+      getExampleDeleteFallbackUrl({ closingTab, organizationId: 'org_1', projectId: 'proj_1' }),
+    ).toBeUndefined();
+    expect(
+      getExampleDeleteFallbackUrl({ parentId: 'req_1', organizationId: 'org_1', projectId: 'proj_1' }),
+    ).toBeUndefined();
   });
 });
 

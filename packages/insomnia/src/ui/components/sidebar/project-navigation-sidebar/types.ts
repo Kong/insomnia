@@ -1,4 +1,12 @@
-import type { BaseModel, GitRepository, Project, RequestGroup, Workspace, WorkspaceMeta } from 'insomnia-data';
+import type {
+  BaseModel,
+  ExampleSummary,
+  GitRepository,
+  Project,
+  RequestGroup,
+  Workspace,
+  WorkspaceMeta,
+} from 'insomnia-data';
 
 import type { InsomniaFile } from '~/common/project';
 import type { Child } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -57,12 +65,28 @@ export interface CollectionChildFlatItem extends BaseFlatItem<Child['doc']> {
   ancestors?: string[];
   level: number;
   pinned: boolean;
+  // HTTP requests only: whether the request has examples in the sidebar.
+  // Their collapsed state lives on the shared `collapsed` field, the same one
+  // folders use for their children.
+  hasExamples?: boolean;
 }
 
 export interface PinnedRequestFlatItem extends Omit<CollectionChildFlatItem, 'kind'> {
   kind: 'pinnedRequest';
   isFirstPinned: boolean;
   isLastPinned: boolean;
+}
+
+// Example child node rendered under its parent HTTP request
+export interface ExampleFlatItem extends Omit<BaseFlatItem<ExampleSummary>, 'collapsed'> {
+  kind: 'example';
+  // parent project
+  project: ProjectWithGitRepository;
+  // parent workspace
+  workspace: Workspace;
+  // parent request id
+  requestId: string;
+  level: number;
 }
 
 export interface PinnedHeaderFlatItem {
@@ -86,6 +110,7 @@ export type FlatItem =
   | ProjectFlatItem
   | WorkspaceFlatItem
   | CollectionChildFlatItem
+  | ExampleFlatItem
   | UnsyncedWorkspaceFlatItem
   | PinnedRequestFlatItem
   | PinnedHeaderFlatItem

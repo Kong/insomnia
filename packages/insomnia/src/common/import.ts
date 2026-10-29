@@ -49,6 +49,7 @@ export type AllExportTypes =
   | 'socketio_payload'
   | 'mock'
   | 'mock_route'
+  | 'example'
   | 'request_group'
   | 'unit_test_suite'
   | 'unit_test'
@@ -174,6 +175,7 @@ export const MODELS_BY_EXPORT_TYPE: Record<AllExportTypes, AllTypes> = {
   socketio_request: 'SocketIORequest',
   mock: 'MockServer',
   mock_route: 'MockRoute',
+  example: 'Example',
   grpc_request: 'GrpcRequest',
   request_group: 'RequestGroup',
   unit_test_suite: 'UnitTestSuite',
