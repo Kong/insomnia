@@ -3,6 +3,7 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { reparentSyncDelta } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -17,12 +18,12 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-  const currentBranch = await window.main.sync.getCurrentBranchName(workspaceId);
+  const currentBranch = await sync.getCurrentBranchName(workspaceId);
 
   try {
     invariant(project.remoteId, 'Project is not remote');
-    await window.main.sync.checkout(workspaceId, [], branch);
-    const delta = await window.main.sync.pull(workspaceId, {
+    await sync.checkout(workspaceId, [], branch);
+    const delta = await sync.pull(workspaceId, {
       candidates: [],
       teamId: project.parentId,
       teamProjectId: project.remoteId,
@@ -32,7 +33,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(reparentSyncDelta(delta, projectId));
   } catch (err) {
-    await window.main.sync.checkout(workspaceId, [], currentBranch);
+    await sync.checkout(workspaceId, [], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
     return {
       error: errorMessage,

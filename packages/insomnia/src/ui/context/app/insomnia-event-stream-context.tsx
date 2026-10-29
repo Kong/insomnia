@@ -15,6 +15,7 @@ import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
 import { avatarImageCache } from '~/ui/hooks/image-cache';
 import { useInvalidateAccountData } from '~/ui/hooks/use-account-server-data';
 import { useInvalidateOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { sync } from '~/ui/ipc';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -74,7 +75,7 @@ const isSameWorkspaceWithRemote = async (workspaceId: string | undefined, remote
   if (!workspaceId || !remoteWorkspaceId) {
     return false;
   }
-  const currentBackendProject = await window.main.sync.getActiveBackendProject(workspaceId);
+  const currentBackendProject = await sync.getActiveBackendProject(workspaceId);
   if (
     currentBackendProject &&
     currentBackendProject?.id === remoteWorkspaceId &&
@@ -186,7 +187,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
               invalidateAccountData();
-            } else if (event.type === 'StorageRuleChanged' && (event.team.startsWith('org_') || event.team.startsWith('team_'))) {
+            } else if (
+              event.type === 'StorageRuleChanged' &&
+              (event.team.startsWith('org_') || event.team.startsWith('team_'))
+            ) {
               invalidateStorageRule(event.team);
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
               syncProjectsSubmit({

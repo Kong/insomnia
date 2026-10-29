@@ -2,6 +2,7 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { getSyncItems, remoteBackendProjectsCache, remoteBranchesCache, remoteCompareCache } from '~/ui/sync-utils';
 import { createFetcherLoadHook, createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -14,22 +15,20 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
     const { syncItems } = await getSyncItems({ workspaceId });
-    const localBranches = (await window.main.sync.getBranchNames(workspaceId)).sort();
-    const currentBranch = await window.main.sync.getCurrentBranchName(workspaceId);
-    const history = (await window.main.sync.getHistory(workspaceId)).sort((a, b) => (b.created > a.created ? 1 : -1));
-    const historyCount = await window.main.sync.getHistoryCount(workspaceId);
-    const status = await window.main.sync.status(workspaceId, syncItems);
+    const localBranches = (await sync.getBranchNames(workspaceId)).sort();
+    const currentBranch = await sync.getCurrentBranchName(workspaceId);
+    const history = (await sync.getHistory(workspaceId)).sort((a, b) => (b.created > a.created ? 1 : -1));
+    const historyCount = await sync.getHistoryCount(workspaceId);
+    const status = await sync.status(workspaceId, syncItems);
 
     let remoteBranches: string[] = [];
     let compare = { ahead: 0, behind: 0 };
     try {
-      remoteBranches = (
-        remoteBranchesCache[workspaceId] || (await window.main.sync.getRemoteBranchNames(workspaceId))
-      ).sort();
-      compare = remoteCompareCache[workspaceId] || (await window.main.sync.compareRemoteBranch(workspaceId));
+      remoteBranches = (remoteBranchesCache[workspaceId] || (await sync.getRemoteBranchNames(workspaceId))).sort();
+      compare = remoteCompareCache[workspaceId] || (await sync.compareRemoteBranch(workspaceId));
       const remoteBackendProjects =
         remoteBackendProjectsCache[project.remoteId] ||
-        (await window.main.sync.remoteBackendProjects({
+        (await sync.remoteBackendProjects({
           teamId: project.parentId,
           teamProjectId: project.remoteId,
         }));
@@ -75,9 +74,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    const remoteBranches = (await window.main.sync.getRemoteBranchNames(workspaceId)).sort();
-    const compare = await window.main.sync.compareRemoteBranch(workspaceId);
-    const remoteBackendProjects = await window.main.sync.remoteBackendProjects({
+    const remoteBranches = (await sync.getRemoteBranchNames(workspaceId)).sort();
+    const compare = await sync.compareRemoteBranch(workspaceId);
+    const remoteBackendProjects = await sync.remoteBackendProjects({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });
