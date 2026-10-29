@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { QueryClient, useMutation } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import React, { act, StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,9 +18,9 @@ vi.mock('~/ui/organization-utils', () => ({
   findMigrationTargetSpaceId: vi.fn(() => 'org_target'),
   migrateProjectsUnderOrganization: vi.fn(),
 }));
-vi.mock('~/ui/context/app/server-data-context', () => ({ useServerDataQueryClient: () => queryClient }));
 vi.mock('~/ui/hooks/use-query', () => ({
   useServerMutation: (options: Parameters<typeof useMutation>[0]) => useMutation(options, queryClient),
+  useServerQuery: (options: Parameters<typeof useQuery>[0]) => useQuery(options, queryClient),
 }));
 
 import { services } from 'insomnia-data';
@@ -50,7 +50,7 @@ const render = async (organizationId: string) => {
   await flush();
 };
 
-// TanStack Query delivers mutation results through its batched (setTimeout) notifier.
+// TanStack Query delivers query results through its batched (setTimeout) notifier.
 const flush = () => act(() => new Promise(resolve => setTimeout(resolve, 0)));
 
 describe('useStartupSync', () => {
@@ -121,14 +121,18 @@ describe('useStartupSync', () => {
     expect(result.current?.status).toBe('idle');
   });
 
-  it('reports an error without retrying by itself, and a retry runs the full task set again', async () => {
+  it('reports an error without retrying by itself, even on remount, and a retry runs the full task set again', async () => {
     vi.mocked(syncProjects).mockRejectedValueOnce(new Error('network'));
 
     await render('org_1');
     expect(result.current?.status).toBe('error');
 
     await render('org_1');
+    act(() => root.unmount());
+    root = createRoot(container);
+    await render('org_1');
     expect(syncProjects).toHaveBeenCalledTimes(1);
+    expect(result.current?.status).toBe('error');
 
     await act(async () => result.current?.retry());
     await flush();
