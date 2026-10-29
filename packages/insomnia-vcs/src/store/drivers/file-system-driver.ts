@@ -65,14 +65,15 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   async removeItem(key: string) {
-    await fs.unlink(await this._getKeyPath(key));
+    // Don't follow the leaf: unlinking a planted symlink removes the link, not its target
+    await fs.unlink(await this._getKeyPath(key, false));
   }
 
   async clear() {
     const files = await fs.readdir(this._directory);
 
     for (const fileName of files) {
-      await fs.unlink(await this._getKeyPath(fileName));
+      await fs.unlink(await this._getKeyPath(fileName, false));
     }
   }
 
@@ -97,7 +98,12 @@ export default class FileSystemDriver implements BaseDriver {
           }
 
           const p = path.join(dir, name);
-          const isDir = (await fs.stat(p)).isDirectory();
+          // The store never creates symlinks, so one here was planted and could point outside it
+          const entry = await fs.lstat(p);
+          if (entry.isSymbolicLink()) {
+            continue;
+          }
+          const isDir = entry.isDirectory();
 
           if (isDir && recursive) {
             const more = await next(p);
@@ -127,7 +133,7 @@ export default class FileSystemDriver implements BaseDriver {
    * Resolve a store key to an absolute path, guaranteeing the result stays inside this._directory.
    * Keys can embed server-supplied identifiers, so they are treated as untrusted.
    */
-  async _getKeyPath(key: string) {
+  async _getKeyPath(key: string, followLeaf = true) {
     if (typeof key !== 'string' || key.includes('\0')) {
       throw new Error('Invalid store key');
     }
@@ -157,6 +163,17 @@ export default class FileSystemDriver implements BaseDriver {
           throw err;
         }
         ancestor = parent;
+      }
+    }
+
+    // A leaf symlink would be followed by stat/read/write, so it must resolve inside the store too
+    if (followLeaf) {
+      try {
+        this._assertInside(realBase, await fs.realpath(p), key);
+      } catch (err) {
+        if (!(err && typeof err === 'object' && 'code' in err && err.code === 'ENOENT')) {
+          throw err;
+        }
       }
     }
 
