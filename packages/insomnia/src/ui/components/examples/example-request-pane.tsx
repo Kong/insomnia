@@ -4,19 +4,23 @@ import { models } from 'insomnia-data';
 import { deconstructQueryStringToParams } from 'insomnia-data/common';
 import { Fragment } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { useParams } from 'react-router';
 
 import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MethodSelector } from '~/ui/components/dropdowns/method-selector';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
 import { BodyEditor } from '~/ui/components/editors/body/body-editor';
 import { readOnlyHttpPairs, RequestHeadersEditor } from '~/ui/components/editors/request-headers-editor';
 import { RequestParametersEditor } from '~/ui/components/editors/request-parameters-editor';
+import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { MarkdownEditor } from '~/ui/components/markdown-editor';
 import { Pane, PaneHeader } from '~/ui/components/panes/pane';
 import { RenderedQueryString } from '~/ui/components/rendered-query-string';
 import { useExampleEditorContext } from '~/ui/context/example-editor-context';
+import { useCreateRequestFromExample } from '~/ui/hooks/use-example-mutations';
 import { useUpdateExample } from '~/ui/hooks/use-example-mutations';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 
@@ -27,13 +31,42 @@ interface ExampleRequestPaneProps {
   request: Request;
   environmentId: string;
   settings: Settings;
+  canTryIt: boolean;
+  onTryIt: () => void;
 }
 
-export const ExampleRequestPane = ({ example, request, environmentId, settings }: ExampleRequestPaneProps) => {
+export const ExampleRequestPane = ({
+  example,
+  request,
+  environmentId,
+  settings,
+  canTryIt,
+  onTryIt,
+}: ExampleRequestPaneProps) => {
   const updateExample = useUpdateExample();
   const patchExampleRequest = useExampleEditorContext()?.patchRequest;
   const patchSettings = useSettingsPatcher();
+  const createRequestFromExampleMutation = useCreateRequestFromExample();
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const requestId = example._id;
+
+  useDocBodyKeyboardShortcuts({
+    request_send: canTryIt ? onTryIt : () => {},
+  });
+
+  const createRequestFromExample = () => {
+    createRequestFromExampleMutation.mutate({
+      exampleId: example._id,
+      parentId: example.parentId,
+      organizationId,
+      projectId,
+      workspaceId,
+    });
+  };
 
   const pathParameters = getCombinedPathParametersFromUrl(request.url, request.pathParameters || []);
   const parametersCount = pathParameters.length + request.parameters.filter(p => !p.disabled).length;
@@ -87,6 +120,40 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
               defaultValue={request.url}
               onChange={url => patchExampleRequest?.(requestId, { url })}
             />
+            {/* Same nesting as RequestUrlBar: the send group lives inside the
+                URL row, so the buttons keep the row's height (30px), not the
+                stretched header height. */}
+            <div className="flex self-stretch">
+              <button
+                onClick={onTryIt}
+                disabled={!canTryIt}
+                title={canTryIt ? undefined : 'Try it is only supported for plain HTTP requests'}
+                className="rounded-l-sm bg-(--color-surprise) px-(--padding-md) text-(--color-font-surprise) disabled:opacity-50"
+                type="button"
+              >
+                Try it
+              </button>
+              <Dropdown
+                key="dropdown"
+                className="flex"
+                aria-label="Example options"
+                triggerButton={
+                  <Button
+                    className="rounded-r-sm bg-(--color-surprise) px-1 text-(--color-font-surprise)"
+                    style={{
+                      borderTopRightRadius: '0.125rem',
+                      borderBottomRightRadius: '0.125rem',
+                    }}
+                  >
+                    <i className="fa fa-caret-down" />
+                  </Button>
+                }
+              >
+                <DropdownItem aria-label="create-request-from-example">
+                  <ItemContent icon="plus" label="Create Request from Example" onClick={createRequestFromExample} />
+                </DropdownItem>
+              </Dropdown>
+            </div>
           </div>
         </div>
       </PaneHeader>
@@ -124,22 +191,10 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
             <span>Auth</span>
             {getAuthObjectOrNull(request.authentication)?.type &&
               getAuthObjectOrNull(request.authentication)?.type !== 'none' && (
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
-                  <span className="h-2 w-2 rounded bg-green-500" />
-                </span>
-              )}
-          </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="auth"
-          >
-            <span>Auth</span>
-            {getAuthObjectOrNull(request.authentication)?.type &&
-              getAuthObjectOrNull(request.authentication)?.type !== 'none' && (
-                <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
-                  <span className="h-2 w-2 rounded bg-green-500" />
-                </span>
-              )}
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
+                <span className="h-2 w-2 rounded bg-green-500" />
+              </span>
+            )}
           </Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
@@ -216,9 +271,6 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
               </div>
             )}
           </div>
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
-          <AuthWrapper authentication={request.authentication} />
         </TabPanel>
         <TabPanel className="flex w-full flex-1 flex-col" id="content-type">
           <BodyEditor key={requestId} request={request} environmentId={environmentId} />

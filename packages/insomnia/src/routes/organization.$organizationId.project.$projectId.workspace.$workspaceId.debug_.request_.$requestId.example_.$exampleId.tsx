@@ -1,4 +1,5 @@
 import type { Example, ExampleRequest, Request, Settings } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback, useMemo } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { href, useNavigate, useParams } from 'react-router';
@@ -13,6 +14,7 @@ import { ExampleEditorContext } from '~/ui/context/example-editor-context';
 import { useExampleQuery } from '~/ui/hooks/use-example-data';
 import { isExampleDeletedInSession } from '~/ui/hooks/use-example-mutations';
 import { useUpdateExample } from '~/ui/hooks/use-example-mutations';
+import { useTryExample } from '~/ui/hooks/use-example-try-it';
 import { useNotFoundRedirect } from '~/ui/hooks/use-not-found-redirect';
 import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 
@@ -73,6 +75,7 @@ const ExampleRoute = () => {
     // Deleting the open example is not a stale URL; do not warn about it.
     silent: isExampleDeletedInSession(exampleId),
   });
+  const tryExample = useTryExample();
 
   const direction = usePaneDirection(settings.forceVerticalLayout);
 
@@ -112,6 +115,13 @@ const ExampleRoute = () => {
     [example, patchRequest, request],
   );
 
+  const tryIt = useCallback(() => {
+    services.stats.incrementExecutedRequests();
+    tryExample.mutate({ requestId, exampleId });
+  }, [exampleId, requestId, tryExample]);
+
+  const isSending = tryExample.isPending;
+
   if (exampleQuery.isError) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-(--hl)">
@@ -136,8 +146,14 @@ const ExampleRoute = () => {
     );
   }
 
-  if (!example || !parentRequest || !request || !exampleEditorContextValue) {
-    // Pending first paint (cache miss on a deep link) or a stale URL that the
+  if (
+    !example ||
+    !parentRequest ||
+    !request ||
+    !exampleEditorContextValue ||
+    example.parentId !== requestId
+  ) {
+    // Pending first paint (cache miss on a deep link), or a stale URL that the
     // effect above is redirecting away from.
     return (
       <div className="flex h-full w-full items-center justify-center text-(--hl)">
@@ -159,6 +175,8 @@ const ExampleRoute = () => {
               request={request}
               environmentId={activeEnvironment ? activeEnvironment._id : ''}
               settings={settings}
+              canTryIt={models.example.canHostExamples(parentRequest)}
+              onTryIt={tryIt}
             />
           </Panel>
           <PanelResizeHandle
@@ -168,6 +186,13 @@ const ExampleRoute = () => {
             <ExampleResponsePane
               key={`${example._id}::response`}
               example={example}
+              tryItResult={
+                // The mutation outlives the route params: opening another example
+                // of the same request must not show (or apply) the previous
+                // example's result.
+                tryExample.data && tryExample.variables?.exampleId === example._id ? tryExample.data : null
+              }
+              isSending={isSending}
             />
           </Panel>
         </PanelGroup>

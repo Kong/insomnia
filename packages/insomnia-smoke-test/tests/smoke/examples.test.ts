@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('Examples', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  test('Add, open, duplicate and delete an example', async ({ page, app, insomnia }) => {
+  test('Add, open, save-as and delete an example', async ({ page, app, insomnia }) => {
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.getByLabel('Import').click();
@@ -24,33 +24,20 @@ test.describe('Examples', () => {
     await exampleNode.click();
     await expect.soft(page).toHaveURL(/\/example\/exp_/);
 
-    // Auth is part of the example snapshot and is editable from the example pane
-    await page.getByRole('tab', { name: 'Auth' }).click();
-    await page.getByRole('button', { name: /Change Authentication type/ }).click();
-    await page.getByRole('option', { name: 'Basic', exact: true }).click();
-    await page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror textarea').fill('example-user');
-    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
-    await page.getByTestId('example-node-200 OK').first().click();
-    await page.getByRole('tab', { name: 'Auth' }).click();
+    // Try it: send the example snapshot through the live endpoint; the Actual
+    // view shows the real response and can be applied onto the example
+    await page.getByRole('button', { name: 'Try it' }).click();
+    await expect.soft(page.getByRole('button', { name: 'Update Example Response' })).toBeVisible({ timeout: 30_000 });
+    await expect.soft(page.getByTestId('response-status-tag')).toContainText('200');
+    await page.getByRole('button', { name: 'Update Example Response' }).click();
+
+    // Applying switches back to the example view; the canned headers now hold
+    // the live response's headers (the headers editor is controlled by the
+    // revalidated example document)
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Headers' }).click();
     await expect
-      .soft(page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror-code'))
-      .toContainText('example-user');
-
-    // Collapse the request's examples section; the example nodes disappear until expanded again
-    const exampleToggle = page.getByTestId('example-toggle-example http');
-    await expect.soft(exampleToggle).toBeVisible();
-    await exampleToggle.click();
-    await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(0);
-    await exampleToggle.click();
-    await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(1);
-
-    // Duplicate the example via its context menu
-    await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
-    await page.getByRole('menuitemradio', { name: 'Duplicate' }).click();
-    await page.getByRole('dialog').locator('#prompt-input').fill('Duplicated Example');
-    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await expect.soft(page.getByTestId('example-node-Duplicated Example')).toBeVisible();
-    await expect.soft(page.getByTestId('example-node-Duplicated Example')).toHaveCount(1);
+      .soft(page.getByTestId('response-pane').getByRole('tabpanel'))
+      .toContainText('X-Powered-By', { timeout: 15_000 });
 
     // Save the real response as a second example
     await insomnia.navigationSidebar.clickRequestOrFolder('example http');
@@ -63,7 +50,44 @@ test.describe('Examples', () => {
     await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
     await page.getByRole('menuitemradio', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+    await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(1);
+
+    // Duplicate the remaining example via its context menu
+    await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
+    await page.getByRole('menuitemradio', { name: 'Duplicate' }).click();
+    await page.getByRole('dialog').locator('#prompt-input').fill('Duplicated Example');
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+    await expect.soft(page.getByTestId('example-node-Duplicated Example')).toBeVisible();
+    await expect.soft(page.getByTestId('example-node-Duplicated Example')).toHaveCount(1);
+
+    // Collapse the request's examples section; the example nodes disappear until expanded again
+    const exampleToggle = page.getByTestId('example-toggle-example http');
+    await expect.soft(exampleToggle).toBeVisible();
+    await exampleToggle.click();
     await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(0);
+    await exampleToggle.click();
+    await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(1);
+
+    // Auth is part of the example snapshot and is editable from the example pane
+    await page.getByTestId('example-node-200 OK').first().click();
+    await page.getByRole('tab', { name: 'Auth' }).click();
+    await page.getByRole('button', { name: /Change Authentication type/ }).click();
+    await page.getByRole('option', { name: 'Basic', exact: true }).click();
+    await page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror textarea').fill('example-user');
+    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
+    await page.getByTestId('example-node-200 OK').first().click();
+    await page.getByRole('tab', { name: 'Auth' }).click();
+    await expect
+      .soft(page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror-code'))
+      .toContainText('example-user');
+
+    // Promote an example into a standalone request via its context menu
+    await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
+    await page.getByRole('menuitemradio', { name: 'Create Request from Example' }).click();
+    // The created request is a normal request: the example editor is left and
+    // the request pane with its Send button is shown.
+    await expect.soft(page).toHaveURL(/\/debug\/request\/req_/);
+    await expect.soft(page.getByRole('button', { name: 'Send' })).toBeVisible();
 
     // Deleting the example that is currently open lands on the parent request
     // and does not warn that the example is "not found"
@@ -75,14 +99,6 @@ test.describe('Examples', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
     await expect.soft(page).toHaveURL(/\/debug\/request\/req_/);
     await expect.soft(page.getByText('Example not found')).toHaveCount(0);
-
-    // Promote an example into a standalone request via its context menu
-    await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
-    await page.getByRole('menuitemradio', { name: 'Create Request from Example' }).click();
-    // The created request is a normal request: the example editor is left and
-    // the request pane with its Send button is shown.
-    await expect.soft(page).toHaveURL(/\/debug\/request\/req_/);
-    await expect.soft(page.getByRole('button', { name: 'Send' })).toBeVisible();
 
     // Drag-to-reorder between sibling examples is not covered here: react-aria
     // uses native HTML5 drag events, which Playwright cannot synthesize with
