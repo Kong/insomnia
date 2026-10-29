@@ -1,6 +1,7 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
-import { parse as urlParse } from 'node:url';
+import { parse as urlParse,pathToFileURL } from 'node:url';
 
 import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
@@ -10,6 +11,33 @@ import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
 import { getApiBaseURL } from '../common/constants';
 import { parseResolvedProxy, shouldBypassProxyForHost } from './network/libcurl-promise';
 import { resolveDbByKey } from './templating-worker-database';
+
+/**
+ * Resolve the on-disk file served for a request path of the app's custom origin.
+ * The pathname is decoded here (the later file:// fetch would otherwise decode %2f / %5c
+ * after path.join has already run) and the result must stay inside rootDir.
+ * Returns null when the path is malformed or escapes rootDir.
+ */
+export function resolveClientFilePath(rootDir: string, pathname: string): string | null {
+  if (!pathname.startsWith('/assets')) {
+    return path.join(rootDir, 'index.html');
+  }
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  if (decoded.includes('\0') || decoded.includes('\\')) {
+    return null;
+  }
+  const resolved = path.resolve(rootDir, `.${decoded}`);
+  const relative = path.relative(rootDir, resolved);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+    return null;
+  }
+  return resolved;
+}
 
 export interface RegisterProtocolOptions {
   scheme: string;
@@ -140,10 +168,24 @@ export async function registerInsomniaProtocols() {
       const url = new URL(request.url);
       if (url.hostname === 'insomnia-app.local') {
         const rootDir = path.resolve(__dirname, 'client');
-        const filePath = path.join(rootDir, url.pathname.startsWith('/assets') ? url.pathname : 'index.html');
+        const filePath = resolveClientFilePath(rootDir, url.pathname);
+        if (!filePath) {
+          return new Response('Not found', { status: 404 });
+        }
+        // Symlinks must not let an in-tree path point outside rootDir
+        try {
+          const realRoot = fs.realpathSync(rootDir);
+          const realFile = fs.realpathSync(filePath);
+          const rel = path.relative(realRoot, realFile);
+          if (rel.startsWith('..') || path.isAbsolute(rel)) {
+            return new Response('Not found', { status: 404 });
+          }
+        } catch {
+          // file does not exist: let the fetch below produce its normal error
+        }
         console.log(`Loading index for: ${url.pathname} from: ${filePath}`);
 
-        return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
+        return await net.fetch(pathToFileURL(filePath).href, { bypassCustomProtocolHandlers: true });
       }
 
       // Allow Google Fonts to bypass the custom https protocol handler.

@@ -1,10 +1,11 @@
-import type { RemoteProject } from 'insomnia-data';
+import type { BaseModel, RemoteProject } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import type { BackendProjectWithTeam, VCS } from 'insomnia-vcs';
 
 import { interceptAccessError } from '~/sync/access-error';
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
+import { assertSafeSyncedDoc } from '../../common/synced-doc-validation';
 
 interface Options {
   vcs: VCS;
@@ -27,6 +28,11 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
+    assertSafeSyncedDoc({
+      _id: backendProject.rootDocumentId,
+      type: models.workspace.type,
+      parentId: remoteProject._id,
+    });
     const workspace = await services.workspace.upsert({
       ...models.workspace.init(),
       _id: backendProject.rootDocumentId,
@@ -49,10 +55,17 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
     projectId: remoteProject._id,
   }); // There won't be any existing docs since it's a new pull
 
+  // @ts-expect-error -- TSCONVERSION
+  const pulledDocs: BaseModel[] = (await vcs.allDocuments()) || [];
+  // Remote docs are teammate-controlled and their ids later feed filesystem paths. Validate every doc
+  // up front so a malformed one is rejected before anything is written (no partial apply).
+  for (const doc of pulledDocs) {
+    assertSafeSyncedDoc(doc);
+  }
+
   const flushId = await database.bufferChanges();
   let workspaceId;
-  // @ts-expect-error -- TSCONVERSION
-  for (const doc of (await vcs.allDocuments()) || []) {
+  for (const doc of pulledDocs) {
     // When we pull a BackendProject we need to update the parent ID of the workspace so that it appears inside.
     // There can't be more than one workspace.
     if (models.workspace.isWorkspace(doc)) {
