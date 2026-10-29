@@ -1,14 +1,16 @@
 import type { ResponseTimelineEntry } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+import { useFetcher, useParams } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useCreateExample } from '~/ui/hooks/use-example-mutations';
 
+import { LARGE_EXAMPLE_RESPONSE_MB } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
 import {
@@ -21,7 +23,8 @@ import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
 import { ErrorBoundary } from '../error-boundary';
-import { showError } from '../modals';
+import { showError, showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -46,6 +49,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
+  const createExampleMutation = useCreateExample();
   const { settings } = useRootLoaderData()!;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const handleSetFilter = async (responseFilter: string) => {
@@ -126,6 +130,12 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const testResultCountTagColor =
     totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-(--hl-sm)';
 
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+
   if (!activeRequest) {
     return <BlankPane type="response" />;
   }
@@ -147,6 +157,92 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
 
   const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
 
+  const saveAsExample = async () => {
+    try {
+      const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
+      const isSensitive = (name: string) => ['authorization', 'proxy-authorization'].includes(name.toLowerCase());
+      const sensitiveHeaders = activeResponse.headers.filter(header => isSensitive(header.name));
+
+      const createExample = () => {
+        const body = bodyBuffer ? bodyBufferToUtf8(bodyBuffer) : '';
+        createExampleMutation.mutate({
+          workspaceId,
+          projectId,
+          organizationId,
+          requestId: activeRequest._id,
+          response: {
+            statusCode: activeResponse.statusCode,
+            statusMessage: activeResponse.statusMessage,
+            headers: activeResponse.headers
+              // Session state must not be stored in (or replayed from) a
+              // canned example.
+              .filter(
+                header =>
+                  !models.example.EXAMPLE_RESPONSE_HEADER_DENYLIST.includes(header.name.toLowerCase()),
+              )
+              .map(header => ({ name: header.name, value: header.value })),
+            body,
+          },
+        });
+      };
+
+      // Collect every reason that warrants a confirmation before saving.
+      // Examples are stored as part of the collection, so a large response body
+      // bloats git history and exports.
+      const bodyBytes = bodyBuffer?.length ?? 0;
+      const isLargeBody = bodyBytes > LARGE_EXAMPLE_RESPONSE_MB * 1024 * 1024;
+      // Detect binary / non-UTF-8 bodies: force-decoding them to UTF-8 would
+      // silently mojibake the stored example body.
+      let isNonUtf8 = false;
+      if (typeof bodyBuffer !== 'string' && bodyBuffer !== undefined) {
+        try {
+          new TextDecoder('utf-8', { fatal: true }).decode(bodyBuffer);
+        } catch {
+          isNonUtf8 = true;
+        }
+      }
+
+      if (isLargeBody || sensitiveHeaders.length > 0 || isNonUtf8) {
+        showModal(AskModal, {
+          title: 'Save response as example?',
+          yesText: 'Save as Example',
+          noText: 'Cancel',
+          message: (
+            <div className="flex flex-col gap-2 text-left">
+              {isLargeBody && (
+                <p>
+                  This response body is {(bodyBytes / 1024 / 1024).toFixed(1)} MB (over the {LARGE_EXAMPLE_RESPONSE_MB}{' '}
+                  MB guideline). The full body is stored in the example and will be included in Git history and
+                  exports.
+                </p>
+              )}
+              {sensitiveHeaders.length > 0 && (
+                <p>
+                  The response contains sensitive header
+                  {sensitiveHeaders.length > 1 ? 's' : ''}{' '}
+                  {sensitiveHeaders.map(header => header.name).join(', ')}, which will be stored in the example and
+                  included in Git history and exports.
+                </p>
+              )}
+              {isNonUtf8 && <p>The response body is not valid UTF-8 text; saving it will produce mojibake.</p>}
+              <p className="text-sm text-(--hl)">You can still save it if you need the complete response on record.</p>
+            </div>
+          ),
+          onDone: async confirmed => {
+            if (confirmed) {
+              createExample();
+            }
+          },
+        });
+        return;
+      }
+
+      createExample();
+    } catch (err) {
+      showError(err instanceof Error ? err : new Error(String(err)));
+    }
+  };
+
   return (
     <Pane type="response">
       {!activeResponse ? null : (
@@ -156,11 +252,25 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
-          <ResponseHistoryDropdown
-            activeResponse={activeResponse}
-            responses={responses}
-            requestVersions={requestVersions}
-          />
+          <div className="flex shrink-0 items-center gap-1">
+            {models.example.canHostExamples(activeRequest) && (
+              <button
+                type="button"
+                className="btn btn--super-compact tall"
+                data-testid="button-save-as-example"
+                title="Save response as example"
+                onClick={saveAsExample}
+              >
+                <i className="fa fa-bookmark space-right" />
+                Save as Example
+              </button>
+            )}
+            <ResponseHistoryDropdown
+              activeResponse={activeResponse}
+              responses={responses}
+              requestVersions={requestVersions}
+            />
+          </div>
         </PaneHeader>
       )}
       <Tabs

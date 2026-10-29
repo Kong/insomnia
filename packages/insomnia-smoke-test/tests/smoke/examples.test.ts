@@ -40,6 +40,13 @@ test.describe('Examples', () => {
     await expect.soft(page.getByTestId('example-node-Duplicated Example')).toBeVisible();
     await expect.soft(page.getByTestId('example-node-Duplicated Example')).toHaveCount(1);
 
+    // Save the real response as a second example
+    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByTestId('response-status-tag')).toContainText('200', { timeout: 30_000 });
+    await page.getByTestId('button-save-as-example').click();
+    await expect.soft(page.getByTestId('example-node-200 OK')).toHaveCount(2);
+
     // Delete one example via its context menu
     await page.getByTestId('example-node-200 OK').first().click({ button: 'right' });
     await page.getByRole('menuitemradio', { name: 'Delete' }).click();
