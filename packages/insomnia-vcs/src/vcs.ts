@@ -605,6 +605,10 @@ export class VCS {
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
     // Fixed temp name: `<localBranch.name>.hidden` can exceed the length cap or hit a reserved device name that the local branch itself passes
+    // customFetch overwrites and pull removes the temp branch, so it must not be a user's branch
+    if (localBranch.name === PULL_TMP_BRANCH_NAME || (await this._getBranch(PULL_TMP_BRANCH_NAME)) !== null) {
+      throw new Error(`Cannot pull while a branch named "${PULL_TMP_BRANCH_NAME}" exists`);
+    }
     const tmpBranchForRemote = await this.customFetch(PULL_TMP_BRANCH_NAME, localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
@@ -1425,10 +1429,15 @@ export class VCS {
 
     branch.modified = new Date();
     // toLowerCase may introduce issues under case sensitive filesystems
-    return getStore().setItem(
-      `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`,
-      branch,
-    );
+    const key = `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`;
+    // `_getBranch` only matches records that name themselves, so never overwrite one belonging to another branch (`a~b` vs `a/b`, `Foo` vs `foo`)
+    const existing: Branch | null = await getStore().getItem(key);
+
+    if (existing !== null && existing.name !== branch.name) {
+      throw new Error(`Branch "${branch.name}" conflicts with existing branch "${existing.name}"`);
+    }
+
+    return getStore().setItem(key, branch);
   }
 
   async _removeBranch(branch: Branch) {
