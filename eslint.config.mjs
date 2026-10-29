@@ -300,6 +300,12 @@ export default defineConfig([
       '**/__mocks__/*',
       '**/.react-router/*',
       'packages/insomnia/src/*.js',
+      // Checked-in, machine-generated bundles (scripts/generate-sandbox-vendored.ts) — same category
+      // as **/*.min.js/**/dist/* above. Without this, ESLint's default reportUnusedDisableDirectives
+      // flags these files' blanket `/* eslint-disable */` as unused (the minified bundle happens to
+      // trip no rule under this config) and --fix deletes it, which then perpetually conflicts with
+      // the generator script re-adding it and with CI's sandbox:vendored:generate diff check.
+      'packages/insomnia/src/templating/sandbox/vendored/*.generated.ts',
     ],
   },
   // Node context: main process, UtilityProcess, and node adapters — no DOM globals.
