@@ -61,16 +61,20 @@ export class ScriptTabComponent extends TabPanelPage {
     const panel = this.page.locator(this.TABPANEL);
     if (scripts.preRequest) {
       const preEditor = panel.locator(this.PRE_REQUEST_EDITOR);
-      await preEditor.isVisible();
-      await preEditor.click();
+      // The tab can re-render under the click and detach it; skip it when already selected.
+      if ((await preEditor.getAttribute("aria-selected")) !== "true") {
+        await preEditor.click();
+      }
 
       const editor = panel.locator(".CodeMirror").first();
       await this.setCodeMirrorValue(editor, scripts.preRequest);
     }
     if (scripts.afterResponse) {
       const afterEditor = panel.locator(this.AFTER_RESPONSE_EDITOR);
-      await afterEditor.isVisible();
-      await afterEditor.click();
+      // The tab can re-render under the click and detach it; skip it when already selected.
+      if ((await afterEditor.getAttribute("aria-selected")) !== "true") {
+        await afterEditor.click();
+      }
 
       const editor = panel.locator(".CodeMirror").first();
       await this.setCodeMirrorValue(editor, scripts.afterResponse);

@@ -266,10 +266,6 @@ export class ProjectSettingsPage extends BasePage {
   }
 
 
-  private readonly confirmCloneButton = this.dialog.getByRole("button", {
-    name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
-  });
-
   private readonly unknownFieldsWarning = this.dialog
     .locator("div")
     .filter({ has: this.page.getByRole("heading", { name: "Unknown Fields Detected" }) })
@@ -304,6 +300,10 @@ export class ProjectSettingsPage extends BasePage {
     await expect(this.dialog.getByText("Scanning remote repo for Insomnia files")).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
-    await expect(this.confirmCloneButton).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
+    // "Create" is excluded: a disabled/enabled "Create" button is rendered before the scan starts,
+    // so matching it would let this return before the scan result has rendered.
+    await expect(
+      this.dialog.getByRole("button", { name: /^(Clone Project|Clone and Migrate|Create Blank Project)$/ }),
+    ).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
   }
 }

@@ -988,7 +988,9 @@ export class GitSyncPage extends BasePage {
    */
   async getVisualDiffNotice(): Promise<string> {
     const notice = this.visualDiffNotice.locator('xpath=..');
-    await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    // The "doesn't match the Insomnia file format" notice only renders once the app's background
+    // import -> export replay finishes, which can run well past DEFAULT_TIMEOUT on a loaded CI runner.
+    await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT * 3 });
     return (await notice.innerText()).replaceAll('\n', ' ').trim();
   }
 

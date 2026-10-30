@@ -19,7 +19,7 @@ test("Verify Disabling SSL Certificate Validation Lets MCP Client Connect To A S
     project,
     new McpClient(faker.string.alphanumeric(10), MCP_SERVER_HTTPS),
   );
-  await mcpClientFlow.connect(mcpClient);
+  await mcpClientFlow.connect(mcpClient, { expectConnected: false });
   const toolsWithValidation = mcpClientFlow.getTools(mcpClient);
   await expect(toolsWithValidation).rejects.toThrow();
 

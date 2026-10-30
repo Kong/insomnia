@@ -20,7 +20,7 @@ test("Verify Custom CA Certificate Toggle Controls Trust For MCP Client Over TLS
     project,
     new McpClient(faker.string.alphanumeric(10), MCP_SERVER_CUSTOM_CA_HTTPS),
   );
-  await mcpClientFlow.connect(mcpClient);
+  await mcpClientFlow.connect(mcpClient, { expectConnected: false });
   const toolsBeforeCa = mcpClientFlow.getTools(mcpClient);
   await expect(toolsBeforeCa).rejects.toThrow();
 
@@ -32,7 +32,7 @@ test("Verify Custom CA Certificate Toggle Controls Trust For MCP Client Over TLS
 
   await certificatesFlow.setCaCertificateEnabled(mcpClient, false);
 
-  await mcpClientFlow.connect(mcpClient);
+  await mcpClientFlow.connect(mcpClient, { expectConnected: false });
   const toolsAfterDisable = mcpClientFlow.getTools(mcpClient);
   await expect(toolsAfterDisable).rejects.toThrow();
 

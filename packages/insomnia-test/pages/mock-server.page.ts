@@ -39,7 +39,13 @@ export class MockServerPage extends BasePage {
    */
   async setSelfHostedUrl(url: string): Promise<void> {
     const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("radio", { name: /^Self Hosted Mock/ }).check();
+    const radio = dialog.getByRole("radio", { name: /^Self Hosted Mock/ });
+    // The radio's <input> is covered by its own label content, so check() can
+    // loop on "intercepts pointer events"; click the label card instead.
+    if (!(await radio.isChecked())) {
+      await dialog.locator("label").filter({ has: radio }).click();
+    }
+    await expect(radio).toBeChecked();
     await dialog
       .getByRole("textbox", { name: "What is your self-hosted mock server URL?" })
       .fill(url);
