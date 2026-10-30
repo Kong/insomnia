@@ -3,7 +3,7 @@ import type * as InsomniaData from 'insomnia-data';
 import type { BaseModel, ChangeBufferEvent, CollectionWorkspaceChildren, OrganizationData } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
+import { organizationDataKeys, untrackedProjectsKeys, workspaceChildrenKeys } from '~/common/app-data';
 
 vi.mock('insomnia-data', async () => {
   const actual = await vi.importActual<typeof InsomniaData>('insomnia-data');
@@ -13,13 +13,15 @@ vi.mock('insomnia-data', async () => {
       appData: {
         getWorkspaceChildren: vi.fn(),
       },
+      project: { list: vi.fn() },
+      workspace: { list: vi.fn(), count: vi.fn() },
     },
   };
 });
 
 import { services } from 'insomnia-data';
 
-import { prefetchUncachedWorkspaceChildren, updateAppDataOnDbChanges } from '../app-data';
+import { prefetchUncachedWorkspaceChildren, untrackedProjectsQuery, updateAppDataOnDbChanges } from '../app-data';
 
 function fakeDoc(type: BaseModel['type'], overrides: Partial<BaseModel> = {}): BaseModel {
   return {
@@ -200,6 +202,22 @@ describe('updateAppDataOnDbChanges', () => {
     expect(queryClient.getQueryState(workspaceChildrenKeys.byWorkspaceId(workspaceId))?.isInvalidated).toBe(true);
   });
 
+  it('invalidates untracked projects on project and workspace changes, but not on workspace meta changes', () => {
+    const key = untrackedProjectsKeys.byTrackedOrganizationIds(['org_1']);
+    const isInvalidated = () => queryClient.getQueryState(key)?.isInvalidated;
+
+    queryClient.setQueryData(key, { untrackedProjects: [], untrackedWorkspaces: [] });
+    updateAppDataOnDbChanges(queryClient, [change('update', fakeDoc('WorkspaceMeta', { parentId: 'wrk_1' }))]);
+    expect(isInvalidated()).toBe(false);
+
+    updateAppDataOnDbChanges(queryClient, [change('insert', fakeDoc('Project', { parentId: 'org_gone' }))]);
+    expect(isInvalidated()).toBe(true);
+
+    queryClient.setQueryData(key, { untrackedProjects: [], untrackedWorkspaces: [] });
+    updateAppDataOnDbChanges(queryClient, [change('remove', fakeDoc('Workspace', { parentId: 'proj_1' }))]);
+    expect(isInvalidated()).toBe(true);
+  });
+
   it('ignores doc types it does not monitor', () => {
     const settings = fakeDoc('Settings', { _id: 'settings_1' });
     expect(() => updateAppDataOnDbChanges(queryClient, [change('update', settings)])).not.toThrow();
@@ -268,5 +286,30 @@ describe('prefetchUncachedWorkspaceChildren', () => {
     await prefetchUncachedWorkspaceChildren(queryClient, ['wrk_a'], 'collection');
 
     expect(services.appData.getWorkspaceChildren).not.toHaveBeenCalled();
+  });
+});
+
+describe('untrackedProjectsQuery', () => {
+  it('lists projects outside the tracked organizations with their workspace counts, plus orphaned workspaces', async () => {
+    const orphanWorkspace = fakeDoc('Workspace', { _id: 'wrk_orphan', parentId: null as unknown as string });
+    vi.mocked(services.project.list).mockResolvedValue([
+      fakeDoc('Project', { _id: 'proj_a' }),
+      fakeDoc('Project', { _id: 'proj_b' }),
+    ] as any);
+    vi.mocked(services.workspace.list).mockResolvedValue([orphanWorkspace] as any);
+    vi.mocked(services.workspace.count).mockImplementation(async query =>
+      (query as { parentId: string }).parentId === 'proj_a' ? 2 : 0,
+    );
+
+    const queryClient = new QueryClient();
+    const result = await queryClient.fetchQuery(untrackedProjectsQuery(['org_1', 'org_2']));
+
+    expect(services.project.list).toHaveBeenCalledWith({ parentId: { $nin: ['org_1', 'org_2'] } });
+    expect(services.workspace.list).toHaveBeenCalledWith({ parentId: null });
+    expect(result.untrackedProjects.map(p => [p._id, p.workspacesCount])).toEqual([
+      ['proj_a', 2],
+      ['proj_b', 0],
+    ]);
+    expect(result.untrackedWorkspaces).toEqual([orphanWorkspace]);
   });
 });
