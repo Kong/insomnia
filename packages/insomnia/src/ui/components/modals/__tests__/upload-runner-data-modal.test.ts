@@ -117,4 +117,15 @@ describe('parseCsvUploadData()', () => {
     expect(parseCsvUploadData('a,b')).toBeNull();
     expect(parseCsvUploadData('')).toBeNull();
   });
+
+  it('throws on structural errors like unterminated quotes', () => {
+    expect(() => parseCsvUploadData('a,b\n1,"2\n3,4')).toThrow('CSV file can not be parsed');
+  });
+
+  it('keeps __proto__ as an own property', () => {
+    const { headers, data } = parseCsvUploadData('__proto__,b\n1,2')!;
+    expect(headers).toEqual(['__proto__', 'b']);
+    expect(Object.keys(data[0])).toEqual(['__proto__', 'b']);
+    expect(data[0].__proto__).toBe('1');
+  });
 });
