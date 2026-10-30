@@ -534,9 +534,24 @@ export abstract class RequestPage extends TabPanelPage {
             .locator(this.ONE_LINE_EDITOR)
             .nth(1)
             .locator(".CodeMirror");
+          // Each step of the detour must land on disk before the next one:
+          // firing the detour value and its restore back-to-back lets the
+          // editor's late re-render swallow the restore, stranding the row
+          // on the detour text (e.g. `key-`).
           await this.setCodeMirrorValue(nameEditor, `${pair.name}-`);
+          await this.waitForPairPersisted(
+            { name: `${pair.name}-` },
+            { checkValue: false },
+          ).catch(() => {});
           await this.setCodeMirrorValue(nameEditor, pair.name);
+          await this.waitForPairPersisted(pair, { checkValue: false }).catch(
+            () => {},
+          );
           await this.setCodeMirrorValue(valueEditor, `${pair.value ?? ""}-`);
+          await this.waitForPairPersisted({
+            ...pair,
+            value: `${pair.value ?? ""}-`,
+          }).catch(() => {});
           await this.setCodeMirrorValue(valueEditor, pair.value ?? "");
           await this.syncRowToggle(row, pair);
           await this.waitForPairPersisted(pair).catch(() => {});
