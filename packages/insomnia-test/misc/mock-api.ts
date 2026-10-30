@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-"use strict";
 
-const http = require("node:http");
-const crypto = require("node:crypto");
-const zlib = require("node:zlib");
-const { parse } = require("graphql");
+import crypto from "node:crypto";
+import http from "node:http";
+import zlib from "node:zlib";
+
+import { parse } from "graphql";
 
 const ACCOUNT_ID = "acct_64a477e6b59d43a5a607f84b4f73e3ce";
 const ORG_ID = "org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
@@ -22,13 +22,13 @@ const DEFAULT_FEATURE_STATE = {
   gitSyncStorageRuleEnabled: true,
   konnectEntitlementEnabled: false,
 };
-const featureStateBySession = new Map(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
+const featureStateBySession = new Map<any, any>(); // sessionId -> partial DEFAULT_FEATURE_STATE overrides
 
-function getFeatureState(sessionId) {
+function getFeatureState(sessionId: any) {
   return { ...DEFAULT_FEATURE_STATE, ...featureStateBySession.get(sessionId) };
 }
 
-function setFeatureState(sessionId, patch) {
+function setFeatureState(sessionId: any, patch: any) {
   featureStateBySession.set(sessionId, { ...getFeatureState(sessionId), ...patch });
 }
 
@@ -50,11 +50,11 @@ const CLOUD_SYNC_SYMMETRIC_KEY = {
   kty: "oct",
 };
 
-function cloudSyncKeyBuf(jwk) {
+function cloudSyncKeyBuf(jwk: any) {
   return Buffer.from(jwk.k, "base64url");
 }
 
-function decryptCloudSyncBlob(msg) {
+function decryptCloudSyncBlob(msg: any) {
   const decipher = crypto.createDecipheriv(
     "aes-256-gcm",
     cloudSyncKeyBuf(CLOUD_SYNC_SYMMETRIC_KEY),
@@ -69,7 +69,7 @@ function decryptCloudSyncBlob(msg) {
   ]);
 }
 
-function encryptCloudSyncBlob(buf) {
+function encryptCloudSyncBlob(buf: any) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(
     "aes-256-gcm",
@@ -177,7 +177,7 @@ const CLOUD_SYNC_SNAPSHOT_COMMON = {
   description: "",
 };
 
-const cloudSyncProjectSnapshots = {
+const cloudSyncProjectSnapshots: Record<string, any> = {
   // "My Collection R1"
   proj_5145140e072d4007a30bfa6630ddae70: [
     {
@@ -385,12 +385,12 @@ const cloudSyncCollectionNewCommitSnapshots = [
 // `remoteHasNewCommit` is on and that project is the one selected via
 // `/_admin/cloud-sync/new-commit`'s `projectId` — see `getCloudSyncState`'s
 // `newCommitProjectId`.
-const CLOUD_SYNC_NEW_COMMIT_SNAPSHOTS = {
+const CLOUD_SYNC_NEW_COMMIT_SNAPSHOTS: Record<string, any> = {
   proj_5145140e072d4007a30bfa6630ddae70: cloudSyncCollectionNewCommitSnapshots,
   proj_5145140e072d4007a30bfa6630ddae71: cloudSyncEnvironmentNewCommitSnapshots,
 };
 
-const cloudSyncRawBlobs = {
+const cloudSyncRawBlobs: Record<string, any> = {
   "be076c5943e0d32b05efbbf215b4f9d2bb894a9c":
     '{"_id":"wrk_a7132f924ba7451594ba64ec411c9e13","created":1769407477819,"description":"","name":"My Collection R1","parentId":null,"scope":"collection","type":"Workspace"}',
   "1b7fe31ec583c8a42fedc0e86a103b94076e77c4":
@@ -430,7 +430,7 @@ const CLOUD_SYNC_DEFAULT_BRANCHES = [{ name: "master" }, { name: "develop" }];
 // spec expects.
 const cloudSyncStateBySession = new Map(); // sessionId -> { newSnapshots, newBlobs, deletedProjectIds, remoteHasNewCommit }
 
-function getCloudSyncState(sessionId) {
+function getCloudSyncState(sessionId: any) {
   if (!cloudSyncStateBySession.has(sessionId)) {
     cloudSyncStateBySession.set(sessionId, {
       newSnapshots: {},
@@ -477,11 +477,11 @@ function getCloudSyncState(sessionId) {
   return cloudSyncStateBySession.get(sessionId);
 }
 
-function resetCloudSyncState(sessionId) {
+function resetCloudSyncState(sessionId: any) {
   cloudSyncStateBySession.delete(sessionId);
 }
 
-function getCloudSyncSnapshotsForProject(projectId, sessionId) {
+function getCloudSyncSnapshotsForProject(projectId: any, sessionId: any) {
   const state = getCloudSyncState(sessionId);
   if (
     state.remoteHasNewCommit &&
@@ -496,19 +496,19 @@ function getCloudSyncSnapshotsForProject(projectId, sessionId) {
   ];
 }
 
-function graphqlOperation(query) {
+function graphqlOperation(query: any) {
   const document = parse(query);
-  const operation = document.definitions[0];
+  const operation = document.definitions[0] as any;
   return {
     operationType: operation.operation,
     operationName: operation.selectionSet.selections[0].name.value,
   };
 }
 
-function handleCloudSyncGraphQL(req, res) {
+function handleCloudSyncGraphQL(req: any, res: any) {
   const sessionId = req.headers["x-session-id"];
   readJsonBody(req)
-    .then(async ({ query, variables = {} }) => {
+    .then(async ({ query, variables = {} }: any) => {
       const { operationType, operationName } = graphqlOperation(query);
       const state = getCloudSyncState(sessionId);
       const requestProjectId =
@@ -547,7 +547,7 @@ function handleCloudSyncGraphQL(req, res) {
                   created: new Date().toISOString(),
                   modified: new Date().toISOString(),
                   name: variables.branch || "master",
-                  snapshots: snapshots.map((s) => s.id),
+                  snapshots: snapshots.map((s: any) => s.id),
                 },
               },
             });
@@ -580,7 +580,7 @@ function handleCloudSyncGraphQL(req, res) {
               data: {
                 blobsMissing: {
                   missing: (variables.ids ?? []).filter(
-                    (id) => !cloudSyncRawBlobs[id] && !state.newBlobs[id],
+                    (id: any) => !cloudSyncRawBlobs[id] && !state.newBlobs[id],
                   ),
                 },
               },
@@ -735,14 +735,14 @@ function handleCloudSyncGraphQL(req, res) {
 const vaultStateBySession = new Map(); // sessionId -> { salt, verifier }
 const vaultExchanges = new Map(); // sessionStarterId -> srp.Server instance
 
-function resetVaultState(sessionId) {
+function resetVaultState(sessionId: any) {
   vaultStateBySession.delete(sessionId);
   for (const [id, exchange] of vaultExchanges) {
     if (exchange.sessionId === sessionId) vaultExchanges.delete(id);
   }
 }
 
-let srpModulePromise;
+let srpModulePromise: any;
 function loadSrp() {
   if (!srpModulePromise) {
     // @getinsomnia/srp-js's dist bundle is built for a browser/Electron
@@ -757,7 +757,7 @@ function loadSrp() {
   return srpModulePromise;
 }
 
-function isVaultRoute(method, pathname) {
+function isVaultRoute(method: any, pathname: any) {
   return (
     method === "POST" &&
     (pathname === "/v1/user/vault" ||
@@ -767,7 +767,7 @@ function isVaultRoute(method, pathname) {
   );
 }
 
-async function handleVault(req, res, url) {
+async function handleVault(req: any, res: any, url: any) {
   const sessionId = req.headers["x-session-id"];
   const body = await readJsonBody(req);
 
@@ -820,10 +820,10 @@ async function handleVault(req, res, url) {
   return sendJson(res, 200, { srpM2 });
 }
 
-function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
+function readJsonBody(req: any): Promise<any> {
+  return new Promise<any>((resolve, reject) => {
     let data = "";
-    req.on("data", (chunk) => (data += chunk));
+    req.on("data", (chunk: any) => (data += chunk));
     req.on("end", () => {
       if (!data) return resolve({});
       try {
@@ -836,7 +836,7 @@ function readJsonBody(req) {
   });
 }
 
-function sendJson(res, status, body) {
+function sendJson(res: any, status: any, body: any) {
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
@@ -844,7 +844,7 @@ function sendJson(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function handleAdmin(req, res, url) {
+async function handleAdmin(req: any, res: any, url: any) {
   if (url.pathname === "/_admin/session-keys" && req.method === "GET") {
     return sendJson(res, 200, {
       publicKey: {
@@ -909,7 +909,7 @@ async function handleAdmin(req, res, url) {
       teamProjectId: PROJECT_ID,
       teams: CLOUD_SYNC_TEAMS,
     };
-    const stateEntries = body.docs.map((doc) => {
+    const stateEntries = body.docs.map((doc: any) => {
       const content = JSON.stringify(doc);
       const blob = crypto.createHash("sha1").update(content).digest("hex");
       state.newBlobs[blob] = content;
@@ -975,7 +975,7 @@ async function handleAdmin(req, res, url) {
     }
     const snapshots = getCloudSyncSnapshotsForProject(project.id, sessionId);
     const latest = snapshots[snapshots.length - 1];
-    const workspaceEntry = latest?.state.find((entry) =>
+    const workspaceEntry = latest?.state.find((entry: any) =>
       entry.key.startsWith("wrk_"),
     );
     return sendJson(res, 200, {
@@ -1081,7 +1081,7 @@ const COLLABORATOR_ROLE_IDS = {
   member: "role_member",
 };
 
-function seedCollaborator(type, index) {
+function seedCollaborator(type: any, index: any) {
   const email = `existing-collaborator-${index}@example.com`;
   const base = {
     id: `collab_seed_${index}`,
@@ -1125,17 +1125,17 @@ const COLLABORATOR_SEARCH_RESULTS = Array.from({ length: 8 }, (_, i) => ({
 
 const collaboratorsBySession = new Map(); // sessionId -> Collaborator[]
 
-function getCollaboratorsState(sessionId) {
+function getCollaboratorsState(sessionId: any) {
   if (!collaboratorsBySession.has(sessionId)) {
     collaboratorsBySession.set(
       sessionId,
-      SEED_COLLABORATORS.map((c) => ({ ...c, metadata: { ...c.metadata } })),
+      SEED_COLLABORATORS.map((c: any) => ({ ...c, metadata: { ...c.metadata } })),
     );
   }
   return collaboratorsBySession.get(sessionId);
 }
 
-async function handleCollaborators(req, res, url) {
+async function handleCollaborators(req: any, res: any, url: any) {
   const { method } = req;
   const segs = url.pathname.split("/").filter(Boolean);
   const sessionId = req.headers["x-session-id"];
@@ -1241,7 +1241,7 @@ async function handleCollaborators(req, res, url) {
     const invitationId = segs[4];
     const collaborators = getCollaboratorsState(sessionId);
     const invite = collaborators.find(
-      (c) => c.metadata.invitationId === invitationId,
+      (c: any) => c.metadata.invitationId === invitationId,
     );
     if (invite) invite.metadata.roleId = body.roles?.[0] ?? invite.metadata.roleId;
     return sendJson(res, 200, {});
@@ -1257,7 +1257,7 @@ async function handleCollaborators(req, res, url) {
     const body = await readJsonBody(req);
     const userId = segs[4];
     const collaborators = getCollaboratorsState(sessionId);
-    const member = collaborators.find((c) => c.metadata.userId === userId);
+    const member = collaborators.find((c: any) => c.metadata.userId === userId);
     if (member) member.metadata.roleId = body.roles?.[0] ?? member.metadata.roleId;
     return sendJson(res, 200, {});
   }
@@ -1265,7 +1265,7 @@ async function handleCollaborators(req, res, url) {
   sendJson(res, 404, { error: `no collaborators route for ${method} ${url.pathname}` });
 }
 
-function isCollaboratorsRoute(method, pathname) {
+function isCollaboratorsRoute(method: any, pathname: any) {
   const segs = pathname.split("/").filter(Boolean);
   if (
     segs[0] === "v1" &&
@@ -1408,7 +1408,7 @@ const KONNECT_ROUTES = {
   ],
 };
 
-function matchDynamic(req, url) {
+function matchDynamic(req: any, url: any) {
   const { method } = req;
   const pathname = url.pathname;
   const segs = pathname.split("/").filter(Boolean);
@@ -1547,7 +1547,7 @@ function matchDynamic(req, url) {
     }
     // /v2/control-planes/:cpId/core-entities/services/:serviceId/routes
     if (konnectSegs.length === 5 && konnectSegs[4] === "routes") {
-      return { data: KONNECT_ROUTES[konnectSegs[3]] ?? [], offset: null };
+      return { data: (KONNECT_ROUTES as Record<string, any>)[konnectSegs[3]] ?? [], offset: null };
     }
     return { data: [] };
   }
@@ -1571,7 +1571,7 @@ function matchDynamic(req, url) {
 }
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, "http://localhost:4010");
+  const url = new URL(req.url!, "http://localhost:4010");
   const key = `${req.method} ${url.pathname}`;
   process.stdout.write(`${key}\n`);
 
@@ -1615,7 +1615,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let body = ROUTES[key];
+  let body = (ROUTES as Record<string, any>)[key];
   if (body === undefined) {
     body = matchDynamic(req, url);
   }

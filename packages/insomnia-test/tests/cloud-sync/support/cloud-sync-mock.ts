@@ -1,6 +1,6 @@
 import { MOCK_API_SERVER, SESSION_ID } from "../../../misc/fixtures";
 
-// Test-only controls for misc/mock-api.js's Cloud Sync GraphQL mock. The app
+// Test-only controls for misc/mock-api.ts's Cloud Sync GraphQL mock. The app
 // calls it from the Electron main process, so a spec can't attach a header or
 // intercept it from the renderer; these hold or fail the response server-side.
 

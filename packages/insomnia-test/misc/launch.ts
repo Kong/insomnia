@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { ElectronApplication } from "@playwright/test";
@@ -24,7 +25,8 @@ const INSOMNIA_DEV_MODE =
   !process.env.INSOMNIA_BINARY &&
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
-const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "..", "insomnia");
+const INSOMNIA_SRC_PACKAGE = path.resolve(import.meta.dirname, "..", "..", "insomnia");
+const require = createRequire(import.meta.url);
 
 /**
  * Runs the same one-shot `esbuild.entrypoints.ts` dev build `npm run

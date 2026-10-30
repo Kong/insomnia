@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { ensureCerts } from "./misc/certs";
+import { ensureCerts } from "./misc/certs.ts";
 
 // By default, misc/fixtures.ts launches the app straight out of the
 // sibling ../insomnia source checkout (its local `electron` binary against
@@ -22,7 +22,7 @@ const isDevMode =
   !process.env.INSOMNIA_BINARY &&
   process.env.INSOMNIA_DEV_MODE !== "false" &&
   process.env.INSOMNIA_DEV_MODE !== "0";
-const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
+const INSOMNIA_SRC_PACKAGE = path.resolve(import.meta.dirname, "..", "insomnia");
 
 // The mock servers' TLS/mTLS key pairs are generated rather than committed.
 // Do it here, once, before any webServer below starts reading them.
@@ -68,49 +68,49 @@ export default defineConfig({
 
   webServer: [
     {
-      command: "node misc/mock-api.js",
+      command: "node misc/mock-api.ts",
       url: "http://localhost:4010/v3/users/me",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/event-stream-server.js",
+      command: "node misc/event-stream-server.ts",
       url: "http://localhost:4050/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/echo-server.js",
+      command: "node misc/echo-server.ts",
       url: "http://localhost:4060/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/socket-server.js",
+      command: "node misc/socket-server.ts",
       url: "http://localhost:3000/socket.io/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/ws-echo-server.js",
+      command: "node misc/ws-echo-server.ts",
       url: "http://localhost:4040",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/mcp-server.js",
+      command: "node misc/mcp-server.ts",
       url: "http://localhost:4020/",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/grpc-server.js",
+      command: "node misc/grpc-server.ts",
       port: 9000,
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/git-server.js",
+      command: "node misc/git-server.ts",
       url: "http://localhost:4070/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
@@ -118,13 +118,13 @@ export default defineConfig({
       stderr: "ignore",
     },
     {
-      command: "node misc/oauth2-server.js",
+      command: "node misc/oauth2-server.ts",
       url: "http://localhost:4080/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
     {
-      command: "node misc/mock-bin-server.js",
+      command: "node misc/mock-bin-server.ts",
       url: "http://localhost:4090/health",
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,

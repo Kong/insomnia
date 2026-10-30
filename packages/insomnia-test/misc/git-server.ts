@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-"use strict";
 
-const http = require("node:http");
-const path = require("node:path");
-const os = require("node:os");
-const fs = require("node:fs");
-const zlib = require("node:zlib");
-const { spawn, execFileSync } = require("node:child_process");
-const backend = require("git-http-backend");
+import { execFileSync, spawn } from "node:child_process";
+import fs from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import http from "node:http";
+import os from "node:os";
+import path from "node:path";
+import zlib from "node:zlib";
+
+import backend from "git-http-backend";
 
 const PORT = 4070;
 const REPOS_ROOT = path.join(os.tmpdir(), "insomnia-git-mock-server");
@@ -19,25 +20,25 @@ const DEFAULT_AUTH = { enabled: true, username: "testuser", password: "testpass"
 // the `gitRepo` fixture's unique UUID name) — never a repo any other test
 // is using concurrently or afterward. Repos with no override fall back to
 // DEFAULT_AUTH.
-const authOverrides = new Map(); // repoName -> { enabled, username, password }
+const authOverrides = new Map<string, { enabled: boolean; username: string; password: string }>(); // repoName -> { enabled, username, password }
 
-function getAuth(repoName) {
+function getAuth(repoName: string) {
   return authOverrides.get(repoName) || DEFAULT_AUTH;
 }
 
 fs.mkdirSync(REPOS_ROOT, { recursive: true });
 
-function repoDir(name) {
+function repoDir(name: string) {
   if (typeof name !== "string" || !name || name.includes("..")) {
     throw new Error(`Invalid repo name: ${name}`);
   }
   return path.join(REPOS_ROOT, name.replace(/[^a-zA-Z0-9._-]/g, ""));
 }
 
-function readJsonBody(req) {
+function readJsonBody(req: IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {
     let data = "";
-    req.on("data", (chunk) => (data += chunk));
+    req.on("data", (chunk: any) => (data += chunk));
     req.on("end", () => {
       if (!data) return resolve({});
       try {
@@ -50,12 +51,12 @@ function readJsonBody(req) {
   });
 }
 
-function sendJson(res, status, body) {
+function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { "Content-Type": "application/json" });
   res.end(JSON.stringify(body));
 }
 
-function isAuthorized(req, repoName) {
+function isAuthorized(req: IncomingMessage, repoName: string) {
   const auth = getAuth(repoName);
   if (!auth.enabled) return true;
   const [scheme, encoded] = (req.headers.authorization || "").split(" ");
@@ -65,7 +66,7 @@ function isAuthorized(req, repoName) {
 }
 
 /** Creates a fresh bare repo, discarding any prior contents at that name. */
-function initBareRepo(name) {
+function initBareRepo(name: string) {
   const dir = repoDir(name);
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
@@ -78,7 +79,7 @@ function initBareRepo(name) {
  * flow treats a repo with zero files as "Create Blank Project" rather than
  * "Clone Project"/"Clone and Migrate", which is what these tests expect.
  */
-function seedRepo(name) {
+function seedRepo(name: string) {
   const dir = repoDir(name);
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-git-seed-"));
   try {
@@ -109,10 +110,13 @@ function seedRepo(name) {
  * throwaway working clone, creating `branch` from master when it doesn't
  * exist yet. Simulates a second client pushing to the remote.
  */
-function pushFile(name, { branch, filePath, content, message }) {
+function pushFile(
+  name: string,
+  { branch, filePath, content, message }: { branch: string; filePath: string; content: string; message: string },
+) {
   const dir = repoDir(name);
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-git-push-"));
-  const git = (...args) => execFileSync("git", args, { cwd: workDir });
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: workDir });
   try {
     execFileSync("git", ["clone", dir, workDir]);
     if (listBranches(name).includes(branch)) {
@@ -138,7 +142,7 @@ function pushFile(name, { branch, filePath, content, message }) {
 }
 
 /** Lists local branch names in a bare repo, e.g. ["master", "branch1"]. */
-function listBranches(name) {
+function listBranches(name: string) {
   const dir = repoDir(name);
   const output = execFileSync("git", [
     "--git-dir",
@@ -158,10 +162,10 @@ function listBranches(name) {
  * doesn't exist rather than throwing, since "not pushed yet" is a normal
  * state for tests to check.
  */
-function listCommits(name, branch) {
+function listCommits(name: string, branch: string) {
   const dir = repoDir(name);
   const format = "%H%x1f%s%x1f%an%x1f%ae";
-  let output;
+  let output: string;
   try {
     output = execFileSync("git", [
       "--git-dir",
@@ -182,7 +186,7 @@ function listCommits(name, branch) {
     });
 }
 
-async function handleAdmin(req, res, url) {
+async function handleAdmin(req: IncomingMessage, res: ServerResponse, url: URL) {
   const segments = url.pathname.split("/").filter(Boolean);
 
   if (req.method === "GET" && segments.length === 1) {
@@ -280,7 +284,7 @@ async function handleAdmin(req, res, url) {
 }
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`);
+  const url = new URL(req.url!, `http://localhost:${PORT}`);
 
   if (url.pathname === "/" || url.pathname === "/health") {
     res.writeHead(200, { "Content-Type": "text/plain" });
@@ -307,7 +311,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let dir;
+  let dir: string;
   try {
     dir = repoDir(repoName);
   } catch (err) {
@@ -329,7 +333,7 @@ const server = http.createServer((req, res) => {
 
   reqStream
     .pipe(
-      backend(req.url, (err, service) => {
+      backend(req.url!, (err: any, service: any) => {
         if (err) {
           res.statusCode = 500;
           console.error("[git-server]", err);

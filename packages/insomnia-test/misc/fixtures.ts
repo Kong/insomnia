@@ -24,7 +24,7 @@ export * from "./constants";
 export { launchInsomniaElectron, SESSION_ID };
 
 /**
- * Toggles misc/mock-api.js's `features.gitSync.enabled` flag, which the app
+ * Toggles misc/mock-api.ts's `features.gitSync.enabled` flag, which the app
  * reads once at startup to decide whether the Git project type is offered
  * at all. Must be called from a `test.beforeAll()` (before the `insomnia`
  * fixture launches Electron for the first test in the file) — toggling it
@@ -44,7 +44,7 @@ export async function setGitSyncFeatureFlag(enabled: boolean): Promise<void> {
 }
 
 /**
- * Toggles misc/mock-api.js's storage-rule `enableGitSync` flag, which the
+ * Toggles misc/mock-api.ts's storage-rule `enableGitSync` flag, which the
  * app reads once at startup to decide whether Git projects are disabled by
  * org storage policy. Same pre-launch timing/reset requirements and
  * per-worker scoping as `setGitSyncFeatureFlag()`.
@@ -58,7 +58,7 @@ export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
 }
 
 /**
- * Toggles misc/mock-api.js's `GET /v1/user/entitlements` response, which the
+ * Toggles misc/mock-api.ts's `GET /v1/user/entitlements` response, which the
  * app reads on startup to decide whether the account holds the Konnect
  * control-planes entitlement — the Konnect organization ("Control Planes")
  * only appears in the organization switcher once this (or a local Konnect
@@ -74,7 +74,7 @@ export async function setKonnectEntitlement(enabled: boolean): Promise<void> {
 }
 
 /**
- * Resets misc/mock-api.js's Cloud Sync mutable state (new snapshots/blobs,
+ * Resets misc/mock-api.ts's Cloud Sync mutable state (new snapshots/blobs,
  * deleted-project ids, "remote has new commit" flag) back to its seeded
  * defaults, scoped to this worker's SESSION_ID — mirrors the isolation
  * `setGitSyncFeatureFlag()` already gets, so this never touches another
@@ -93,7 +93,7 @@ export async function resetCloudSyncState(): Promise<void> {
 }
 
 /**
- * Resets misc/mock-api.js's Vault Key mutable state (the stored SRP
+ * Resets misc/mock-api.ts's Vault Key mutable state (the stored SRP
  * salt/verifier from a prior generate/reset, and any in-flight unlock
  * exchange), scoped to this worker's SESSION_ID — same isolation as
  * `resetCloudSyncState()`. The `insomnia` fixture already calls this before
@@ -175,7 +175,7 @@ export const test = base.extend<Fixtures>({
   // `userSession.vaultSalt`, which alone is enough to make Preferences'
   // Vault Key panel show "Enter Vault Key" instead of "Generate Vault Key"
   // (see `pages/preferences.page.ts`'s vault key methods), without needing
-  // a `vaultKey` override too. `misc/mock-api.js` runs a real SRP exchange
+  // a `vaultKey` override too. `misc/mock-api.ts` runs a real SRP exchange
   // against whatever salt/verifier a spec's own `preferencesFlow` calls
   // establish — this fixture only ever seeds the renderer's *local* belief
   // that a salt exists, not the mock server's stored verifier.
