@@ -1,0 +1,19 @@
+type: mcpClient.insomnia/5.0
+schema_version: "5.1"
+name: Legacy Id MCP Client
+meta:
+  id: wrk_legacy_id_mcp_client
+  created: 1000
+  modified: 1000
+  description: ""
+mcpRequest:
+  name: Legacy Id MCP Client
+  url: http://localhost:4060/mcp
+  transportType: streamable-http
+  meta:
+    id: legacy-mcp-request-id
+    created: 1000
+    modified: 1000
+    isPrivate: false
+    description: ""
+    sortKey: 0
