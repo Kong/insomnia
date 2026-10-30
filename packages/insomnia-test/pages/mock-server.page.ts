@@ -39,11 +39,12 @@ export class MockServerPage extends BasePage {
    */
   async setSelfHostedUrl(url: string): Promise<void> {
     const dialog = this.page.getByRole("dialog");
-    const radio = dialog.getByRole("radio", { name: /^Self Hosted Mock/ });
+    const radioName = { name: /^Self Hosted Mock/ };
+    const radio = dialog.getByRole("radio", radioName);
     // The radio's <input> is covered by its own label content, so check() can
     // loop on "intercepts pointer events"; click the label card instead.
     if (!(await radio.isChecked())) {
-      await dialog.locator("label").filter({ has: radio }).click();
+      await dialog.locator("label").filter({ has: this.page.getByRole("radio", radioName) }).click();
     }
     await expect(radio).toBeChecked();
     await dialog

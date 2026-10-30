@@ -668,7 +668,7 @@ export class GitSyncPage extends BasePage {
   };
 
   private readonly visualDiffNotice = this.commitDialog.getByText(
-    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|doesn't match the Insomnia file format/,
+    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|This is not a valid Insomnia file/,
   );
 
   /**
@@ -988,9 +988,7 @@ export class GitSyncPage extends BasePage {
    */
   async getVisualDiffNotice(): Promise<string> {
     const notice = this.visualDiffNotice.locator('xpath=..');
-    // The "doesn't match the Insomnia file format" notice only renders once the app's background
-    // import -> export replay finishes, which can run well past DEFAULT_TIMEOUT on a loaded CI runner.
-    await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT * 3 });
+    await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await notice.innerText()).replaceAll('\n', ' ').trim();
   }
 

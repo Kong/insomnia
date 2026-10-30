@@ -1,4 +1,4 @@
-import type { Locator } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
 import { ScriptTab } from "../enums/script-tab";
 import { TabPanelPage } from "./tab-panel.page";
@@ -57,28 +57,34 @@ export class ScriptTabComponent extends TabPanelPage {
    * @param scripts - The script(s) to set
    */
   async setScripts(scripts: RequestScripts): Promise<void> {
-    await this.switchTab("scripts");
-    const panel = this.page.locator(this.TABPANEL);
     if (scripts.preRequest) {
-      const preEditor = panel.locator(this.PRE_REQUEST_EDITOR);
-      // The tab can re-render under the click and detach it; skip it when already selected.
-      if ((await preEditor.getAttribute("aria-selected")) !== "true") {
-        await preEditor.click();
-      }
-
-      const editor = panel.locator(".CodeMirror").first();
-      await this.setCodeMirrorValue(editor, scripts.preRequest);
+      await this.writeScript(this.PRE_REQUEST_EDITOR, scripts.preRequest);
     }
     if (scripts.afterResponse) {
-      const afterEditor = panel.locator(this.AFTER_RESPONSE_EDITOR);
-      // The tab can re-render under the click and detach it; skip it when already selected.
-      if ((await afterEditor.getAttribute("aria-selected")) !== "true") {
-        await afterEditor.click();
-      }
-
-      const editor = panel.locator(".CodeMirror").first();
-      await this.setCodeMirrorValue(editor, scripts.afterResponse);
+      await this.writeScript(this.AFTER_RESPONSE_EDITOR, scripts.afterResponse);
     }
+  }
+
+  /**
+   * Switches to the Scripts tab and the given editor pane, then writes
+   * `value` into it. The whole sequence is retried because the owning
+   * page (notably a Folder tab in a Git Sync project) can re-mount after
+   * the switch, resetting to its default tab and leaving the write on a
+   * detached editor.
+   */
+  private async writeScript(paneSelector: string, value: string): Promise<void> {
+    await expect(async () => {
+      await this.switchTab("scripts");
+      const panel = this.page.locator(this.TABPANEL);
+      const pane = panel.locator(paneSelector);
+      if ((await pane.getAttribute("aria-selected", { timeout: 2000 })) !== "true") {
+        await pane.click({ timeout: 2000 });
+      }
+      const editor = panel.locator(".CodeMirror").first();
+      // Fails fast if the panel was reset to another tab, so the retry re-switches.
+      await expect(editor).toBeVisible({ timeout: 2000 });
+      await this.setCodeMirrorValue(editor, value);
+    }).toPass({ timeout: 45_000 });
   }
 
   /**

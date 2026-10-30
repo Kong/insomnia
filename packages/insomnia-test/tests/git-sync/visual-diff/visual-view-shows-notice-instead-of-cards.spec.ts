@@ -69,7 +69,7 @@ test('Verify the Visual view shows a notice instead of cards for a conflicted fi
   for (const notice of [spectralNotice, openApiNotice]) {
     expect(notice).toContain('No requests, folders, environments or settings changed');
   }
-  expect(invalidNotice).toContain("This file doesn't match the Insomnia file format");
+  expect(invalidNotice).toContain("This is not a valid Insomnia file, so the Visual view cannot show it");
   expect(invalidNotice).toContain('Open the Text view');
   expect(invalidCards).toEqual([]);
   expect(invalidWarningAbsent).toBe(true);

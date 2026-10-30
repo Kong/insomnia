@@ -141,6 +141,14 @@ export class ProjectSettingsPage extends BasePage {
    */
   async submitScanForFiles(): Promise<void> {
     await this.scanForFilesButton.click();
+    // The dialog flips to the results view before the scan request has started, and in that
+    // window it already shows the empty-result state ("Create Blank Project", no warning).
+    // Wait for the in-flight indicator so a later read can't mistake that for a finished scan.
+    // A scan so fast it never paints this is fine to skip: it has finished already.
+    await this.dialog
+      .getByText("Scanning remote repo for Insomnia files")
+      .waitFor({ state: "visible", timeout: 3000 })
+      .catch(() => {});
   }
 
   /**

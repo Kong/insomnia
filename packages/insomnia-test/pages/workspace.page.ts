@@ -1232,7 +1232,7 @@ export class WorkspacePage extends BasePage {
     // commit) can exceed — give the parent node a full DEFAULT_TIMEOUT to show up.
     const node = await this.poll(() => this.findItemNode(parent), DEFAULT_TIMEOUT);
     if (!node) {
-      throw new Error(`resolveNode(): no tree node found for "${parent.name}"`);
+      throw new Error(`resolveNode(): no tree node found for ${JSON.stringify(parent)}`);
     }
     return node;
   }
