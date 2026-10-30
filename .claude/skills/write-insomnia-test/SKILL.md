@@ -253,6 +253,7 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No leftover `_probe*.spec.ts` files from step 6.
 - [ ] An upgrade-style spec (old app → current app) marks every test with `upgradePhase(UpgradePhase.Before|After)` and extends `test` with `upgradeFixtures` — see "Upgrade specs" in `reference.md`.
 - [ ] If feasible, actually run it: `npx playwright test <new-file-path>` (from `packages/insomnia-test`; by default launches dev-mode against the sibling `packages/insomnia` source — see reference.md's "App launch" section; set `INSOMNIA_BINARY` or `INSOMNIA_DEV_MODE=false` to target a specific/packaged build instead) — confirm it passes for real, not just that it type-checks.
+- [ ] `npm run lint -w insomnia-test` is clean for the touched files (this workspace has no `type-check`/`test` script of its own — `npx playwright test` is the test runner).
 
 ### 12. Summarize the finished test case for the user
 
