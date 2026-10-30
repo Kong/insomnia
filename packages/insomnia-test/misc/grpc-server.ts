@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-"use strict";
 
-const fs = require("node:fs");
-const path = require("node:path");
-const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
-const { ReflectionService } = require("@grpc/reflection");
-const { certPath } = require("./certs");
+import fs from "node:fs";
+import path from "node:path";
 
-const PROTO_PATH = path.join(__dirname, "protos", "hello.proto");
+import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
+import { ReflectionService } from "@grpc/reflection";
+
+import { certPath } from "./certs.ts";
+
+const PROTO_PATH = path.join(import.meta.dirname, "protos", "hello.proto");
 
 const TLS_KEY = fs.readFileSync(
   certPath("localhost-key.pem"),
@@ -33,7 +34,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
   oneofs: true,
 });
 
-const helloProto = grpc.loadPackageDefinition(packageDefinition).hello;
+const helloProto = grpc.loadPackageDefinition(packageDefinition).hello as any;
 
 const CUSTOM_HEADER = "x-test-header";
 const REPLY_DELAY_HEADER = "x-reply-delay-ms";
@@ -41,7 +42,7 @@ const DEFAULT_REPLY_DELAY_MS = 50;
 
 const server = new grpc.Server();
 server.addService(helloProto.HelloService.service, {
-  sayHello(call, callback) {
+  sayHello(call: any, callback: any) {
     if (!call.request.greeting) {
       callback({
         code: grpc.status.INVALID_ARGUMENT,
@@ -55,10 +56,10 @@ server.addService(helloProto.HelloService.service, {
       : `hello ${call.request.greeting}`;
     callback(null, { reply });
   },
-  lotsOfReplies(call) {
+  lotsOfReplies(call: any) {
     const names = (call.request.greeting || "")
       .split(",")
-      .map((name) => name.trim())
+      .map((name: string) => name.trim())
       .filter(Boolean);
     const queue = names.length ? names : [""];
     const delayMs =
@@ -76,17 +77,17 @@ server.addService(helloProto.HelloService.service, {
     }, delayMs);
     call.on("cancelled", () => clearInterval(interval));
   },
-  lotsOfGreetings(call, callback) {
-    const greetings = [];
-    call.on("data", (chunk) => {
+  lotsOfGreetings(call: any, callback: any) {
+    const greetings: string[] = [];
+    call.on("data", (chunk: any) => {
       if (chunk.greeting) greetings.push(chunk.greeting);
     });
     call.on("end", () =>
       callback(null, { reply: `hello ${greetings.join(", ")}` }),
     );
   },
-  bidiHello(call) {
-    call.on("data", (chunk) => {
+  bidiHello(call: any) {
+    call.on("data", (chunk: any) => {
       call.write({ reply: `hello ${chunk.greeting || ""}` });
     });
     call.on("end", () => call.end());

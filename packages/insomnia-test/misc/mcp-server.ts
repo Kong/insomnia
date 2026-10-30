@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-'use strict';
 
-const https = require('node:https');
-const fs = require('node:fs');
-const express = require('express');
-const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
-const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
-const z = require('zod/v4');
-const { certPath } = require('./certs');
+import fs from 'node:fs';
+import type { IncomingMessage } from "node:http";
+import https from 'node:https';
+
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
+import * as z from 'zod/v4';
+
+import { certPath } from './certs.ts';
 
 const HTTPS_OPTIONS = {
   key: fs.readFileSync(certPath('localhost-key.pem')),
@@ -94,7 +96,7 @@ app.get('/', (_req, res) => {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 1000;
 
-function delayResponse(req) {
+function delayResponse(req: IncomingMessage) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -187,9 +189,9 @@ app.post('/mcp-list/:key', (req, res) => {
     const script = config?.[method];
     const reply =
       script === undefined
-        ? { result: EMPTY_LISTS[method] }
+        ? { result: EMPTY_LISTS[method as keyof typeof EMPTY_LISTS] }
         : 'pages' in script
-          ? (script.pages[params?.cursor ?? ''] ?? { result: EMPTY_LISTS[method] })
+          ? (script.pages[params?.cursor ?? ''] ?? { result: EMPTY_LISTS[method as keyof typeof EMPTY_LISTS] })
           : script;
     if (method === 'tools/list' && config?.serverRequestReusingToolsListId) {
       res.writeHead(200, {
@@ -219,12 +221,12 @@ const PORT = process.env.MCP_PORT || 4020;
 const SECURE_PORT = process.env.MCP_SECURE_PORT || 4021;
 const CUSTOM_CA_PORT = process.env.MCP_CUSTOM_CA_PORT || 4022;
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT as number, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at http://localhost:${PORT}\n`);
 });
-https.createServer(HTTPS_OPTIONS, app).listen(SECURE_PORT, '127.0.0.1', () => {
+https.createServer(HTTPS_OPTIONS, app).listen(SECURE_PORT as number, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at https://localhost:${SECURE_PORT}\n`);
 });
-https.createServer(CUSTOM_CA_HTTPS_OPTIONS, app).listen(CUSTOM_CA_PORT, '127.0.0.1', () => {
+https.createServer(CUSTOM_CA_HTTPS_OPTIONS, app).listen(CUSTOM_CA_PORT as number, '127.0.0.1', () => {
   process.stdout.write(`MCP mock server listening at https://localhost:${CUSTOM_CA_PORT} (custom CA)\n`);
 });

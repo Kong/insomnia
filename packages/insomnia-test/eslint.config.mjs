@@ -15,10 +15,10 @@ export default defineConfig([
     files: ['**/*.ts'],
     plugins: { playwright },
   },
-  // Standalone CommonJS mock servers/fixtures, run directly with `node`
+  // Standalone mock servers/fixtures, run directly with `node`
   // (see package.json scripts) rather than bundled.
   {
-    files: ['misc/*.js', 'tests/**/*-main.js'],
+    files: ['misc/*.ts', '*.cjs'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -26,6 +26,7 @@ export default defineConfig([
     },
     rules: {
       'unicorn/prefer-module': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 ]);

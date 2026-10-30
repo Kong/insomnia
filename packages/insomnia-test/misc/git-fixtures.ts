@@ -19,7 +19,7 @@ function requireGitRepo(gitRepo: string | undefined): string {
 }
 
 /**
- * Reads the real local branch names from the bare repo on misc/git-server.js
+ * Reads the real local branch names from the bare repo on misc/git-server.ts
  * — ground truth for what's actually been pushed, independent of anything
  * the app's UI reports.
  */
@@ -33,7 +33,7 @@ export async function getServerBranches(
 }
 
 /**
- * Overrides misc/git-server.js's Basic auth requirement for one repo only
+ * Overrides misc/git-server.ts's Basic auth requirement for one repo only
  * — e.g. to test bad credentials or a disabled-auth repo. Scoped to
  * `gitRepo` by name, so it can never leak into another test's repo.
  */
@@ -60,7 +60,7 @@ export interface ServerCommit {
 
 /**
  * Reads the real commit history for `branch` from the bare repo on
- * misc/git-server.js (newest first) — ground truth for what's actually
+ * misc/git-server.ts (newest first) — ground truth for what's actually
  * been pushed, independent of anything the app's UI reports.
  */
 export async function getServerCommits(
@@ -74,7 +74,7 @@ export async function getServerCommits(
 }
 
 /**
- * Commits a file onto `branch` of the bare repo on misc/git-server.js, as if
+ * Commits a file onto `branch` of the bare repo on misc/git-server.ts, as if
  * a second client had pushed it — so the app under test sees the remote
  * move ahead without doing anything itself. `branch` is created from master
  * if it doesn't exist yet.
@@ -112,7 +112,7 @@ export function buildCollectionFile(name: string): string {
   ].join("\n");
 }
 
-// Shared custom credential used to authenticate against misc/git-server.js,
+// Shared custom credential used to authenticate against misc/git-server.ts,
 // whose default Basic auth is testuser/testpass. `name` is the app's own
 // hardcoded display name for any custom (username/PAT) credential (see
 // git-custom-credential-form.tsx) — it isn't something we choose, so unlike
@@ -126,7 +126,7 @@ export const GIT_CREDENTIAL: GitCredential = {
 };
 
 interface GitFixtures {
-  /** The name of a repo freshly created (and seeded) on misc/git-server.js — always local, never a full URL. */
+  /** The name of a repo freshly created (and seeded) on misc/git-server.ts — always local, never a full URL. */
   gitRepo: string;
 }
 

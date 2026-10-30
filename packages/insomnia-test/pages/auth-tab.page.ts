@@ -183,7 +183,7 @@ export class AuthTabComponent extends TabPanelPage {
    * before any token exists, "Refresh Token" once one does — and waits
    * for the Access Token field to be populated. For the Authorization
    * Code and Implicit grants this drives a real popup authorization
-   * window (auto-approved by `misc/oauth2-server.js`, no interaction
+   * window (auto-approved by `misc/oauth2-server.ts`, no interaction
    * needed here); for Client Credentials/Resource Owner Password/an
    * existing Refresh Token it resolves directly against the token
    * endpoint with no popup at all.

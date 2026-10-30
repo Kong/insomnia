@@ -7,7 +7,7 @@ import type { TestInfo } from '@playwright/test';
 
 import { UpgradePhase } from '../enums/upgrade-phase';
 
-const TEST_PACKAGE = path.resolve(__dirname, '..');
+const TEST_PACKAGE = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(TEST_PACKAGE, '..', '..');
 const TREES_DIR = process.env.INSOMNIA_VERSIONS_DIR ?? path.join(os.tmpdir(), 'insomnia-test-versions');
 const PHASE_DEV_SERVER_PORT = process.env.INSOMNIA_UPGRADE_DEV_PORT ?? '3434';

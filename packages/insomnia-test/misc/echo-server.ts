@@ -1,14 +1,16 @@
 #!/usr/bin/env node
-'use strict';
 
-const http = require('node:http');
-const https = require('node:https');
-const fs = require('node:fs');
-const path = require('node:path');
-const { graphql, buildSchema } = require('graphql');
-const { certPath } = require('./certs');
+import fs from 'node:fs';
+import type { IncomingMessage, ServerResponse } from "node:http";
+import http from 'node:http';
+import https from 'node:https';
+import path from 'node:path';
 
-const PETSTORE_SWAGGER = fs.readFileSync(path.join(__dirname, 'fixtures', 'petstore-swagger.json'), 'utf8');
+import { buildSchema, graphql } from 'graphql';
+
+import { certPath } from './certs.ts';
+
+const PETSTORE_SWAGGER = fs.readFileSync(path.join(import.meta.dirname, 'fixtures', 'petstore-swagger.json'), 'utf8');
 
 const GRAPHQL_SCHEMA = buildSchema(`
   """A character from the show."""
@@ -55,10 +57,10 @@ const GRAPHQL_EPISODES = [
 ];
 
 const GRAPHQL_ROOT = {
-  characters: ({ filter }) => ({
+  characters: ({ filter }: { filter?: { status?: string } }) => ({
     results: filter?.status ? GRAPHQL_CHARACTERS.filter(c => c.status === filter.status) : GRAPHQL_CHARACTERS,
   }),
-  episode: ({ id }) => GRAPHQL_EPISODES.find(e => e.id === id) ?? null,
+  episode: ({ id }: { id: number }) => GRAPHQL_EPISODES.find(e => e.id === id) ?? null,
 };
 
 const HTTPS_OPTIONS = {
@@ -81,10 +83,10 @@ const MTLS_HTTPS_OPTIONS = {
   rejectUnauthorized: true,
 };
 
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
+function readBody(req: IncomingMessage) {
+  return new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
@@ -93,7 +95,7 @@ function readBody(req) {
 const MIN_REPLY_DELAY_MS = 1;
 const MAX_REPLY_DELAY_MS = 60_000;
 
-function delayResponse(req) {
+function delayResponse(req: IncomingMessage) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
   if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
@@ -102,8 +104,8 @@ function delayResponse(req) {
   return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
 }
 
-function parseCookies(header) {
-  const cookies = {};
+function parseCookies(header?: string) {
+  const cookies: Record<string, string> = {};
   if (!header) return cookies;
   for (const pair of header.split(';')) {
     const idx = pair.indexOf('=');
@@ -113,8 +115,8 @@ function parseCookies(header) {
   return cookies;
 }
 
-async function handleRequest(req, res) {
-  const url = new URL(req.url, `${req.socket.encrypted ? 'https' : 'http'}://localhost`);
+async function handleRequest(req: IncomingMessage, res: ServerResponse) {
+  const url = new URL(req.url as string, `${(req.socket as any).encrypted ? 'https' : 'http'}://localhost`);
   process.stdout.write(`${req.method} ${url.pathname}\n`);
   await delayResponse(req);
 
@@ -133,7 +135,7 @@ async function handleRequest(req, res) {
     try {
       json = JSON.parse(raw);
     } catch {}
-    const args = {};
+    const args: Record<string, any> = {};
     for (const [k, v] of url.searchParams) {
       if (args[k] === undefined) {
         args[k] = v;

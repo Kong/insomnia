@@ -3,13 +3,13 @@
 // (git-ignored). Idempotent: does nothing when every file already exists, so
 // playwright.config.ts can call it once before the webServers start and each
 // server can call it again as a no-op (or to run standalone).
-const crypto = require("node:crypto");
-const fs = require("node:fs");
-const path = require("node:path");
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
-const forge = require("node-forge");
+import forge from "node-forge";
 
-const CERT_DIR = path.join(__dirname, "fixtures", "generated");
+const CERT_DIR = path.join(import.meta.dirname, "fixtures", "generated");
 
 const FILES = [
   "localhost-key.pem",
@@ -33,7 +33,19 @@ function generateKeyPair() {
   return { privatePem, forgePrivate, forgePublic };
 }
 
-function createCert({ commonName, issuer, issuerKey, key, extensions }) {
+function createCert({
+  commonName,
+  issuer,
+  issuerKey,
+  key,
+  extensions,
+}: {
+  commonName: string;
+  issuer?: forge.pki.CertificateField[];
+  issuerKey?: forge.pki.rsa.PrivateKey;
+  key: ReturnType<typeof generateKeyPair>;
+  extensions: any[];
+}) {
   const cert = forge.pki.createCertificate();
   cert.publicKey = key.forgePublic;
   cert.serialNumber = crypto.randomBytes(8).toString("hex");
@@ -58,7 +70,7 @@ const LOCALHOST_SAN = {
 
 function generate() {
   fs.mkdirSync(CERT_DIR, { recursive: true });
-  const write = (name, contents) =>
+  const write = (name: string, contents: string) =>
     fs.writeFileSync(path.join(CERT_DIR, name), contents);
 
   // Self-signed localhost cert, used by every plain HTTPS/WSS/gRPC-TLS server.
@@ -137,9 +149,9 @@ function ensureCerts() {
  * @param name - A fixture file name, e.g. `"localhost-key.pem"`
  * @returns The absolute path to that generated file, creating it first if needed
  */
-function certPath(name) {
+function certPath(name: string) {
   ensureCerts();
   return path.join(CERT_DIR, name);
 }
 
-module.exports = { CERT_DIR, ensureCerts, certPath };
+export { CERT_DIR, ensureCerts, certPath };
