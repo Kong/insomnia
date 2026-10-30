@@ -86,13 +86,33 @@ export class VariableSourcePage extends BasePage {
    */
   async readVariableModal(): Promise<VariableSourceModal> {
     const dialog = this.page.getByRole("dialog");
-    const row = dialog.locator(this.SOURCE_ROW);
     const preview = dialog.locator("textarea");
     await expect(preview).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    const source = (await row.isVisible())
-      ? ((await row.innerText()).replace(/\s+/g, " ").trim())
-      : undefined;
-    return { source, preview: await preview.inputValue() };
+    // The Source row is recomputed asynchronously after every template change,
+    // so read an atomic snapshot (no visible-then-innerText race) and wait
+    // until two consecutive snapshots agree.
+    const snapshot = () =>
+      dialog.evaluate((el, sel) => {
+        const row = el.querySelector<HTMLElement>(sel);
+        const textarea = el.querySelector("textarea");
+        return {
+          source: row ? row.innerText.replace(/\s+/g, " ").trim() : undefined,
+          preview: textarea?.value ?? "",
+        };
+      }, this.SOURCE_ROW);
+    let previous = await snapshot();
+    await expect
+      .poll(
+        async () => {
+          const current = await snapshot();
+          const settled = JSON.stringify(current) === JSON.stringify(previous);
+          previous = current;
+          return settled;
+        },
+        { timeout: DEFAULT_TIMEOUT, intervals: [200] },
+      )
+      .toBe(true);
+    return previous;
   }
 
   /**

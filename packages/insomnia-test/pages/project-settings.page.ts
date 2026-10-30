@@ -141,6 +141,14 @@ export class ProjectSettingsPage extends BasePage {
    */
   async submitScanForFiles(): Promise<void> {
     await this.scanForFilesButton.click();
+    // The dialog flips to the results view before the scan request has started, and in that
+    // window it already shows the empty-result state ("Create Blank Project", no warning).
+    // Wait for the in-flight indicator so a later read can't mistake that for a finished scan.
+    // A scan so fast it never paints this is fine to skip: it has finished already.
+    await this.dialog
+      .getByText("Scanning remote repo for Insomnia files")
+      .waitFor({ state: "visible", timeout: 3000 })
+      .catch(() => {});
   }
 
   /**
@@ -154,6 +162,7 @@ export class ProjectSettingsPage extends BasePage {
         name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
       })
       .click();
+    // The dialog only closes once the clone (git fetch + project creation) finishes.
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -266,10 +275,6 @@ export class ProjectSettingsPage extends BasePage {
   }
 
 
-  private readonly confirmCloneButton = this.dialog.getByRole("button", {
-    name: /^(Clone Project|Clone and Migrate|Create Blank Project|Create)$/,
-  });
-
   private readonly unknownFieldsWarning = this.dialog
     .locator("div")
     .filter({ has: this.page.getByRole("heading", { name: "Unknown Fields Detected" }) })
@@ -304,6 +309,10 @@ export class ProjectSettingsPage extends BasePage {
     await expect(this.dialog.getByText("Scanning remote repo for Insomnia files")).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
-    await expect(this.confirmCloneButton).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
+    // "Create" is excluded: a disabled/enabled "Create" button is rendered before the scan starts,
+    // so matching it would let this return before the scan result has rendered.
+    await expect(
+      this.dialog.getByRole("button", { name: /^(Clone Project|Clone and Migrate|Create Blank Project)$/ }),
+    ).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
   }
 }

@@ -668,7 +668,7 @@ export class GitSyncPage extends BasePage {
   };
 
   private readonly visualDiffNotice = this.commitDialog.getByText(
-    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|doesn't match the Insomnia file format/,
+    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|This is not a valid Insomnia file/,
   );
 
   /**
@@ -824,6 +824,11 @@ export class GitSyncPage extends BasePage {
       await this.selectEntityCardTab(entityName, tab, typeLabel);
     }
     const editor = card.locator('.monaco-diff-editor').first();
+    // The app only creates the Monaco editor once its (empty) container is within 300px of the
+    // viewport, so there is nothing to scroll to yet: bring the card itself into view first.
+    await card.scrollIntoViewIfNeeded();
+    await card.getByRole('tabpanel').first().scrollIntoViewIfNeeded();
+    await expect(editor).toBeAttached({ timeout: DEFAULT_TIMEOUT });
     await editor.scrollIntoViewIfNeeded();
     await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     await expect(editor.locator('.diff-hidden-lines').first()).toBeAttached({ timeout: DEFAULT_TIMEOUT });
@@ -1120,28 +1125,47 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Counts the diff editor's highlighted unknown-field lines at both the top
-   * and the bottom of the file, so a field anywhere in a file that fits in
-   * two viewports is seen; lines visible from both positions are counted
-   * twice, so use it for "any highlight" checks rather than an exact line
-   * count. Moves the editor's cursor. Requires `openChangeDiff()` to have
-   * been called.
-   * @returns The highlighted lines seen at the top plus those seen at the bottom
+   * Counts the diff editor's highlighted unknown-field lines across the whole
+   * file by scrolling it from the top to the bottom, so a field anywhere in
+   * the file is seen however small the editor is (in a short Commit modal it
+   * shows only a few lines, with the unchanged ones folded away). Lines
+   * visible from two adjacent scroll positions may be counted twice, so use
+   * it for "any highlight" checks rather than an exact line count. Scrolls
+   * with the mouse wheel rather than the keyboard, as moving the cursor does
+   * not scroll an editor that short. Requires `openChangeDiff()` to have been
+   * called.
+   * @returns The highlighted lines seen at every scroll position, summed
    */
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
-    await this.commitDialog.locator('.monaco-diff-editor .view-line').first().click();
+    const diffEditor = this.commitDialog.locator('.monaco-diff-editor').first();
+    const viewLines = diffEditor.locator('.view-lines');
+    await diffEditor.hover();
+    await this.page.mouse.wheel(0, -100_000);
     let total = 0;
-    for (const key of ['ControlOrMeta+ArrowUp', 'ControlOrMeta+ArrowDown']) {
-      await this.page.keyboard.press(key);
+    let previousText = '';
+    // No step cap: the loop ends when scrolling stops changing what is visible (the test timeout bounds it otherwise).
+    for (let step = 0; ; step++) {
+      await this.page.waitForTimeout(300);
       let previous = -1;
+      let stableReads = 0;
       let count = 0;
+      // The decorations render a beat after the editor's lines do, so an early 0 is not "settled":
+      // give the first position's highlight a grace period, then require the count to stop changing.
+      const deadlineForFirstHighlight = Date.now() + DEFAULT_TIMEOUT / 2;
       await expect(async () => {
         count = await this.getUnknownFieldHighlightCount();
-        const isSettled = count === previous;
+        stableReads = count === previous ? stableReads + 1 : 0;
         previous = count;
-        expect(isSettled).toBe(true);
+        const hasWaitedEnough = step > 0 || count > 0 || Date.now() > deadlineForFirstHighlight;
+        expect(stableReads >= 2 && hasWaitedEnough).toBe(true);
       }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });
       total += count;
+
+      const text = (await viewLines.allInnerTexts()).join('\n');
+      if (text === previousText) break; // the wheel no longer scrolls: reached the bottom
+      previousText = text;
+      // A step well under the editor's visible height, so no line is skipped between positions.
+      await this.page.mouse.wheel(0, 40);
     }
     return total;
   }

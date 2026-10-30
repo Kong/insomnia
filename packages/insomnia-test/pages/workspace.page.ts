@@ -1228,7 +1228,13 @@ export class WorkspacePage extends BasePage {
     parent: TreeNode | { name: string; id?: string },
   ): Promise<TreeNode> {
     if ("_id" in parent) return parent as TreeNode;
-    return (await this.findItemNode(parent))!;
+    // findItemNode() only polls for 2s, which a slow sidebar re-render (e.g. after a Git Sync
+    // commit) can exceed — give the parent node a full DEFAULT_TIMEOUT to show up.
+    const node = await this.poll(() => this.findItemNode(parent), DEFAULT_TIMEOUT);
+    if (!node) {
+      throw new Error(`resolveNode(): no tree node found for ${JSON.stringify(parent)}`);
+    }
+    return node;
   }
 
   /**
@@ -2249,6 +2255,18 @@ export class WorkspacePage extends BasePage {
     await row.click();
     await row.focus();
     await this.page.keyboard.press("Delete");
+  }
+
+  /**
+   * Reads the titles of any visible "resource not found" toasts, so a failing
+   * assertion names the route that raised it.
+   * @returns The toasts' full text, one entry per toast
+   */
+  async getResourceNotFoundToastTexts(): Promise<string[]> {
+    return this.page
+      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
+      .locator("xpath=..")
+      .allInnerTexts();
   }
 
   /**
