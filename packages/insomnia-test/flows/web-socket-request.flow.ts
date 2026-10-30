@@ -3,6 +3,7 @@ import type { RequestAuthentication } from "insomnia-data";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { ResponseView } from "../models/response";
@@ -19,6 +20,7 @@ export class WebSocketRequestFlow extends BaseFlow {
    * Creates a new WebSocket request under `parent`, naming it via the
    * rename flow and applying its fields on the request page.
    */
+  @step()
   async create(
     parent: Collection | Folder,
     request: WebSocketRequest,
@@ -51,6 +53,7 @@ export class WebSocketRequestFlow extends BaseFlow {
    * returns the resulting response, locating it via the standalone
    * project tree.
    */
+  @step()
   async disconnect(
     request: WebSocketRequest,
     callback: () => Promise<void> | void = () => {},
@@ -75,6 +78,7 @@ export class WebSocketRequestFlow extends BaseFlow {
    * Reads back an existing request's fields by name or identity via the
    * standalone project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -97,6 +101,7 @@ export class WebSocketRequestFlow extends BaseFlow {
    * Opens the WebSocket connection for `request` and returns the
    * resulting response, locating it via the standalone project tree.
    */
+  @step()
   async send(
     request: WebSocketRequest,
     options?: { expectConnected?: boolean },
@@ -119,6 +124,7 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
    */
+  @step()
   async setAuthentication(
     request: WebSocketRequest,
     authentication: RequestAuthentication,
@@ -138,6 +144,7 @@ export class WebSocketRequestFlow extends BaseFlow {
    * `timeout` ms elapses), and returns the resulting response, locating it
    * via the standalone project tree.
    */
+  @step()
   async sendMessage(
     request: WebSocketRequest,
     body: WebSocketRequestBody,

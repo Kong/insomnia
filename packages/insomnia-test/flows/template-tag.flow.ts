@@ -1,4 +1,5 @@
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { HttpRequest } from "../models/http-request";
 import type { ResponseView } from "../models/response";
 import type { TemplateTag, TemplateTagName } from "../models/template-tag";
@@ -16,6 +17,7 @@ export class TemplateTagFlow extends BaseFlow {
    * arguments too, since those have dedicated getters), and confirms via
    * "Done".
    */
+  @step()
   async get(template: string): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
     const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
@@ -47,6 +49,7 @@ export class TemplateTagFlow extends BaseFlow {
    * `PreferencesFlow.addCloudCredentials()`). No other tag is supported
    * today, since these are the only two with dedicated argument setters.
    */
+  @step()
   async edit(template: string, target: TemplateTag): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
     const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
@@ -80,6 +83,7 @@ export class TemplateTagFlow extends BaseFlow {
    * clicks "Clear" to wipe the value cached under its storage key, and
    * confirms via "Done".
    */
+  @step()
   async clearCachedPrompt(template: string): Promise<void> {
     const templateTag = this.pageManager.templateTagPage;
     const tag = template.match(/\{%.*?%\}/)?.[0] ?? template;
@@ -93,6 +97,7 @@ export class TemplateTagFlow extends BaseFlow {
    * value), answers the resulting prompt dialog, and reads back the
    * response.
    */
+  @step()
   async sendAnsweringPrompt(
     request: HttpRequest,
     label: string,

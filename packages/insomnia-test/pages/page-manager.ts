@@ -1,7 +1,6 @@
 import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
-import { instrumentWithSteps } from "../misc/step-instrumentation";
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
 import { CloudSyncPage } from "./cloud-sync.page";
@@ -282,8 +281,7 @@ export class PageManager {
   }
 
   private getOrCreate<T extends object>(key: string, factory: () => T): T {
-    if (!this.instances.has(key))
-      this.instances.set(key, instrumentWithSteps(factory()));
+    if (!this.instances.has(key)) this.instances.set(key, factory());
     return this.instances.get(key) as T;
   }
 }

@@ -2,6 +2,7 @@ import type { RequestAuthentication } from "insomnia-data";
 
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import { GraphQLRequest } from "../models/graphql-request";
@@ -15,6 +16,7 @@ export class GraphQLRequestFlow extends BaseFlow {
    * Creates a GraphQL request under `parent` via the standalone project
    * tree, then verifies it was created.
    */
+  @step()
   async create(
     parent: Collection | Folder,
     request: GraphQLRequest,
@@ -41,6 +43,7 @@ export class GraphQLRequestFlow extends BaseFlow {
    * Reads back an existing GraphQL request's fields via the standalone
    * project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -63,6 +66,7 @@ export class GraphQLRequestFlow extends BaseFlow {
    * Opens `request`, clicks its Auth tab's token-fetch button and reads
    * the resulting tokens back.
    */
+  @step()
   async fetchOAuth2Tokens(request: GraphQLRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.graphqlRequestPage;
@@ -78,6 +82,7 @@ export class GraphQLRequestFlow extends BaseFlow {
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
    */
+  @step()
   async setAuthentication(
     request: GraphQLRequest,
     authentication: RequestAuthentication,
@@ -95,6 +100,7 @@ export class GraphQLRequestFlow extends BaseFlow {
    * Sends `request` and reads back the resulting response via the
    * standalone project tree.
    */
+  @step()
   async send(request: GraphQLRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const graphqlRequestPage = this.pageManager.graphqlRequestPage;
