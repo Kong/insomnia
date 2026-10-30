@@ -129,7 +129,7 @@ A local AES-256 key auto-generated on first launch of the Insomnia App (regardle
 - **Key:** Locally generated AES-256 key — auto-generated on first launch of the Insomnia App, regardless of login state
 - **Key generation:** On first launch, if no local encryption key exists, generate a new AES-256 key using `crypto.subtle.generateKey` (or equivalent)
 - **Key local protection:** Encrypted with Electron's asynchronous `safeStorage` API before storing locally (see 4.2.1)
-- **Key storage location:** Stored in a dedicated local file (e.g., `<dataPath>/.encryption-key`), protected by safeStorage
+- **Key storage location:** Stored through `ElectronStorage` (`src/main/electron-storage.ts`) under a dedicated key (e.g. `fieldEncryptionKey`), i.e. the file `<dataPath>/localStorage/fieldEncryptionKey`, next to the existing Vault Key. Must use the strict methods described in 4.2.1, not `setItem` / `getItem`
 - **Encrypted value format:** `enc:v1:` + base64(`iv` (12 bytes) ‖ `tag` (16 bytes) ‖ `ciphertext`)
   - **Compact:** the binary parts are concatenated and base64-encoded once. A JSON envelope (e.g. base64 of `{iv, t, ad, d}` with hex/base64 inside) would make each value more than twice as large
   - **Versioned:** `v1` allows a future change of algorithm or layout; readers dispatch on the version and keep decoding older versions
@@ -148,9 +148,23 @@ The key file is protected with `safeStorage.encryptStringAsync()` / `decryptStri
 2. **Pre-flight check:** Call `isAsyncEncryptionAvailable()` after `ready` as a signal, but still treat every encrypt/decrypt call as fallible — after `ready`, errors surface during operations rather than in the availability check.
 3. **Always `try/catch`.** Temporary unavailability is **not** a field in the success payload; it is a Promise rejection from `decryptStringAsync` with a message like `safeStorage.decryptStringAsync is temporarily unavailable. Please try again.`
 4. **Bounded exponential backoff for temporary unavailability only.** Detect the error by its "temporarily unavailable" message and retry: 5 attempts, 120 ms base delay, 2000 ms cap, 20% jitter. Any other error fails immediately.
-5. **Handle `shouldReEncrypt`.** `decryptStringAsync` resolves `{ result, shouldReEncrypt }`; `shouldReEncrypt: true` signals an OS-side key/provider rotation. Re-encrypt the plaintext key with `encryptStringAsync` and write the new ciphertext back to the key file (write to a temp file, then rename, so a crash cannot leave a half-written key file). The local AES key itself does not change, so `.db` ciphertext is unaffected.
+5. **Handle `shouldReEncrypt`.** `decryptStringAsync` resolves `{ result, shouldReEncrypt }`; `shouldReEncrypt: true` signals an OS-side key/provider rotation. Re-encrypt the plaintext key with `encryptStringAsync` and write the new ciphertext back to the key file with `setItemDurable` (see "Key file storage" below), so a crash cannot leave a half-written key file. The local AES key itself does not change, so `.db` ciphertext is unaffected.
 6. **Never delete or regenerate on failure.** A temporary-unavailable error, exhausted retries, or a non-retriable decrypt error must leave the key file untouched. A new key is generated **only when the key file does not exist**. Regenerating over an unreadable key file would orphan every encrypted field on disk.
 7. **Recoverable degraded state.** If retries are exhausted or decryption fails, the database opens in degraded mode (see 4.3) and the user is shown the decryption failure dialog (5.2). The next launch retries normally.
+
+**Key file storage:** The protected key is stored through `ElectronStorage`, which already holds the Vault Key (`setSecret` / `getSecret` in `secret-storage.ts`) and is initialized in `entry.main.ts` before `initDatabase()`. Its existing `setItem` / `getItem` are **not safe for this key**:
+
+- **`setItem` defers the write and does not make it durable:** it buffers in memory and writes 100 ms later with `writeFileSync` directly over the target — no temp file + rename, no fsync. A crash in that window loses or truncates the key after the `.db` files may already be encrypted (6.3).
+- **`setItem` swallows write errors:** they are only logged and it returns `void`, so the caller cannot tell the key was not saved.
+- **`getItem` turns an unreadable file into the default value:** a truncated or corrupt file fails `JSON.parse` and `getItem` returns `defaultObj`. The caller would conclude "no key" and generate a new one — exactly what rule 6 forbids, orphaning all encrypted data.
+- **`getItem` writes on read:** a missing file is created with the default value, which blurs the "key file does not exist" check.
+
+Two new methods are added to `ElectronStorage`. Existing methods and their callers are unchanged:
+
+- **`setItemDurable(key, value): Promise<void>`:** writes a temp file, fsyncs it, renames it over the target, then fsyncs the directory. Rejects on any failure.
+- **`getItemStrict(key)`:** returns `null` only when the file does not exist. Throws when the file exists but cannot be read or parsed. Never writes.
+
+The key's lifecycle uses only these two methods. "Generate a new key" is reachable only through `getItemStrict` returning `null`.
 
 **First launch when protection fails:** If no key file exists and `encryptStringAsync` fails after retries, the key is **not** persisted in plaintext. Encryption is not enabled for that session (data stays in its current plaintext state and migration is deferred), and key generation is retried on the next launch.
 
@@ -185,7 +199,7 @@ init: async (config: DataStoreOptions = {}, forceReset = false) => {
   const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
   // safeStorage-protected local key (4.2.1); not needed (and not loaded) for in-memory instances.
   // Resolves undefined when the key cannot be loaded or created → degraded mode.
-  const fieldEncryptionKey = config.inMemoryOnly ? undefined : await getLocalEncryptionKey(dbPath);
+  const fieldEncryptionKey = config.inMemoryOnly ? undefined : await getLocalEncryptionKey();
   await nedbDatabase.init({ dbPath, fieldEncryptionKey, ...config }, forceReset);
   // ...
 };
@@ -214,12 +228,19 @@ init: async (config: DataStoreOptions = {}, forceReset = false) => {
 **`afterSerialization` never writes plaintext for an encrypted field:**
 
 - **Values already starting with `enc:v1:` are written unchanged**, never encrypted again. This keeps values that failed decryption byte-identical across rewrites, so they remain recoverable once the correct key is available.
-- **If encryption itself fails**, the hook throws instead of falling back to plaintext. NeDB builds all lines before touching the file, so nothing partial is written:
-  - During an insert/update, the operation rejects. NeDB has already applied the change in memory, so it is lost on restart; the error surfaces to the caller.
-  - During the startup rewrite, that datastore's load rejects and its `.db` file is left untouched (see "Load failures" below).
-- With a valid `KeyObject` already in memory, encryption failure indicates a programming error, not a runtime condition; tests (below) guard against it.
+- **If encryption itself fails, the hook throws instead of falling back to plaintext.**
+  - **Why throw:** With the key already in memory and `node:crypto`, encryption does not fail in normal operation. A failure means a bug in our code (e.g. a wrong path walk, or a non-string value passed to the cipher). With a plaintext fallback, that bug would be invisible: data still round-trips, tests still pass, and sensitive fields silently stay plaintext — the original security finding would remain while appearing fixed. Throwing makes such a bug fail loudly in development and tests (fail closed).
+  - **Cost if it ever happens on a user's machine:** NeDB builds all lines before touching the file, so nothing partial is written. During an insert/update, the operation rejects; NeDB has already applied the change in memory, so it is lost on restart. During the startup rewrite, that datastore's load fails and its `.db` file is left untouched (see "Load failures" below).
+  - **Not in conflict with degraded mode (4.3):** Degraded mode also writes plaintext, but it is an explicit state entered after detecting that the key is unavailable, and the user is told. A per-field plaintext fallback would happen silently.
 
-**Load failures must surface as errors, not hangs:** Each datastore is created with `autoload: true`, which starts its load immediately; Insomnia currently neither passes `onload` nor awaits `autoloadPromise`. If a load rejects, NeDB rethrows it as an unhandled rejection and never marks the datastore ready, so every query on it waits forever — `init()` then hangs in `repairDatabase()` and no window ever appears. `init()` therefore awaits every datastore's `autoloadPromise` (`Promise.allSettled`) and rejects with an error naming the failed datastores. Startup reports that error to the user instead of hanging. The failed `.db` files are untouched, so nothing is lost.
+**Load failures must surface as errors, not hangs:**
+
+- **How datastores load today:** Each datastore is created with `autoload: true`. Its constructor returns immediately while the `.db` file loads in the background; queries issued before the load finishes are queued and run once it succeeds. A load consists of reading every line through `beforeDeserialization`, then the full rewrite through `afterSerialization`. `init()` creates all 44 datastores this way and does not wait for their loads.
+- **What happens when a load fails:** Insomnia neither passes an `onload` callback nor awaits `autoloadPromise`, so NeDB rethrows the error as an unhandled promise rejection (only a log line). The datastore is never marked ready, so its queued queries never run — they neither resolve nor reject. The app hangs at the first query on that datastore:
+  - If it is one of the datastores queried by `repairDatabase()` at the end of `init()` (Workspace, Environment, CookieJar, ApiSpec, GitRepository), `init()` hangs and no window appears.
+  - Otherwise (e.g. Request), startup completes and the UI hangs later, e.g. when the user opens a workspace.
+- **Why this matters now:** Without encryption, loads practically never fail (only when more than 90% of a file is corrupt). Encryption adds a new failure source: `afterSerialization` throwing during the startup rewrite.
+- **Required behavior:** `init()` awaits every datastore's `autoloadPromise` (`Promise.allSettled`) and rejects with an error naming the failed datastores. Startup reports that error to the user instead of hanging. The failed `.db` files are untouched, so nothing is lost.
 
 **Tests:** For each encrypted model, cover wrong key, tampered ciphertext, truncated value, lookalike plaintext, and unparseable line. Assert that the document count is unchanged after load + rewrite, failed values are preserved byte-for-byte, and the failure report lists exactly the affected `{ type, _id, path }`.
 
@@ -357,8 +378,8 @@ The key must be durably persisted and verified **before** any datastore is writt
 
 1. Generate the AES-256 key.
 2. Protect it with `encryptStringAsync` (4.2.1).
-3. Write it to a temp file, flush it to disk, then rename it to the key file.
-4. Read the key file back, decrypt it with `decryptStringAsync`, and compare it with the in-memory key.
+3. Write it with `ElectronStorage.setItemDurable` (temp file, fsync, rename; 4.2.1).
+4. Read it back with `getItemStrict`, decrypt it with `decryptStringAsync`, and compare it with the in-memory key.
 5. Only then initialize the database with hooks.
 
 If any of steps 1–4 fails, the "first launch when protection fails" path in 4.2.1 applies: encryption is not enabled for this session, and key creation is retried on the next launch.
@@ -391,7 +412,7 @@ If any of steps 1–4 fails, the "first launch when protection fails" path in 4.
 | ------- | ------------------------------------------------ | ------------------------------------------- |
 | Phase 1 | Field encryption utility (`field-encryption.ts`) | 1 new file + tests                          |
 | Phase 2 | Integrate hooks into `database-nedb.ts` `init()` (per-instance key via init options, skip `inMemoryOnly`); pass key from `database.main.ts` | 2 files modified |
-| Phase 3 | Local key generation + async safeStorage protection (retry with backoff, `shouldReEncrypt` write-back, atomic key file write, degraded mode) | 1–2 new files + tests |
+| Phase 3 | Local key generation + async safeStorage protection (retry with backoff, `shouldReEncrypt` write-back, degraded mode); `ElectronStorage.setItemDurable` / `getItemStrict` | 1–2 new files, `electron-storage.ts` modified, + tests |
 | Phase 4 | Decryption failure dialog UI                     | 1–2 new files                               |
 | Phase 5 | `encrypted()` registry + schema path derivation; mark sensitive fields in model schemas; migrate ClientCertificate / CloudCredential / OAuth2Token / GitCredentials / RequestVersion to Zod | 1 new file + tests; 12+ model files modified |
 | Phase 6 | inso CLI `--encryption-key` support (reuse `createFieldEncryptionHooks()` in `ne-db-adapter.ts`) | 2–3 files modified |
