@@ -5,9 +5,11 @@ on:
 
 permissions: {}
 
+# Do not cancel a running release build: a cancelled run has often spent Windows code-signing tokens already.
+# A new dispatch for the same ref waits until the running build ends.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # shared kong github action for security checking
