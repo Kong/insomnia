@@ -1044,11 +1044,15 @@ export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
   requestIds,
+  includeCookies = true,
+  includeEnvironments = true,
   db = database,
 }: {
   workspaceId: string;
   includePrivateEnvironments: boolean;
   requestIds?: string[];
+  includeCookies?: boolean;
+  includeEnvironments?: boolean;
   db?: IDatabase;
 }) {
   try {
@@ -1085,6 +1089,19 @@ export async function getInsomniaV5DataExport({
       exportableResources.filter(models.webSocketPayload.isWebSocketPayload).map(payload => [payload.parentId, payload]),
     );
 
+    // When exporting a subset of requests, only keep the folders that contain at least one of them
+    const requestGroupIdsToKeep = new Set<string>();
+    if (requestIds && requestIds.length > 0) {
+      const parentIdById = new Map(exportableResources.map(resource => [resource._id, resource.parentId]));
+      for (const requestId of requestIds) {
+        let parentId = parentIdById.get(requestId);
+        while (parentId && !requestGroupIdsToKeep.has(parentId)) {
+          requestGroupIdsToKeep.add(parentId);
+          parentId = parentIdById.get(parentId);
+        }
+      }
+    }
+
     /**
      * Recursively builds a collection structure from flat resource list
      * This function converts the flat list of resources into a hierarchical structure
@@ -1103,9 +1120,12 @@ export async function getInsomniaV5DataExport({
       // Filter resources based on requestIds filter and parent relationship
       resources
         .filter(resource => {
-          // Include all request groups, or filter by requestIds if specified
-          if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
+          // Include everything, or filter by requestIds if specified (folders are kept only if they contain a selected request)
+          if (!requestIds || requestIds.length === 0) {
             return true;
+          }
+          if (models.requestGroup.isRequestGroup(resource)) {
+            return requestGroupIdsToKeep.has(resource._id);
           }
 
           return requestIds.includes(resource._id);
@@ -1447,11 +1467,15 @@ export async function getInsomniaV5DataExport({
           ),
           workspace._id,
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
+        cookieJar: includeCookies
+          ? getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar))
+          : undefined,
+        environments: includeEnvironments
+          ? getEnvironmentsFromResources(
+              exportableResources.filter(models.environment.isEnvironment),
+              includePrivateEnvironments,
+            )
+          : undefined,
         spec: collectionApiSpec.length > 0 ? getSpecFromResources(collectionApiSpec) : {},
         testSuites: getTestSuitesFromResources(collectionTestSuites),
       };
@@ -1476,11 +1500,15 @@ export async function getInsomniaV5DataExport({
           ),
           workspace._id,
         ),
-        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(
-          exportableResources.filter(models.environment.isEnvironment),
-          includePrivateEnvironments,
-        ),
+        cookieJar: includeCookies
+          ? getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar))
+          : undefined,
+        environments: includeEnvironments
+          ? getEnvironmentsFromResources(
+              exportableResources.filter(models.environment.isEnvironment),
+              includePrivateEnvironments,
+            )
+          : undefined,
         spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
         testSuites: getTestSuitesFromResources(
           exportableResources.filter(
