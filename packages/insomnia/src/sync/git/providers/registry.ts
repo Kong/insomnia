@@ -91,3 +91,9 @@ export class GitRemoteProviderRegistry {
     return undefined;
   }
 }
+
+/**
+ * Singleton instance of the provider registry
+ * Use this instance throughout the application
+ */
+export const gitRemoteProviderRegistry = new GitRemoteProviderRegistry();
