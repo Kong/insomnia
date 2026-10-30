@@ -2,6 +2,8 @@
 
 ## Reporting a Vulnerability
 
-To report a vulnerability in the Kong gateway, Insomnia or other Kong software, or know of a publicly disclosed security vulnerability, please immediately let us know by emailing <security@konghq.com>.
+Kong offers a Responsible Disclosure Program to encourage the good-faith reporting of security vulnerabilities. Researchers who follow our guidelines will not face legal action and may be publicly acknowledged for their contributions. For more information, visit our [Responsible Disclosure page](https://hackerone.com/kong).
 
-For more detailed information, please see [Kong's Security Update Process](https://docs.konghq.com/gateway-oss/latest/kong-security-update-process/#reporting-a-vulnerability).
+To report a vulnerability in Insomnia or other Kong software, please submit it through our [HackerOne program](https://hackerone.com/kong).
+
+For urgent matters, such as a publicly disclosed security vulnerability, email <security@konghq.com>.
