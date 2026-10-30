@@ -256,7 +256,12 @@ export async function collectHiddenWindowCoverage(
   hiddenWindows.delete(app);
   for (const win of tracked) {
     if (!win.isClosed()) {
-      await collectWindowCoverage(win);
+      // A hidden window can be hung on purpose (e.g. a script stuck in an infinite loop),
+      // and asking a blocked renderer for coverage never answers — give up after a while.
+      await Promise.race([
+        collectWindowCoverage(win),
+        new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+      ]);
     }
   }
 }
