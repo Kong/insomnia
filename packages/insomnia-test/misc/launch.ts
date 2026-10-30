@@ -30,7 +30,7 @@ const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "..", "insomnia");
  * Runs the same one-shot `esbuild.entrypoints.ts` dev build `npm run
  * start:electron` does, compiling the main/preload bundles into
  * `packages/insomnia/src` so the local `electron` binary has something to
- * load. Cached at module scope — `playwright.config.ts` pins `workers: 1`,
+ * load. Cached at module scope — `playwright.config.ts` enforces one worker,
  * so every test in the run shares this one build rather than re-running it
  * per test.
  */
@@ -138,14 +138,11 @@ export async function launchInsomniaElectron(options: {
 
 
 // The app sends this as the `x-session-id` header on every request to
-// mock-api.js, so it's also the key mock-api.js uses to keep per-instance
-// state (feature flags, ...) from leaking between Electron instances that
-// are running concurrently in different Playwright workers — see
-// setGitSyncFeatureFlag() below. Suffixed with TEST_PARALLEL_INDEX, which
-// Playwright guarantees is stable for a worker's lifetime and never shared
-// by two concurrently-running workers (unlike TEST_WORKER_INDEX, which
-// changes on retry): https://playwright.dev/docs/test-parallel.
-export const SESSION_ID = `sess_64a477e6b59d43a5a607f84b4f73e3ce-w${process.env.TEST_PARALLEL_INDEX ?? "0"}`;
+// mock-api.js, which keys its per-instance state (feature flags, cloud-sync
+// commits, vault, ...) by it. The suite is serial (see playwright.config.ts),
+// so one fixed id is enough; the `_admin/*` calls in misc/fixtures.ts pass it
+// explicitly because they run before the Electron instance has launched.
+export const SESSION_ID = "sess_64a477e6b59d43a5a607f84b4f73e3ce";
 
 // The account keys come from mock-api.js, which generates them at startup so
 // no key material lives in the repo (see GET /_admin/session-keys there).

@@ -6,7 +6,7 @@ import { GIT_SERVER as GIT_SERVER_URL,test as base } from "./fixtures";
 // The most recently created repo (set by the `gitRepo` fixture), used as
 // the default for getServerBranches()/getServerCommits() so specs don't
 // have to thread it through explicitly. Safe as module state since
-// playwright.config.ts runs this suite with workers: 1 (fully serial).
+// playwright.config.ts enforces a single worker (and throws on --workers=N).
 let currentGitRepo: string | undefined;
 
 function requireGitRepo(gitRepo: string | undefined): string {
