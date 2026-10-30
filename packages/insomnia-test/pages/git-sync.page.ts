@@ -1126,43 +1126,46 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Counts the diff editor's highlighted unknown-field lines across the whole
-   * file by paging from the top to the bottom, so a field anywhere in the
-   * file is seen however small the viewport is. Lines visible from two
-   * adjacent pages may be counted twice, so use it for "any highlight"
-   * checks rather than an exact line count. Moves the editor's cursor.
-   * Requires `openChangeDiff()` to have been called.
-   * @returns The highlighted lines seen on every page of the file, summed
+   * file by scrolling it from the top to the bottom, so a field anywhere in
+   * the file is seen however small the editor is (in a short Commit modal it
+   * shows only a few lines, with the unchanged ones folded away). Lines
+   * visible from two adjacent scroll positions may be counted twice, so use
+   * it for "any highlight" checks rather than an exact line count. Scrolls
+   * with the mouse wheel rather than the keyboard, as moving the cursor does
+   * not scroll an editor that short. Requires `openChangeDiff()` to have been
+   * called.
+   * @returns The highlighted lines seen at every scroll position, summed
    */
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
-    await this.commitDialog.locator('.monaco-diff-editor .view-line').first().click();
-    // Ctrl+Arrow only jumps to the top on macOS (Cmd+Arrow); on Linux/Windows Monaco binds it to
-    // "scroll one line", so use Ctrl+Home there.
-    await this.page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowUp' : 'Control+Home');
-    const viewLines = this.commitDialog.locator('.monaco-diff-editor .view-lines');
+    const diffEditor = this.commitDialog.locator('.monaco-diff-editor').first();
+    const viewLines = diffEditor.locator('.view-lines');
+    await diffEditor.hover();
+    await this.page.mouse.wheel(0, -100_000);
     let total = 0;
-    let previousPageText = '';
-    // No page cap: the loop ends when PageDown stops changing what is visible (the test timeout bounds it otherwise).
-    for (let page = 0; ; page++) {
+    let previousText = '';
+    // No step cap: the loop ends when scrolling stops changing what is visible (the test timeout bounds it otherwise).
+    for (let step = 0; ; step++) {
+      await this.page.waitForTimeout(300);
       let previous = -1;
       let stableReads = 0;
       let count = 0;
       // The decorations render a beat after the editor's lines do, so an early 0 is not "settled":
-      // give the first page's highlight a grace period, then require the count to stop changing.
+      // give the first position's highlight a grace period, then require the count to stop changing.
       const deadlineForFirstHighlight = Date.now() + DEFAULT_TIMEOUT / 2;
       await expect(async () => {
         count = await this.getUnknownFieldHighlightCount();
         stableReads = count === previous ? stableReads + 1 : 0;
         previous = count;
-        const hasWaitedEnough = page > 0 || count > 0 || Date.now() > deadlineForFirstHighlight;
+        const hasWaitedEnough = step > 0 || count > 0 || Date.now() > deadlineForFirstHighlight;
         expect(stableReads >= 2 && hasWaitedEnough).toBe(true);
       }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });
       total += count;
 
-      const pageText = (await viewLines.allInnerTexts()).join('\n');
-      if (pageText === previousPageText) break; // PageDown no longer scrolls: reached the bottom
-      previousPageText = pageText;
-      await this.page.keyboard.press('PageDown');
-      await this.page.waitForTimeout(200);
+      const text = (await viewLines.allInnerTexts()).join('\n');
+      if (text === previousText) break; // the wheel no longer scrolls: reached the bottom
+      previousText = text;
+      // A step well under the editor's visible height, so no line is skipped between positions.
+      await this.page.mouse.wheel(0, 40);
     }
     return total;
   }
