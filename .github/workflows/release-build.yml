@@ -213,6 +213,7 @@ jobs:
                 Write-Host "Already signed, skipping: $($_.Name)"
               } else {
                 Write-Host "To sign ($status): $($_.Name)"
+                Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- to sign (DigiCert action): ``$($_.Name)``"
                 Move-Item -LiteralPath $_.FullName -Destination "packages/insomnia/dist/win-unpacked/tosign"
               }
             }
