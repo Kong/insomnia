@@ -14,7 +14,7 @@ import { CoverageReport } from "monocart-coverage-reports";
  */
 export const COVERAGE_ENABLED = process.env.COVERAGE === "true";
 
-const OUTPUT_DIR = path.resolve(__dirname, "..", "coverage");
+const OUTPUT_DIR = path.resolve(import.meta.dirname, "..", "coverage");
 
 /**
  * Where the Electron main process's `NODE_V8_COVERAGE` output lands. Nested
@@ -134,7 +134,7 @@ function loadRendererSourceMap(entryUrl: string): object | undefined {
     }
   }
   // Dev mode / unpackaged build output
-  const devMap = path.resolve(__dirname, "..", "..", "insomnia", "build", relPath);
+  const devMap = path.resolve(import.meta.dirname, "..", "..", "insomnia", "build", relPath);
   try {
     return JSON.parse(fs.readFileSync(devMap, "utf8"));
   } catch {

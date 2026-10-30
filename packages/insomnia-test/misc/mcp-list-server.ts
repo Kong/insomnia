@@ -17,7 +17,7 @@ export type McpListConfig = Partial<Record<McpListMethod, McpListScript>> & {
 };
 
 /**
- * Gives a test its own scriptable endpoint on `misc/mcp-server.js` and
+ * Gives a test its own scriptable endpoint on `misc/mcp-server.ts` and
  * scripts what its list requests answer. List methods left out of `config`
  * answer with a valid empty list. Call again with the same `key` to switch
  * the behavior (e.g. between two Refresh clicks).
