@@ -207,8 +207,8 @@ export class GrpcRequestFlow extends BaseFlow {
    */
   private async openRequest(request: GrpcRequest): Promise<GrpcRequestPage> {
     const workspace = this.pageManager.workspacePage;
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
 
     const grpcRequestPage = this.pageManager.grpcRequestPage;
     await grpcRequestPage.navigate();
