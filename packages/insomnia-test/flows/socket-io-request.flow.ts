@@ -1,6 +1,7 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { ResponseView } from "../models/response";
@@ -13,6 +14,7 @@ export class SocketIORequestFlow extends BaseFlow {
    * Opens the Socket.IO connection for `request`, locating it via the
    * standalone project tree before connecting.
    */
+  @step()
   async connect(request: SocketIORequest): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;
@@ -27,6 +29,7 @@ export class SocketIORequestFlow extends BaseFlow {
    * Creates a new Socket.IO request under `parent`, naming it via the
    * rename flow and applying its fields on the request page.
    */
+  @step()
   async create(
     parent: Collection | Folder,
     request: SocketIORequest,
@@ -55,6 +58,7 @@ export class SocketIORequestFlow extends BaseFlow {
    * returns the resulting response, locating it via the standalone project
    * tree.
    */
+  @step()
   async disconnect(
     request: SocketIORequest,
     callback: () => Promise<void> | void = () => {},
@@ -79,6 +83,7 @@ export class SocketIORequestFlow extends BaseFlow {
    * Reads back an existing request's fields by name or identity via the
    * standalone project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -102,6 +107,7 @@ export class SocketIORequestFlow extends BaseFlow {
    * connection and returns the resulting response, locating it via the
    * standalone project tree.
    */
+  @step()
   async sendMessage(request: SocketIORequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const socketIoRequestPage = this.pageManager.socketIoRequestPage;

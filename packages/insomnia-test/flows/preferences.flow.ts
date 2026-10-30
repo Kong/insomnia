@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { step } from "../misc/step";
 import type { GitCredential } from "../models/git-credential";
 import type { AiUrlBackendSettings} from "../models/settings";
 import { Settings } from "../models/settings";
@@ -14,6 +15,7 @@ export class PreferencesFlow extends BaseFlow {
    * closes it. Only settings that are defined on `settings` are applied
    * (e.g. `validateSSL` is skipped when undefined).
    */
+  @step()
   async set(settings: Settings): Promise<Settings> {
     const preferencesPage = this.pageManager.preferencesPage;
     let aiUrlBackendResult: AiUrlBackendSettings | undefined;
@@ -167,6 +169,7 @@ export class PreferencesFlow extends BaseFlow {
    * `.rejects.toThrow(...)`. If accepted, the modal closes on its own and
    * this closes Preferences to finish.
    */
+  @step()
   async createPlugin(name: string): Promise<void> {
     const preferencesPage = this.pageManager.preferencesPage;
     await preferencesPage.open();
@@ -187,6 +190,7 @@ export class PreferencesFlow extends BaseFlow {
    * Opens Preferences -> Scripting and toggles a single rule group's
    * sandbox switch, then closes Preferences.
    */
+  @step()
   async toggleScriptSandboxRule(
     group: ScriptSandboxRuleGroup,
     enabled: boolean,
@@ -203,6 +207,7 @@ export class PreferencesFlow extends BaseFlow {
    * Credentials, so it's available to select when cloning/connecting a Git
    * Sync project.
    */
+  @step()
   async addGitCredential(credential: GitCredential): Promise<void> {
     const { preferencesPage } = this.pageManager;
     await preferencesPage.open();
@@ -217,6 +222,7 @@ export class PreferencesFlow extends BaseFlow {
    * Preferences. Does NOT include bundled plugins (see
    * `PreferencesPage.getBundlePlugins()`), which never appear on this tab.
    */
+  @step()
   async getInstalledPlugins(): Promise<string[]> {
     const { preferencesPage } = this.pageManager;
     await preferencesPage.open();
@@ -232,6 +238,7 @@ export class PreferencesFlow extends BaseFlow {
    * salt exists yet for this session (a fresh session, or one whose vault
    * state was just reset — see `resetVaultKey()`).
    */
+  @step()
   async generateVaultKey(): Promise<string> {
     const { preferencesPage } = this.pageManager;
     await preferencesPage.open();
@@ -249,6 +256,7 @@ export class PreferencesFlow extends BaseFlow {
    * there's no dialog to surface via `.rejects.toThrow()`); returns `null`
    * on success.
    */
+  @step()
   async enterVaultKey(key: string): Promise<string | null> {
     const { preferencesPage } = this.pageManager;
     await preferencesPage.open();
@@ -267,6 +275,7 @@ export class PreferencesFlow extends BaseFlow {
    * Preferences. Requires a vault salt to already exist for this session
    * (e.g. via the `vaultSalt` fixture override).
    */
+  @step()
   async resetVaultKey(): Promise<string> {
     const { preferencesPage } = this.pageManager;
     await preferencesPage.open();

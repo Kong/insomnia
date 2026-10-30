@@ -8,6 +8,7 @@ import {
   trackHiddenWindowCoverage,
 } from "../misc/coverage";
 import { launchInsomniaElectron } from "../misc/launch";
+import { step } from "../misc/step";
 import { BaseFlow } from "./base.flow";
 
 export class AppFlow extends BaseFlow {
@@ -18,6 +19,7 @@ export class AppFlow extends BaseFlow {
    * `flowManager`/`pageManager` onto the new app in place, so the same
    * `user.flowManager`/`user.pageManager` instances keep working.
    */
+  @step()
   async restart(): Promise<Page> {
     const config = this.flowManager.launchConfig;
     if (!config) {
@@ -61,6 +63,7 @@ export class AppFlow extends BaseFlow {
    * `setImmediate` before returning, so the error has been fully
    * handled by the time this resolves.
    */
+  @step()
   async emitStdoutEpipeError(): Promise<void> {
     await this.flowManager.electronApp!.evaluate(() => {
       process.nextTick(() => {
@@ -79,6 +82,7 @@ export class AppFlow extends BaseFlow {
    * event on the main process's `process.stdout` (e.g. `"error"`,
    * `"close"`, `"drain"`).
    */
+  @step()
   async getStdoutListenerCount(event: string): Promise<number> {
     return this.flowManager.electronApp!.evaluate(
       (_electron, evt) => process.stdout.listenerCount(evt),
@@ -91,6 +95,7 @@ export class AppFlow extends BaseFlow {
    * trivial `evaluate()` call. If the main process had crashed, this
    * call itself would reject with a "Target closed" error.
    */
+  @step()
   async isAlive(): Promise<boolean> {
     return this.flowManager.electronApp!.evaluate(() => true);
   }
@@ -99,6 +104,7 @@ export class AppFlow extends BaseFlow {
    * Reads the main process's `userData` directory — the same path
    * Insomnia backs up its NeDB `.db` files under (`<dataPath>/backups`).
    */
+  @step()
   async getDataPath(): Promise<string> {
     return this.flowManager.electronApp!.evaluate(({ app }) =>
       app.getPath("userData"),
@@ -112,6 +118,7 @@ export class AppFlow extends BaseFlow {
    * "check for remote changes" logic on a real focus change, without
    * actually needing to blur/refocus the Electron window from the OS.
    */
+  @step()
   async simulateMainWindowFocusChange(): Promise<void> {
     await this.flowManager.electronApp!.evaluate(({ BrowserWindow }) => {
       for (const win of BrowserWindow.getAllWindows()) {
@@ -127,6 +134,7 @@ export class AppFlow extends BaseFlow {
    * them in order. Only lines written during this call are captured —
    * nothing from before it started.
    */
+  @step()
   async captureMainProcessLog(action: () => Promise<void>): Promise<string[]> {
     const lines: string[] = [];
     const proc = this.flowManager.electronApp!.process();
@@ -153,6 +161,7 @@ export class AppFlow extends BaseFlow {
    * to run.
    * @throws If no window with that title is currently open
    */
+  @step()
   async closeHiddenScriptWindow(): Promise<void> {
     for (const win of await this.flowManager.electronApp!.windows()) {
       if ((await win.title().catch(() => "")) === "Hidden Browser Window") {

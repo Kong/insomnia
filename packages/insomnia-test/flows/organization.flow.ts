@@ -1,4 +1,5 @@
 import type { CollaboratorRole } from "../enums/collaborator-role";
+import { step } from "../misc/step";
 import { BaseFlow } from "./base.flow";
 
 /**
@@ -28,6 +29,7 @@ export class OrganizationFlow extends BaseFlow {
    * doesn't already match, rather than always clicking through the role
    * menu.
    */
+  @step()
   async invite(...collaborators: Collaborator[]): Promise<void> {
     const { invitePage } = this.pageManager;
     const alreadyListed = (c: Collaborator) =>

@@ -1,5 +1,6 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import { GrpcRequest } from "../models/grpc-request";
@@ -17,6 +18,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * Creates a gRPC request under `parent` via the standalone project tree,
    * then verifies it was created.
    */
+  @step()
   async create(parent: Collection | Folder, request: GrpcRequest): Promise<GrpcRequest> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -40,6 +42,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * Reads back an existing gRPC request's fields via the standalone
    * project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -63,6 +66,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * server-streaming call, or an open client/bidi-streaming call — then
    * reads back the resulting gRPC status.
    */
+  @step()
   async cancel(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
     await grpcRequestPage.cancel();
@@ -74,6 +78,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * bidi-streaming call by clicking "Commit", then reads back the
    * resulting gRPC status and message(s).
    */
+  @step()
   async commit(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
     await grpcRequestPage.commit();
@@ -88,6 +93,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * response arrives until `commit()` closes the client's half of the
    * stream.
    */
+  @step()
   async send(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
     await grpcRequestPage.send();
@@ -99,6 +105,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * Unlike `send()`, this does not wait for a response — none arrives
    * until `commit()` closes the client's half of the stream.
    */
+  @step()
   async start(request: GrpcRequest): Promise<void> {
     const grpcRequestPage = await this.openRequest(request);
     await grpcRequestPage.send();
@@ -109,6 +116,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * on disk and in the request pane's loader data, so a following
    * `send()` can't go out with the previous body.
    */
+  @step()
   async setBody(request: GrpcRequest, body: string): Promise<void> {
     if (!request.id) {
       throw new Error(
@@ -126,6 +134,7 @@ export class GrpcRequestFlow extends BaseFlow {
    * bidi-streaming call. Can be called repeatedly with different bodies
    * before calling `commit()`.
    */
+  @step()
   async streamMessage(request: GrpcRequest, body: string): Promise<void> {
     if (!request.id) {
       throw new Error(

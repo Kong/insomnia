@@ -1,6 +1,7 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import type { ResponseExportOption } from "../enums/response-export-option";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { RequestAuthentication, RequestParameter } from "../models/http-request";
@@ -15,6 +16,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Creates a new HTTP request under `parent`, naming it via the rename
    * flow and applying its fields on the request page.
    */
+  @step()
   async create(parent: Collection | Folder, request: HttpRequest): Promise<HttpRequest> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -39,6 +41,7 @@ export class HttpRequestFlow extends BaseFlow {
    * editor. Use after `create()` for requests with many params, where
    * per-row editing is prone to a stale-row-list save race.
    */
+  @step()
   async setParamsBulk(request: HttpRequest, params: RequestParameter[]): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
@@ -53,6 +56,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Reads back an existing request's fields by name or identity, looking
    * it up in the standalone project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
   ): Promise<HttpRequest | undefined> {
@@ -74,6 +78,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Sends `request` and returns the resulting response, locating it in the
    * standalone project tree.
    */
+  @step()
   async send(request: HttpRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
@@ -96,6 +101,7 @@ export class HttpRequestFlow extends BaseFlow {
    * any token exists, "Refresh Token" once one does), then reads back
    * the resulting Refresh/Identity/Access Token fields in one call.
    */
+  @step()
   async fetchOAuth2Tokens(request: HttpRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
@@ -112,6 +118,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Exports the response currently shown for the last-sent request to
    * `filePath` via the response pane's "Preview" dropdown.
    */
+  @step()
   async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
     await this.pageManager.responsePage.exportResponse(option, filePath);
   }
@@ -120,6 +127,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Saves the large response currently shown for the last-sent request to
    * `filePath` via the response pane's "Save To File" button.
    */
+  @step()
   async saveResponseToFile(filePath: string): Promise<void> {
     await this.pageManager.responsePage.saveResponseToFile(filePath);
   }
@@ -128,6 +136,7 @@ export class HttpRequestFlow extends BaseFlow {
    * Reads an export menu item's label and disabled state for the response
    * currently shown.
    */
+  @step()
   async getResponseExportOptionState(
     option: ResponseExportOption,
   ): Promise<{ text: string; disabled: boolean }> {

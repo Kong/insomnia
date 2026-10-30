@@ -2,6 +2,7 @@ import type { RequestAuthentication } from "insomnia-data";
 
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import { EventStreamRequest } from "../models/event-stream-request";
 import type { Folder } from "../models/folder";
@@ -15,6 +16,7 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Creates an Event Stream request under `parent` via the standalone
    * project tree, then verifies it was created.
    */
+  @step()
   async create(
     parent: Collection | Folder,
     request: EventStreamRequest,
@@ -45,6 +47,7 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Reads back an existing Event Stream request's fields via the
    * standalone project tree.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
     parent?: Collection,
@@ -71,6 +74,7 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Opens `request`, clicks its Auth tab's token-fetch button and reads
    * the resulting tokens back.
    */
+  @step()
   async fetchOAuth2Tokens(request: EventStreamRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.eventStreamRequestPage;
@@ -86,6 +90,7 @@ export class EventStreamRequestFlow extends BaseFlow {
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
    */
+  @step()
   async setAuthentication(
     request: EventStreamRequest,
     authentication: RequestAuthentication,
@@ -103,6 +108,7 @@ export class EventStreamRequestFlow extends BaseFlow {
    * Connects the event stream for `request` and reads back the resulting
    * response via the standalone project tree.
    */
+  @step()
   async send(
     request: EventStreamRequest,
     options?: { expectConnected?: boolean },

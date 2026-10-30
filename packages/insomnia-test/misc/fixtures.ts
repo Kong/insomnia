@@ -18,7 +18,6 @@ import {
   trackHiddenWindowCoverage,
 } from "./coverage";
 import { launchInsomniaElectron, SESSION_ID } from "./launch";
-import { closeOpenStepGroup } from "./step-instrumentation";
 
 export * from "./constants";
 export { launchInsomniaElectron, SESSION_ID };
@@ -326,7 +325,6 @@ export const test = base.extend<Fixtures>({
     await pageManager.workspacePage.navigate();
     await disableFocusModeDefault(flowManager);
     await use({ page: window, pageManager, flowManager });
-    await closeOpenStepGroup();
 
     // A test that called AppFlow.restart() leaves the relaunched app
     // behind — the `insomnia`/`window` fixtures only know the original

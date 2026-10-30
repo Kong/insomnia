@@ -1,3 +1,4 @@
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type {
   VariableSourceModal,
@@ -20,6 +21,7 @@ export class VariableSourceFlow extends BaseFlow {
    * tag matching `snippet` to open its editor modal, and reads its Source
    * row plus Live Preview once the preview settles on `expectedPreview`.
    */
+  @step()
   async inspectVariableModal(
     snippet: string,
     expectedPreview: string,
@@ -35,6 +37,7 @@ export class VariableSourceFlow extends BaseFlow {
    * environment page's editor to open its tag editor modal, and reads its
    * Source row plus Live Preview once the preview settles.
    */
+  @step()
   async inspectEnvironmentPageVariable(
     snippet: string,
     expectedPreview: string,
@@ -48,6 +51,7 @@ export class VariableSourceFlow extends BaseFlow {
    * Hovers the template tag matching `snippet` in the currently open
    * environment page's editor until its variable-source tooltip shows.
    */
+  @step()
   async hoverEnvironmentPageVariable(
     snippet: string,
   ): Promise<{ tooltip: string; chip: string }> {
@@ -59,6 +63,7 @@ export class VariableSourceFlow extends BaseFlow {
    * template tag matching `snippet` until its variable-source tooltip
    * shows.
    */
+  @step()
   async hoverVariable(
     snippet: string,
   ): Promise<{ tooltip: string; chip: string }> {
@@ -71,6 +76,7 @@ export class VariableSourceFlow extends BaseFlow {
    * Hovers the template tag matching `snippet` inside the open Manage
    * Environments modal until its variable-source tooltip shows.
    */
+  @step()
   async hoverVariableInModal(
     snippet: string,
     scope: VariableSourceScope = "modal",
@@ -82,6 +88,7 @@ export class VariableSourceFlow extends BaseFlow {
    * Hovers the tag matching `snippet` on the Body tab, then hovers the
    * tooltip's own content and reports whether it stayed visible.
    */
+  @step()
   async hoverTooltipContent(snippet: string): Promise<boolean> {
     const page = this.pageManager.variableSourcePage;
     await page.navigate();
@@ -94,6 +101,7 @@ export class VariableSourceFlow extends BaseFlow {
    * the tooltip text after each hover (the tooltip swaps rather than
    * vanishing when the pointer moves between tags).
    */
+  @step()
   async hoverBetweenVariables(
     first: string,
     firstExpected: string,
@@ -116,6 +124,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Switches the open tag editor modal's selected variable.
    */
+  @step()
   async selectModalVariable(
     option: string | { label: string },
     expectedPreview?: string,
@@ -131,6 +140,7 @@ export class VariableSourceFlow extends BaseFlow {
    * Types a custom template into the open tag editor modal and reads the
    * re-derived Source row and Live Preview.
    */
+  @step()
   async setModalTemplate(
     template: string,
     expectedPreview?: string,
@@ -145,6 +155,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Clicks the open tag editor modal's Source "Open" button.
    */
+  @step()
   async openSourceFromModal(): Promise<void> {
     await this.pageManager.variableSourcePage.clickModalSourceOpen();
   }
@@ -152,6 +163,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Clicks the visible variable-source tooltip's "Open" button.
    */
+  @step()
   async openSourceFromTooltip(): Promise<void> {
     await this.pageManager.variableSourcePage.clickTooltipOpen();
   }
@@ -159,6 +171,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Opens `collection` and picks an imported project environment for it.
    */
+  @step()
   async selectProjectEnvironment(
     collection: Collection,
     optionName: string,
@@ -171,6 +184,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Opens the collection's Manage Environments modal.
    */
+  @step()
   async openManageEnvironmentsModal(): Promise<void> {
     await this.pageManager.variableSourcePage.openManageEnvironmentsModal();
   }
@@ -178,6 +192,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Selects an environment row inside the open Manage Environments modal.
    */
+  @step()
   async selectModalEnvironment(name: string): Promise<void> {
     await this.pageManager.variableSourcePage.selectModalEnvironment(name);
   }
@@ -185,6 +200,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Reads where an "Open" action landed.
    */
+  @step()
   async getNavigation(
     landing: VariableSourceLanding,
     environmentRow?: string,
@@ -213,6 +229,7 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Waits for the Manage Environments modal to close.
    */
+  @step()
   async waitForManageEnvironmentsModalClosed(): Promise<void> {
     await this.pageManager.variableSourcePage.waitForManageEnvironmentsModalHidden();
   }

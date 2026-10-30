@@ -1,6 +1,7 @@
 import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
 import { ContextMenuItem } from "../enums/context-menu-items";
 import type { ExportFormat } from "../enums/export-format";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { Project } from "../models/project";
 import { BaseFlow } from "./base.flow";
@@ -11,6 +12,7 @@ export class ExportFlow extends BaseFlow {
    * "Export" context-menu item, confirming the request-selection step
    * (every request stays checked).
    */
+  @step()
   async exportCollection(item: Collection, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, exportPage } = this.pageManager;
     const node = await workspacePage.resolveNode(item);
@@ -28,6 +30,7 @@ export class ExportFlow extends BaseFlow {
    * each) via Preferences -> Data, selecting `format`. Skips the
    * request-selection step, which only Collection-scoped exports show.
    */
+  @step()
   async exportProject(item: Project, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, preferencesPage, exportPage } = this.pageManager;
     await workspacePage.clickNode(await workspacePage.resolveNode(item));
@@ -47,6 +50,7 @@ export class ExportFlow extends BaseFlow {
    * workspace) via Preferences -> Data. Always writes as Insomnia v5 —
    * this entry point has no request-selection or format-selection step.
    */
+  @step()
   async exportAllData(directoryPath: string): Promise<void> {
     const { preferencesPage, exportPage } = this.pageManager;
     await exportPage.stubSaveDirectoryLocation(directoryPath);
@@ -67,6 +71,7 @@ export class ExportFlow extends BaseFlow {
    * so this rejects with that alert's trimmed text in that case; dismiss
    * it with `workspaceFlow.closeDialog()` before continuing.
    */
+  @step()
   async exportOpenApiSpec(
     item: Collection,
     format: ApiSpecExportFormat,

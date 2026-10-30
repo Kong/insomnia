@@ -1,6 +1,5 @@
 import type { ElectronApplication } from "@playwright/test";
 
-import { instrumentWithSteps } from "../misc/step-instrumentation";
 import type { PageManager } from "../pages/page-manager";
 import { AppFlow } from "./app.flow";
 import { CertificatesFlow } from "./certificates.flow";
@@ -89,140 +88,96 @@ export class FlowManager implements FlowContext {
   }
 
   get appFlow(): AppFlow {
-    return (this._appFlow ??= instrumentWithSteps(
-      new AppFlow(this, this.pageManager),
-    ));
+    return (this._appFlow ??= new AppFlow(this, this.pageManager));
   }
 
   get certificatesFlow(): CertificatesFlow {
-    return (this._certificatesFlow ??= instrumentWithSteps(
-      new CertificatesFlow(this, this.pageManager),
-    ));
+    return (this._certificatesFlow ??= new CertificatesFlow(this, this.pageManager));
   }
 
   get cloudSyncFlow(): CloudSyncFlow {
-    return (this._cloudSyncFlow ??= instrumentWithSteps(
-      new CloudSyncFlow(this, this.pageManager),
-    ));
+    return (this._cloudSyncFlow ??= new CloudSyncFlow(this, this.pageManager));
   }
 
   get cookieFlow(): CookieFlow {
-    return (this._cookieFlow ??= instrumentWithSteps(
-      new CookieFlow(this, this.pageManager),
-    ));
+    return (this._cookieFlow ??= new CookieFlow(this, this.pageManager));
   }
 
   get environmentFlow(): EnvironmentFlow {
-    return (this._environmentFlow ??= instrumentWithSteps(
-      new EnvironmentFlow(this, this.pageManager, this.workspaceFlow),
-    ));
+    return (this._environmentFlow ??= new EnvironmentFlow(this, this.pageManager, this.workspaceFlow));
   }
 
   get eventStreamRequestFlow(): EventStreamRequestFlow {
-    return (this._eventStreamRequestFlow ??= instrumentWithSteps(
-      new EventStreamRequestFlow(this, this.pageManager),
-    ));
+    return (this._eventStreamRequestFlow ??= new EventStreamRequestFlow(this, this.pageManager));
   }
 
   get exportFlow(): ExportFlow {
-    return (this._exportFlow ??= instrumentWithSteps(
-      new ExportFlow(this, this.pageManager),
-    ));
+    return (this._exportFlow ??= new ExportFlow(this, this.pageManager));
   }
 
   get folderFlow(): FolderFlow {
-    return (this._folderFlow ??= instrumentWithSteps(
-      new FolderFlow(this, this.pageManager),
-    ));
+    return (this._folderFlow ??= new FolderFlow(this, this.pageManager));
   }
 
   get gitSyncFlow(): GitSyncFlow {
-    return (this._gitSyncFlow ??= instrumentWithSteps(
-      new GitSyncFlow(this, this.pageManager),
-    ));
+    return (this._gitSyncFlow ??= new GitSyncFlow(this, this.pageManager));
   }
 
   get graphqlRequestFlow(): GraphQLRequestFlow {
-    return (this._graphqlRequestFlow ??= instrumentWithSteps(
-      new GraphQLRequestFlow(this, this.pageManager),
-    ));
+    return (this._graphqlRequestFlow ??= new GraphQLRequestFlow(this, this.pageManager));
   }
 
   get grpcRequestFlow(): GrpcRequestFlow {
-    return (this._grpcRequestFlow ??= instrumentWithSteps(
-      new GrpcRequestFlow(this, this.pageManager),
-    ));
+    return (this._grpcRequestFlow ??= new GrpcRequestFlow(this, this.pageManager));
   }
 
   get httpRequestFlow(): HttpRequestFlow {
-    return (this._httpRequestFlow ??= instrumentWithSteps(
-      new HttpRequestFlow(this, this.pageManager),
-    ));
+    return (this._httpRequestFlow ??= new HttpRequestFlow(this, this.pageManager));
   }
 
   get importFlow(): ImportFlow {
-    return (this._importFlow ??= instrumentWithSteps(
-      new ImportFlow(this, this.pageManager),
-    ));
+    return (this._importFlow ??= new ImportFlow(this, this.pageManager));
   }
 
   get mcpClientFlow(): McpClientFlow {
-    return (this._mcpClientFlow ??= instrumentWithSteps(
-      new McpClientFlow(this, this.pageManager, this.workspaceFlow),
-    ));
+    return (this._mcpClientFlow ??= new McpClientFlow(this, this.pageManager, this.workspaceFlow));
   }
 
   get mockServerFlow(): MockServerFlow {
-    return (this._mockServerFlow ??= instrumentWithSteps(
-      new MockServerFlow(this, this.pageManager),
-    ));
+    return (this._mockServerFlow ??= new MockServerFlow(this, this.pageManager));
   }
 
   get organizationFlow(): OrganizationFlow {
-    return (this._organizationFlow ??= instrumentWithSteps(
-      new OrganizationFlow(this, this.pageManager),
-    ));
+    return (this._organizationFlow ??= new OrganizationFlow(this, this.pageManager));
   }
 
   get preferencesFlow(): PreferencesFlow {
-    return (this._preferencesFlow ??= instrumentWithSteps(
-      new PreferencesFlow(this, this.pageManager),
-    ));
+    return (this._preferencesFlow ??= new PreferencesFlow(this, this.pageManager));
   }
 
   get socketIoRequestFlow(): SocketIORequestFlow {
-    return (this._socketIoRequestFlow ??= instrumentWithSteps(
-      new SocketIORequestFlow(this, this.pageManager),
-    ));
+    return (this._socketIoRequestFlow ??= new SocketIORequestFlow(this, this.pageManager));
   }
 
   get templateTagFlow(): TemplateTagFlow {
-    return (this._templateTagFlow ??= instrumentWithSteps(
-      new TemplateTagFlow(this, this.pageManager),
-    ));
+    return (this._templateTagFlow ??= new TemplateTagFlow(this, this.pageManager));
   }
 
   get variableSourceFlow(): VariableSourceFlow {
-    return (this._variableSourceFlow ??= instrumentWithSteps(
-      new VariableSourceFlow(this, this.pageManager),
-    ));
+    return (this._variableSourceFlow ??= new VariableSourceFlow(this, this.pageManager));
   }
 
   get webSocketRequestFlow(): WebSocketRequestFlow {
-    return (this._webSocketRequestFlow ??= instrumentWithSteps(
-      new WebSocketRequestFlow(this, this.pageManager),
-    ));
+    return (this._webSocketRequestFlow ??= new WebSocketRequestFlow(this, this.pageManager));
   }
 
   get workspaceFlow(): WorkspaceFlow {
-    return (this._workspaceFlow ??= instrumentWithSteps(
-      new WorkspaceFlow(
+    return (this._workspaceFlow ??= new WorkspaceFlow(
         this,
         this.pageManager,
         this.preferencesFlow,
         this,
         this.gitRepoUrl,
-      ),
-    ));
+      ));
   }
 }

@@ -1,5 +1,6 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { ImportSource } from "../enums/import-sources";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import type { CurlCommand } from "../models/curl-command";
 import type { Project } from "../models/project";
@@ -10,6 +11,7 @@ export class ImportFlow extends BaseFlow {
    * Opens the Import dialog from `project`'s context menu, scans clipboard
    * content pasted into the import source, then imports it into the project.
    */
+  @step()
   async importClipboard(project: Project, content: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -32,6 +34,7 @@ export class ImportFlow extends BaseFlow {
    * Opens the Import dialog from `project`'s context menu, scans a raw curl
    * command, then imports it into the given collection within that project.
    */
+  @step()
   async importCurl(
     project: Project,
     collection: Collection,
@@ -60,6 +63,7 @@ export class ImportFlow extends BaseFlow {
    * Opens the Import dialog from `project`'s context menu, scans a local
    * file, then imports it into the project.
    */
+  @step()
   async importFile(project: Project, filePath: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -82,6 +86,7 @@ export class ImportFlow extends BaseFlow {
    * Opens the Import dialog from `project`'s context menu, scans an MCP
    * server URL, then imports it into the project.
    */
+  @step()
   async importMcp(project: Project, url: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())
@@ -104,6 +109,7 @@ export class ImportFlow extends BaseFlow {
    * Opens the Import dialog from `project`'s context menu, scans content
    * fetched from a URL, then imports it into the project.
    */
+  @step()
   async importUrl(project: Project, url: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const projectNode = (await workspace.getTree())

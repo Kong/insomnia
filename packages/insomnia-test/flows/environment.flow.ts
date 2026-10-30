@@ -1,3 +1,4 @@
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import {
   Environment,
@@ -31,6 +32,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Creates/renames the workspace's Base Environment under `parent`, then
    * applies `environment.kvPairData`.
    */
+  @step()
   async createBaseEnvironment(parent: Project, environment: Environment): Promise<Environment> {
     await this.workspaceFlow.createEnvironment(parent, environment);
     if (environment.name !== BASE_ENVIRONMENT_NAME) {
@@ -47,6 +49,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Creates a sub-environment nested under `parent`, then applies
    * `environment.kvPairData`.
    */
+  @step()
   async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
     await this.pageManager.environmentPage.createSubEnvironment(
       environment.name,
@@ -59,6 +62,7 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Finds an environment by name/id and reads its variables back.
    */
+  @step()
   async get(
     item: string | { name: string; id?: string },
   ): Promise<Environment | undefined> {
@@ -88,6 +92,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Links a project Environment into `item` via the "Select a Project
    * Environment" picker.
    */
+  @step()
   async link(
     item:
       | Collection
@@ -123,6 +128,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Distinct from `link()`, which instead attaches a separate Project
    * Environment; both can be active on the same collection at once.
    */
+  @step()
   async activate(collection: Collection, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(collection);
@@ -134,6 +140,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Opens one environment picker on `collection`'s toolbar and reports
    * which picker popovers are open, then dismisses it.
    */
+  @step()
   async getOpenPickersAfterOpening(
     collection: Collection,
     picker: "project" | "collection",
@@ -153,6 +160,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Creates a Project Environment from `collection`'s project picker and
    * reads the picker back, without linking the new environment.
    */
+  @step()
   async addProjectEnvironmentFromPicker(
     collection: Collection,
     name: string,
@@ -170,6 +178,7 @@ export class EnvironmentFlow extends BaseFlow {
    * Creates a shared or private sub-environment inside `collection`'s own
    * "Manage Environments" modal and reports whether it is marked private.
    */
+  @step()
   async createCollectionSubEnvironment(
     collection: Collection,
     environment: Environment,
