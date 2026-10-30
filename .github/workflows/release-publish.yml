@@ -161,7 +161,9 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
+          # `*-artifacts/inso-*` covers artifacts uploaded at the artifact root (LCA of a single
+          # search path), e.g. the arm64 inso job; matrix jobs nest under insomnia-inso/artifacts
+          file: './artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/*-artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json'
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
           overwrite: true
