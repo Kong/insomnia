@@ -551,9 +551,17 @@ describe('_repairDatabase()', async () => {
       _id: 'w3',
       name: 'Workspace 3',
     });
+    const w4 = await services.workspace.create({
+      _id: 'w4',
+      name: models.apiSpec.init().fileName,
+    });
     await services.apiSpec.updateOrCreateForParentId(w1._id, {
       fileName: '',
     });
+    await services.apiSpec.updateOrCreateForParentId(w4._id, {
+      fileName: models.apiSpec.init().fileName,
+    });
+    const modifiedBefore = (await services.apiSpec.getByParentId(w4._id))?.modified;
     await services.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
@@ -570,6 +578,8 @@ describe('_repairDatabase()', async () => {
     expect((await services.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
     expect((await services.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
     expect((await services.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await services.apiSpec.getByParentId(w4._id))?.fileName).toBe(models.apiSpec.init().fileName); // backfill is a no-op, should skip
+    expect((await services.apiSpec.getByParentId(w4._id))?.modified).toBe(modifiedBefore); // should not restamp
   });
 
   it('fixes old git uris', async () => {
@@ -610,6 +620,58 @@ describe('_repairDatabase()', async () => {
       expect.objectContaining({
         uri: 'https://github.com/foo/bar',
         uriNeedsMigration: false,
+      }),
+    );
+  });
+
+  it('clears stale workspace sync flags for non-remote projects only', async () => {
+    const localProject = await services.project.create({ name: 'local', remoteId: null });
+    const localWorkspace = await services.workspace.create({ name: 'local-ws', parentId: localProject._id });
+    const localMeta = await services.workspaceMeta.create({
+      parentId: localWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    const gitProject = await services.project.create({
+      name: 'git',
+      remoteId: null,
+      gitRepositoryId: 'git_test',
+    });
+    const gitWorkspace = await services.workspace.create({ name: 'git-ws', parentId: gitProject._id });
+    const gitMeta = await services.workspaceMeta.create({
+      parentId: gitWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    const cloudProject = await services.project.create({ name: 'cloud', remoteId: 'proj_remote' });
+    const cloudWorkspace = await services.workspace.create({ name: 'cloud-ws', parentId: cloudProject._id });
+    const cloudMeta = await services.workspaceMeta.create({
+      parentId: cloudWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    await repairDatabase();
+
+    for (const [workspace, meta] of [
+      [localWorkspace, localMeta],
+      [gitWorkspace, gitMeta],
+    ] as const) {
+      expect(await services.workspaceMeta.getByParentId(workspace._id)).toEqual(
+        expect.objectContaining({
+          hasUncommittedChanges: false,
+          hasUnpushedChanges: false,
+          modified: meta.modified,
+        }),
+      );
+    }
+    expect(await services.workspaceMeta.getByParentId(cloudWorkspace._id)).toEqual(
+      expect.objectContaining({
+        hasUncommittedChanges: true,
+        hasUnpushedChanges: true,
+        modified: cloudMeta.modified,
       }),
     );
   });

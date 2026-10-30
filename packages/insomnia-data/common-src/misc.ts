@@ -35,3 +35,14 @@ export function slugify(input: string, maxLength = 40) {
   }
   return slug.slice(0, maxLength).replace(/-+$/g, '');
 }
+
+const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
+
+/**
+ * Escape a dynamic string for use inside of a regular expression
+ * @param str - string to escape
+ * @returns {string} escaped string
+ */
+export function escapeRegex(str: string) {
+  return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
+}

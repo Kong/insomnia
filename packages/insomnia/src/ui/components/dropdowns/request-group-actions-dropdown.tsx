@@ -8,7 +8,6 @@ import { useParams } from 'react-router';
 
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -21,7 +20,6 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -33,6 +31,7 @@ interface Props extends Partial<DropdownProps> {
   activeWorkspace: Workspace;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
+  onDelete: () => void;
 }
 
 export const RequestGroupActionsDropdown = ({
@@ -41,6 +40,7 @@ export const RequestGroupActionsDropdown = ({
   isOpen,
   onOpenChange,
   onRename,
+  onDelete,
   activeProject,
   activeWorkspace,
 }: Props) => {
@@ -53,7 +53,6 @@ export const RequestGroupActionsDropdown = ({
   const newRequestFetcher = useRequestNewActionFetcher();
   const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
   const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
-  const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
 
   const tabNavigate = useTabNavigate();
 
@@ -118,22 +117,6 @@ export const RequestGroupActionsDropdown = ({
             name,
           },
         });
-      },
-    });
-  };
-
-  const handleDeleteFolder = async () => {
-    showModal(AskModal, {
-      title: 'Delete Folder',
-      message: `Do you really want to delete "${requestGroup.name}"?`,
-      yesText: 'Delete',
-      noText: 'Cancel',
-      color: 'danger',
-      onDone: async (isYes: boolean) => {
-        if (isYes) {
-          services.stats.incrementDeletedRequestsForDescendents(requestGroup);
-          deleteRequestGroupFetcher.submit({ organizationId, projectId, workspaceId, id: requestGroup._id });
-        }
       },
     });
   };
@@ -340,7 +323,7 @@ export const RequestGroupActionsDropdown = ({
           id: 'Delete',
           name: 'Delete',
           icon: 'trash',
-          action: () => handleDeleteFolder(),
+          action: onDelete,
         },
         {
           id: 'RunFolder',

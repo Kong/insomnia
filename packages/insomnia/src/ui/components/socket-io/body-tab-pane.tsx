@@ -21,7 +21,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from '~/ui/utils/try-interpolate';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
 import { useRequestPayloadPatcher } from '../../hooks/use-request';
@@ -97,16 +97,17 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
 
   const handleSend = async () => {
     const args = requestPayload?.args ?? [];
-    const renderedArgs = await tryToInterpolateRequestOrShowRenderErrorModal({
+    const result = await tryToInterpolateRequestAndCollectSensitiveValues({
       request,
       environmentId,
       payload: args.map(item => item.value),
     });
 
     // Return early if rendering failed (e.g., RenderError was caught and modal shown)
-    if (!renderedArgs) {
+    if (!result) {
       return;
     }
+    const { rendered: renderedArgs, sensitiveValues } = result;
 
     // Parse JSON content type args before sending
     const parsedArgs = args.map((item, index) => {
@@ -127,6 +128,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
       eventName: requestPayload?.eventName || 'message',
       ack: requestPayload?.ack,
       args: parsedArgs,
+      sensitiveValues,
     });
   };
 

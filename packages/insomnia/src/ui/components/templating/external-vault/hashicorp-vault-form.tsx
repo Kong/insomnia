@@ -1,4 +1,4 @@
-import type { CloudProviderCredential } from 'insomnia-data';
+import type { CloudProviderCredential, PluginData } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React from 'react';
 
@@ -17,6 +17,7 @@ export interface HashiCorpVaultFormProps {
   formData: HashiCorpSecretConfig;
   onChange: (newConfig: HashiCorpSecretConfig) => void;
   activeTagData: NunjucksParsedTag;
+  vaultPluginData: PluginData[];
 }
 type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
@@ -38,7 +39,12 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
-  const credentialId = activeTagData.args[1].value as string;
+  const idFromTag = activeTagData.args[1]?.value?.toString() || '';
+  const credentialId = models.cloudCredential.isCloudCredentialId(idFromTag)
+    ? // legacy version to save cloud credential id in tag
+      idFromTag
+    : // new version to save cloud credential id in pluginData, and each tag will have a unique id as key to get the cloud credential id as value from pluginData
+      props.vaultPluginData.find(data => data.key === idFromTag)?.value || '';
   const selectedCredential = cloudCredentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
   const credentialType = selectedCredential?.credentials?.type;
   const handleOnChange = <T extends KeysOfUnion<HashiCorpSecretConfig>>(

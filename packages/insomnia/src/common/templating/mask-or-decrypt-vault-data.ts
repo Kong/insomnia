@@ -1,6 +1,7 @@
 import { models, services } from 'insomnia-data';
 
-import type { RenderPurpose } from '~/common/templating/types';
+import { getConfidentialValuePolicy } from '~/common/templating/confidential-value-policy';
+import type { RenderPurpose, SensitiveValueCollector } from '~/common/templating/types';
 import { decryptVaultKeyFromSession } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 
@@ -11,14 +12,22 @@ import { getRuntime } from '~/runtimes';
  *
  * Given an object the result is always a fresh copy; a non-object input is returned as is.
  */
-export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
-  /**
-   * Decrypt secrets when renderPurpose is one of the following:
-   * - preview: render the template in variable editor to do the live preview
-   * - send: render the template when sending requests
-   * - script: render the template in pre-request or after-response script
-   */
-  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
+export async function maskOrDecryptVaultDataIfNecessary({
+  vaultEnvironmentData,
+  renderPurpose,
+  hideSecretValues,
+  forceReveal,
+  sensitiveValueCollector,
+}: {
+  vaultEnvironmentData: any;
+  renderPurpose?: RenderPurpose;
+  hideSecretValues?: boolean;
+  forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
+}) {
+  // getConfidentialValuePolicy is the single decision point for reveal/mask across all render surfaces
+  const shouldDecrypt =
+    getConfidentialValuePolicy({ purpose: renderPurpose, hideSecretValues, forceReveal }) === 'reveal';
   if (typeof vaultEnvironmentData !== 'object' || vaultEnvironmentData === null) {
     return vaultEnvironmentData;
   }
@@ -32,6 +41,9 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
       for (const vaultContextKey of Object.keys(vaultEnvironmentData)) {
         const encryptedValue = vaultEnvironmentData[vaultContextKey];
         decryptedData[vaultContextKey] = await getRuntime().crypto.decryptSecretValue(encryptedValue, symmetricKey);
+        if (sensitiveValueCollector && typeof decryptedData[vaultContextKey] === 'string') {
+          sensitiveValueCollector.register(decryptedData[vaultContextKey]);
+        }
       }
       return decryptedData;
     }

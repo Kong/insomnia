@@ -6,6 +6,7 @@ import { Button as RaButton, Heading, Radio, RadioGroup } from 'react-aria-compo
 import { useParams } from 'react-router';
 import { useLatest } from 'react-use';
 
+import { getConfidentialBasicAuthHeaderValue } from '~/common/network/sensitive-value-collector';
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import type { McpReadyState } from '~/main/mcp/types';
 import { _buildBearerHeader } from '~/network/authentication';
@@ -25,7 +26,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from '~/ui/utils/try-interpolate';
 
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -96,7 +97,7 @@ export const McpUrlActionBar = ({
 
   const generateConnectParams = useCallback(async () => {
     // Render any nunjucks tags in the url/headers/authentication settings/cookies
-    const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+    const result = await tryToInterpolateRequestAndCollectSensitiveValues({
       request,
       environmentId,
       payload: {
@@ -106,6 +107,10 @@ export const McpUrlActionBar = ({
         env: getDataFromKVPair(request.env).data,
       },
     });
+    if (!result) {
+      return null;
+    }
+    const { rendered, sensitiveValues } = result;
 
     const { authentication, headers } = rendered;
 
@@ -114,7 +119,12 @@ export const McpUrlActionBar = ({
         if (authentication.type === 'basic') {
           const { username, password, useISO88591 } = authentication;
           const encoding = useISO88591 ? 'latin1' : 'utf8';
-          headers.push(getBasicAuthHeader(username, password, encoding));
+          const basicAuthHeader = getBasicAuthHeader(username, password, encoding);
+          headers.push(basicAuthHeader);
+          const confidentialHeaderValue = getConfidentialBasicAuthHeaderValue(sensitiveValues, authentication);
+          if (confidentialHeaderValue) {
+            sensitiveValues.push(confidentialHeaderValue);
+          }
         } else if (authentication.type === 'bearer' && authentication.token) {
           const { token, prefix } = authentication;
           headers.push(getBearerAuthHeader(token, prefix));
@@ -144,6 +154,7 @@ export const McpUrlActionBar = ({
       suppressUserAgent: rendered.suppressUserAgent,
       cookieJar: rendered.workspaceCookieJar,
       env: rendered.env,
+      sensitiveValues,
     };
   }, [environmentId, request]);
 
@@ -159,6 +170,9 @@ export const McpUrlActionBar = ({
     }
 
     const connectParams = await generateConnectParams();
+    if (!connectParams) {
+      return;
+    }
 
     if (connectParams.transportType === models.mcpRequest.TRANSPORT_TYPES.STDIO) {
       const stdioAccess = await isAllowedToRunSTDIO(request, project, modalRef);

@@ -18,7 +18,7 @@ import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codem
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
-import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
+import { tryToInterpolateRequestAndCollectSensitiveValues } from '~/ui/utils/try-interpolate';
 
 import { type AuthTypes, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -87,7 +87,11 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
   // NOTE: Liquid template interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
-      const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
+      const messageResult = await tryToInterpolateRequestAndCollectSensitiveValues({ request, environmentId, payload });
+      if (!messageResult) {
+        return;
+      }
+      const { rendered: renderedMessage, sensitiveValues: messageSensitiveValues } = messageResult;
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const rendered = await renderRealtimeConnectPayload({
@@ -107,10 +111,15 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
           cookieJar: rendered.workspaceCookieJar,
           initialPayload: renderedMessage,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: [...new Set([...rendered.sensitiveValues, ...messageSensitiveValues])],
         });
         return;
       }
-      window.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
+      window.main.webSocket.event.send({
+        requestId: request._id,
+        payload: renderedMessage,
+        sensitiveValues: messageSensitiveValues,
+      });
     } catch (err) {
       if (err instanceof RenderError) {
         showModal(RequestRenderErrorModal, {

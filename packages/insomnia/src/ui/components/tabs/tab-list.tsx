@@ -20,18 +20,17 @@ import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import { TAB_CONTEXT_MENU_COMMAND, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
-import { InsomniaTab } from './tab';
+import { InsomniaTab, TAB_CONTEXT_MENU_COMMAND } from './tab';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
-
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
   const [showAddRequestModal, setShowAddRequestModal] = useState(false);

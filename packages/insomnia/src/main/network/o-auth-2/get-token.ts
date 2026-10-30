@@ -14,19 +14,26 @@ import type {
   ResponseTimelineEntry,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
-import { setDefaultProtocol } from 'insomnia-data/common';
+import { escapeRegex, setDefaultProtocol } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
+import {
+  createSensitiveValueCollector,
+  getConfidentialBasicAuthHeaderValue,
+  redactResponsePatch,
+  withRedaction,
+} from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 
 import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
-import { type DefaultBrowserRedirectParam, escapeRegex } from '../../../common/misc';
+import { type DefaultBrowserRedirectParam } from '../../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
 import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
 import {
+  defaultSendActionRuntime,
   fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
@@ -629,7 +636,28 @@ const sendAccessTokenRequest = async (
     created: Date.now(),
   };
 
-  const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
+  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const renderResult = await tryToInterpolateRequest({
+    request: newRequest,
+    environment: environment._id,
+    // This is a real send. Without an explicit purpose the confidential-value policy is
+    // fail-closed, so a credential coming from a confidential variable or a SECRET vault
+    // entry would be interpolated into the token request as •••••• instead of its value.
+    purpose: 'send',
+    sensitiveValueCollector: collector,
+  });
+  // Unless credentialsInBody is set, the caller sends clientId/clientSecret as a Basic header built
+  // before this render. Its base64 never matches the plaintext secret registered above, so register it
+  // too. A request that didn't send the header never contains the value, so this is harmless then.
+  if (collector) {
+    const basicHeaderValue = getConfidentialBasicAuthHeaderValue(collector.values, {
+      username: authentication.clientId,
+      password: authentication.clientSecret,
+    });
+    if (basicHeaderValue) {
+      collector.register(basicHeaderValue);
+    }
+  }
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   const response = await sendCurlAndWriteTimeline(
@@ -639,10 +667,13 @@ const sendAccessTokenRequest = async (
     { ...settings, validateSSL: settings.validateAuthSSL },
     timelinePath,
     responseId,
+    // Omitting the runtime does not skip the timeline, it falls back to the non-redacting
+    // default -- so the rendered credential would be written to disk in cleartext.
+    withRedaction(defaultSendActionRuntime, collector),
   );
   const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 
-  return await services.response.create(responsePatch);
+  return await services.response.create(redactResponsePatch(responsePatch, collector));
 };
 
 export const encodePKCE = (buffer: Buffer) => {

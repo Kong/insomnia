@@ -17,7 +17,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useSearchParams } from 'react-router';
+import { useLocation, useSearchParams } from 'react-router';
 
 import { debounce } from '~/common/misc';
 import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
@@ -82,6 +82,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   // the variable live preview "Open" action). Validated against this workspace's
   // environments; consumed after applying so forwarded search params cannot
   // re-select it on later navigations (same pattern as the folder pane's ?tab=).
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedEnvironmentId = searchParams.get('environmentId');
   const isValidRequestedEnvironment =
@@ -96,7 +97,10 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
       next.delete('environmentId');
       setSearchParams(next, { replace: true });
     }
-  }, [isValidRequestedEnvironment, requestedEnvironmentId, searchParams, setSearchParams]);
+    // Open navigates to the same ?environmentId= URL on every click, so the search
+    // string does not change; the location key does. Without it an interrupted
+    // cleanup leaves the param in the URL and later clicks never apply again.
+  }, [location.key, isValidRequestedEnvironment, requestedEnvironmentId, searchParams, setSearchParams]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );

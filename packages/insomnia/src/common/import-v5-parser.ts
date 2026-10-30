@@ -82,6 +82,8 @@ export const CookieJarSchema = z.object({
 const { name, data, color, dataPropertyOrder, ...rest } = environment.baseEnvironmentSchema.omit({
   metaSortKey: true,
 }).shape;
+// Names of the confidential variables in `data`; see getConfidentialKeys in insomnia-v5.ts.
+const confidentialKeys = z.array(z.string()).optional();
 export const EnvironmentSchema = z.object({
   name,
   meta: MetaSchema.optional(),
@@ -96,11 +98,13 @@ export const EnvironmentSchema = z.object({
         dataPropertyOrder,
         color,
         ...rest,
+        confidentialKeys,
       }),
     )
     .optional(),
   dataPropertyOrder,
   ...rest,
+  confidentialKeys,
 });
 
 const {
@@ -116,9 +120,7 @@ const {
 export const GRPCRequestSchema = z.object({
   url: grpcRequestUrlShape,
   name: grpcRequestNameShape,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('greq'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   body: grpcRequestBodyShape.optional(),
   metadata: grpcRequestMetadataShape.optional(),
   ...restGrpcRequestSchemaShape,
@@ -190,9 +192,7 @@ const {
 } = requestGroup.baseRequestGroupSchema.shape;
 export const RequestGroupSchema = z.object({
   name: requestGroupNameShape,
-  meta: MetaGroupSchema.extend({
-    id: z.string().startsWith('fld'),
-  }).optional(),
+  meta: MetaGroupSchema.optional(),
   children: z.array(z.any()).optional(),
   scripts: z
     .object({
@@ -201,6 +201,7 @@ export const RequestGroupSchema = z.object({
     })
     .optional(),
   ...restRequestGroupSchemaShape,
+  confidentialKeys,
 });
 
 const {
@@ -216,9 +217,7 @@ const {
 export const RequestSchema = z.object({
   url: requestUrlShape,
   name: requestNameShape,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('req'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   ...restRequestSchemaShape,
   scripts: z
     .object({
@@ -237,6 +236,39 @@ export const RequestSchema = z.object({
     },
   }),
   pathParameters: requestPathParametersShape.nullable(),
+});
+
+/**
+ * A WebSocket/Socket.IO request's body lives in its own document (WebSocketPayload /
+ * SocketIOPayload), not on the request itself. `meta.id` carries that document's real id so
+ * that re-importing a file updates the same document instead of orphaning it and creating a
+ * new one — which is what git sync does on every pull.
+ */
+export const WebsocketRequestBodySchema = z.object({
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('ws-payload'),
+  }).optional(),
+  name: z.string().optional().default(''),
+  value: z.string().optional().default(''),
+  mode: z.string().optional().default('application/json'),
+});
+
+export const SocketIORequestBodySchema = z.object({
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('socket-io-payload'),
+  }).optional(),
+  eventName: z.string().optional().default(''),
+  ack: z.boolean().optional().default(false),
+  args: z
+    .array(
+      z.object({
+        id: z.string(),
+        value: z.string().optional().default(''),
+        mode: z.string().optional().default('application/json'),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 const {
@@ -264,6 +296,7 @@ export const WebsocketRequestSchema = z.object({
   }),
   ...restWebSocketRequestSchemaShape,
   pathParameters: webSocketRequestPathParametersShape.nullable(),
+  body: WebsocketRequestBodySchema.optional(),
 });
 
 const {
@@ -288,6 +321,7 @@ export const SocketIORequestSchema = z.object({
     path: undefined,
   }),
   ...restSocketIORequestSchemaShape,
+  body: SocketIORequestBodySchema.optional(),
 });
 
 // Keep the key order consistent so that export to YAML maintains the same order as before: meta sits after authentication
@@ -305,9 +339,7 @@ export const McpRequestSchema = z.object({
   transportType: mcpRequestTransportType,
   headers: mcpRequestHeaders,
   authentication: mcpRequestAuthentication,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('mcp-req'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   ...restMcpRequestShape,
 });
 
@@ -328,6 +360,12 @@ const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSche
   pathParameters: z.undefined(),
 });
 
+/**
+ * NOTE: this is a plain union, not a discriminated one, so branch order and the `z.undefined()`
+ * guards below are what keep the request types apart. Any key unique to the WebSocket or the
+ * Socket.IO branch must also be added as `z.undefined()` to the other one, otherwise an item
+ * without a `meta.id` prefix to discriminate on matches the wrong branch and loses that key.
+ */
 export const RequestCollectionSchema = z
   .union([
     GRPCRequestSchema.extend({
@@ -343,11 +381,24 @@ export const RequestCollectionSchema = z
       // These undefined properties are added to differentiate between the different types of children in the union
       children: z.undefined(),
       method: z.undefined(),
+      // Socket.IO-only keys. Without these guards a Socket.IO item that has no `meta` matches
+      // this branch and silently loses them, because z.object strips unknown keys.
+      eventListeners: z.undefined(),
+      body: WebsocketRequestBodySchema.extend({
+        eventName: z.undefined(),
+        ack: z.undefined(),
+        args: z.undefined(),
+      }).optional(),
     }),
     SocketIORequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
       children: z.undefined(),
       method: z.undefined(),
+      body: SocketIORequestBodySchema.extend({
+        name: z.undefined(),
+        value: z.undefined(),
+        mode: z.undefined(),
+      }).optional(),
     }),
     RequestGroupWithChildrenSchema,
   ])

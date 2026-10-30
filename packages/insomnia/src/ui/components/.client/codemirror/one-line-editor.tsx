@@ -30,7 +30,7 @@ import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { Tooltip } from '~/ui/components/tooltip';
-import { useNunjucks } from '~/ui/context/nunjucks/use-nunjucks';
+import { useNunjucks, type UseNunjucksOptions } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
@@ -41,6 +41,10 @@ import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
 import { getCachedEditorState, setCachedEditorState } from './editor-state-cache';
 import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './extensions/variable-source-tooltip';
+
+// Stable options object so handleRender reference stays constant across re-renders.
+// A new object per render would cause initEditor to re-run on every render.
+const PREVIEW_NUNJUCKS_OPTIONS: UseNunjucksOptions = { renderContext: { purpose: 'preview' } };
 
 // Replace the editor's entire value while PRESERVING undo/redo history and the
 // cursor. Unlike cm.setValue(), which clears history, replaceRange records the
@@ -114,7 +118,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     );
     const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
-    const { handleRender, handleGetRenderContext } = useNunjucks();
+    const { handleRender, handleGetRenderContext } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
     const openVariableSource = useOpenVariableSource();
     const isPasswordEditor = type?.toLowerCase() === 'password';
 
@@ -374,6 +378,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         // moved to another control (e.g. Tab from the URL bar to Send) — until the editor holds focus
         // or the window elapses.
         const deadline = Date.now() + 500;
+        // The control that held focus when we mounted (typically the "Add" button that triggered this
+        // editor). It keeps focus until we take it, so it must not be mistaken for the user having
+        // deliberately moved elsewhere. Cleared once the editor holds focus, so a later deliberate
+        // return to that control is respected.
+        let initialActiveElement = document.activeElement;
         const ensureFocus = () => {
           const cm = codeMirror.current;
           if (!cm) {
@@ -395,6 +404,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             const role = active?.getAttribute('role');
             const userMovedToAnotherControl =
               !!active &&
+              active !== initialActiveElement &&
               (active.tagName === 'INPUT' ||
                 active.tagName === 'TEXTAREA' ||
                 active.tagName === 'SELECT' ||
@@ -412,6 +422,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             }
             cm.focus();
             cm.getDoc().setCursor(cm.getDoc().lineCount(), 0);
+          } else {
+            initialActiveElement = null;
           }
           if (Date.now() < deadline) {
             requestAnimationFrame(ensureFocus);

@@ -27,10 +27,12 @@ vi.mock('~/common/runtime', () => ({
 
 import type { Cookie, Request, Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { EnvironmentKvPairDataType } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
 import { getRenderedRequestAndContext } from '../../common/render';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../../main/har';
+import type { RenderedRequest } from '../../common/templating/types';
+import { exportHar, exportHarResponse, exportHarWithRenderedRequest, exportHarWithRequest } from '../../main/har';
 
 let cookieBridge: any;
 
@@ -438,6 +440,99 @@ describe('export', () => {
         headersSize: -1,
         bodySize: -1,
       });
+    });
+  });
+
+  describe('Generate Code vs explicit export separation', () => {
+    it('exportHarWithRequest with purpose=preview masks confidential env values when setting is ON (default)', async () => {
+      const workspace = await services.workspace.create();
+      const baseEnv = await services.environment.getOrCreateForParentId(workspace._id);
+      await services.environment.update(baseEnv, {
+        data: { token: 'real-secret' },
+        kvPairData: [
+          {
+            id: 'pair_token',
+            name: 'token',
+            value: 'real-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ],
+      });
+      const request: Request = {
+        ...models.request.init(),
+        _id: 'req_codegen',
+        modified: 1,
+        created: 1,
+        parentId: workspace._id,
+        type: models.request.type,
+        headers: [{ name: 'Authorization', value: 'Bearer {{ _.token }}' }],
+        method: 'GET',
+        url: 'https://api.example.com/',
+      };
+      const { context } = await getRenderedRequestAndContext({ request, environment: baseEnv._id, purpose: 'preview' });
+      expect((context as any).token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+
+    it('exportHar (explicit export) uses undefined purpose — confidential env values are masked (same as SECRET, not affected by setting)', async () => {
+      const workspace = await services.workspace.create({ _id: 'wrk_export_sep' });
+      const baseEnv = await services.environment.getOrCreateForParentId(workspace._id);
+      await services.environment.update(baseEnv, {
+        data: { token: 'real-secret' },
+        kvPairData: [
+          {
+            id: 'pair_token',
+            name: 'token',
+            value: 'real-secret',
+            type: EnvironmentKvPairDataType.STRING,
+            enabled: true,
+            isConfidential: true,
+          },
+        ],
+      });
+      const request: Request = {
+        ...models.request.init(),
+        _id: 'req_export_sep',
+        modified: 1,
+        created: 1,
+        parentId: workspace._id,
+        type: models.request.type,
+        method: 'GET',
+        url: 'https://api.example.com/',
+        headers: [],
+      };
+      // explicit export passes no purpose → fail-closed 'mask' → same behaviour as SECRET
+      const { context } = await getRenderedRequestAndContext({ request, environment: baseEnv._id });
+      expect((context as any).token).toBe(models.environment.vaultEnvironmentMaskValue);
+    });
+  });
+
+  describe('exportHarWithRenderedRequest()', () => {
+    const renderedRequest = (overrides: Partial<RenderedRequest>): RenderedRequest => ({
+      ...models.request.init(),
+      _id: 'req_masked',
+      type: models.request.type,
+      parentId: 'wrk_masked',
+      modified: 1,
+      created: 1,
+      isPrivate: false,
+      cookies: [],
+      cookieJar: { ...models.cookieJar.init(), _id: 'jar', type: models.cookieJar.type, parentId: 'wrk_masked', modified: 1, created: 1, isPrivate: false, cookies: [] },
+      suppressUserAgent: false,
+      ...overrides,
+    });
+
+    it('keeps a masked host as the mask and shows a masked Basic Auth header as the mask', async () => {
+      const har = await exportHarWithRenderedRequest(
+        renderedRequest({
+          url: '••••••/users',
+          authentication: { type: 'basic', username: '••••••', password: 'pass' },
+        }),
+      );
+
+      expect(har.url).toBe('••••••/users');
+      expect(har.headers).toContainEqual({ name: 'Authorization', value: 'Basic ••••••' });
     });
   });
 

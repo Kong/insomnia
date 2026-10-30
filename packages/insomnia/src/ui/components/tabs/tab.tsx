@@ -8,10 +8,14 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import type { WorkspaceFileIssue } from '~/main/git-service';
 import { scrollElementIntoView } from '~/ui/utils';
 
-import { type BaseTab, TAB_CONTEXT_MENU_COMMAND, type TabType, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { type BaseTab, type TabType, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 
+export const enum TAB_CONTEXT_MENU_COMMAND {
+  CLOSE_ALL = 'Close All',
+  CLOSE_OTHERS = 'Close Other Tabs',
+}
 
 const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   GET: 'text-(--color-font-surprise) bg-[rgba(var(--color-surprise-rgb),0.5)]',

@@ -2,12 +2,19 @@ import type { CookieJar, Environment, GitRepository, Workspace } from 'insomnia-
 import { database, models } from 'insomnia-data';
 
 import * as apiSpecServices from '../services/api-spec';
+import * as projectServices from '../services/project';
 
 /**
  * Run various database repair scripts
  */
 export async function repairDatabase() {
   console.log('[fix] Running database repairs');
+
+  for (const project of await projectServices.list()) {
+    if (project.remoteId === null) {
+      await projectServices.clearWorkspaceSyncFlags(project._id);
+    }
+  }
 
   for (const workspace of await database.find<Workspace>(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
@@ -29,7 +36,10 @@ async function _applyApiSpecName(workspace: Workspace) {
   const apiSpec = await apiSpecServices.getByParentId(workspace._id);
   const existsAndFilenameIsDefaultOrMissing =
     apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
-  if (existsAndFilenameIsDefaultOrMissing) {
+  // A backfill that would write the existing value changes nothing but would
+  // still restamp `modified`, which git sync serializes into YAML and shows up
+  // as a modified file. Skip no-op writes.
+  if (existsAndFilenameIsDefaultOrMissing && apiSpec.fileName !== workspace.name) {
     await apiSpecServices.update(apiSpec, { fileName: workspace.name });
   }
 }

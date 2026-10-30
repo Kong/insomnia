@@ -1,4 +1,5 @@
 import type {
+  ChangeBufferEvent,
   ResponseTimelineEntry,
   RunnerResultPerRequest,
   RunnerTestResult,
@@ -345,6 +346,21 @@ export const Runner: FC = () => {
       setTestHistory(results.reverse());
     };
     readResults();
+    // Results can also disappear from under us - "Clear All Response History" in the Tools
+    // menu removes them database-wide - so re-read whenever one is removed, and drop the
+    // result currently on screen if it was one of them.
+    return window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      const removedIds = changes
+        .filter(([event, doc]) => event === 'remove' && models.runnerTestResult.isRunnerTestResult(doc))
+        .map(([, doc]) => doc._id);
+
+      if (removedIds.length === 0) {
+        return;
+      }
+
+      readResults();
+      setExecutionResult(current => (current && removedIds.includes(current._id) ? null : current));
+    });
   }, [runnerId]);
 
   const [totalTime, setTotalTime] = useState({
@@ -694,7 +710,8 @@ export const Runner: FC = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          className={`runner-request-list-${item.name} border border-solid border-transparent text-(--color-font)`}
+                          data-testid={`runner-request-list-${item.name}`}
+                          className="border border-solid border-transparent text-(--color-font)"
                           style={{ outline: 'none' }}
                         >
                           <Button slot="drag" className="hover:cursor-grab">
@@ -990,6 +1007,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const noLogRuntime = {
     appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
+    appendTimelineOnError: async (_timelinePath: string, _data: string) => {}, // no op
   };
 
   try {

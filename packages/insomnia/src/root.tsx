@@ -50,6 +50,7 @@ import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
+import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
@@ -178,7 +179,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   );
 };
 
-export async function clientLoader(_args: Route.ClientLoaderArgs) {
+export async function clientLoader(_args: Route.ClientLoaderArgs): Promise<RootLoaderData> {
   const settings = await services.settings.get();
   const userSession = await services.userSession.get();
   const cloudCredentials = await services.cloudCredential.all();
@@ -411,9 +412,35 @@ const Root = () => {
         revalidate();
       }
     });
+    // Lives here rather than in renderer-listeners so the clear can revalidate loaders
+    // afterwards - the response panes read their data from loaders, which a raw database
+    // write does not refresh.
+    const unsubClearResponseHistory = window.main.on('clear-all-response-history', () => {
+      showModal(AlertModal, {
+        title: 'Clear All Response History',
+        message:
+          'This will clear your local Response history across every project/collection. No functionality will be impacted, and this will not affect any other user. Do you wish to continue?',
+        addCancel: true,
+        okLabel: 'Continue',
+        onConfirm: async () => {
+          try {
+            await services.helpers.removeAllResponseHistory();
+            revalidate();
+            showToast({ icon: 'trash', title: 'Response history cleared', status: 'success' });
+          } catch (error) {
+            // AlertModal does not await onConfirm, so an unreported failure would look exactly
+            // like a successful clear. The clear can also stop part-way through, hence the
+            // revalidate on this path too.
+            revalidate();
+            showError({ title: 'Failed to clear response history', error });
+          }
+        },
+      });
+    });
     return () => {
       unsubLoggedIn();
       unsubGitDbSynced();
+      unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
 
