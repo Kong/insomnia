@@ -53,16 +53,17 @@ test("Verify query params from the URL, template tags, and the Parameters tab ar
     name: faker.string.alphanumeric(10),
     method: HttpMethod.Post,
     url: `${HTTP_SERVER}/post?key=fromUrl&key={{ fromUrlValue }}`,
-    params: [
-      { name: "key", value: "{{ fromEditorValue }}" },
-      { name: "key", value: "/" },
-      { name: "space", value: spaceValue },
-      { name: "ampersand", value: ampersandValue },
-      { name: "equals", value: equalsValue },
-      { name: "hash", value: hashValue },
-      { name: "chinese", value: chineseValue },
-    ],
   });
+  
+  await httpRequestFlow.setParamsBulk(request, [
+    { name: "key", value: "{{ fromEditorValue }}" },
+    { name: "key", value: "/" },
+    { name: "space", value: spaceValue },
+    { name: "ampersand", value: ampersandValue },
+    { name: "equals", value: equalsValue },
+    { name: "hash", value: hashValue },
+    { name: "chinese", value: chineseValue },
+  ]);
   const responseView = await httpRequestFlow.send(request);
 
   expect(responseView.statusCode).toBe(200);
