@@ -1,0 +1,340 @@
+import * as fs from "node:fs";
+import path from "node:path";
+
+import type { Locator } from "@playwright/test";
+import { type ElectronApplication,expect } from "@playwright/test";
+import type { Page } from "playwright-core";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
+
+export abstract class BasePage {
+  constructor(
+    protected page: Page,
+    protected insomnia?: ElectronApplication,
+  ) {}
+
+  /**
+   * Navigates to this page and waits until it is confirmed ready for
+   * interaction. Each subclass implements this to wait on a
+   * page-specific visible element that indicates the page has loaded.
+   */
+  abstract navigate(): Promise<void>;
+
+  /**
+   * Rewires this Page instance onto a fresh window/ElectronApplication —
+   * called by `PageManager.setWindow()` after `AppFlow.restart()`.
+   */
+  setContext(page: Page, insomnia?: ElectronApplication): void {
+    this.page = page;
+    this.insomnia = insomnia;
+  }
+
+  /**
+   * Reads a CodeMirror editor's current value directly via its own
+   * `CodeMirror` instance API rather than scraping rendered DOM text.
+   */
+  protected async readCodeMirror(locator: Locator): Promise<string> {
+    return locator.evaluate((el) => (el as any).CodeMirror?.getValue() ?? "");
+  }
+
+  /**
+   * Polls `locator`'s `attribute` until it reads the same value on two
+   * consecutive checks, then returns it. Guards against a locator that's
+   * about to be swapped out from under a caller — e.g. a list row that
+   * briefly renders with a provisional key before the app's data refetch
+   * settles it onto the persisted document's real one — by not returning
+   * a value until it's stopped changing.
+   */
+  protected async waitForStableAttribute(
+    locator: Locator,
+    attribute: string,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<string | null> {
+    return this.waitForStableValue(
+      () => locator.getAttribute(attribute),
+      2,
+      timeout,
+    );
+  }
+
+  /**
+   * Sets a CodeMirror editor's value directly via its own `setValue()` API
+   * instead of simulating keystrokes, re-reads it back to catch a stray
+   * race that left it with the wrong content, then watches it for 200ms
+   * to confirm the value actually holds — the immediate read-back only
+   * confirms the write landed at that instant, but a background re-render
+   * (e.g. a `{{ }}`/`{% %}` tag's inline widget redrawing) can silently
+   * revert it shortly after, which a caller that immediately re-navigates
+   * can otherwise observe as the field having raced back to its old
+   * value. Retries the whole write up to 3 times if a revert is caught
+   * within that window.
+   *
+   * This only confirms the live editor value, not that it has been
+   * persisted to disk — see e.g. `HttpRequestFlow`/`GrpcRequestFlow`'s
+   * `waitForUrlPersisted()` for that separate, stricter check.
+   */
+  protected async setCodeMirrorValue(
+    cmLocator: Locator,
+    text: string,
+  ): Promise<void> {
+    const deadline = Date.now() + DEFAULT_TIMEOUT;
+    let attempt = 0;
+    do {
+      attempt++;
+      await expect(async () => {
+        await cmLocator.evaluate(
+          (el, value) => (el as any).CodeMirror?.setValue(value),
+          text,
+        );
+        expect(await this.readCodeMirror(cmLocator)).toBe(text);
+      }).toPass({ timeout: DEFAULT_TIMEOUT });
+      if (await this.valueHolds(cmLocator, text, 200)) return;
+      // A revert means a background patch of a still-initializing document
+      // landed over the write; back off so the next write goes in after it
+      // rather than racing it again within the same few milliseconds.
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, Math.min(250 * attempt, 1000)),
+      );
+    } while (Date.now() < deadline);
+    throw new Error(
+      `CodeMirror value "${text}" did not hold after ${attempt} attempts`,
+    );
+  }
+
+  /**
+   * Polls `locator`'s CodeMirror value every 50ms for `durationMs`,
+   * bailing out as soon as it no longer matches `expected` (a revert).
+   */
+  private async valueHolds(
+    locator: Locator,
+    expected: string,
+    durationMs: number,
+  ): Promise<boolean> {
+    const deadline = Date.now() + durationMs;
+    while (Date.now() < deadline) {
+      if ((await this.readCodeMirror(locator)) !== expected) return false;
+      await this.waitForRendererIdle();
+    }
+    return true;
+  }
+
+  /**
+   * Waits for the page's own event loop to drain everything already
+   * queued in it — every pending microtask (promise `.then()` chains),
+   * then one full macrotask turn — before returning. Use right before an
+   * action whose outcome depends on a React state update that a
+   * just-confirmed async write (e.g. a fetcher action landing in NeDB)
+   * triggers a moment *later* rather than synchronously, such as a
+   * React Router loader revalidation. Because this round-trips through
+   * the renderer's own task queue instead of guessing a duration from the
+   * test process (`page.waitForTimeout()`), anything already scheduled
+   * inside the page — including a slow revalidation stalled behind a busy
+   * main thread under CI load — is guaranteed to have run by the time
+   * this resolves, in a way a fixed sleep can't reliably promise.
+   */
+  protected async waitForRendererIdle(): Promise<void> {
+    await this.page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => setTimeout(resolve, 0), 0);
+        }),
+    );
+  }
+
+  /**
+   * Reads the app's on-disk NeDB file `dbFile`, keeping only each
+   * document's latest revision and dropping deleted ones.
+   */
+  protected async readPersistedDocs(dbFile: string): Promise<any[]> {
+    const dataPath = await this.insomnia!.evaluate(({ app }) =>
+      app.getPath("userData"),
+    );
+    const latest = new Map<string, any>();
+    for (const line of fs
+      .readFileSync(path.join(dataPath, dbFile), "utf8")
+      .split("\n")
+      .filter(Boolean)) {
+      const doc = JSON.parse(line);
+      if (doc.$$deleted) latest.delete(doc._id);
+      else latest.set(doc._id, doc);
+    }
+    return [...latest.values()];
+  }
+
+  /**
+   * Polls the app's on-disk NeDB files until any live document in one of
+   * `dbFiles` satisfies `predicate`. Use in place of a fixed sleep after
+   * an edit the app saves through a debounce: the UI already shows the
+   * new value, but a caller that navigates away or unmounts the editor
+   * before the debounce fires can silently lose the write, and only the
+   * on-disk store the app itself reads from shows it has landed.
+   */
+  protected async waitForPersisted(
+    dbFiles: string[],
+    predicate: (doc: any) => boolean,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      let matched = false;
+      for (const file of dbFiles) {
+        if ((await this.readPersistedDocs(file)).some(predicate)) matched = true;
+      }
+      expect(matched).toBe(true);
+    }).toPass({ timeout });
+  }
+
+  /**
+   * Polls the on-disk NeDB files until any live document in one of
+   * `dbFiles` holds `expected` at the value `read` extracts from it — the
+   * single-field form of `waitForPersisted()`. Use after an edit the app
+   * autosaves through a debounce (a script, an auth field, docs, a spec).
+   */
+  protected async waitForFieldPersisted(
+    dbFiles: string[],
+    read: (doc: any) => unknown,
+    expected: unknown,
+  ): Promise<void> {
+    await this.waitForPersisted(dbFiles, (doc) => read(doc) === expected);
+  }
+
+  /**
+   * Polls the on-disk NeDB files until any live document in one of
+   * `dbFiles` lists a row named `name` in one of the arrays `rowsOf`
+   * returns — confirming a name/value row's debounced save has landed
+   * (and the row has settled onto its persisted key) before the next edit
+   * builds on it. Skipped for a blank name, which the app never persists.
+   */
+  protected async waitForRowPersisted(
+    dbFiles: string[],
+    rowsOf: (doc: any) => unknown[],
+    name: string,
+    matchesValue?: (row: any) => boolean,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    if (!name) return;
+    await this.waitForPersisted(
+      dbFiles,
+      (doc) =>
+        rowsOf(doc).some(
+          (rows) =>
+            Array.isArray(rows) &&
+            rows.some(
+              (row) => row.name === name && (matchesValue?.(row) ?? true),
+            ),
+        ),
+      timeout,
+    );
+  }
+
+  /**
+   * Polls `read` until it returns the same value (compared by JSON) on
+   * consecutive reads — the poll-based replacement for sleeping while a
+   * debounced/async re-render (a filtered list, a search result set, a
+   * tree after a drop) settles.
+   */
+  protected async waitForStableValue<T>(
+    read: () => Promise<T>,
+    stableReads = 3,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<T> {
+    let previous = "";
+    let streak = 0;
+    let value!: T;
+    await expect(async () => {
+      value = await read();
+      const serialized = JSON.stringify(value);
+      streak = serialized === previous ? streak + 1 : 1;
+      previous = serialized;
+      expect(streak).toBeGreaterThanOrEqual(stableReads);
+    }).toPass({ timeout, intervals: [100] });
+    return value;
+  }
+
+  /**
+   * Stubs Electron's native file-picker dialog so a "Choose File" button
+   * can be automated without an OS-level file chooser.
+   */
+  protected async stubFileChooser(filePath: string): Promise<void> {
+    if (!this.insomnia) {
+      throw new Error(
+        "ElectronApplication not available — pass `insomnia` through PageManager to stub the file chooser",
+      );
+    }
+    await this.insomnia.evaluate(({ dialog }, fp) => {
+      dialog.showOpenDialog = (async () => ({
+        canceled: false,
+        filePaths: [fp],
+      })) as typeof dialog.showOpenDialog;
+    }, filePath);
+  }
+
+  /**
+   * Stubs Electron's native file-save dialog so an export action that
+   * writes a single file can be automated without an OS-level save
+   * prompt.
+   */
+  protected async stubSaveDialog(filePath: string): Promise<void> {
+    if (!this.insomnia) {
+      throw new Error(
+        "ElectronApplication not available — pass `insomnia` through PageManager to stub the save dialog",
+      );
+    }
+    await this.insomnia.evaluate(({ dialog }, fp) => {
+      dialog.showSaveDialog = (async () => ({
+        canceled: false,
+        filePath: fp,
+      })) as typeof dialog.showSaveDialog;
+    }, filePath);
+  }
+
+  /**
+   * Sends the platform's Undo shortcut (Cmd+Z on macOS, Ctrl+Z elsewhere)
+   * to whatever currently has focus.
+   */
+  async undo(focus?: () => Promise<void>): Promise<void> {
+    if (focus) {
+      await focus();
+    }
+    await this.page.keyboard.press(
+      process.platform === "darwin" ? "Meta+z" : "Control+z",
+    );
+  }
+
+  /**
+   * Checks whether an element is hidden. Pass one of a page's own public
+   * readonly Locator fields, e.g. `projectSettingsPage.isHidden(projectSettingsPage.gitSetupForm)`.
+   */
+  async isHidden(target: Locator): Promise<boolean> {
+    return target.isHidden();
+  }
+
+  /**
+   * Checks whether an element is disabled. Pass one of a page's own public
+   * readonly Locator fields, e.g. `projectSettingsPage.isDisabled(projectSettingsPage.scanForFilesButton)`.
+   */
+  async isDisabled(target: Locator): Promise<boolean> {
+    return target.isDisabled();
+  }
+
+  /**
+   * Checks whether a CodeMirror editor currently has focus, via the
+   * `data-focused` attribute the app itself sets on the editor's
+   * container on focus/blur (see one-line-editor.tsx) — more reliable
+   * than comparing against `document.activeElement` across an iframe/
+   * Electron boundary.
+   */
+  async hasFocus(container: Locator): Promise<boolean> {
+    return (await container.getAttribute("data-focused")) === "on";
+  }
+
+  /**
+   * Checks whether a plain DOM element (a button, a react-aria textbox,
+   * a tab, etc. — anything that isn't a CodeMirror editor) currently has
+   * focus, via `document.activeElement`. Use hasFocus() instead for a
+   * CodeMirror editor's container, since CodeMirror doesn't reliably
+   * register itself as `document.activeElement`.
+   */
+  async isFocused(target: Locator): Promise<boolean> {
+    return target.evaluate((el) => el === document.activeElement);
+  }
+}

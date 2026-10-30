@@ -1,0 +1,220 @@
+import { ContextMenuItem } from "../enums/context-menu-items";
+import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
+import type { Collection } from "../models/collection";
+import type { Folder } from "../models/folder";
+import { GrpcRequest } from "../models/grpc-request";
+import type { GrpcRequestPage } from "../pages/grpc-request.page";
+import { BaseFlow } from "./base.flow";
+
+export interface GrpcResponse {
+  status?: { code: string; message: string };
+  message?: unknown;
+  messages?: unknown[];
+}
+
+export class GrpcRequestFlow extends BaseFlow {
+  /**
+   * Creates a gRPC request under `parent` via the standalone project tree,
+   * then verifies it was created.
+   */
+  @step()
+  async create(parent: Collection | Folder, request: GrpcRequest): Promise<GrpcRequest> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(parent);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(ContextMenuItem.GrpcRequest);
+
+    const requestNode = await workspace.waitForFirstRealChild(node._id);
+    await workspace.rightClick(requestNode);
+    await workspace.clickContextMenu(ContextMenuItem.Rename);
+    await workspace.setItemName(request.name);
+    await workspace.clickRename();
+
+    const grpcRequestPage = this.pageManager.grpcRequestPage;
+    await grpcRequestPage.navigate();
+    await this.applyRequestFields(grpcRequestPage, request, requestNode._id);
+
+    return this.assertCreated(await this.get(request.name), request.name);
+  }
+
+  /**
+   * Reads back an existing gRPC request's fields via the standalone
+   * project tree.
+   */
+  @step()
+  async get(
+    item: string | { name: string; id?: string },
+    parent?: Collection,
+  ): Promise<GrpcRequest | undefined> {
+    const identity = typeof item === "string" ? { name: item } : item;
+    const workspace = this.pageManager.workspacePage;
+    const grpcRequestPage = this.pageManager.grpcRequestPage;
+
+    const node = await workspace.findItemNode(identity, TreeNodeType.Request);
+    if (!node) return undefined;
+
+    await workspace.openRequestNode(node);
+    await grpcRequestPage.navigate();
+
+    const data = await grpcRequestPage.get();
+    return new GrpcRequest({ name: identity.name, id: node._id, ...data });
+  }
+
+  /**
+   * Cancels `request`'s in-flight call — a still-in-flight unary/
+   * server-streaming call, or an open client/bidi-streaming call — then
+   * reads back the resulting gRPC status.
+   */
+  @step()
+  async cancel(request: GrpcRequest): Promise<GrpcResponse> {
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.cancel();
+    return this.readResponse();
+  }
+
+  /**
+   * Closes the client half of `request`'s open client-streaming or
+   * bidi-streaming call by clicking "Commit", then reads back the
+   * resulting gRPC status and message(s).
+   */
+  @step()
+  async commit(request: GrpcRequest): Promise<GrpcResponse> {
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.commit();
+    return this.readResponse();
+  }
+
+  /**
+   * Sends `request` and reads back the resulting gRPC status and
+   * message(s) via the standalone project tree. For unary and
+   * server-streaming methods this waits for the whole call to complete;
+   * for client/bidi-streaming methods, use `start()` instead since no
+   * response arrives until `commit()` closes the client's half of the
+   * stream.
+   */
+  @step()
+  async send(request: GrpcRequest): Promise<GrpcResponse> {
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.send();
+    return this.readResponse();
+  }
+
+  /**
+   * Opens a client-streaming or bidi-streaming call by clicking "Start".
+   * Unlike `send()`, this does not wait for a response — none arrives
+   * until `commit()` closes the client's half of the stream.
+   */
+  @step()
+  async start(request: GrpcRequest): Promise<void> {
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.send();
+  }
+
+  /**
+   * Replaces `request`'s message body and waits until it has landed both
+   * on disk and in the request pane's loader data, so a following
+   * `send()` can't go out with the previous body.
+   */
+  @step()
+  async setBody(request: GrpcRequest, body: string): Promise<void> {
+    if (!request.id) {
+      throw new Error(
+        "setBody(): request.id is required to confirm the body persisted",
+      );
+    }
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.setBody(body);
+    await this.waitForBodyPersisted(request.id, body);
+    await grpcRequestPage.waitForBodyInLoaderData(body);
+  }
+
+  /**
+   * Sends one message over `request`'s open client-streaming or
+   * bidi-streaming call. Can be called repeatedly with different bodies
+   * before calling `commit()`.
+   */
+  @step()
+  async streamMessage(request: GrpcRequest, body: string): Promise<void> {
+    if (!request.id) {
+      throw new Error(
+        "streamMessage(): request.id is required to confirm the body persisted before streaming it",
+      );
+    }
+    const grpcRequestPage = await this.openRequest(request);
+    await grpcRequestPage.setBody(body);
+    await this.waitForBodyPersisted(request.id, body);
+    await grpcRequestPage.waitForBodyInLoaderData(body);
+    await grpcRequestPage.clickStream();
+  }
+
+  private async applyRequestFields(
+    page: GrpcRequestPage,
+    request: GrpcRequest,
+    id: string,
+  ): Promise<void> {
+    await page.setUrl(request.url);
+    await this.waitForUrlPersisted("insomnia.GrpcRequest.db", page, id, request.url);
+    if (request.method) {
+      await page.fetchServerReflection();
+      await page.setMethod(request.method);
+    }
+    if (request.body) {
+      await page.setBody(request.body);
+      await this.waitForBodyPersisted(id, request.body);
+    }
+    if (request.headers && request.headers.length > 0) {
+      await page.setHeaders(request.headers);
+    }
+  }
+
+  /**
+   * Waits until `id`'s persisted `body.text` settles on `content`. The app
+   * patches a just-set body into the request's state in the background
+   * rather than synchronously, and a UI read-back right after `setBody()`
+   * can observe an optimistic value that a later remount then reverts —
+   * reading the same on-disk store the real gRPC call reads from is the
+   * only way to know the value that will actually be sent has landed.
+   * Observed live: proceeding before this settled silently wiped the name
+   * just typed into a freshly-added header row (its value, typed slightly
+   * later, survived the remount), and separately let a streamed message go
+   * out with the previous body instead of the one just set.
+   */
+  private async waitForBodyPersisted(id: string, content: string): Promise<void> {
+    await this.waitForFieldPersisted(
+      "insomnia.GrpcRequest.db",
+      id,
+      (doc) => doc?.body?.text,
+      content,
+    );
+  }
+
+  /**
+   * Locates and opens `request`'s request pane via the standalone project
+   * tree.
+   */
+  private async openRequest(request: GrpcRequest): Promise<GrpcRequestPage> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
+
+    const grpcRequestPage = this.pageManager.grpcRequestPage;
+    await grpcRequestPage.navigate();
+    return grpcRequestPage;
+  }
+
+  /**
+   * Reads back the gRPC status and message(s) currently shown in the
+   * response pane.
+   */
+  private async readResponse(): Promise<GrpcResponse> {
+    const responsePage = this.pageManager.responsePage;
+    await responsePage.navigateGrpc();
+    const messages = await responsePage.getGrpcMessages();
+    return {
+      status: await responsePage.getGrpcStatus(),
+      message: messages[0],
+      messages,
+    };
+  }
+}
