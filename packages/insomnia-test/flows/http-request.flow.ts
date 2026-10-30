@@ -14,9 +14,6 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Creates a new HTTP request under `parent`, naming it via the rename
    * flow and applying its fields on the request page.
-   * @param parent - The Collection or Folder under which the request is created
-   * @param request - The request definition to create, including its fields
-   * @returns The created request, read back and asserted to exist
    */
   async create(parent: Collection | Folder, request: HttpRequest): Promise<HttpRequest> {
     const workspace = this.pageManager.workspacePage;
@@ -41,8 +38,6 @@ export class HttpRequestFlow extends BaseFlow {
    * Replaces `request`'s query parameters using the Params tab's bulk
    * editor. Use after `create()` for requests with many params, where
    * per-row editing is prone to a stale-row-list save race.
-   * @param request - The request to update (must exist in the sidebar)
-   * @param params - The parameters to set
    */
   async setParamsBulk(request: HttpRequest, params: RequestParameter[]): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -57,13 +52,9 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Reads back an existing request's fields by name or identity, looking
    * it up in the standalone project tree.
-   * @param item - The request's name, or an object identifying it by name and optional id
-   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
-   * @returns The request populated with its current fields, or undefined if not found
    */
   async get(
     item: string | { name: string; id?: string },
-    parent?: Collection,
   ): Promise<HttpRequest | undefined> {
     const identity = typeof item === "string" ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
@@ -82,8 +73,6 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Sends `request` and returns the resulting response, locating it in the
    * standalone project tree.
-   * @param request - The request to send
-   * @returns The response view received after sending the request
    */
   async send(request: HttpRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;
@@ -106,8 +95,6 @@ export class HttpRequestFlow extends BaseFlow {
    * (see `AuthTabComponent.fetchOAuth2Tokens()` — "Fetch Tokens" before
    * any token exists, "Refresh Token" once one does), then reads back
    * the resulting Refresh/Identity/Access Token fields in one call.
-   * @param request - The request whose Auth tab already has OAuth 2.0 configured
-   * @returns The tokens now stored on that request's Auth tab
    */
   async fetchOAuth2Tokens(request: HttpRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
@@ -124,8 +111,6 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Exports the response currently shown for the last-sent request to
    * `filePath` via the response pane's "Preview" dropdown.
-   * @param option - The export menu item to click
-   * @param filePath - Absolute path the file should be written to
    */
   async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
     await this.pageManager.responsePage.exportResponse(option, filePath);
@@ -134,7 +119,6 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Saves the large response currently shown for the last-sent request to
    * `filePath` via the response pane's "Save To File" button.
-   * @param filePath - Absolute path the file should be written to
    */
   async saveResponseToFile(filePath: string): Promise<void> {
     await this.pageManager.responsePage.saveResponseToFile(filePath);
@@ -143,7 +127,6 @@ export class HttpRequestFlow extends BaseFlow {
   /**
    * Reads an export menu item's label and disabled state for the response
    * currently shown.
-   * @param option - The export menu item to inspect
    */
   async getResponseExportOptionState(
     option: ResponseExportOption,
@@ -183,8 +166,6 @@ export class HttpRequestFlow extends BaseFlow {
    * Applies `authentication` to the request pane's Auth tab. OAuth 1.0 is
    * HTTP-only so it is handled here; every other type is delegated to
    * `BaseFlow.applyAuthentication`.
-   * @param page - The request page to apply authentication on
-   * @param authentication - The authentication config to apply
    */
   private async applyHttpAuthentication(
     page: HttpRequestPage,

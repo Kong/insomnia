@@ -23,8 +23,6 @@ export abstract class BasePage {
   /**
    * Rewires this Page instance onto a fresh window/ElectronApplication —
    * called by `PageManager.setWindow()` after `AppFlow.restart()`.
-   * @param page - The freshly-launched app's main window
-   * @param insomnia - The freshly-launched ElectronApplication, if any
    */
   setContext(page: Page, insomnia?: ElectronApplication): void {
     this.page = page;
@@ -34,8 +32,6 @@ export abstract class BasePage {
   /**
    * Reads a CodeMirror editor's current value directly via its own
    * `CodeMirror` instance API rather than scraping rendered DOM text.
-   * @param locator - Must resolve to the `.CodeMirror` element itself (the one carrying the `CodeMirror` instance), not a wrapper around it
-   * @returns The editor's current text value, or an empty string if no `CodeMirror` instance is attached
    */
   protected async readCodeMirror(locator: Locator): Promise<string> {
     return locator.evaluate((el) => (el as any).CodeMirror?.getValue() ?? "");
@@ -48,25 +44,17 @@ export abstract class BasePage {
    * briefly renders with a provisional key before the app's data refetch
    * settles it onto the persisted document's real one — by not returning
    * a value until it's stopped changing.
-   * @param locator - The element whose attribute should settle
-   * @param attribute - The attribute to poll
-   * @param timeout - Overall budget to wait for the value to settle
-   * @returns The settled attribute value
    */
   protected async waitForStableAttribute(
     locator: Locator,
     attribute: string,
     timeout = DEFAULT_TIMEOUT,
   ): Promise<string | null> {
-    const deadline = Date.now() + timeout;
-    let previous = await locator.getAttribute(attribute);
-    while (Date.now() < deadline) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 200));
-      const current = await locator.getAttribute(attribute);
-      if (current === previous) return current;
-      previous = current;
-    }
-    return previous;
+    return this.waitForStableValue(
+      () => locator.getAttribute(attribute),
+      2,
+      timeout,
+    );
   }
 
   /**
@@ -84,8 +72,6 @@ export abstract class BasePage {
    * This only confirms the live editor value, not that it has been
    * persisted to disk — see e.g. `HttpRequestFlow`/`GrpcRequestFlow`'s
    * `waitForUrlPersisted()` for that separate, stricter check.
-   * @param cmLocator - Must resolve to the `.CodeMirror` element itself (the one carrying the `CodeMirror` instance), not a wrapper around it
-   * @param text - The value to set
    */
   protected async setCodeMirrorValue(
     cmLocator: Locator,
@@ -118,10 +104,6 @@ export abstract class BasePage {
   /**
    * Polls `locator`'s CodeMirror value every 50ms for `durationMs`,
    * bailing out as soon as it no longer matches `expected` (a revert).
-   * @param locator - Must resolve to the `.CodeMirror` element itself
-   * @param expected - The value that must hold for the full duration
-   * @param durationMs - How long the value must hold to count as stable
-   * @returns `true` if `expected` held for the whole duration, `false` if it reverted first
    */
   private async valueHolds(
     locator: Locator,
@@ -162,8 +144,6 @@ export abstract class BasePage {
   /**
    * Reads the app's on-disk NeDB file `dbFile`, keeping only each
    * document's latest revision and dropping deleted ones.
-   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.ApiSpec.db"`
-   * @returns The live documents currently persisted in that file
    */
   protected async readPersistedDocs(dbFile: string): Promise<any[]> {
     const dataPath = await this.insomnia!.evaluate(({ app }) =>
@@ -188,9 +168,6 @@ export abstract class BasePage {
    * new value, but a caller that navigates away or unmounts the editor
    * before the debounce fires can silently lose the write, and only the
    * on-disk store the app itself reads from shows it has landed.
-   * @param dbFiles - The NeDB filenames to scan, e.g. `["insomnia.Request.db"]`
-   * @param predicate - Receives each document's latest revision; return `true` when it holds the expected state
-   * @param timeout - Overall budget to wait for a matching document
    */
   protected async waitForPersisted(
     dbFiles: string[],
@@ -211,9 +188,6 @@ export abstract class BasePage {
    * `dbFiles` holds `expected` at the value `read` extracts from it — the
    * single-field form of `waitForPersisted()`. Use after an edit the app
    * autosaves through a debounce (a script, an auth field, docs, a spec).
-   * @param dbFiles - The NeDB filenames to scan, e.g. `["insomnia.Request.db"]`
-   * @param read - Extracts the value under test from a document
-   * @param expected - The value it must settle on
    */
   protected async waitForFieldPersisted(
     dbFiles: string[],
@@ -229,11 +203,6 @@ export abstract class BasePage {
    * returns — confirming a name/value row's debounced save has landed
    * (and the row has settled onto its persisted key) before the next edit
    * builds on it. Skipped for a blank name, which the app never persists.
-   * @param dbFiles - The NeDB filenames to scan
-   * @param rowsOf - Returns the candidate row lists of a document (params, headers, kvPairData, ...)
-   * @param name - The row name to look for
-   * @param matchesValue - Optional extra check on the named row (its value/disabled state); omit to match on name alone
-   * @param timeout - Overall budget to wait for the row to land
    */
   protected async waitForRowPersisted(
     dbFiles: string[],
@@ -262,10 +231,6 @@ export abstract class BasePage {
    * consecutive reads — the poll-based replacement for sleeping while a
    * debounced/async re-render (a filtered list, a search result set, a
    * tree after a drop) settles.
-   * @param read - Reads whatever should stop changing
-   * @param stableReads - How many consecutive identical reads count as settled
-   * @param timeout - Overall budget to wait for the value to settle
-   * @returns The settled value
    */
   protected async waitForStableValue<T>(
     read: () => Promise<T>,
@@ -288,7 +253,6 @@ export abstract class BasePage {
   /**
    * Stubs Electron's native file-picker dialog so a "Choose File" button
    * can be automated without an OS-level file chooser.
-   * @param filePath - Absolute path the stubbed dialog should return
    */
   protected async stubFileChooser(filePath: string): Promise<void> {
     if (!this.insomnia) {
@@ -308,7 +272,6 @@ export abstract class BasePage {
    * Stubs Electron's native file-save dialog so an export action that
    * writes a single file can be automated without an OS-level save
    * prompt.
-   * @param filePath - Absolute path the stubbed dialog should return
    */
   protected async stubSaveDialog(filePath: string): Promise<void> {
     if (!this.insomnia) {
@@ -327,8 +290,6 @@ export abstract class BasePage {
   /**
    * Sends the platform's Undo shortcut (Cmd+Z on macOS, Ctrl+Z elsewhere)
    * to whatever currently has focus.
-   * @param focus - Optional callback to click/focus the target editor
-   * before sending the shortcut. Omit if the caller already focused it.
    */
   async undo(focus?: () => Promise<void>): Promise<void> {
     if (focus) {
@@ -342,8 +303,6 @@ export abstract class BasePage {
   /**
    * Checks whether an element is hidden. Pass one of a page's own public
    * readonly Locator fields, e.g. `projectSettingsPage.isHidden(projectSettingsPage.gitSetupForm)`.
-   * @param target - The element to check
-   * @returns Whether the element is hidden
    */
   async isHidden(target: Locator): Promise<boolean> {
     return target.isHidden();
@@ -352,8 +311,6 @@ export abstract class BasePage {
   /**
    * Checks whether an element is disabled. Pass one of a page's own public
    * readonly Locator fields, e.g. `projectSettingsPage.isDisabled(projectSettingsPage.scanForFilesButton)`.
-   * @param target - The element to check
-   * @returns Whether the element is disabled
    */
   async isDisabled(target: Locator): Promise<boolean> {
     return target.isDisabled();
@@ -365,8 +322,6 @@ export abstract class BasePage {
    * container on focus/blur (see one-line-editor.tsx) — more reliable
    * than comparing against `document.activeElement` across an iframe/
    * Electron boundary.
-   * @param container - The editor's container element (the CodeMirror instance's textarea's parent), not the `.CodeMirror` element itself
-   * @returns Whether the editor is currently focused
    */
   async hasFocus(container: Locator): Promise<boolean> {
     return (await container.getAttribute("data-focused")) === "on";
@@ -378,8 +333,6 @@ export abstract class BasePage {
    * focus, via `document.activeElement`. Use hasFocus() instead for a
    * CodeMirror editor's container, since CodeMirror doesn't reliably
    * register itself as `document.activeElement`.
-   * @param target - The element to check
-   * @returns Whether the element is currently the focused element
    */
   async isFocused(target: Locator): Promise<boolean> {
     return target.evaluate((el) => el === document.activeElement);

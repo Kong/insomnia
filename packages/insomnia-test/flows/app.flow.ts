@@ -17,7 +17,6 @@ export class AppFlow extends BaseFlow {
    * state survives an app restart, not just a page reload. Rewires
    * `flowManager`/`pageManager` onto the new app in place, so the same
    * `user.flowManager`/`user.pageManager` instances keep working.
-   * @returns The fresh app's main window
    */
   async restart(): Promise<Page> {
     const config = this.flowManager.launchConfig;
@@ -79,8 +78,6 @@ export class AppFlow extends BaseFlow {
    * Reads the number of listeners currently registered for a given
    * event on the main process's `process.stdout` (e.g. `"error"`,
    * `"close"`, `"drain"`).
-   * @param event - The event name to check
-   * @returns The listener count
    */
   async getStdoutListenerCount(event: string): Promise<number> {
     return this.flowManager.electronApp!.evaluate(
@@ -93,7 +90,6 @@ export class AppFlow extends BaseFlow {
    * Confirms the main process is still responsive by round-tripping a
    * trivial `evaluate()` call. If the main process had crashed, this
    * call itself would reject with a "Target closed" error.
-   * @returns Always `true` when the call succeeds
    */
   async isAlive(): Promise<boolean> {
     return this.flowManager.electronApp!.evaluate(() => true);
@@ -102,7 +98,6 @@ export class AppFlow extends BaseFlow {
   /**
    * Reads the main process's `userData` directory — the same path
    * Insomnia backs up its NeDB `.db` files under (`<dataPath>/backups`).
-   * @returns The absolute path to the app's data directory
    */
   async getDataPath(): Promise<string> {
     return this.flowManager.electronApp!.evaluate(({ app }) =>
@@ -131,8 +126,6 @@ export class AppFlow extends BaseFlow {
    * trail slightly behind the action that produced them), and returns
    * them in order. Only lines written during this call are captured —
    * nothing from before it started.
-   * @param action - The action to run while capturing
-   * @returns Every captured stdout/stderr line, in order
    */
   async captureMainProcessLog(action: () => Promise<void>): Promise<string[]> {
     const lines: string[] = [];

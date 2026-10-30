@@ -41,7 +41,6 @@ export class ResponsePage extends BasePage {
    * Assembles the full response state currently shown in the response
    * pane — summary stats, streamed events, headers, console log, and
    * body.
-   * @returns The complete response view (response data plus console, events and test results)
    */
   async get(): Promise<ResponseView> {
     return {
@@ -57,8 +56,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the response body shown on the "preview" tab, parsing it as
    * JSON when possible and falling back to the raw text otherwise.
-   * @returns The parsed (or raw) response body, or undefined when the
-   * "preview" tab or its editor isn't available
    */
   private async getBody(): Promise<unknown> {
     if (!(await this.switchTab('preview'))) return undefined;
@@ -76,8 +73,6 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads the response's size tag and converts it to bytes.
-   * @returns The response size in bytes, or undefined when the tag is
-   * missing or unparseable
    */
   private async getBytesContent(): Promise<number | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(2);
@@ -88,8 +83,6 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads the request/response console log shown on the "timeline" tab.
-   * @returns The console log text, or undefined when the "timeline" tab
-   * isn't available
    */
   async getConsole(): Promise<string | undefined> {
     if (!(await this.switchTab('timeline'))) return undefined;
@@ -101,8 +94,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the response's elapsed-time tag and converts it to
    * milliseconds.
-   * @returns The elapsed time in milliseconds, or undefined when the tag
-   * is missing or unparseable
    */
   private async getElapsedTime(): Promise<number | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(1);
@@ -114,8 +105,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the currently selected event's preview content, parsing it as
    * JSON when possible and falling back to the raw text otherwise.
-   * @returns The parsed (or raw) preview content, or undefined when no
-   * preview editor is present
    */
   private async getEventPreview(): Promise<unknown> {
     const editor = this.page.locator(this.EVENT_PREVIEW_EDITOR);
@@ -133,8 +122,6 @@ export class ResponsePage extends BasePage {
    * Reads all streamed events from the "events" tab. Each row is clicked
    * in turn (which updates the preview editor) so its preview payload can
    * be captured alongside its data and time columns.
-   * @returns The list of stream events, or undefined when the "events"
-   * tab isn't available
    */
   async getEvents(): Promise<StreamEvent[] | undefined> {
     if (!(await this.switchTab('events'))) return undefined;
@@ -155,9 +142,6 @@ export class ResponsePage extends BasePage {
    * Reads a specific streamed gRPC response message by clicking its
    * "Response N" tab and parsing the editor content as JSON, falling back
    * to the raw text when it isn't valid JSON.
-   * @param index - The zero-based index of the response message to read
-   * @returns The parsed (or raw) message content, or undefined when the
-   * tab doesn't exist
    */
   async getGrpcMessage(index = 0): Promise<unknown> {
     const tab = this.page.locator(this.PANE).getByRole('tab', { name: `Response ${index + 1}`, exact: true });
@@ -178,7 +162,6 @@ export class ResponsePage extends BasePage {
    * "Response N" tabs until one doesn't exist. Works uniformly for unary
    * (a single "Response 1" tab) and server/client/bidi-streaming calls
    * (one tab per message received).
-   * @returns The parsed (or raw) content of each response message
    */
   async getGrpcMessages(): Promise<unknown[]> {
     const messages: unknown[] = [];
@@ -193,8 +176,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the gRPC response status tag and splits it into a status code
    * and message.
-   * @returns The gRPC status code and message, or undefined when no
-   * status tag is present
    */
   async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
     const tag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
@@ -206,8 +187,6 @@ export class ResponsePage extends BasePage {
 
   /**
    * Reads all response headers listed on the "headers" tab.
-   * @returns The list of response headers, or undefined when the
-   * "headers" tab isn't available
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
     if (!(await this.switchTab('headers'))) return undefined;
@@ -225,8 +204,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads all `insomnia.test`/`insomnia.expect` results listed on the
    * "test-results" tab (populated by pre-request/after-response scripts).
-   * @returns The list of test results, or undefined when the
-   * "test-results" tab isn't available
    */
   private async getTestResults(): Promise<ResponseTestResult[] | undefined> {
     if (!(await this.switchTab('test-results'))) return undefined;
@@ -255,7 +232,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reports whether text (e.g. `"Request was cancelled"`, `"Executing
    * script timeout"`) is currently visible anywhere in the response pane.
-   * @param text - The exact text to look for
    */
   async hasMessage(text: string): Promise<boolean> {
     return this.page.locator(this.PANE).getByText(text).first().isVisible();
@@ -270,8 +246,6 @@ export class ResponsePage extends BasePage {
   /**
    * Reads the response's HTTP status tag and splits it into a numeric
    * status code and message.
-   * @returns The status code and message, or undefined when no status
-   * tag is present or the code isn't numeric
    */
   private async getStatus(): Promise<{ code: number; message: string } | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).nth(0);
@@ -287,7 +261,6 @@ export class ResponsePage extends BasePage {
    * Gathers the response's headline stats — status code, status message,
    * elapsed time, and byte size — as shown in the response pane's header
    * tags.
-   * @returns The response summary fields
    */
   private async getSummary(): Promise<Pick<ResponseView, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
     const status = await this.getStatus();
@@ -333,8 +306,6 @@ export class ResponsePage extends BasePage {
   /**
    * Exports the response currently shown via the "Preview" dropdown,
    * writing it to `filePath` through a stubbed native save dialog.
-   * @param option - The export menu item to click
-   * @param filePath - Absolute path the stubbed save dialog should return
    */
   async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
     await this.stubSaveDialog(filePath);
@@ -346,7 +317,6 @@ export class ResponsePage extends BasePage {
    * Clicks the "Save To File" button that only renders for responses over
    * the large-response threshold, writing the raw body to `filePath`
    * through a stubbed native save dialog.
-   * @param filePath - Absolute path the stubbed save dialog should return
    */
   async saveResponseToFile(filePath: string): Promise<void> {
     await this.stubSaveDialog(filePath);
@@ -356,8 +326,6 @@ export class ResponsePage extends BasePage {
   /**
    * Opens the "Preview" dropdown and reads one export item's label and
    * whether it is disabled, then closes the dropdown.
-   * @param option - The export menu item to inspect
-   * @returns The item's visible text and whether it is rendered as disabled
    */
   async getExportOptionState(option: ResponseExportOption): Promise<{ text: string; disabled: boolean }> {
     await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();

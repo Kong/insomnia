@@ -42,8 +42,6 @@ export class PageManager {
    * Rewires every already-created Page instance (and future ones) onto a
    * fresh window/ElectronApplication — called by `AppFlow.restart()`
    * once the relaunched app's first window is ready.
-   * @param page - The freshly-launched app's main window
-   * @param insomnia - The freshly-launched ElectronApplication
    */
   setWindow(page: Page, insomnia?: ElectronApplication): void {
     this.page = page;
@@ -55,7 +53,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the CertificatesPage instance.
-   * @returns The shared CertificatesPage instance
    */
   get certificatesPage(): CertificatesPage {
     return this.getOrCreate("certificates", () => new CertificatesPage(this.page));
@@ -63,7 +60,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the CloudSyncPage instance.
-   * @returns The shared CloudSyncPage instance
    */
   get cloudSyncPage(): CloudSyncPage {
     return this.getOrCreate("cloudSync", () => new CloudSyncPage(this.page));
@@ -71,7 +67,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the CommandPalettePage instance.
-   * @returns The shared CommandPalettePage instance
    */
   get commandPalettePage(): CommandPalettePage {
     return this.getOrCreate(
@@ -82,7 +77,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the CookiePage instance.
-   * @returns The shared CookiePage instance
    */
   get cookiePage(): CookiePage {
     return this.getOrCreate("cookie", () => new CookiePage(this.page, this.insomnia));
@@ -90,7 +84,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the EnvironmentPage instance.
-   * @returns The shared EnvironmentPage instance
    */
   get environmentPage(): EnvironmentPage {
     return this.getOrCreate(
@@ -101,7 +94,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the EventStreamRequestPage instance.
-   * @returns The shared EventStreamRequestPage instance
    */
   get eventStreamRequestPage(): EventStreamRequestPage {
     return this.getOrCreate(
@@ -112,7 +104,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the ExportPage instance.
-   * @returns The shared ExportPage instance
    */
   get exportPage(): ExportPage {
     return this.getOrCreate(
@@ -123,7 +114,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the FolderPage instance.
-   * @returns The shared FolderPage instance
    */
   get folderPage(): FolderPage {
     return this.getOrCreate("folder", () => new FolderPage(this.page, this.insomnia));
@@ -131,7 +121,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the GitSyncPage instance.
-   * @returns The shared GitSyncPage instance
    */
   get gitSyncPage(): GitSyncPage {
     return this.getOrCreate(
@@ -142,7 +131,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the GraphQLRequestPage instance.
-   * @returns The shared GraphQLRequestPage instance
    */
   get graphqlRequestPage(): GraphQLRequestPage {
     return this.getOrCreate(
@@ -153,7 +141,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the GrpcRequestPage instance.
-   * @returns The shared GrpcRequestPage instance
    */
   get grpcRequestPage(): GrpcRequestPage {
     return this.getOrCreate(
@@ -164,7 +151,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the HttpRequestPage instance.
-   * @returns The shared HttpRequestPage instance
    */
   get httpRequestPage(): HttpRequestPage {
     return this.getOrCreate(
@@ -175,7 +161,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the ImportPage instance.
-   * @returns The shared ImportPage instance
    */
   get importPage(): ImportPage {
     return this.getOrCreate("import", () => new ImportPage(this.page));
@@ -183,7 +168,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the InvitePage instance.
-   * @returns The shared InvitePage instance
    */
   get invitePage(): InvitePage {
     return this.getOrCreate("invite", () => new InvitePage(this.page));
@@ -191,7 +175,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the KonnectPage instance.
-   * @returns The shared KonnectPage instance
    */
   get konnectPage(): KonnectPage {
     return this.getOrCreate("konnect", () => new KonnectPage(this.page));
@@ -199,7 +182,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the McpClientPage instance.
-   * @returns The shared McpClientPage instance
    */
   get mcpClientPage(): McpClientPage {
     return this.getOrCreate("mcpClient", () => new McpClientPage(this.page, this.insomnia));
@@ -207,7 +189,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the MockServerPage instance.
-   * @returns The shared MockServerPage instance
    */
   get mockServerPage(): MockServerPage {
     return this.getOrCreate(
@@ -218,7 +199,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the PreferencesPage instance.
-   * @returns The shared PreferencesPage instance
    */
   get preferencesPage(): PreferencesPage {
     return this.getOrCreate(
@@ -229,7 +209,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the ProjectSettingsPage instance.
-   * @returns The shared ProjectSettingsPage instance
    */
   get projectSettingsPage(): ProjectSettingsPage {
     return this.getOrCreate(
@@ -240,7 +219,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the ResponsePage instance.
-   * @returns The shared ResponsePage instance
    */
   get responsePage(): ResponsePage {
     return this.getOrCreate("response", () => new ResponsePage(this.page, this.insomnia));
@@ -248,7 +226,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the RunnerPage instance.
-   * @returns The shared RunnerPage instance
    */
   get runnerPage(): RunnerPage {
     return this.getOrCreate(
@@ -259,7 +236,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the SocketIORequestPage instance.
-   * @returns The shared SocketIORequestPage instance
    */
   get socketIoRequestPage(): SocketIORequestPage {
     return this.getOrCreate(
@@ -270,7 +246,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the TemplateTagPage instance.
-   * @returns The shared TemplateTagPage instance
    */
   get templateTagPage(): TemplateTagPage {
     return this.getOrCreate(
@@ -281,7 +256,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the VariableSourcePage instance.
-   * @returns The shared VariableSourcePage instance
    */
   get variableSourcePage(): VariableSourcePage {
     return this.getOrCreate(
@@ -292,7 +266,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the WebSocketRequestPage instance.
-   * @returns The shared WebSocketRequestPage instance
    */
   get webSocketRequestPage(): WebSocketRequestPage {
     return this.getOrCreate(
@@ -303,7 +276,6 @@ export class PageManager {
 
   /**
    * Lazily creates (and caches) the WorkspacePage instance.
-   * @returns The shared WorkspacePage instance
    */
   get workspacePage(): WorkspacePage {
     return this.getOrCreate("workspace", () => new WorkspacePage(this.page, this.insomnia));

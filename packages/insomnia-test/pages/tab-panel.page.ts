@@ -38,7 +38,6 @@ export abstract class TabPanelPage extends BasePage {
 
   /**
    * Clicks the tab within this pane identified by its data-key.
-   * @param tab - The data-key of the tab to switch to
    */
   protected async switchTab(tab: string): Promise<void> {
     await this.page

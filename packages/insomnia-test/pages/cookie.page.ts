@@ -69,7 +69,6 @@ export class CookiePage extends BasePage {
    * Reads and parses every cookie row currently shown in the list
    * dialog, once the dialog has finished rendering them (or shows its
    * empty state).
-   * @returns The parsed cookies currently displayed
    */
   async getCookies(): Promise<Cookie[]> {
     const rows = this.rows();
@@ -128,7 +127,6 @@ export class CookiePage extends BasePage {
    * without it, a slow re-render can leave the previous iteration's row
    * still sitting in that slot, so the new cookie's fields get written
    * into it instead of a fresh row (silently clobbering the prior cookie).
-   * @param cookies - The cookies to set as the new complete list
    */
   async setCookies(cookies: Cookie[]): Promise<void> {
     await this.deleteAll();
@@ -168,8 +166,6 @@ export class CookiePage extends BasePage {
    * write as `waitForPersisted` above works around for the Friendly tab).
    * So this retries the whole fill-and-submit until the list actually
    * shows the parsed result, instead of trusting a fixed delay to beat it.
-   * @param existingKey - The current `key` of the cookie row to edit
-   * @param rawCookieString - The full raw cookie string to set, e.g. "foo=bar; Domain=example.com; Path=/"
    */
   async editCookieRaw(
     existingKey: string,
@@ -215,7 +211,6 @@ export class CookiePage extends BasePage {
    * works around). So this retries the whole open-fill-submit cycle
    * until the list actually shows the saved result, instead of trusting
    * fixed delays to beat the debounce.
-   * @param cookie - The cookie fields to write into the just-added row
    */
   private async editCookie(cookie: Cookie): Promise<void> {
     await expect(async () => {
@@ -300,8 +295,6 @@ export class CookiePage extends BasePage {
    * clicked is silently dropped — callers check this after "Done" and
    * redo the whole open-fill-submit cycle if it never lands. `expires` is
    * compared as epoch milliseconds.
-   * @param expected - The cookie properties that must all be saved on a single cookie
-   * @param timeout - How long to wait before giving up (kept short so a caller's retry loop gets another attempt)
    */
   private async waitForCookieSaved(
     expected: Record<string, string | boolean | number>,

@@ -15,9 +15,6 @@ export class TemplateTagFlow extends BaseFlow {
    * for a `hash` tag specifically, its Algorithm/Digest Encoding/Input
    * arguments too, since those have dedicated getters), and confirms via
    * "Done".
-   * @param template - The raw template tag text, e.g. `"{% uuid 'v4' %}"`
-   * @returns The tag's function name, its resolved Live Preview, and (for
-   * `hash` only) its Algorithm/Digest Encoding/Input arguments
    */
   async get(template: string): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
@@ -49,11 +46,6 @@ export class TemplateTagFlow extends BaseFlow {
    * .selectVaultCredential`) to an already-created cloud credential (see
    * `PreferencesFlow.addCloudCredentials()`). No other tag is supported
    * today, since these are the only two with dedicated argument setters.
-   * @param template - The tag's current raw text, used to find and open it
-   * @param target - The desired new arguments for the tag's own
-   * `functionName` (`algorithm`/`digestEncoding`/`input` for `hash`,
-   * `credentialName` for `vault`); `target.preview` is ignored as input
-   * @returns The tag's new arguments and resolved Live Preview
    */
   async edit(template: string, target: TemplateTag): Promise<TemplateTag> {
     const templateTag = this.pageManager.templateTagPage;
@@ -87,7 +79,6 @@ export class TemplateTagFlow extends BaseFlow {
    * Opens a `prompt` tag already rendered on the current request's page,
    * clicks "Clear" to wipe the value cached under its storage key, and
    * confirms via "Done".
-   * @param template - The prompt tag's raw text, used to find and open it
    */
   async clearCachedPrompt(template: string): Promise<void> {
     const templateTag = this.pageManager.templateTagPage;
@@ -101,10 +92,6 @@ export class TemplateTagFlow extends BaseFlow {
    * Sends `request` (whose body holds a `prompt` tag with no cached
    * value), answers the resulting prompt dialog, and reads back the
    * response.
-   * @param request - The request to send
-   * @param label - The prompt tag's title text shown in its dialog
-   * @param value - The value to submit in the prompt
-   * @returns The prompt input's `type` attribute and the response received
    */
   async sendAnsweringPrompt(
     request: HttpRequest,

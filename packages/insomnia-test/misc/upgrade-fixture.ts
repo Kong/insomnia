@@ -21,8 +21,6 @@ const UPGRADE_DATA_PATH_ENV = 'INSOMNIA_UPGRADE_DATA_PATH';
 /**
  * Marks a test as belonging to one phase of an upgrade case: the fixtures skip it in the other phase.
  * Pass the result as the test's details: `test('...', upgradePhase(UpgradePhase.Before), async () => {})`.
- * @param phase - The phase the test runs in
- * @returns Playwright test details carrying the phase as a tag
  */
 export function upgradePhase(phase: UpgradePhase): { tag: string } {
   return { tag: phase };

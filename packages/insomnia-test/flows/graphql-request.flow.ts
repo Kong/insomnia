@@ -14,9 +14,6 @@ export class GraphQLRequestFlow extends BaseFlow {
   /**
    * Creates a GraphQL request under `parent` via the standalone project
    * tree, then verifies it was created.
-   * @param parent - The Collection or Folder under which the request is created
-   * @param request - The request fields to apply after creation
-   * @returns The created request, re-read from the UI
    */
   async create(
     parent: Collection | Folder,
@@ -43,9 +40,6 @@ export class GraphQLRequestFlow extends BaseFlow {
   /**
    * Reads back an existing GraphQL request's fields via the standalone
    * project tree.
-   * @param item - The request name, or an object identifying it by name/id
-   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
-   * @returns The request's fields, or undefined if it could not be found
    */
   async get(
     item: string | { name: string; id?: string },
@@ -68,8 +62,6 @@ export class GraphQLRequestFlow extends BaseFlow {
   /**
    * Opens `request`, clicks its Auth tab's token-fetch button and reads
    * the resulting tokens back.
-   * @param request - The GraphQL request whose OAuth 2.0 tokens to fetch
-   * @returns The refresh, identity and access tokens now stored
    */
   async fetchOAuth2Tokens(request: GraphQLRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
@@ -85,8 +77,6 @@ export class GraphQLRequestFlow extends BaseFlow {
 
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
-   * @param request - The GraphQL request whose Auth tab to edit
-   * @param authentication - The authentication config to apply
    */
   async setAuthentication(
     request: GraphQLRequest,
@@ -104,8 +94,6 @@ export class GraphQLRequestFlow extends BaseFlow {
   /**
    * Sends `request` and reads back the resulting response via the
    * standalone project tree.
-   * @param request - The request to send
-   * @returns The response view received after sending
    */
   async send(request: GraphQLRequest): Promise<ResponseView> {
     const workspace = this.pageManager.workspacePage;

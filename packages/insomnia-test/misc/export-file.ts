@@ -10,9 +10,6 @@ const STABLE_CHECKS_REQUIRED = 3;
  * several consecutive checks, then returns its content. An export writes
  * its file asynchronously after the native save dialog resolves, so a
  * single existence check can read a truncated file mid-write.
- * @param filePath - Absolute path of the file an export is expected to write
- * @param timeout - Milliseconds to wait before giving up
- * @returns The file's content once its size has stabilized
  */
 export async function waitForExportedFile(
   filePath: string,
@@ -55,8 +52,6 @@ const DYNAMIC_FIELDS = ["id", "created", "modified", "sortKey", "startedDateTime
  * ids/timestamps a real export always produces. Applies to both sides of
  * a comparison — normalize the fresh export and the fixture the same way
  * before comparing.
- * @param content - The raw exported file content (YAML or JSON)
- * @returns `content` with every dynamic field's value replaced by a placeholder
  */
 export function normalizeExportFixture(content: string): string {
   let normalized = content;

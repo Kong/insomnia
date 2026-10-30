@@ -95,7 +95,6 @@ export class PreferencesPage extends BasePage {
    * A custom-styled checkbox (General tab, Settings.validateSSL) whose
    * native input ignores direct clicks — the wrapping label is the actual
    * clickable target.
-   * @param enabled - Whether SSL certificate validation should be enabled
    */
   async setValidateSSL(enabled: boolean): Promise<void> {
     const label = this.dialog.locator("label", {
@@ -115,7 +114,6 @@ export class PreferencesPage extends BasePage {
    * A custom-styled checkbox (General tab, Settings.sidebarFocusForCollections)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target. Same shape as setValidateSSL() above.
-   * @param enabled - Whether the sidebar should narrow to a collection's contents once it's focused
    */
   async setSidebarFocusForCollections(enabled: boolean): Promise<void> {
     const label = this.dialog.locator("label", {
@@ -148,7 +146,6 @@ export class PreferencesPage extends BasePage {
    * actual clickable target. Same shape as setValidateSSL() above. Gates
    * the Tests tab (`WorkspacePage.openTestsTab()`) on an API Collection —
    * INS-3528 hides the legacy unit-test viewer by default.
-   * @param enabled - Whether the legacy unit-test viewer should be shown
    */
   async setShowLegacyUnitTests(enabled: boolean): Promise<void> {
     const label = this.dialog.locator("label", {
@@ -209,7 +206,6 @@ export class PreferencesPage extends BasePage {
    * Clicks "Export the "{name}" Project" on the Data tab. Skips the
    * request-selection dialog and opens "Select Export Type" directly
    * (see `ExportPage`).
-   * @param name - The Project's display name
    */
   async clickExportProject(name: string): Promise<void> {
     await this.dialog
@@ -223,7 +219,6 @@ export class PreferencesPage extends BasePage {
    * Adds `path` to "What folders can Insomnia access?" (General tab), so
    * scripts/template tags can read files under it. Fills the text input
    * and clicks "Add", then waits for it to appear in the folder list.
-   * @param path - The absolute folder path to allow
    */
   async addDataFolder(path: string): Promise<void> {
     await this.dialog.locator('input[data-testid="dataFolders"]').fill(path);
@@ -236,7 +231,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Adds a custom (username/PAT) Git credential from the Credentials tab,
    * which must already be open (see `openCredentialsTab()`).
-   * @param credential - The custom credential to add
    */
   async addCustomCredential(credential: GitCredential): Promise<void> {
     const modal = this.page.getByRole("dialog", {
@@ -264,7 +258,6 @@ export class PreferencesPage extends BasePage {
    * short-circuits to a canned success without ever calling AWS STS, so
    * `credentials.section`/`.region` need only be well-formed strings, not
    * real AWS values.
-   * @param credential - The AWS credential's display name, section name, and region
    */
   async createAwsCloudCredential(
     credential: Omit<AwsCloudCredential, "provider">,
@@ -297,7 +290,6 @@ export class PreferencesPage extends BasePage {
    * `createAwsCloudCredential()`, so `credentials.serviceAccountKeyFilePath`
    * need only be a non-empty string (the Create button stays disabled
    * while it's empty), not a real service account key file.
-   * @param credential - The GCP credential's display name and service account key path
    */
   async createGcpCloudCredential(
     credential: Omit<GcpCloudCredential, "provider">,
@@ -328,7 +320,6 @@ export class PreferencesPage extends BasePage {
    * be a well-formed URL (validated live, client-side) and
    * `credentials.role_id`/`.secret_id` need only be non-empty — the real
    * AppRole login call never happens.
-   * @param credential - The HashiCorp credential's display name, server address, role id, and secret id
    */
   async createHashiCorpCloudCredential(
     credential: Omit<HashiCorpCloudCredential, "provider">,
@@ -387,7 +378,6 @@ export class PreferencesPage extends BasePage {
    * Fills the "New Plugin" modal's name field — just the suffix that
    * follows the fixed `insomnia-plugin-` prefix shown beside the input
    * (confirmed live: the input itself only holds the suffix).
-   * @param name - The plugin name's suffix, e.g. `"my-plugin"` for `insomnia-plugin-my-plugin`
    */
   async setNewPluginName(name: string): Promise<void> {
     await this.page.getByTestId("plugin-name-input").fill(name);
@@ -414,7 +404,6 @@ export class PreferencesPage extends BasePage {
    * element can vanish between the two calls. A short explicit timeout
    * (rather than the default) makes that loss fail fast into the caller's
    * `toPass()` retry instead of blocking it for the full default timeout.
-   * @returns The error/hint text currently shown
    */
   private async getNewPluginNameError(): Promise<string> {
     return (
@@ -439,7 +428,6 @@ export class PreferencesPage extends BasePage {
    * the error field immediately after clicking can still show the
    * pre-submit static format hint (`"Plugin name must be of format
    * my-plugin-name"`), so this polls past that hint rather than racing it.
-   * @returns The validation error message, or `null` if the name was accepted
    */
   async waitForNewPluginOutcome(): Promise<string | null> {
     let error: string | null = null;
@@ -478,7 +466,6 @@ export class PreferencesPage extends BasePage {
    * but the row's own text content runs the name straight into its
    * permissions/version text with no separator, so the name is parsed
    * back out of the `data-testid` attribute instead of the rendered text.
-   * @returns The registered plugin names, in list order
    */
   async getPluginNames(): Promise<string[]> {
     const rows = this.dialog.locator('[data-testid^="insomnia-plugin-"]');
@@ -505,7 +492,6 @@ export class PreferencesPage extends BasePage {
    * Reads the currently-registered template tag names (built-in and
    * plugin-provided) via the plugin bridge. Does not require the
    * Preferences dialog to be open.
-   * @returns The registered template tag names
    */
   async getRegisteredTemplateTagNames(): Promise<string[]> {
     return this.page.evaluate(async () =>
@@ -519,7 +505,6 @@ export class PreferencesPage extends BasePage {
    * Reads the plugin bridge's own diagnostic counters (per-method
    * ok/error/timeout counts and durations) from the hidden plugin
    * `BrowserWindow`. Does not require the Preferences dialog to be open.
-   * @returns The current bridge metrics snapshot
    */
   async getPluginBridgeMetrics(): Promise<PluginBridgeMetrics> {
     return this.page.evaluate(() =>
@@ -542,7 +527,6 @@ export class PreferencesPage extends BasePage {
    * require still succeeds, and `permissionWarnings` never populates
    * regardless of what's declared), so don't test them as an enforced
    * security boundary.
-   * @returns The bundled plugins currently loaded
    */
   async getBundlePlugins(): Promise<BundlePluginInfo[]> {
     return this.page.evaluate(() =>
@@ -556,8 +540,6 @@ export class PreferencesPage extends BasePage {
    * `type: "request"` field merged into the action object returned by
    * `getRequestActions()`, which doesn't carry one itself. Rejects with the
    * action's own thrown/rejected error, if any.
-   * @param label - The request action's declared label
-   * @param requestId - The `_id` of the request to run the action against
    */
   async executeRequestAction(label: string, requestId: string): Promise<void> {
     await this.page.evaluate(
@@ -584,7 +566,6 @@ export class PreferencesPage extends BasePage {
    * state immediately after the click can still report the pre-click
    * value, so this polls until it settles (same race as
    * `TemplateTagPage.setAlgorithm()`).
-   * @param enabled - Whether plugin template tags should run inside the QuickJS sandbox
    */
   async setTemplateTagSandbox(enabled: boolean): Promise<void> {
     const label = this.dialog.getByTestId("toggle-plugin-sandbox");
@@ -606,8 +587,6 @@ export class PreferencesPage extends BasePage {
    * "Node.js Internals" vs. "Global & Node.js Internals") never collide.
    * The row's switch is itself a label-wraps-checkbox control, same
    * clickable-target quirk as `setTemplateTagSandbox()`.
-   * @param group - The rule group to toggle
-   * @param enabled - Whether the rule group should be enabled
    */
   async setScriptSandboxRule(
     group: ScriptSandboxRuleGroup,
@@ -627,8 +606,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Reads the Scripting tab's per-rule-group sandbox switch's current
    * state.
-   * @param group - The rule group to read
-   * @returns Whether the rule group is currently enabled
    */
   async isScriptSandboxRuleEnabled(
     group: ScriptSandboxRuleGroup,
@@ -657,7 +634,6 @@ export class PreferencesPage extends BasePage {
    * Clicks a backend's nav button on the AI Settings tab (e.g. `"LLM URL"`,
    * or `"LLM URL Active"` once it's the active backend) to expand its
    * config panel. Must be called with `openAiSettingsTab()` already open.
-   * @param name - The button's exact accessible name
    */
   async clickAiBackendNav(name: string): Promise<void> {
     await this.dialog.getByRole("button", { name }).click();
@@ -667,7 +643,6 @@ export class PreferencesPage extends BasePage {
    * Reports whether a backend's nav button currently carries the "Active"
    * badge (i.e. it's the app's current LLM backend). Must be called with
    * `openAiSettingsTab()` already open.
-   * @param navLabel - The backend's un-suffixed nav label, e.g. `"LLM URL"`
    */
   async isAiBackendActive(navLabel: string): Promise<boolean> {
     return this.dialog
@@ -678,7 +653,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the "url" backend panel's "LLM URL" field. Must be called with
    * the panel already expanded (see `clickAiBackendNav()`).
-   * @param url - The LLM endpoint URL
    */
   async setAiUrlBackendUrl(url: string): Promise<void> {
     await this.page.getByLabel("LLM URL").fill(url);
@@ -687,7 +661,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the "url" backend panel's "API Token" field. Must be called with
    * the panel already expanded (see `clickAiBackendNav()`).
-   * @param token - The bearer token to send with requests to the LLM endpoint
    */
   async setAiUrlBackendApiToken(token: string): Promise<void> {
     await this.page.getByLabel("API Token").fill(token);
@@ -708,7 +681,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Selects a model from the "url" backend panel's "Model" dropdown, once
    * populated (see `clickLoadAiModels()`).
-   * @param modelId - The model id to select, as returned by `<url>/models`
    */
   async selectAiModel(modelId: string): Promise<void> {
     await this.page.getByLabel("Model").selectOption(modelId);
@@ -735,8 +707,6 @@ export class PreferencesPage extends BasePage {
    * `"LLM URL"`, `"API Token"`, `"Temperature (0-2):"`). Must be called
    * with the relevant backend's panel already expanded (see
    * `clickAiBackendNav()`).
-   * @param label - The field's accessible label text
-   * @returns The field's current value
    */
   private async getAiSettingsFieldValue(label: string): Promise<string> {
     return this.page.getByLabel(label).inputValue();
@@ -747,8 +717,6 @@ export class PreferencesPage extends BasePage {
    * Advanced Options panel (e.g. `"Temperature (0-2):"`, `"Top P (0-1):"`,
    * `"Max Tokens (1-128000):"`). Must be called with
    * `openAiAdvancedOptions()` already open.
-   * @param label - The field's accessible label text
-   * @param value - The value to fill
    */
   async setAiAdvancedOptionValue(label: string, value: string): Promise<void> {
     await this.page.getByLabel(label).fill(value);
@@ -781,8 +749,6 @@ export class PreferencesPage extends BasePage {
    * mid-flight the instant this reads — for an already-configured backend
    * the "LLM URL" field is never genuinely blank, so this polls past a
    * transient empty read rather than racing it.
-   * @param navLabel - The backend's nav button accessible name, e.g. `"LLM URL"` or `"LLM URL Active"`
-   * @returns The backend's current form field values
    */
   async getUrlBackendFormValues(
     navLabel: string,
@@ -835,7 +801,6 @@ export class PreferencesPage extends BasePage {
    * native input ignores direct clicks — the wrapping label is the actual
    * clickable target, same quirk as `setValidateSSL()`. Must be called
    * with `openProxyTab()` already open.
-   * @param enabled - Whether the global network proxy should be enabled
    */
   async setProxyEnabled(enabled: boolean): Promise<void> {
     const label = this.dialog.locator("label", {
@@ -854,7 +819,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the Proxy tab's "Proxy for HTTP" field. Must be called with
    * `openProxyTab()` already open.
-   * @param value - The proxy address, e.g. `"127.0.0.1:1111"`
    */
   async setHttpProxy(value: string): Promise<void> {
     await this.dialog.locator('input[name="httpProxy"]').fill(value);
@@ -863,7 +827,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the Proxy tab's "Proxy for HTTPS" field. Must be called with
    * `openProxyTab()` already open.
-   * @param value - The proxy address, e.g. `"127.0.0.1:2222"`
    */
   async setHttpsProxy(value: string): Promise<void> {
     await this.dialog.locator('input[name="httpsProxy"]').fill(value);
@@ -872,7 +835,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the Proxy tab's "No proxy" field. Must be called with
    * `openProxyTab()` already open.
-   * @param value - Comma-separated list of hostnames to bypass the proxy for
    */
   async setNoProxy(value: string): Promise<void> {
     await this.dialog.locator('input[name="noProxy"]').fill(value);
@@ -887,7 +849,6 @@ export class PreferencesPage extends BasePage {
    * Visible"), which is dismissed here so it doesn't block later steps.
    * On by default, which masks vault/secret values in the template tag
    * Live Preview as `••••••`.
-   * @param enabled - Whether confidential values should be hidden in Preview/Console
    */
   async setHideSecretValuesInPreviewAndConsole(
     enabled: boolean,
@@ -914,7 +875,6 @@ export class PreferencesPage extends BasePage {
    * A custom-styled checkbox (General tab, Settings.filterResponsesByEnv)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target, same quirk as `setValidateSSL()`.
-   * @param enabled - Whether responses should be filtered to the active environment
    */
   async setFilterResponsesByEnvironment(enabled: boolean): Promise<void> {
     const label = this.dialog.locator("label", {
@@ -943,7 +903,6 @@ export class PreferencesPage extends BasePage {
 
   /**
    * Fills the General tab's "Request timeout (ms)" field.
-   * @param ms - The timeout in milliseconds; `0` disables timeouts
    */
   async setRequestTimeout(ms: number): Promise<void> {
     await this.page.getByLabel("Request timeout (ms)").fill(String(ms));
@@ -954,7 +913,6 @@ export class PreferencesPage extends BasePage {
    * for the freshly-generated key to render. Only shown when no vault salt
    * exists yet for this session — see `openEnterVaultKeyModal()` for the
    * already-salted case.
-   * @returns The generated vault key's displayed value
    */
   async generateVaultKey(): Promise<string> {
     await this.dialog
@@ -995,7 +953,6 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the open input-vault-key-modal's "Vault Key Input" field. Must be
    * called with `openEnterVaultKeyModal()` already open.
-   * @param key - The vault key value to attempt
    */
   async fillVaultKeyInput(key: string): Promise<void> {
     await this.page.getByLabel("Vault Key Input").fill(key);
@@ -1037,7 +994,6 @@ export class PreferencesPage extends BasePage {
    * either the modal closing on its own (key accepted) or the error field
    * settling on a message (key rejected). Same wait-past-a-stale-read shape
    * as `waitForNewPluginOutcome()`.
-   * @returns The validation error message, or `null` if the key was accepted
    */
   async waitForVaultKeyUnlockOutcome(): Promise<string | null> {
     let error: string | null = null;
@@ -1075,7 +1031,6 @@ export class PreferencesPage extends BasePage {
    * confirms), waits for the modal to show the freshly-generated
    * replacement key, then dismisses the modal via its "OK" button. Must be
    * called with `openEnterVaultKeyModal()` already open.
-   * @returns The newly-generated vault key
    */
   async resetVaultKeyFromModal(): Promise<string> {
     const modal = this.page.getByTestId("input-vault-key-modal");
@@ -1095,7 +1050,6 @@ export class PreferencesPage extends BasePage {
    * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
    * nothing when it already is. The switch is disabled until an LLM backend
    * is active. Must be called with `openAiSettingsTab()` already open.
-   * @param enabled - The state to leave the switch in
    */
   async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
     const smartCommitsSwitch = this.dialog

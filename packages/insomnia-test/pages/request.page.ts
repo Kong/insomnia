@@ -67,8 +67,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Also rewires the composed Auth/Scripts tab components, whose
    * persistence checks read the app's on-disk store via `insomnia`.
-   * @param page - The freshly-launched app's main window
-   * @param insomnia - The freshly-launched ElectronApplication, if any
    */
   override setContext(page: Page, insomnia?: ElectronApplication): void {
     super.setContext(page, insomnia);
@@ -80,7 +78,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Builds the CSS selector for this request type's URL bar CodeMirror
    * editor, using the subclass-provided urlBarId to disambiguate between
    * request protocols.
-   * @returns The CSS selector for the URL bar's CodeMirror editor
    */
   protected get URL_BAR(): string {
     return `${this.PANE} #${this.urlBarId} + .CodeMirror`;
@@ -111,7 +108,6 @@ export abstract class RequestPage extends TabPanelPage {
    * If an error dialog (e.g. "Failed to Render Request") appears instead,
    * throws using its text rather than waiting out the full timeout for a
    * button that will never appear.
-   * @param options.expectConnected - Set to `false` when the connection is expected to be refused or to fail right away (unreachable server/proxy), so the button never stays on "Disconnect"; returns right after the click
    */
   async connect({
     expectConnected = true,
@@ -140,8 +136,6 @@ export abstract class RequestPage extends TabPanelPage {
    * connected) until it passes within the timeout, then clicks the
    * Connect/Disconnect button to close the connection and waits for it
    * to flip back to "Connect".
-   * @param callback - A callback retried via expect().toPass() before disconnecting
-   * @param timeout - The maximum time to retry the callback, in milliseconds
    */
   async disconnect(
     callback: () => Promise<void> | void = () => {},
@@ -164,8 +158,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Reads back the currently selected body content type and its
    * content. Returns undefined when no body type is selected or the
    * selected type matches the given "no body" sentinel value.
-   * @param noBodyValue - The select value representing "no body" for this request type
-   * @returns The current content type and content, or undefined if there is no body
    */
   protected async getContentTypeBody(
     noBodyValue: string,
@@ -186,7 +178,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Reads back the request's current headers.
-   * @returns The current headers
    */
   async getHeaders(): Promise<RequestHeader[]> {
     return this.readKeyValuePairs("headers");
@@ -195,7 +186,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the params tab and clicks its "Add" button, appending a
    * new blank row.
-   * @returns The new row's Name editor container — pass to hasFocus() to check whether it auto-focused
    */
   async addParam(): Promise<Locator> {
     return this.clickAddButton("params");
@@ -204,7 +194,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the headers tab and clicks its "Add" button, appending a
    * new blank row.
-   * @returns The new row's Name editor container — pass to hasFocus() to check whether it auto-focused
    */
   async addHeader(): Promise<Locator> {
     return this.clickAddButton("headers");
@@ -213,8 +202,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the given tab and clicks its key/value editor's "Add"
    * button, appending a new blank row.
-   * @param tab - The data-key of the tab containing the key/value editor
-   * @returns The new row's Name editor container element
    */
   private async clickAddButton(tab: string): Promise<Locator> {
     await this.switchTab(tab);
@@ -252,7 +239,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Reads the currently selected request method from the method button.
-   * @returns The current method text
    */
   async getMethod(): Promise<string> {
     return this.page.locator(this.METHOD_BUTTON).innerText();
@@ -260,7 +246,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Reads back the request's current query parameters.
-   * @returns The current parameters
    */
   async getParams(): Promise<RequestParameter[]> {
     return this.readKeyValuePairs("params");
@@ -273,7 +258,6 @@ export abstract class RequestPage extends TabPanelPage {
    * instance can still be mid-remount — reading through immediately can
    * race that and observe no instance at all, not merely a stale value —
    * so this polls until an instance is actually attached before reading it.
-   * @returns The current URL text
    */
   async getUrl(): Promise<string> {
     const urlBar = this.page.locator(this.URL_BAR);
@@ -289,8 +273,6 @@ export abstract class RequestPage extends TabPanelPage {
    * for a read right after navigating to another request (a tab switch,
    * the command palette), where the URL bar can still show the previous
    * request's URL until the route settles.
-   * @param expected - The URL the URL bar must settle on
-   * @returns The URL text once it matches
    */
   async waitForUrl(expected: string): Promise<string> {
     let url = "";
@@ -305,7 +287,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Polls the app's on-disk request store until a request holds `url`,
    * confirming a URL typed into the URL bar has been saved (the editor
    * saves through a debounce) before the caller navigates away from it.
-   * @param url - The URL that must have been persisted
    */
   async waitForUrlPersisted(url: string): Promise<void> {
     await this.waitForFieldPersisted(
@@ -319,8 +300,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Reads back all key/value pairs currently shown on the given tab,
    * including each row's enabled/disabled toggle state. Rows with no
    * toggle button are treated as always enabled.
-   * @param tab - The data-key of the tab containing the key/value editor
-   * @returns The pairs currently present, skipping rows with an empty name and value
    */
   protected async readKeyValuePairs(tab: string): Promise<KeyValuePair[]> {
     await this.page
@@ -351,7 +330,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the content-type tab and selects the given body type
    * from the "Change Body Type" dropdown.
-   * @param contentType - The data-key of the body type option to select
    */
   protected async selectBodyType(contentType: string): Promise<void> {
     await this.switchTab("content-type");
@@ -381,7 +359,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Sets the request body: selects the given content type, then writes
    * the body content into the CodeMirror editor if one is present for
    * that body type (some body types, e.g. "No Body", have no editor).
-   * @param body - The content type and content to set
    */
   protected async setContentTypeBody(body: RequestBody): Promise<void> {
     await this.selectBodyType(body.contentType);
@@ -394,7 +371,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Sets the request's headers.
-   * @param headers - The headers to set
    */
   async setHeaders(headers: RequestHeader[]): Promise<void> {
     await this.setKeyValuePairs("headers", headers);
@@ -406,8 +382,6 @@ export abstract class RequestPage extends TabPanelPage {
    * all" if enabled, then adds a new row per pair, filling its name and
    * value editors and toggling it off if marked disabled. Waits between
    * edits since new rows are appended asynchronously.
-   * @param tab - The data-key of the tab containing the key/value editor
-   * @param pairs - The pairs to set, replacing any existing ones
    */
   protected async setKeyValuePairs(
     tab: string,
@@ -478,8 +452,6 @@ export abstract class RequestPage extends TabPanelPage {
    * can't tell apart rows that share one (e.g. repeated `key` params).
    * Pairs still missing after a while are re-typed into their row, which
    * sits at the same index as the pair in `pairs`.
-   * @param pairs - The rows just set, in row order; pairs with a `fileName` are skipped
-   * @param settleMs - How long all pairs must keep holding
    */
   protected async waitForPairsSettled(
     pairs: { name: string; value?: string; disabled?: boolean; fileName?: string }[],
@@ -567,8 +539,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Flips a row's enable toggle if it doesn't match `pair.disabled`. Rows
    * without a toggle are left alone.
-   * @param row - The key/value row locator
-   * @param pair - The pair whose disabled state the row should show
    */
   protected async syncRowToggle(
     row: Locator,
@@ -586,9 +556,6 @@ export abstract class RequestPage extends TabPanelPage {
    * debounced save has landed (and the row has settled onto its
    * persisted key) before the next edit builds on it. Skipped for a
    * blank name, which the app never persists.
-   * @param pair - The row that was just edited
-   * @param options.checkValue - Whether the value/disabled state must match too, or only the name (right after the name is typed)
-   * @param options.reapply - Re-types the row's edit; run before each retry once a wait attempt times out, since a save from a stale copy of the row list can silently revert the edit and re-waiting alone would never recover it
    */
   protected async waitForPairPersisted(
     pair: { name: string; value?: string; disabled?: boolean },
@@ -623,7 +590,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Opens the request method dropdown and selects the given method,
    * then waits for the method button to reflect the new selection.
-   * @param method - The HTTP method name to select
    */
   async setMethod(method: HttpMethod): Promise<void> {
     await this.page.locator(this.METHOD_BUTTON).click();
@@ -635,7 +601,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Sets the request's query parameters.
-   * @param params - The parameters to set
    */
   async setParams(params: RequestParameter[]): Promise<void> {
     await this.setKeyValuePairs("params", params);
@@ -647,7 +612,6 @@ export abstract class RequestPage extends TabPanelPage {
    * per-row key/value editors, which sidesteps the stale-row-list save
    * race that many separately saved rows can trigger. The pane stays in
    * bulk mode afterwards, since that is an app-wide setting.
-   * @param params - The parameters to set, replacing any existing ones
    */
   async setParamsBulk(params: RequestParameter[]): Promise<void> {
     await this.switchTab("params");
@@ -673,7 +637,6 @@ export abstract class RequestPage extends TabPanelPage {
    * This only confirms the live editor value, not that it has been
    * persisted to disk — see `HttpRequestFlow`/`GrpcRequestFlow`'s
    * `waitForUrlPersisted()` for that separate, stricter check.
-   * @param url - The URL value to set
    */
   async setUrl(url: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.URL_BAR), url);
@@ -684,7 +647,6 @@ export abstract class RequestPage extends TabPanelPage {
    * given text via real keystrokes (rather than replacing the value
    * outright like setUrl()), so it builds genuine CodeMirror undo
    * history the way a user's typing would.
-   * @param text - The text to type at the end of the current URL
    */
   async typeUrl(text: string): Promise<void> {
     const urlBar = this.page.locator(this.URL_BAR);
@@ -705,7 +667,6 @@ export abstract class RequestPage extends TabPanelPage {
    * Reads the resolved-value tooltip (`title`) off the first environment
    * variable tag rendered inline in the URL bar, e.g. `{{ _.exampleString }}`.
    * Empty string if no tag is currently rendered there.
-   * @returns The tag's currently rendered preview text
    */
   async getUrlPreview(): Promise<string> {
     const tag = this.page.locator(`${this.URL_BAR} .nunjucks-tag`).first();
@@ -715,7 +676,6 @@ export abstract class RequestPage extends TabPanelPage {
   /**
    * Switches to the Docs tab and clicks the Markdown editor's Write or
    * Preview sub-tab.
-   * @param mode - The sub-tab to switch to
    */
   async setDocsMode(mode: "write" | "preview"): Promise<void> {
     await this.switchTab("docs");
@@ -726,7 +686,6 @@ export abstract class RequestPage extends TabPanelPage {
 
   /**
    * Reads the current value of the Docs tab's Markdown editor.
-   * @returns The current docs text, or an empty string if the editor instance is not found
    */
   async getDocs(): Promise<string> {
     await this.switchTab("docs");
@@ -740,7 +699,6 @@ export abstract class RequestPage extends TabPanelPage {
    * editor, moves the cursor to the end, and types the given text via
    * real keystrokes (rather than replacing the value outright), so it
    * builds genuine CodeMirror undo history the way a user's typing would.
-   * @param text - The text to type at the end of the current docs content
    */
   async typeDocs(text: string): Promise<void> {
     await this.setDocsMode("write");

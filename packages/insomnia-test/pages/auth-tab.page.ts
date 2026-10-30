@@ -134,7 +134,6 @@ export class AuthTabComponent extends TabPanelPage {
    * Reads back the Refresh Token, Identity Token, and Access Token
    * fields shown below the Auth tab's OAuth 2.0 form. Empty strings mean
    * no token has been fetched yet.
-   * @returns The currently stored OAuth 2.0 tokens
    */
   async getOAuth2Tokens(): Promise<OAuth2Tokens> {
     await this.switchTab("auth");
@@ -218,7 +217,6 @@ export class AuthTabComponent extends TabPanelPage {
    * not yet actually wired up, so it's silently swallowed and the button
    * text never changes no matter how long we wait on that same click -
    * only redoing the click fixes it.
-   * @param type - The auth type to select
    */
   async setAuthType(type: AuthType): Promise<void> {
     await this.switchTab("auth");
@@ -235,7 +233,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Sets the Bearer Token's token, switching the auth type to Bearer
    * Token first.
-   * @param fields - The Bearer Token fields to set; `token` is the only one written
    */
   async setBearerFields(fields: Partial<AuthTypeBearer>): Promise<void> {
     await this.setAuthType(AuthType.Bearer);
@@ -245,7 +242,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Sets the single token's value, switching the auth type to the
    * single-token type (Socket.IO's only auth option) first.
-   * @param fields - The single-token fields to set
    */
   async setSingleTokenFields(
     fields: Partial<AuthTypeSingleToken>,
@@ -268,7 +264,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Sets the Basic auth username and password, switching the auth type
    * to Basic first.
-   * @param fields - The Basic auth fields to set
    */
   async setBasicFields(fields: Partial<AuthTypeBasic>): Promise<void> {
     await this.setAuthType(AuthType.Basic);
@@ -281,7 +276,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Sets the API Key auth key and value, switching the auth type to
    * API Key first. The "Add to" select is left at its default (Header).
-   * @param fields - The API Key fields to set
    */
   async setApiKeyFields(fields: Partial<AuthTypeAPIKey>): Promise<void> {
     await this.setAuthType(AuthType.ApiKey);
@@ -323,7 +317,6 @@ export class AuthTabComponent extends TabPanelPage {
    * Sets the given OAuth 1.0 fields, switching the auth type to OAuth
    * 1.0 first. Fields left undefined are not written, leaving whatever
    * value is already there.
-   * @param fields - The OAuth 1.0 fields to set
    */
   async setOAuth1Fields(fields: Partial<AuthTypeOAuth1>): Promise<void> {
     await this.setAuthType(AuthType.OAuth1);
@@ -378,7 +371,6 @@ export class AuthTabComponent extends TabPanelPage {
    * with no matching row for the currently selected grant type (e.g.
    * `username` under Client Credentials) is silently skipped rather
    * than hanging.
-   * @param fields - The OAuth 2.0 fields to set
    */
   async setOAuth2Fields(fields: Partial<AuthTypeOAuth2>): Promise<void> {
     await this.setAuthType(AuthType.OAuth2);
@@ -469,8 +461,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Reads a toggle button's on/off state from its inner icon's
    * `data-testid` ("toggle-is-on" vs "toggle-is-off").
-   * @param id - The toggle button's element id
-   * @returns Whether the toggle is currently on
    */
   private async isToggleOn(id: string): Promise<boolean> {
     return (
@@ -484,8 +474,6 @@ export class AuthTabComponent extends TabPanelPage {
   /**
    * Clicks a toggle button only if its current on/off state doesn't
    * already match `enabled`.
-   * @param id - The toggle button's element id
-   * @param enabled - The desired on/off state
    */
   private async setToggle(id: string, enabled: boolean): Promise<void> {
     if ((await this.isToggleOn(id)) !== enabled) {
@@ -501,8 +489,6 @@ export class AuthTabComponent extends TabPanelPage {
    * `authentication[field] === value`, confirming the edit has actually
    * been saved (the editors autosave through a debounce) rather than just
    * shown in the UI.
-   * @param field - The `authentication` property that was just edited
-   * @param value - The value it must hold
    */
   private async waitForAuthFieldPersisted(
     field: string,
@@ -518,8 +504,6 @@ export class AuthTabComponent extends TabPanelPage {
    * may drop a field persisted earlier; once an edit has had
    * `AUTH_REAPPLY_AFTER_MS` to land on its own, the edits still missing
    * from the closest-matching document are re-applied.
-   * @param edits - The edited `authentication` fields and how to repeat each edit
-   * @param settleMs - How long every edit must keep holding before returning, to outlast a late stale save
    */
   private async waitForAuthFieldsPersisted(
     edits: AuthFieldEdit[],
@@ -557,8 +541,6 @@ export class AuthTabComponent extends TabPanelPage {
    * Builds the locator for an OAuth 1.0 field's CodeMirror editor,
    * identified by the row's visible label (e.g. "Consumer Key" -> the
    * "consumer-key"-id textarea CodeMirror replaces).
-   * @param label - The field's visible row label
-   * @returns The CSS locator for that field's CodeMirror editor
    */
   private oAuth1FieldEditor(label: string): Locator {
     return this.page.locator(
@@ -572,8 +554,6 @@ export class AuthTabComponent extends TabPanelPage {
    * "Client-ID"-id textarea CodeMirror replaces). Resolves to an empty
    * locator (`.count()` is 0) when the field's row isn't rendered for
    * the currently selected grant type or accordion state.
-   * @param label - The field's visible row label
-   * @returns The CSS locator for that field's CodeMirror editor
    */
   private oauth2FieldEditor(label: string): Locator {
     return this.page.locator(
@@ -587,8 +567,6 @@ export class AuthTabComponent extends TabPanelPage {
    * their own — only their wrapping `<label>` carries a (dangling)
    * `for="Access-Token"`-style attribute — so they must be reached via
    * that label's child input, not a `#Access-Token` id selector.
-   * @param id - The token's label `for` value, e.g. "Access-Token"
-   * @returns The CSS locator for that token's input element
    */
   private oauth2TokenInput(id: string): Locator {
     return this.page.locator(`${this.TABPANEL} label[for="${id}"] input`);

@@ -13,8 +13,6 @@ export class PreferencesFlow extends BaseFlow {
    * Opens the Preferences dialog and applies the given settings, then
    * closes it. Only settings that are defined on `settings` are applied
    * (e.g. `validateSSL` is skipped when undefined).
-   * @param settings - The settings to apply; undefined fields are left unchanged. `cloudCredentials` creates every listed cloud (vault) service credential via Preferences -> Credentials, so it's available to select as a `vault` template tag's "Credential For Vault Service Provider"
-   * @returns A `Settings` echoing back read-back state for settings whose UI it's already visiting anyway (currently just `aiUrlBackend`, with `isActive` set) — most callers can ignore this
    */
   async set(settings: Settings): Promise<Settings> {
     const preferencesPage = this.pageManager.preferencesPage;
@@ -168,7 +166,6 @@ export class PreferencesFlow extends BaseFlow {
    * modal (leaving neither the modal nor Preferences open) — assert with
    * `.rejects.toThrow(...)`. If accepted, the modal closes on its own and
    * this closes Preferences to finish.
-   * @param name - The plugin name's suffix to attempt, e.g. `"my-plugin"`
    */
   async createPlugin(name: string): Promise<void> {
     const preferencesPage = this.pageManager.preferencesPage;
@@ -189,8 +186,6 @@ export class PreferencesFlow extends BaseFlow {
   /**
    * Opens Preferences -> Scripting and toggles a single rule group's
    * sandbox switch, then closes Preferences.
-   * @param group - The rule group to toggle
-   * @param enabled - Whether the rule group should be enabled
    */
   async toggleScriptSandboxRule(
     group: ScriptSandboxRuleGroup,
@@ -207,7 +202,6 @@ export class PreferencesFlow extends BaseFlow {
    * Adds a custom (username/PAT) Git credential via Preferences ->
    * Credentials, so it's available to select when cloning/connecting a Git
    * Sync project.
-   * @param credential - The custom credential to add
    */
   async addGitCredential(credential: GitCredential): Promise<void> {
     const { preferencesPage } = this.pageManager;
@@ -222,7 +216,6 @@ export class PreferencesFlow extends BaseFlow {
    * `insomnia-plugin-*` names currently listed there, then closes
    * Preferences. Does NOT include bundled plugins (see
    * `PreferencesPage.getBundlePlugins()`), which never appear on this tab.
-   * @returns The registered user-installed plugin names, in list order
    */
   async getInstalledPlugins(): Promise<string[]> {
     const { preferencesPage } = this.pageManager;
@@ -238,7 +231,6 @@ export class PreferencesFlow extends BaseFlow {
    * Security section, then closes Preferences. Only succeeds when no vault
    * salt exists yet for this session (a fresh session, or one whose vault
    * state was just reset — see `resetVaultKey()`).
-   * @returns The generated vault key
    */
   async generateVaultKey(): Promise<string> {
     const { preferencesPage } = this.pageManager;
@@ -256,7 +248,6 @@ export class PreferencesFlow extends BaseFlow {
    * message instead of throwing (the modal stays open on a rejection, so
    * there's no dialog to surface via `.rejects.toThrow()`); returns `null`
    * on success.
-   * @param key - The vault key to attempt
    */
   async enterVaultKey(key: string): Promise<string | null> {
     const { preferencesPage } = this.pageManager;
@@ -275,7 +266,6 @@ export class PreferencesFlow extends BaseFlow {
    * Vault Key" modal's "Reset Vault Key" confirm button, then closes
    * Preferences. Requires a vault salt to already exist for this session
    * (e.g. via the `vaultSalt` fixture override).
-   * @returns The newly-generated replacement vault key
    */
   async resetVaultKey(): Promise<string> {
     const { preferencesPage } = this.pageManager;

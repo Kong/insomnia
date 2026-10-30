@@ -62,6 +62,15 @@ function ensureInsomniaDevBuild(): Promise<void> {
   return insomniaDevBuild;
 }
 
+function packagedAppPath(): string {
+  if (process.platform !== "darwin") {
+    throw new Error(
+      `INSOMNIA_BINARY must point at an Insomnia executable on ${process.platform}; the default packaged-app path only exists on macOS.`,
+    );
+  }
+  return "/Applications/Insomnia.app/Contents/MacOS/Insomnia";
+}
+
 /**
  * Launches the app's `ElectronApplication` against `dataPath`, exactly as
  * the `insomnia` fixture does on a test's first launch — factored out so
@@ -69,8 +78,6 @@ function ensureInsomniaDevBuild(): Promise<void> {
  * executable/args/env derivation. Deliberately skips
  * `resetCloudSyncState()`/`resetVaultState()`: a restart must preserve
  * whatever state the test already built up.
- * @param options - The same `dataPath`/`skipOnboarding`/`vaultKey`/`vaultSalt` values the original launch used
- * @returns The freshly-launched ElectronApplication
  */
 export async function launchInsomniaElectron(options: {
   dataPath: string;
@@ -88,7 +95,7 @@ export async function launchInsomniaElectron(options: {
     process.env.INSOMNIA_BINARY ??
     (INSOMNIA_DEV_MODE
       ? (require(path.join(INSOMNIA_SRC_PACKAGE, "..", "..", "node_modules", "electron")) as string)
-      : "/Applications/Insomnia.app/Contents/MacOS/Insomnia");
+      : packagedAppPath());
   const args = INSOMNIA_DEV_MODE
     ? [INSOMNIA_SRC_PACKAGE, "--no-sandbox"]
     : ["--no-sandbox"];

@@ -19,8 +19,6 @@ export abstract class BaseFlow {
    * Applies `authentication` to a request pane's Auth tab. Only None,
    * Basic, API Key, Bearer Token, OAuth 2.0 and the single-token type are
    * wired up here.
-   * @param auth - The request page's Auth tab component
-   * @param authentication - The authentication config to apply
    */
   protected async applyAuthentication(
     auth: AuthTabComponent,
@@ -49,9 +47,6 @@ export abstract class BaseFlow {
   /**
    * Narrows a possibly-`undefined` lookup result, throwing if the item
    * that was supposedly just created can't actually be found.
-   * @param item - The result of re-fetching the just-created item
-   * @param name - The name used in the thrown error, for diagnostics
-   * @returns `item`, narrowed to non-`undefined`
    */
   protected assertCreated<T>(item: T | undefined, name: string): T {
     if (item === undefined) {
@@ -77,11 +72,6 @@ export abstract class BaseFlow {
    * to be repeated once the earlier background patch has landed — see
    * `HttpRequestFlow`'s URL wait for why passive waiting alone isn't
    * always enough there.
-   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.Request.db"`
-   * @param id - The `_id` of the document to check
-   * @param field - Reads the value under test off a document
-   * @param expected - The value `field` must settle on
-   * @param onMismatch - Optional retry action to run when a read still disagrees, before the next poll
    */
   protected async waitForFieldPersisted<T>(
     dbFile: string,
@@ -111,10 +101,6 @@ export abstract class BaseFlow {
    * never recovers from that — the value only lands once the write is
    * repeated after the initial patch has landed — so this re-sends the
    * same write once the on-disk store shows it was lost.
-   * @param dbFile - The NeDB filename holding the request, e.g. `"insomnia.Request.db"`
-   * @param page - The request page `url` was just set on
-   * @param id - The `_id` of the request whose URL was just set
-   * @param url - The URL that must be the persisted value
    */
   protected async waitForUrlPersisted(
     dbFile: string,
@@ -137,9 +123,6 @@ export abstract class BaseFlow {
    * app as a hidden child of a node the UI exposes (e.g. an MCP Client's
    * McpRequest under its workspace), so the tree node's id is the parent's
    * rather than the document's own.
-   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.McpRequest.db"`
-   * @param parentId - The `parentId` of the document to find
-   * @returns The `_id` of the child document
    */
   protected async waitForChildDocId(
     dbFile: string,
@@ -165,9 +148,6 @@ export abstract class BaseFlow {
   /**
    * Reads the on-disk `dbFile` NeDB file directly for `id`'s
    * currently-persisted document, keeping only its latest revision.
-   * @param dbFile - The NeDB filename to read, e.g. `"insomnia.GrpcRequest.db"`
-   * @param id - The `_id` of the document to read
-   * @returns The document's latest revision, or `undefined` if `id` has no document yet
    */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
     const dataPath = await this.flowManager.getDataPath();

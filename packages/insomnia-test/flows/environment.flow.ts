@@ -19,11 +19,6 @@ import type { WorkspaceFlow } from "./workspace.flow";
 const BASE_ENVIRONMENT_NAME = "Base Environment";
 
 export class EnvironmentFlow extends BaseFlow {
-  /**
-   * @param flowManager - The owning FlowManager
-   * @param pageManager - The shared PageManager
-   * @param workspaceFlow - Used to create the workspace an environment is added to
-   */
   constructor(
     flowManager: FlowContext,
     pageManager: PageManager,
@@ -35,9 +30,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Creates/renames the workspace's Base Environment under `parent`, then
    * applies `environment.kvPairData`.
-   * @param parent - The Project to create/rename the Base Environment in
-   * @param environment - The environment to create, including variables to set
-   * @returns The created environment, with `containerName` populated
    */
   async createBaseEnvironment(parent: Project, environment: Environment): Promise<Environment> {
     await this.workspaceFlow.createEnvironment(parent, environment);
@@ -54,9 +46,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Creates a sub-environment nested under `parent`, then applies
    * `environment.kvPairData`.
-   * @param parent - The Environment to nest a sub-environment under; must be the object returned by `createBaseEnvironment()`
-   * @param environment - The sub-environment to create, including variables to set
-   * @returns The created environment, with `containerName` inherited from `parent` if set
    */
   async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
     await this.pageManager.environmentPage.createSubEnvironment(
@@ -69,8 +58,6 @@ export class EnvironmentFlow extends BaseFlow {
 
   /**
    * Finds an environment by name/id and reads its variables back.
-   * @param item - The environment's name, or an object with `name`/`id`
-   * @returns The found environment, or `undefined` if not found
    */
   async get(
     item: string | { name: string; id?: string },
@@ -100,8 +87,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Links a project Environment into `item` via the "Select a Project
    * Environment" picker.
-   * @param item - The Collection/McpClient/request to link the environment into
-   * @param environment - Must be the object returned by `create()` — it needs `environment.containerName`
    */
   async link(
     item:
@@ -137,8 +122,6 @@ export class EnvironmentFlow extends BaseFlow {
    * directly under it — e.g. from an imported legacy-format collection).
    * Distinct from `link()`, which instead attaches a separate Project
    * Environment; both can be active on the same collection at once.
-   * @param collection - The collection whose own environment to activate
-   * @param name - The environment/sub-environment name to activate
    */
   async activate(collection: Collection, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -150,9 +133,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Opens one environment picker on `collection`'s toolbar and reports
    * which picker popovers are open, then dismisses it.
-   * @param collection - The collection whose toolbar holds the pickers
-   * @param picker - Which picker to open
-   * @returns The pickers that were open while `picker` was open
    */
   async getOpenPickersAfterOpening(
     collection: Collection,
@@ -172,9 +152,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Creates a Project Environment from `collection`'s project picker and
    * reads the picker back, without linking the new environment.
-   * @param collection - The collection whose toolbar's project picker is used
-   * @param name - The new Project Environment's name
-   * @returns The picker's selection label and its listed option names
    */
   async addProjectEnvironmentFromPicker(
     collection: Collection,
@@ -192,9 +169,6 @@ export class EnvironmentFlow extends BaseFlow {
   /**
    * Creates a shared or private sub-environment inside `collection`'s own
    * "Manage Environments" modal and reports whether it is marked private.
-   * @param collection - The collection whose own environments are managed
-   * @param environment - The sub-environment to create (`isPrivate` selects the button)
-   * @returns Whether the created environment row carries the private lock icon
    */
   async createCollectionSubEnvironment(
     collection: Collection,

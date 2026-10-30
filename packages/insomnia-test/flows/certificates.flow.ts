@@ -24,8 +24,6 @@ export class CertificatesFlow extends BaseFlow {
    * Sets `item`'s workspace-wide CA Certificate, opening the "Manage
    * Certificates" dialog from `item`'s location. Overwrites any CA
    * certificate already set.
-   * @param item - The Collection/request whose location the dialog is opened from
-   * @param path - Absolute path to a PEM-format CA certificate file
    */
   async setCaCertificate(item: CertificateTarget, path: string): Promise<void> {
     await this.openTarget(item);
@@ -39,8 +37,6 @@ export class CertificatesFlow extends BaseFlow {
   /**
    * Adds a client certificate to `item`'s workspace, opening the "Manage
    * Certificates" dialog from `item`'s location.
-   * @param item - The Collection/request whose location the dialog is opened from
-   * @param certificate - The client certificate to add
    */
   async addClientCertificate(
     item: CertificateTarget,
@@ -58,9 +54,6 @@ export class CertificatesFlow extends BaseFlow {
    * Toggles a client certificate's Enabled/Disabled state, identified by
    * its `host`, opening the "Manage Certificates" dialog from `item`'s
    * location.
-   * @param item - The Collection/request whose location the dialog is opened from
-   * @param host - The client certificate's configured host
-   * @param enabled - Whether the client certificate should be enabled
    */
   async setClientCertificateEnabled(
     item: CertificateTarget,
@@ -84,8 +77,6 @@ export class CertificatesFlow extends BaseFlow {
   /**
    * Toggles `item`'s workspace-wide CA Certificate's Enabled/Disabled
    * state, opening the "Manage Certificates" dialog from `item`'s location.
-   * @param item - The Collection/request whose location the dialog is opened from
-   * @param enabled - Whether the CA certificate should be enabled
    */
   async setCaCertificateEnabled(
     item: CertificateTarget,
@@ -102,8 +93,6 @@ export class CertificatesFlow extends BaseFlow {
   /**
    * Toggles an MCP Client's "SSL Certificate Validation" switch, opening
    * the "Manage Certificates" dialog from the client's location.
-   * @param client - The MCP Client whose dialog is opened
-   * @param enabled - Whether SSL certificate validation should be enabled
    */
   async setSslValidationEnabled(
     client: McpClient,

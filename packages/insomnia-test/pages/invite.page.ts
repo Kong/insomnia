@@ -62,7 +62,6 @@ export class InvitePage extends BasePage {
    * Types an email into the invite form's input and confirms it as its own
    * chip via Enter — repeat for each address to invite by email rather
    * than by picking an existing organization member.
-   * @param email - The email address to add as a pending invitee
    */
   async addEmail(email: string): Promise<void> {
     await this.emailInput.fill(email);
@@ -73,7 +72,6 @@ export class InvitePage extends BasePage {
    * Types `query` into the invite form's email input to trigger the
    * "Organization members" search popover, waiting for at least one result
    * to render.
-   * @param query - The search text to type
    */
   async searchOrganizationMembers(query: string): Promise<void> {
     await this.emailInput.fill(query);
@@ -86,7 +84,6 @@ export class InvitePage extends BasePage {
    * Clicks the result matching `email` in the currently open "Organization
    * members" search popover, adding it as a pending invitee. Call
    * `searchOrganizationMembers()` first to populate the popover.
-   * @param email - The email address of the result to select
    */
   async selectOrganizationMember(email: string): Promise<void> {
     await this.organizationMembers
@@ -144,7 +141,6 @@ export class InvitePage extends BasePage {
 
   /**
    * The "Invitation list" row whose visible text contains `email`.
-   * @param email - The email address to look for
    */
   private invitationRow(email: string): Locator {
     return this.invitationList
@@ -156,7 +152,6 @@ export class InvitePage extends BasePage {
   /**
    * Reports whether `email` currently appears as a row in the
    * "Invitation list".
-   * @param email - The email address to look for
    */
   async isInvited(email: string): Promise<boolean> {
     return this.invitationRow(email).isVisible();
@@ -165,7 +160,6 @@ export class InvitePage extends BasePage {
   /**
    * Reads the currently selected role shown on `email`'s "Invitation list"
    * row's role-menu trigger.
-   * @param email - The email address identifying the row
    */
   async getMemberRole(email: string): Promise<CollaboratorRole> {
     const label = (
@@ -176,8 +170,6 @@ export class InvitePage extends BasePage {
 
   /**
    * Opens `email`'s "Invitation list" row's role menu and selects `role`.
-   * @param email - The email address identifying the row
-   * @param role - The role to select, e.g. `CollaboratorRole.Admin`
    */
   async setMemberRole(email: string, role: CollaboratorRole): Promise<void> {
     await this.invitationRow(email).getByLabel("Menu").click();

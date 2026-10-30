@@ -112,64 +112,13 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
-  # Counts the test cases with `playwright test --list` and derives the shard
-  # count as ceil(total / TESTS_PER_SHARD), then generates the matrix indices
-  # (1..N). Needs `build` only for the cached node_modules.
-  # ---------------------------------------------------------------------------
-  shards:
-    name: Shard Matrix
-    needs: build
-    runs-on: ubuntu-24.04
-    env:
-      TESTS_PER_SHARD: 10
-    outputs:
-      indices: ${{ steps.matrix.outputs.indices }}
-      total: ${{ steps.matrix.outputs.total }}
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout repo
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version-file: .nvmrc
-
-      - name: Restore node_modules
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
-        with:
-          path: |
-            node_modules
-            packages/*/node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
-
-      - id: matrix
-        working-directory: packages/insomnia-test
-        run: |
-          count=$(npx playwright test --list 2>&1 | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+')
-          if [ -z "$count" ] || [ "$count" -lt 1 ]; then
-            echo "ERROR: could not determine test count"; exit 1
-          fi
-          total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
-          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard)"
-          echo "total=$total" >> "$GITHUB_OUTPUT"
-          echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
-
-  # ---------------------------------------------------------------------------
-  # Run the whole suite across N shards in parallel. Each shard restores the
+  # Run the whole suite across a fixed number of shards in parallel. Each shard restores the
   # downloaded binary and runs a slice of the suite, retrying failures in-process
   # (see playwright.config.ts `retries`).
   # ---------------------------------------------------------------------------
   parallel-test:
     name: Parallel Test
-    needs: [build, shards]
+    needs: build
     timeout-minutes: 60
     runs-on: ubuntu-24.04
     permissions:
@@ -178,8 +127,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: ${{ fromJSON(needs.shards.outputs.indices) }}
-        shardTotal: ${{ fromJSON(format('[{0}]', needs.shards.outputs.total)) }}
+        shardIndex: [1, 2, 3, 4, 5, 6]
+        shardTotal: [6]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -296,7 +245,7 @@ jobs:
         with:
           name: playwright-report-${{ matrix.shardIndex }}
           path: packages/insomnia-test/playwright-report/
-          retention-days: 7
+          retention-days: 1
           if-no-files-found: ignore
 
       - name: Upload blob report
@@ -329,7 +278,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-      actions: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -388,6 +336,7 @@ jobs:
       # individual shard reported on its own. See misc/merge-coverage-union.js
       # for the full writeup.
       - name: Merge coverage reports
+        id: merge-coverage
         continue-on-error: true
         working-directory: packages/insomnia-test
         run: node misc/merge-coverage-union.js ../../coverage-raw
@@ -409,6 +358,7 @@ jobs:
           merge-multiple: true
 
       - name: Merge Playwright reports
+        id: merge-report
         continue-on-error: true
         working-directory: packages/insomnia-test
         run: npx playwright merge-reports --reporter=html ../../all-blob-reports
@@ -421,18 +371,12 @@ jobs:
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
 
-      # coverage-raw-*/playwright-report-[0-9]+/blob-report-[0-9]+ were only a
-      # transport into this job — now that they're merged, delete them so
-      # only the two artifacts uploaded above remain.
-      - name: Delete per-shard intermediate artifacts
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Warn if a merge step failed
+        if: ${{ always() && (steps.merge-coverage.outcome == 'failure' || steps.merge-report.outcome == 'failure') }}
         run: |
-          ids=$(gh api --paginate \
-            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-            --jq '.artifacts[] | select(.name | test("^playwright-report-[0-9]+$|^coverage-raw-[0-9]+$|^blob-report-[0-9]+$")) | .id')
-          export REPO="${{ github.repository }}"
-          # Delete in parallel (16 at a time); one failed delete shouldn't abort the rest.
-          echo "$ids" | xargs -r -P 16 -I{} sh -c \
-            'echo "Deleting intermediate artifact {}"; gh api -X DELETE "/repos/$REPO/actions/artifacts/{}" --silent || echo "Failed to delete {}"'
+          {
+            echo "### :warning: Insomnia Test report merge failed"
+            echo "- Merge coverage reports: ${{ steps.merge-coverage.outcome }}"
+            echo "- Merge Playwright reports: ${{ steps.merge-report.outcome }}"
+            echo "The merged artifacts may be missing; per-shard artifacts are still available."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -52,7 +52,6 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Fills the "Project name" field in the create/update dialog.
-   * @param name - The new project name
    */
   async setName(name: string): Promise<void> {
     await this.nameField.fill(name);
@@ -70,7 +69,6 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * The project-type tile's radio control in the create/update-project
    * dialog (e.g. Git blocked by org storage rule). Poll via `isDisabled()`.
-   * @param type - The project type tile to locate
    */
   projectTypeTile(type: ProjectType): Locator {
     return this.page.getByLabel(`Project Type: ${type}`, { exact: true });
@@ -80,8 +78,6 @@ export class ProjectSettingsPage extends BasePage {
    * Reads the visible text of a labeled banner in the create/update-project
    * dialog (e.g. "Git Sync Feature Disabled Banner", "Project Storage
    * Restriction Banner").
-   * @param label - The banner's accessible label
-   * @returns The banner's trimmed text, or undefined if it isn't visible
    */
   async getBannerText(label: string): Promise<string | undefined> {
     const banner = this.page.getByLabel(label);
@@ -93,7 +89,6 @@ export class ProjectSettingsPage extends BasePage {
    * Selects a previously-added credential in the "Authorized as" dropdown
    * of the "Clone from Remote" sub-form, by the credential's display name
    * (e.g. "Custom Git Credential" for a custom/PAT credential).
-   * @param name - The credential's display name
    */
   async selectCredential(name: string): Promise<void> {
     await this.gitSetupForm
@@ -104,7 +99,6 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Fills the Repository URL field in the "Clone from Remote" sub-form.
-   * @param url - The remote repo URL, e.g. "http://localhost:4070/demo.git"
    */
   async setRepositoryUrl(url: string): Promise<void> {
     await this.gitSetupForm
@@ -114,7 +108,6 @@ export class ProjectSettingsPage extends BasePage {
 
   /**
    * Selects a remote branch to clone from the branch dropdown.
-   * @param branch - The branch name to select, e.g. "master"
    */
   async selectBranch(branch: string): Promise<void> {
     await this.gitSetupForm
@@ -126,7 +119,6 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * Picks the clone destination's parent folder via the native folder
    * picker, stubbed to return `folderPath` immediately.
-   * @param folderPath - The absolute path to clone into (as a parent dir)
    */
   async chooseCloneLocation(folderPath: string): Promise<void> {
     await this.stubFileChooser(folderPath);
@@ -183,7 +175,6 @@ export class ProjectSettingsPage extends BasePage {
    * Picks the folder to adopt via the native folder picker, stubbed to
    * return `folderPath` immediately. Requires `selectGitOpenMode()` to
    * have been called first.
-   * @param folderPath - The absolute path of the folder to open as a Git project
    */
   async chooseOpenFolderLocation(folderPath: string): Promise<void> {
     await this.stubFileChooser(folderPath);
@@ -228,7 +219,6 @@ export class ProjectSettingsPage extends BasePage {
    * shown after picking a folder that's already adopted by another
    * project. Requires `chooseOpenFolderLocation()` to have been called
    * first.
-   * @returns The trimmed warning text, or undefined if no warning is showing
    */
   async getOpenFolderCollisionError(): Promise<string | undefined> {
     const warning = this.dialog.getByText(/is already connected to this folder/i);
@@ -239,7 +229,6 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * Reads the repository's currently-displayed local path from the "Path to
    * local files" field's `title` attribute.
-   * @returns The trimmed absolute path
    */
   async getRepositoryPath(): Promise<string> {
     const title = await this.dialog.locator("span[title]").getAttribute("title");
@@ -254,7 +243,6 @@ export class ProjectSettingsPage extends BasePage {
    * the result — the new path (or a collision error) settles
    * asynchronously; read it back via
    * `getRepositoryPath()`/`getRelocationError()`.
-   * @param destinationDir - The folder to move the repo into
    */
   async relocateRepository(destinationDir: string): Promise<void> {
     await this.stubFileChooser(destinationDir);
@@ -264,7 +252,6 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * Reads the inline relocation-error banner's text, if visible (e.g. a
    * destination-already-has-files collision).
-   * @returns The trimmed error text, or undefined if no error is showing
    */
   async getRelocationError(): Promise<string | undefined> {
     const error = this.dialog.getByText(
@@ -285,7 +272,6 @@ export class ProjectSettingsPage extends BasePage {
    * Detected" warning. Requires `submitScanForFiles()` to have been called.
    * Waits for the scan to finish first, so an
    * empty result means no warning, not a scan still in flight.
-   * @returns The listed file paths; empty when no warning is shown
    */
   async getUnknownFieldFiles(): Promise<string[]> {
     await this.waitForScanResult();
@@ -295,7 +281,6 @@ export class ProjectSettingsPage extends BasePage {
   /**
    * Reads the full text of the post-scan "Unknown Fields Detected" warning.
    * Requires `submitScanForFiles()` to have been called.
-   * @returns The warning's text; empty when no warning is shown
    */
   async getUnknownFieldsWarningText(): Promise<string> {
     await this.waitForScanResult();

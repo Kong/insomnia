@@ -46,7 +46,6 @@ export class CloudSyncPage extends BasePage {
    * "unsynced" tree row carries the exact same accessible name and role,
    * so an unscoped `getByRole("row", { name })` hits a strict-mode
    * violation once the sidebar tree is showing that row too.
-   * @param name - The card's file/collection name
    */
   private fileCard(name: string) {
     return this.page.getByTestId("workspace-grid").getByRole("row", { name });
@@ -72,7 +71,6 @@ export class CloudSyncPage extends BasePage {
    * project's "unsynced" row to currently be visible — call
    * `backToAllProjects()` first if another workspace's collection-focus
    * mode is hiding it.
-   * @param name - The unsynced workspace's name, e.g. "My Collection R1"
    */
   async fetchUnsyncedWorkspace(name: string): Promise<void> {
     const unsyncedRow = this.page.getByTestId(
@@ -93,7 +91,6 @@ export class CloudSyncPage extends BasePage {
    * data loader (e.g. right before simulating a main-window focus change,
    * so the background "check for remote changes" logic has fresh route
    * data to act on).
-   * @param name - The workspace's name
    */
   async reselect(name: string): Promise<void> {
     await this.page.getByTestId(`workspace-node-${name}`).first().click();
@@ -106,8 +103,6 @@ export class CloudSyncPage extends BasePage {
    * indistinguishable by name alone (same accessible name, different
    * testid — a plain by-name tree lookup like `workspaceFlow.getCollection()`
    * can't tell them apart), so this checks each row's own testid directly.
-   * @param name - The workspace's name
-   * @returns The workspace's current sync status, or undefined if neither row is present (e.g. after a full delete)
    */
   async isSynced(name: string): Promise<SyncStatus | undefined> {
     if (await this.page.getByTestId(`workspace-node-${name}`).isVisible()) {
@@ -195,7 +190,6 @@ export class CloudSyncPage extends BasePage {
    * Stages one unstaged change by its row name (e.g. a request's name) in
    * the open Commit modal. Requires `openCommitDialog()` to have been
    * called first.
-   * @param name - The unstaged row's visible name
    */
   private async stageChange(name: string): Promise<void> {
     const row = this.commitDialog.getByRole("row", { name });
@@ -215,8 +209,6 @@ export class CloudSyncPage extends BasePage {
    * The modal only closes itself once nothing is left to commit — adding a
    * request also leaves a sibling's own automatic update unstaged — so it is
    * closed explicitly when it stays open after `name`'s row is committed.
-   * @param name - The single unstaged row to stage before committing
-   * @param message - The commit message
    */
   async commit(name: string, message: string): Promise<void> {
     await this.stageChange(name);
@@ -244,8 +236,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Stages `name`, fills the commit message, and commits + pushes in one
    * action. Requires `openCommitDialog()` to have been called first.
-   * @param name - The single unstaged row to stage before committing
-   * @param message - The commit message
    */
   async commitAndPush(name: string, message: string): Promise<void> {
     await this.stageChange(name);
@@ -261,7 +251,6 @@ export class CloudSyncPage extends BasePage {
    * Reads whether the sync dropdown's "Commit" action is currently
    * disabled (no staged/unstaged changes left) — opens the menu to check,
    * then closes it again.
-   * @returns Whether "Commit" is disabled
    */
   async isCommitDisabled(): Promise<boolean> {
     await this.openSyncMenu();
@@ -294,7 +283,6 @@ export class CloudSyncPage extends BasePage {
    * Restores the snapshot whose row displays `message` (its commit
    * message) in the open History modal, via its 2-click confirm. Requires
    * `openHistory()` to have been called first.
-   * @param message - The snapshot's commit message, as shown in its row
    */
   async restoreSnapshot(message: string): Promise<void> {
     await this.historyDialog
@@ -326,7 +314,6 @@ export class CloudSyncPage extends BasePage {
    * Fetches a remote-only branch into the local branches list, from its
    * row in the Branches modal's "Remote Branches list". Requires
    * `openBranchesDialog()` to have been called first.
-   * @param branch - The remote branch to fetch
    */
   async fetchRemoteBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -340,7 +327,6 @@ export class CloudSyncPage extends BasePage {
    * Checks out `branch` from its row in the Branches modal's local
    * "Branches list". Requires `openBranchesDialog()` to have been called
    * first.
-   * @param branch - The local branch to check out
    */
   async checkoutLocalBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -354,7 +340,6 @@ export class CloudSyncPage extends BasePage {
    * Deletes local branch `branch` via its row in the Branches modal's
    * local "Branches list", confirming the 2-click prompt. Requires
    * `openBranchesDialog()` to have been called first.
-   * @param branch - The local branch to delete
    */
   async deleteLocalBranch(branch: string): Promise<void> {
     const row = this.branchesDialog
@@ -370,8 +355,6 @@ export class CloudSyncPage extends BasePage {
    * Whether local branch `branch`'s "Delete" button is currently
    * disabled (e.g. because it's the currently checked-out branch).
    * Requires `openBranchesDialog()` to have been called first.
-   * @param branch - The local branch to check
-   * @returns Whether its "Delete" button is disabled
    */
   async isLocalBranchDeleteDisabled(branch: string): Promise<boolean> {
     return this.branchesDialog
@@ -386,7 +369,6 @@ export class CloudSyncPage extends BasePage {
    * checked out, via its row in the Branches modal's local "Branches
    * list", confirming the 2-click prompt. Requires `openBranchesDialog()`
    * to have been called first.
-   * @param branch - The local branch to merge in
    */
   async mergeBranch(branch: string): Promise<void> {
     const row = this.branchesDialog
@@ -402,8 +384,6 @@ export class CloudSyncPage extends BasePage {
    * Whether `branch` is currently listed in the Branches modal's local
    * "Branches list". Requires `openBranchesDialog()` to have been called
    * first.
-   * @param branch - The local branch to check for
-   * @returns Whether it's currently listed
    */
   async isLocalBranchListed(branch: string): Promise<boolean> {
     const list = this.branchesDialog.getByLabel("Branches list", {
@@ -428,7 +408,6 @@ export class CloudSyncPage extends BasePage {
    * `isLocalBranchListed()`, which blocks up to the timeout while a row is
    * absent, this returns as soon as the row is gone. Requires
    * `openBranchesDialog()` to have been called first.
-   * @param branch - The local branch expected to be gone
    */
   async waitForLocalBranchRemoved(branch: string): Promise<void> {
     await expect(
@@ -442,7 +421,6 @@ export class CloudSyncPage extends BasePage {
    * Creates a new local branch from the Branches modal's "New branch
    * name" field. Requires `openBranchesDialog()` to have been called
    * first.
-   * @param branch - The new branch's name
    */
   async createBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -458,7 +436,6 @@ export class CloudSyncPage extends BasePage {
    * field to read exactly `message` — shown when creating a branch fails
    * (an invalid or already-used name). Requires `openBranchesDialog()` to
    * have been called first.
-   * @param message - The expected error text
    */
   async waitForBranchCreationError(message: string): Promise<void> {
     await expect(
@@ -472,8 +449,6 @@ export class CloudSyncPage extends BasePage {
    * Resolves every conflicted file listed in the "Resolve conflicts" modal
    * by choosing the same side for each, then submits and waits for the
    * modal to close. Call after `mergeBranch()` hit conflicts.
-   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
-   * @returns The names of the conflicted files that were resolved
    */
   async resolveMergeConflicts(
     version: "Current" | "Incoming",
@@ -518,7 +493,6 @@ export class CloudSyncPage extends BasePage {
    * current label — plain "Pull" when there's nothing to pull, or
    * "Pull N Commit(s)" once one is detected. Leaves the menu open;
    * call `closeSyncMenu()` afterward.
-   * @returns The "Pull" action's current visible label
    */
   async waitForPullAvailable(): Promise<string> {
     await this.openSyncMenu();
@@ -553,7 +527,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Opens `name`'s workspace-actions dropdown from its sidebar row and
    * clicks "Delete", opening the delete-workspace dialog.
-   * @param name - The workspace's name
    */
   async openDeleteWorkspaceDialog(name: string): Promise<void> {
     const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
@@ -590,7 +563,6 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Hovers a project dashboard card by its file/collection name.
-   * @param name - The card's name
    */
   async hoverFile(name: string): Promise<void> {
     await this.fileCard(name).hover();
@@ -601,7 +573,6 @@ export class CloudSyncPage extends BasePage {
    * `GridListItem` uses roving tabindex, so this lands focus on the card
    * itself, the same element a real Tab/arrow-key traversal would land
    * on, rather than a descendant.
-   * @param name - The card's name
    */
   async focusFile(name: string): Promise<void> {
     await this.fileCard(name).focus();
@@ -617,7 +588,6 @@ export class CloudSyncPage extends BasePage {
    * this waits for the row to attach first rather than reading `count()`
    * immediately — a bare immediate read raced that query and produced a
    * false negative on a genuinely-unsynced card, confirmed live.
-   * @param name - The card's name
    */
   async hasFileDeleteButton(name: string): Promise<boolean> {
     const card = this.fileCard(name);
@@ -642,7 +612,6 @@ export class CloudSyncPage extends BasePage {
    * button has no running transition/animation left before taking a
    * single settled reading, rather than polling toward an assumed target
    * value.
-   * @param name - The card's name
    */
   async isFileDeleteButtonRevealed(name: string): Promise<boolean> {
     const button = this.fileCard(name).getByLabel("Delete unsynced file");
@@ -661,7 +630,6 @@ export class CloudSyncPage extends BasePage {
    * Whether `name`'s dashboard card is currently listed at all — true for
    * a synced/local-only/unsynced card alike; false once an unsynced
    * card's remote file has been deleted.
-   * @param name - The card's name
    */
   async isFileCardVisible(name: string): Promise<boolean> {
     return this.fileCard(name).isVisible();
@@ -670,7 +638,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Hovers `name`'s unsynced dashboard card and clicks its delete button,
    * opening the "Delete file" confirmation dialog.
-   * @param name - The unsynced card's name
    */
   async openFileDeleteDialog(name: string): Promise<void> {
     await this.hoverFile(name);
@@ -691,7 +658,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Dismisses the open "Delete file" dialog via `method`, without deleting
    * anything.
-   * @param method - How to dismiss the dialog
    */
   async dismissFileDeleteDialog(method: DialogDismissMethod): Promise<void> {
     switch (method) {
@@ -734,7 +700,6 @@ export class CloudSyncPage extends BasePage {
    * Waits for the "Failed to delete remote file" toast naming `name` to
    * appear, after a `confirmFileDelete()` whose archive call was made to
    * fail.
-   * @param name - The unsynced file's name, as named in the toast
    */
   async waitForFileDeleteFailureToast(name: string): Promise<void> {
     await expect(
@@ -759,7 +724,6 @@ export class CloudSyncPage extends BasePage {
    * Lists the visible names of every change row (staged and unstaged) in
    * the open Commit modal. Requires `openCommitDialog()` to have been
    * called first.
-   * @returns The rows' names in display order
    */
   async getChangeNames(): Promise<string[]> {
     const rows = this.commitDialog
@@ -774,7 +738,6 @@ export class CloudSyncPage extends BasePage {
    * Clicks a row in the open Commit modal to open its diff, and waits for
    * the diff pane's heading to show it. Requires `openCommitDialog()` to
    * have been called first.
-   * @param name - The row's visible name
    */
   async openChangeDiff(name: string): Promise<void> {
     await this.commitDialog.getByRole("row", { name }).click();
@@ -786,7 +749,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Reads whether the open Commit modal's diff pane shows the unknown
    * fields banner. Requires `openChangeDiff()` to have been called.
-   * @returns True if the banner is visible
    */
   async isUnknownFieldsDiffWarningVisible(): Promise<boolean> {
     return this.commitDialog.getByTestId("unknown-fields-diff-warning").isVisible();
@@ -795,7 +757,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Counts the diff editor's highlighted unknown-field lines in the open
    * Commit modal. Requires `openChangeDiff()` to have been called.
-   * @returns The number of highlighted lines
    */
   async getUnknownFieldHighlightCount(): Promise<number> {
     return this.commitDialog.locator(".unknown-field-line-bg").count();
@@ -804,7 +765,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Reads the red "unsupported" banner's text from the open Commit modal's
    * diff pane. Requires `openChangeDiff()` to have been called.
-   * @returns The banner's text, or an empty string when it isn't shown
    */
   async getUnsupportedDocDiffErrorText(): Promise<string> {
     const banner = this.commitDialog.getByTestId("unsupported-doc-diff-error");
@@ -813,8 +773,6 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Hovers a row's unknown fields warning icon and reads its tooltip.
-   * @param name - The row's visible name
-   * @returns The tooltip's text, or an empty string when the row has no such icon
    */
   async getUnknownFieldsIconTooltip(name: string): Promise<string> {
     return this.readRowIconTooltip(name, "Unrecognized fields warning");
@@ -822,8 +780,6 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Hovers a row's "unsupported item" error icon and reads its tooltip.
-   * @param name - The row's visible name
-   * @returns The tooltip's text, or an empty string when the row has no such icon
    */
   async getUnsupportedItemIconTooltip(name: string): Promise<string> {
     return this.readRowIconTooltip(name, "Unsupported item error");
@@ -847,8 +803,6 @@ export class CloudSyncPage extends BasePage {
    * waiting for the commit to finish — for a commit that opens the
    * "Unrecognized Fields" confirmation. Requires `openCommitDialog()` to
    * have been called first.
-   * @param name - The single unstaged row to stage before committing
-   * @param message - The commit message
    */
   async submitCommit(name: string, message: string): Promise<void> {
     await this.stageChange(name);
@@ -871,8 +825,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Reads whether `name` is listed as a staged change (its row shows the
    * unstage "minus" button) in the open Commit modal.
-   * @param name - The row's visible name
-   * @returns True if the row is staged
    */
   async isChangeStaged(name: string): Promise<boolean> {
     return this.commitDialog
@@ -883,7 +835,6 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Reads whether the "Unrecognized Fields" confirmation is open.
-   * @returns True if the confirmation dialog is visible
    */
   async isUnknownFieldsConfirmationVisible(): Promise<boolean> {
     return this.unknownFieldsConfirmDialog.isVisible();
@@ -891,7 +842,6 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Waits for the "Unrecognized Fields" confirmation and reads its text.
-   * @returns The dialog's text content
    */
   async getUnknownFieldsConfirmationText(): Promise<string> {
     await expect(this.unknownFieldsConfirmDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -910,7 +860,6 @@ export class CloudSyncPage extends BasePage {
   /**
    * Continues past the open "Unrecognized Fields" confirmation, creating
    * the commit, and waits for `name` to leave the Commit modal's lists.
-   * @param name - The row that was being committed
    */
   async confirmUnknownFieldsCommit(name: string): Promise<void> {
     await this.page.getByTestId("unknown-fields-commit-confirm-button").click();

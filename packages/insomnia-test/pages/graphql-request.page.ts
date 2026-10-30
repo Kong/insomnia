@@ -19,7 +19,6 @@ export class GraphQLRequestPage extends RequestPage {
    * Reads the full GraphQL request state from the UI (method, url, params,
    * body, schema documentation, and scripts). Headers are always returned
    * empty since this page doesn't expose a headers tab.
-   * @returns the GraphQL request fields, excluding `name`
    */
   async get(): Promise<Omit<GraphQLRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -41,7 +40,6 @@ export class GraphQLRequestPage extends RequestPage {
    * the generic single-editor "Change Body Type" flow the HTTP/WebSocket
    * request pages use (that dropdown has no option matching this domain's
    * mimeType, so it can't be driven the same way).
-   * @returns the body's mime type and JSON-encoded `{ query, variables }` text, or `undefined` if no query is set
    */
   private async getBody(): Promise<GraphQLRequestBody | undefined> {
     await this.switchTab("content-type");
@@ -78,7 +76,6 @@ export class GraphQLRequestPage extends RequestPage {
    * reflects the change, not that it has been persisted, so a caller that
    * immediately re-navigates (e.g. `create()` re-reading via `get()`) can
    * otherwise observe a stale empty query.
-   * @param body - the GraphQL request body to apply
    */
   async setBody(body: GraphQLRequestBody): Promise<void> {
     if (body.mimeType == null) return;
@@ -134,7 +131,6 @@ export class GraphQLRequestPage extends RequestPage {
    * jumps straight to the sole root type's fields when there's only one
    * (as with this project's mock schema), so this navigates back to the
    * root screen first to also capture the root types list.
-   * @returns The schema documentation, or `undefined` if it hasn't resolved (e.g. the request doesn't point at a GraphQL endpoint)
    */
   private async getSchemaInfo(): Promise<GraphQLSchema | undefined> {
     await this.switchTab("content-type");
@@ -238,8 +234,6 @@ export class GraphQLRequestPage extends RequestPage {
  * Parses a GraphQL return-type signature (e.g. `CharacterResults!`,
  * `Episode`, `[Character!]!`) into the introspection standard's simplified
  * `name`/`isList`/`isNonNull` shape — see `GraphQLSchemaTypeRef`.
- * @param typeText - The raw type signature text
- * @returns The parsed type reference
  */
 function parseTypeRef(typeText: string): {
   name: string;
@@ -265,8 +259,6 @@ function parseTypeRef(typeText: string): {
  * `JSON.parse`/`JSON.stringify` — that would break on Insomnia template
  * tags (`{{ someVar }}`), which aren't valid JSON but are valid inside the
  * variables editor (they resolve to real values at send time).
- * @param text - The raw `{ query, variables }` payload
- * @returns The extracted query text, and the variables object's raw source text if present
  */
 function splitGraphQLBody(text: string): {
   query: string;

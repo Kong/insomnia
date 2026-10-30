@@ -283,14 +283,16 @@ async function handleRequest(req, res) {
 }
 
 const server = http.createServer(handleRequest);
+const ipv6Server = http.createServer(handleRequest);
 const httpsServer = https.createServer(HTTPS_OPTIONS, handleRequest);
 const customCaHttpsServer = https.createServer(CUSTOM_CA_HTTPS_OPTIONS, handleRequest);
 const mtlsHttpsServer = https.createServer(MTLS_HTTPS_OPTIONS, handleRequest);
 
-// Dual-stack so http://[::1]:4060 (ipv6-local-address.spec.ts) is reachable as well as 127.0.0.1.
-server.listen(4060, '::', () => {
+server.listen(4060, '127.0.0.1', () => {
   process.stdout.write('Listening at http://localhost:4060\n');
 });
+// Loopback-only IPv6 listener so http://[::1]:4060 (ipv6-local-address.spec.ts) is reachable too.
+ipv6Server.listen(4060, '::1');
 httpsServer.listen(4061, '127.0.0.1', () => {
   process.stdout.write('Listening at https://localhost:4061\n');
 });

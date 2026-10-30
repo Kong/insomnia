@@ -22,8 +22,6 @@ function requireGitRepo(gitRepo: string | undefined): string {
  * Reads the real local branch names from the bare repo on misc/git-server.js
  * — ground truth for what's actually been pushed, independent of anything
  * the app's UI reports.
- * @param gitRepo - The repo name; defaults to the one created by the `gitRepo` fixture
- * @returns The repo's local branch names
  */
 export async function getServerBranches(
   gitRepo = currentGitRepo,
@@ -38,8 +36,6 @@ export async function getServerBranches(
  * Overrides misc/git-server.js's Basic auth requirement for one repo only
  * — e.g. to test bad credentials or a disabled-auth repo. Scoped to
  * `gitRepo` by name, so it can never leak into another test's repo.
- * @param gitRepo - The repo name; defaults to the one created by the `gitRepo` fixture
- * @param overrides - Fields to change; omitted fields keep their current value
  */
 export async function setGitRepoAuth(
   overrides: { enabled?: boolean; username?: string; password?: string },
@@ -66,9 +62,6 @@ export interface ServerCommit {
  * Reads the real commit history for `branch` from the bare repo on
  * misc/git-server.js (newest first) — ground truth for what's actually
  * been pushed, independent of anything the app's UI reports.
- * @param gitRepo - The repo name; defaults to the one created by the `gitRepo` fixture
- * @param branch - The branch to read; defaults to "master"
- * @returns The branch's commits, or `[]` if the branch doesn't exist on the server
  */
 export async function getServerCommits(
   gitRepo = currentGitRepo,
@@ -85,8 +78,6 @@ export async function getServerCommits(
  * a second client had pushed it — so the app under test sees the remote
  * move ahead without doing anything itself. `branch` is created from master
  * if it doesn't exist yet.
- * @param file - The file path, content, and optional commit message and branch (default "master")
- * @param gitRepo - The repo name; defaults to the one created by the `gitRepo` fixture
  */
 export async function pushServerFile(
   file: { path: string; content: string; message?: string; branch?: string },
@@ -105,8 +96,6 @@ export async function pushServerFile(
 /**
  * Builds the YAML for a minimal, empty Insomnia collection file, suitable
  * for `pushServerFile()` to make the app see a new collection on the remote.
- * @param name - The collection's display name
- * @returns The file content
  */
 export function buildCollectionFile(name: string): string {
   const id = crypto.randomUUID().replaceAll("-", "");

@@ -19,9 +19,6 @@ export class VariableSourceFlow extends BaseFlow {
    * Opens the Body tab of the currently open request, clicks the template
    * tag matching `snippet` to open its editor modal, and reads its Source
    * row plus Live Preview once the preview settles on `expectedPreview`.
-   * @param snippet - A substring of the tag's `data-template`
-   * @param expectedPreview - The Live Preview value to wait for
-   * @returns The modal's source text and settled preview
    */
   async inspectVariableModal(
     snippet: string,
@@ -37,8 +34,6 @@ export class VariableSourceFlow extends BaseFlow {
    * Clicks the template tag matching `snippet` in the currently open
    * environment page's editor to open its tag editor modal, and reads its
    * Source row plus Live Preview once the preview settles.
-   * @param snippet - A substring of the tag's `data-template`
-   * @param expectedPreview - The Live Preview value to wait for
    */
   async inspectEnvironmentPageVariable(
     snippet: string,
@@ -52,7 +47,6 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Hovers the template tag matching `snippet` in the currently open
    * environment page's editor until its variable-source tooltip shows.
-   * @param snippet - A substring of the tag's `data-template`
    */
   async hoverEnvironmentPageVariable(
     snippet: string,
@@ -64,8 +58,6 @@ export class VariableSourceFlow extends BaseFlow {
    * Opens the Body tab of the currently open request and hovers the
    * template tag matching `snippet` until its variable-source tooltip
    * shows.
-   * @param snippet - A substring of the tag's `data-template`
-   * @returns The tooltip text and the tag's own (short) display text
    */
   async hoverVariable(
     snippet: string,
@@ -78,8 +70,6 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Hovers the template tag matching `snippet` inside the open Manage
    * Environments modal until its variable-source tooltip shows.
-   * @param snippet - A substring of the tag's `data-template`
-   * @param scope - Where the tag lives; defaults to the Manage Environments modal
    */
   async hoverVariableInModal(
     snippet: string,
@@ -91,7 +81,6 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Hovers the tag matching `snippet` on the Body tab, then hovers the
    * tooltip's own content and reports whether it stayed visible.
-   * @param snippet - A substring of the tag's `data-template`
    */
   async hoverTooltipContent(snippet: string): Promise<boolean> {
     const page = this.pageManager.variableSourcePage;
@@ -104,10 +93,6 @@ export class VariableSourceFlow extends BaseFlow {
    * Hovers `first`'s tag then `second`'s tag on the Body tab, returning
    * the tooltip text after each hover (the tooltip swaps rather than
    * vanishing when the pointer moves between tags).
-   * @param first - Snippet of the first tag to hover
-   * @param firstExpected - Text the tooltip must contain for the first tag
-   * @param second - Snippet of the second tag to hover
-   * @param secondExpected - Text the tooltip must contain for the second tag
    */
   async hoverBetweenVariables(
     first: string,
@@ -130,8 +115,6 @@ export class VariableSourceFlow extends BaseFlow {
 
   /**
    * Switches the open tag editor modal's selected variable.
-   * @param option - The option value or `{ label }`
-   * @param expectedPreview - The Live Preview value to wait for afterwards
    */
   async selectModalVariable(
     option: string | { label: string },
@@ -147,8 +130,6 @@ export class VariableSourceFlow extends BaseFlow {
   /**
    * Types a custom template into the open tag editor modal and reads the
    * re-derived Source row and Live Preview.
-   * @param template - The raw template text
-   * @param expectedPreview - The Live Preview value to wait for afterwards
    */
   async setModalTemplate(
     template: string,
@@ -177,8 +158,6 @@ export class VariableSourceFlow extends BaseFlow {
 
   /**
    * Opens `collection` and picks an imported project environment for it.
-   * @param collection - The collection to link the project environment to
-   * @param optionName - The project environment's name in the picker
    */
   async selectProjectEnvironment(
     collection: Collection,
@@ -198,7 +177,6 @@ export class VariableSourceFlow extends BaseFlow {
 
   /**
    * Selects an environment row inside the open Manage Environments modal.
-   * @param name - The environment row's accessible name
    */
   async selectModalEnvironment(name: string): Promise<void> {
     await this.pageManager.variableSourcePage.selectModalEnvironment(name);
@@ -206,8 +184,6 @@ export class VariableSourceFlow extends BaseFlow {
 
   /**
    * Reads where an "Open" action landed.
-   * @param landing - Which source surface the Open action should have opened
-   * @param environmentRow - The environment row expected to be selected, when the surface has an Environments grid
    */
   async getNavigation(
     landing: VariableSourceLanding,

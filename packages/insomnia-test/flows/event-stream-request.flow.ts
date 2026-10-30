@@ -14,9 +14,6 @@ export class EventStreamRequestFlow extends BaseFlow {
   /**
    * Creates an Event Stream request under `parent` via the standalone
    * project tree, then verifies it was created.
-   * @param parent - The Collection or Folder under which the request is created
-   * @param request - The request fields to apply after creation
-   * @returns The created request, re-read from the UI
    */
   async create(
     parent: Collection | Folder,
@@ -47,9 +44,6 @@ export class EventStreamRequestFlow extends BaseFlow {
   /**
    * Reads back an existing Event Stream request's fields via the
    * standalone project tree.
-   * @param item - The request name, or an object identifying it by name/id
-   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
-   * @returns The request's fields, or undefined if it could not be found
    */
   async get(
     item: string | { name: string; id?: string },
@@ -76,8 +70,6 @@ export class EventStreamRequestFlow extends BaseFlow {
   /**
    * Opens `request`, clicks its Auth tab's token-fetch button and reads
    * the resulting tokens back.
-   * @param request - The Event Stream request whose OAuth 2.0 tokens to fetch
-   * @returns The refresh, identity and access tokens now stored
    */
   async fetchOAuth2Tokens(request: EventStreamRequest): Promise<OAuth2Tokens> {
     const workspace = this.pageManager.workspacePage;
@@ -93,8 +85,6 @@ export class EventStreamRequestFlow extends BaseFlow {
 
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
-   * @param request - The Event Stream request whose Auth tab to edit
-   * @param authentication - The authentication config to apply
    */
   async setAuthentication(
     request: EventStreamRequest,
@@ -112,9 +102,6 @@ export class EventStreamRequestFlow extends BaseFlow {
   /**
    * Connects the event stream for `request` and reads back the resulting
    * response via the standalone project tree.
-   * @param request - The request to connect
-   * @param options - Forwarded to the page's `connect()`
-   * @returns The response view captured after connecting
    */
   async send(
     request: EventStreamRequest,
