@@ -85,6 +85,9 @@ jobs:
             packages/*/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
+      - name: Type-check insomnia-test
+        run: npm run type-check -w insomnia-test
+
       - name: Build Insomnia
         working-directory: packages/insomnia
         env:
