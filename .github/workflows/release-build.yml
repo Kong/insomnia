@@ -171,13 +171,16 @@ jobs:
         shell: bash
         run: ./build-secure-wrapper.sh CI
 
-      - name: Move .dll and .exe files to /tosign (PowerShell)
+      # Only Insomnia's own binaries go to /tosign. The vendor Electron .dll files (chrome_elf.dll, ffmpeg.dll, ...)
+      # stay out: electron-builder does not sign them by default and every file costs one code-signing token.
+      - name: Move insomnia.dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -File |
+            Where-Object { $_.Name -eq 'insomnia.dll' -or $_.Extension -eq '.exe' } |
+            Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
 
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
