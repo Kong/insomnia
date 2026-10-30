@@ -1125,34 +1125,44 @@ export class GitSyncPage extends BasePage {
   }
 
   /**
-   * Counts the diff editor's highlighted unknown-field lines at both the top
-   * and the bottom of the file, so a field anywhere in a file that fits in
-   * two viewports is seen; lines visible from both positions are counted
-   * twice, so use it for "any highlight" checks rather than an exact line
-   * count. Moves the editor's cursor. Requires `openChangeDiff()` to have
-   * been called.
-   * @returns The highlighted lines seen at the top plus those seen at the bottom
+   * Counts the diff editor's highlighted unknown-field lines across the whole
+   * file by paging from the top to the bottom, so a field anywhere in the
+   * file is seen however small the viewport is. Lines visible from two
+   * adjacent pages may be counted twice, so use it for "any highlight"
+   * checks rather than an exact line count. Moves the editor's cursor.
+   * Requires `openChangeDiff()` to have been called.
+   * @returns The highlighted lines seen on every page of the file, summed
    */
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
     await this.commitDialog.locator('.monaco-diff-editor .view-line').first().click();
+    // Ctrl+Arrow only jumps to the top on macOS (Cmd+Arrow); on Linux/Windows Monaco binds it to
+    // "scroll one line", so use Ctrl+Home there.
+    await this.page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowUp' : 'Control+Home');
+    const viewLines = this.commitDialog.locator('.monaco-diff-editor .view-lines');
     let total = 0;
-    // Ctrl+Arrow only jumps to the top/bottom on macOS (Cmd+Arrow); on Linux/Windows Monaco binds it to
-    // "scroll one line", which would leave everything past the first viewport unseen, so use Ctrl+Home/End there.
-    const jumpKeys = process.platform === 'darwin' ? ['Meta+ArrowUp', 'Meta+ArrowDown'] : ['Control+Home', 'Control+End'];
-    for (const key of jumpKeys) {
-      await this.page.keyboard.press(key);
+    let previousPageText = '';
+    // No page cap: the loop ends when PageDown stops changing what is visible (the test timeout bounds it otherwise).
+    for (let page = 0; ; page++) {
       let previous = -1;
+      let stableReads = 0;
       let count = 0;
       // The decorations render a beat after the editor's lines do, so an early 0 is not "settled":
-      // give a first highlight a grace period, then require the count to stop changing.
+      // give the first page's highlight a grace period, then require the count to stop changing.
       const deadlineForFirstHighlight = Date.now() + DEFAULT_TIMEOUT / 2;
       await expect(async () => {
         count = await this.getUnknownFieldHighlightCount();
-        const isSettled = count === previous && (count > 0 || Date.now() > deadlineForFirstHighlight);
+        stableReads = count === previous ? stableReads + 1 : 0;
         previous = count;
-        expect(isSettled).toBe(true);
+        const hasWaitedEnough = page > 0 || count > 0 || Date.now() > deadlineForFirstHighlight;
+        expect(stableReads >= 2 && hasWaitedEnough).toBe(true);
       }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });
       total += count;
+
+      const pageText = (await viewLines.allInnerTexts()).join('\n');
+      if (pageText === previousPageText) break; // PageDown no longer scrolls: reached the bottom
+      previousPageText = pageText;
+      await this.page.keyboard.press('PageDown');
+      await this.page.waitForTimeout(200);
     }
     return total;
   }
