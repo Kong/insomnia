@@ -5,13 +5,13 @@ import { useNavigate } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { SyncResult } from '~/konnect/sync';
-import { useRootLoaderData } from '~/root';
 import { KongLogo } from '~/ui/components/kong-logo';
 import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { refreshKonnectAccess, useKonnectSyncEnabled } from '~/ui/organization-utils';
 

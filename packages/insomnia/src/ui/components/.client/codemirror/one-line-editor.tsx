@@ -25,7 +25,6 @@ import {
   replaceVaultTagIdIfNeeded,
 } from '~/common/templating/utils';
 import { isCurlCommand } from '~/common/utils/curl';
-import { useRootLoaderData } from '~/root';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
 import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
@@ -36,6 +35,7 @@ import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 

@@ -1,6 +1,6 @@
 ---
 name: write-insomnia-test
-description: Use when writing, adding, or modifying a Playwright E2E test case (tests/**/*.spec.ts) for the Insomnia desktop app in this repo. Converts a short plain-language scenario ("test that X happens when Y", "write a test that verifies...") into an accurate spec file built from the existing Model/Flow/Page/enum layers. Trigger whenever the user asks to add/write a test case, a happy-path, or an edge-case spec for any protocol (http/graphql/grpc/websocket/socket.io/event-stream/mcp-client), API Mock servers and routes (self-hosted), the Collection Runner, cookie, environment, import, export, template tags, git sync, cloud sync, plugins/script sandbox, organization/invite collaborators, legacy database migration, or preferences (vault key, cloud/vault-provider credentials).
+description: Use when writing, adding, or modifying a Playwright E2E test case (tests/**/*.spec.ts) for the Insomnia desktop app in this repo. Converts a short plain-language scenario ("test that X happens when Y", "write a test that verifies...") into an accurate spec file built from the existing Model/Flow/Page/enum layers. Trigger whenever the user asks to add/write a test case, a happy-path, or an edge-case spec for any protocol (http/graphql/grpc/websocket/socket.io/event-stream/mcp-client), API Mock servers and routes (self-hosted), the Collection Runner, cookie, environment, import, export, template tags, git sync, cloud sync, plugins/script sandbox, organization/invite collaborators, legacy database migration, or preferences (vault key, cloud/vault-provider credentials), variable source (hover tooltip / tag-editor "Source" row), response export, and upgrade (old-version → current-version data) scenarios.
 ---
 
 # Writing an Insomnia E2E Test Case
@@ -53,7 +53,7 @@ test("...", async ({ user }) => {
 
 User prompts are often short ("test environment variable overrides", "add a test for gRPC error handling"). Before writing anything, pin down:
 
-- **Domain**: which protocol/feature (http / graphql / grpc / websocket / socket.io / event-stream / mcp-client / mock-server / runner / cookie / environment / import / export — and if import, which source: file/url/curl/clipboard/mcp)?
+- **Domain**: which protocol/feature (http / graphql / grpc / websocket / socket.io / event-stream / mcp-client / mock-server / runner / cookie / environment / variable-source / import / export / git-sync / cloud-sync / upgrade — and if import, which source: file/url/curl/clipboard/mcp)?
 - **Preconditions**: what entities must exist first (Project, Collection, Environment, linked Cookie, ...) and in what state?
 - **Action**: what does the user actually do (send, connect, disconnect, duplicate, import, call a tool, link an environment/cookie...)?
 - **Expected outcome**: what gets asserted (response body/status/headers, a UI node appearing/disappearing, dialog text, a stream event, a deleted node)?
@@ -251,6 +251,7 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No `const { pageManager } = user;` / `const { flowManager } = user;` (whole-object destructure) anywhere, and no inline `user.pageManager.xxxPage...`/`user.flowManager.xxxFlow...` mid-body — every Page/Flow instance used is destructured by name at the top, from `user.pageManager`/`user.flowManager` directly.
 - [ ] File path and name follow §7, including its own directory if it uses a fixture file.
 - [ ] No leftover `_probe*.spec.ts` files from step 6.
+- [ ] An upgrade-style spec (old app → current app) marks every test with `upgradePhase(UpgradePhase.Before|After)` and extends `test` with `upgradeFixtures` — see "Upgrade specs" in `reference.md`.
 - [ ] If feasible, actually run it: `npx playwright test <new-file-path>` (from `packages/insomnia-test`; by default launches dev-mode against the sibling `packages/insomnia` source — see reference.md's "App launch" section; set `INSOMNIA_BINARY` or `INSOMNIA_DEV_MODE=false` to target a specific/packaged build instead) — confirm it passes for real, not just that it type-checks.
 
 ### 12. Summarize the finished test case for the user

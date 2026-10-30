@@ -777,7 +777,7 @@ export class GitSyncPage extends BasePage {
    * @param tab - The tab's label without its count, e.g. "Secrets"
    */
   async selectEntityCardTab(entityName: string, tab: string, typeLabel?: string): Promise<void> {
-    await this.entityCard(entityName, typeLabel).getByRole('tab', { name: new RegExp(`^\\s*${tab}`) }).click();
+    await this.entityCard(entityName, typeLabel).getByRole('tab', { name: new RegExp(`^\\s*${tab.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) }).click();
   }
 
   /**

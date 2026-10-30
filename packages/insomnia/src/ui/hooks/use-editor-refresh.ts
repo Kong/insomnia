@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const useEditorRefresh = (callback: () => void) => {
   const { settings } = useRootLoaderData()!;
