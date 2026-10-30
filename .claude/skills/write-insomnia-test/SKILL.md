@@ -9,7 +9,19 @@ description: Use when writing, adding, or modifying a Playwright E2E test case (
 
 This repo is strictly layered: `tests/*.spec.ts` → `flows/*.flow.ts` → `pages/*.page.ts` → `models/*.ts`. Writing a new test case almost never requires new Page/Flow/Model code — it's just composing existing methods in a spec file.
 
-**Before writing any code, open `reference.md` in this skill folder** and confirm, for the domain involved: the Flow's exact method signatures, the Model's exact fields, and the mock server URL to hit. Do not call a method or pass a field from memory/guesswork — the single most common accuracy failure in this framework is inventing a Flow method or Model field that doesn't actually exist. If `reference.md` doesn't cover something you need, grep the actual `flows/`/`models/`/`pages/` file before writing the call.
+**Before writing any code, scan the live framework** (see step 3) and confirm, for the domain involved: the Flow's exact method signatures, the Model's exact fields, and the mock server URL to hit. This skill deliberately ships no static API reference — the source is the only source of truth. Do not call a method or pass a field from memory/guesswork — the single most common accuracy failure in this framework is inventing a Flow method or Model field that doesn't actually exist.
+
+## Framework facts the code doesn't make obvious
+
+- **Fixtures**: `dataPath`, `skipOnboarding`, `vaultKey`/`vaultSalt` are overridable via `test.extend` to seed state before launch. Git Sync specs import `test` (and the git helpers) from `misc/git-fixtures`, not `misc/fixtures`.
+- **Single worker**: the suite is serial (enforced in `playwright.config.ts`); module-level state in `misc/git-fixtures.ts` and `misc/step-instrumentation.ts` depends on it.
+- **Mock servers**: started by `playwright.config.ts`'s `webServer`, all loopback-only. Import base URLs from `misc/constants.ts` (via `misc/fixtures`), never hardcode a port. TLS variants need `preferencesFlow.set({ validateSSL: false })` unless the CA is added via `certificatesFlow`; mTLS also needs a client certificate. Toggles on the cloud API mock (`_admin/*` helpers in `misc/fixtures.ts`) must run before the app launches.
+- **Timing**: Page/Flow methods already wait for debounced saves to reach disk, so a spec never needs `page.waitForTimeout()`. For anything else use `expect.poll` / `toPass` with `DEFAULT_TIMEOUT` / `ACTION_TIMEOUT` / `LONG_TIMEOUT` from `misc/constants.ts`.
+- **Page/Flow layering**: a Page exposes plain per-field setters and never takes a whole Model (except returning raw data from `get()`); the owning Flow holds the Model and dispatches to the setters.
+- **Model construction**: use a plain object literal when the constructor takes a single init object; `new <Model>(...)` only for positional-arg Models (e.g. `Project`, `Collection`, `McpClient`, `Folder`, `MockServer`).
+- **No Flow ≠ no support**: some domains have no dedicated Flow (e.g. Command Palette, Runner, Vault Key and Plugins live on `workspaceFlow`/`preferencesFlow`; Konnect and Login/Scratch Pad use a Page directly). Find them by scanning, not by assuming a `<domain>Flow` exists.
+- A new synchronous method returning a `Locator` must be listed in `misc/step-instrumentation.ts`'s `EXCLUDED_METHODS`, otherwise auto-instrumentation wraps it in an async step.
+- Coverage (`COVERAGE=true`) is CI-only; specs never need to know about it.
 
 ## Prefer Flow methods over direct Page access
 
@@ -17,7 +29,7 @@ When a step can be done through a `xxxFlow` method, call that — never reach fo
 
 Flow methods are explicit, not overloaded: each distinct action has its own named method (`workspaceFlow.createProject()` / `.openLocalGitFolder()` / `.cloneGitProject()` / `.createCollection()`, `exportFlow.exportCollection()` / `.exportProject()`, `workspaceFlow.renameRequest()` …) so a call site shows which flow it triggers. When adding a new Flow method, give it its own name rather than another `typeof`/`instanceof`-dispatched overload of an existing one.
 
-Call `pageManager.xxxPage` directly only for the specific action `reference.md` shows has no Flow method covering it (e.g. `pageManager.<domain>RequestPage.setMethod()` — no Flow method changes an already-created request's method) — and only that one call, not the surrounding sequence a Flow method already exists for.
+Call `pageManager.xxxPage` directly only for the specific action your scan (step 3) shows has no Flow method covering it (e.g. `pageManager.<domain>RequestPage.setMethod()` — no Flow method changes an already-created request's method) — and only that one call, not the surrounding sequence a Flow method already exists for.
 
 ## Scope constraint: `tests/` only, nothing lower-layer — except a genuine bug
 
@@ -58,7 +70,7 @@ User prompts are often short ("test environment variable overrides", "add a test
 - **Action**: what does the user actually do (send, connect, disconnect, duplicate, import, call a tool, link an environment/cookie...)?
 - **Expected outcome**: what gets asserted (response body/status/headers, a UI node appearing/disappearing, dialog text, a stream event, a deleted node)?
 
-If any of the four is genuinely ambiguous (protocol unclear, exact expected error text unspecified), ask a short clarifying question rather than guessing. Otherwise, proceed — don't ask about things `reference.md` already answers.
+If any of the four is genuinely ambiguous (protocol unclear, exact expected error text unspecified), ask a short clarifying question rather than guessing. Otherwise, proceed — don't ask about things the framework source already answers.
 
 ### 2. Check existing coverage before writing anything new
 
@@ -72,9 +84,18 @@ Before deciding on a file name or writing any code, decide in this priority orde
 - **Never merge two genuinely distinct scenarios into one test just to cut file count.** Option 2 is for widening a test's existing test point with more data or assertions of the same shape, not for bolting an unrelated behavior onto it. If the fold would need a second, differently-shaped assertion block or a different action entirely, that's two test points — use option 3, per the single-sentence-intent rule (step 8); a broken assertion should always tell you unambiguously which behavior regressed.
 - When reuse or extension applies, say so in the TodoWrite plan (step 5) as "edit existing file X to also cover Y" rather than "create new file," and skip step 7's file-naming step for that scenario.
 
-### 3. Look up the domain in `reference.md`
+### 3. Scan the framework for the domain
 
-Find the domain's row/section: the Flow property name on `flowManager`, the Flow file, the Page file, the Model file, and the exact method signatures already available (create/send/connect/disconnect/get/link/duplicate/delete/...).
+Work out the domain's entry points from the code, not from memory (all paths relative to `packages/insomnia-test/`):
+
+1. `flows/flow-manager.ts` and `pages/page-manager.ts` — the registered Flow/Page properties; pick the one matching the domain (a domain may have no dedicated Flow, or share one with another domain).
+2. The matching `flows/<domain>.flow.ts` — read its public methods, signatures and JSDoc. Include `flows/workspace.flow.ts` and `flows/preferences.flow.ts` too: many features (runner, command palette, vault key, plugins, git clone, ...) are exposed there.
+3. The matching `pages/<domain>.page.ts` — only to confirm whether an action has no Flow wrapper, and whether the method is decorated (e.g. `@throwOnDialog`).
+4. `models/` and `enums/` — the exact Model fields, constructors (init object vs positional) and enum values the Flow methods take.
+5. `misc/constants.ts` (and `misc/fixtures.ts`) — the mock-server base URL constants and timeouts; the matching `misc/*-server.js` if you need to know what routes it serves.
+6. `tests/<domain>/` — skim 1–2 existing specs as the idiom to match.
+
+Use `ls`/`grep` rather than reading everything; stop once you can name every Flow method, Model field and constant the test will use.
 
 ### 4. Decide: pure composition, missing layer code, or an existing bug?
 
@@ -87,7 +108,7 @@ Find the domain's row/section: the Flow property name on `flowManager`, the Flow
 
 Before touching any file, write the concrete plan as a TodoWrite list: which spec file(s) change (new file, or an edit to an existing one per step 2), and *why* each step is needed.
 
-This matters most exactly when step 4 turns up a gap: that's where it's tempting to just quietly patch `flows/`/`pages/`/`models/` to make the test work (a body-type test wanting a native file-dialog stub; a "secure cookie" test wanting an HTTPS mock server). Per the Scope Constraint, don't — write down what's missing instead, and surface it to the user (see `AskUserQuestion`) before writing any spec code that depends on it. Check `reference.md` first — a gap only warrants stopping if `reference.md` and the real `flows/`/`pages/` files genuinely don't cover it. Every protocol mock server (HTTP echo/SSE/WebSocket/Socket.IO/MCP/gRPC) has a secure counterpart sharing one self-signed cert and requiring `preferencesFlow.set({ validateSSL: false })` — see the Mock servers table in `reference.md`.
+This matters most exactly when step 4 turns up a gap: that's where it's tempting to just quietly patch `flows/`/`pages/`/`models/` to make the test work (a body-type test wanting a native file-dialog stub; a "secure cookie" test wanting an HTTPS mock server). Per the Scope Constraint, don't — write down what's missing instead, and surface it to the user (see `AskUserQuestion`) before writing any spec code that depends on it. Scan first (step 3) — a gap only warrants stopping if the real `flows/`/`pages/` files genuinely don't cover it. Every protocol mock server (HTTP echo/SSE/WebSocket/Socket.IO/MCP/gRPC) has a secure counterpart sharing one self-signed cert and requiring `preferencesFlow.set({ validateSSL: false })` — see the constants in `misc/constants.ts`.
 
 This is distinct from a genuine bug (per the Scope Constraint's exception): a gap has nothing to restore (no established correct behavior was ever built), while a bug means the method already promises behavior it isn't delivering. When step 4 identifies a bug rather than a gap, the plan should say so explicitly — e.g. "fix bug in `pages/graphql-request.page.ts`'s `setBody()` (silently no-ops), then write the spec" — so it's visible as its own line item, not folded silently into "write the spec."
 
@@ -95,7 +116,7 @@ Keep the todo list updated as you go (mark items in_progress/completed in real t
 
 ### 6. Probing the real app (investigation only — confirming a bug is in scope, adding new capability never is)
 
-`reference.md` and the source files describe *what* a Flow/Page method does, not always *how it behaves live* (timing, debounce, exact error text). If you need to confirm that before composing a test — or need to precisely describe a gap found in step 4 back to the user, or need to confirm a suspected bug is real before invoking the Scope Constraint's exception — write a short throwaway spec (e.g. `tests/<domain>/_probe.spec.ts`) that drives the flow with raw Playwright calls on `user.page` directly, and after each step print out what actually happened via plain `console.log`. Run it for real:
+The source files describe *what* a Flow/Page method does, not always *how it behaves live* (timing, debounce, exact error text). If you need to confirm that before composing a test — or need to precisely describe a gap found in step 4 back to the user, or need to confirm a suspected bug is real before invoking the Scope Constraint's exception — write a short throwaway spec (e.g. `tests/<domain>/_probe.spec.ts`) that drives the flow with raw Playwright calls on `user.page` directly, and after each step print out what actually happened via plain `console.log`. Run it for real:
 
 ```
 npx playwright test tests/<domain>/_probe.spec.ts --reporter=list
@@ -141,10 +162,10 @@ import { test } from "../../misc/fixtures"; // adjust relative depth to the actu
 import { ProjectType } from "../../enums/project-types";
 import { Project } from "../../models/project";
 import { Collection } from "../../models/collection";
-// ...import the domain's enums/models as needed, per reference.md
+// ...import the domain's enums/models as needed, per your step 3 scan
 
 test("<one sentence, imperative, e.g. 'Verify XXX'>", async ({ user }) => {
-  const { workspaceFlow, xxxRequestFlow } = user.flowManager; // pull exactly the flows reference.md lists for this domain
+  const { workspaceFlow, xxxRequestFlow } = user.flowManager; // pull exactly the flows your scan found for this domain
   const { xxxPage } = user.pageManager; // only if you need direct Page access (e.g. no Flow method covers it) — name the exact Page(s), never the whole object
 
   const project = await workspaceFlow.createProject(
@@ -165,10 +186,10 @@ Rules that apply to every test:
 
 - Every variable name/string that could collide across tests (project/collection/request names, custom header values, etc.) must come from `faker` (`faker.string.alphanumeric(10)` and friends) — never hardcode.
 - Every fixed UI value (HTTP method, content type, project type, context-menu item, import source) must come from `enums/`, never a magic string.
-- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. See the Mock servers table in `reference.md` for the full constant list.
+- Every mock-server base URL (`http://localhost:4060`, `ws://localhost:4040`, `localhost:9000`, etc.) must come from `misc/constants.ts` (`HTTP_SERVER`, `WS_SERVER`, `GRPC_SERVER`, ...; re-exported by `misc/fixtures.ts`), never hardcoded — import it from `misc/fixtures` alongside `test` and compose the path onto it, e.g. `` `${HTTP_SERVER}/post` ``. `misc/constants.ts` has the full constant list.
 - When asserting the shape of a constructed object, use `satisfies <Model>` (not `as`) so TypeScript catches misspelled/nonexistent fields at write time — see the real example in `tests/environment/sub-environment-variable-priority.spec.ts:59`.
-- Model fields are exactly what's in `models/*.ts` / `reference.md` — don't add fields "because it seems logical."
-- **Prefer a plain object literal over `new <Model>(...)` for every Model whose constructor takes a single init object** — `Settings`, `Environment`, `HttpRequest`/`GraphQLRequest`/`GrpcRequest`/`WebSocketRequest`/`SocketIORequest`, `Cookie`, etc. (e.g. `{ validateSSL: false }`, not `new Settings({ validateSSL: false })`; `{ name, kvPairData: [...] }`, not `new Environment({ name, kvPairData: [...] })`). `new <Model>(...)` is only correct for the handful of Models with *positional* constructor args instead of an init object — `Project`, `Collection`, `McpClient`, `Folder`, `MockServer` (e.g. `new Project(name, ProjectType)` above) — those have no literal equivalent. See the full rule in `reference.md`.
+- Model fields are exactly what's in `models/*.ts` — don't add fields "because it seems logical."
+- **Prefer a plain object literal over `new <Model>(...)` for every Model whose constructor takes a single init object** — `Settings`, `Environment`, `HttpRequest`/`GraphQLRequest`/`GrpcRequest`/`WebSocketRequest`/`SocketIORequest`, `Cookie`, etc. (e.g. `{ validateSSL: false }`, not `new Settings({ validateSSL: false })`; `{ name, kvPairData: [...] }`, not `new Environment({ name, kvPairData: [...] })`). `new <Model>(...)` is only correct for the handful of Models with *positional* constructor args instead of an init object — `Project`, `Collection`, `McpClient`, `Folder`, `MockServer` (e.g. `new Project(name, ProjectType)` above) — those have no literal equivalent.
 - **Never add comments to the spec file.** The test name plus the composed Flow calls should read clearly on their own; don't explain *what* a step does or *why* an edge case exists in a `//` comment above it — that belongs in the PR description or commit message, not the file. (The `// adjust relative depth...` and numbered `// 1./2./3.` comments in the skeleton below are annotations for *this document*, describing the skeleton to you — never copy them literally into a real spec file.)
 - **Never destructure the whole `pageManager` or `flowManager` object** (`const { pageManager } = user;` / `const { flowManager } = user;`) just to reach `pageManager.xxxPage.method()`/`flowManager.xxxFlow.method()` inline later — that pierces through the wrapper only to shorten nothing and hides which Pages/Flows the test actually touches. Always destructure the exact named instances you need at the top, the same way for both: `const { xxxRequestFlow } = user.flowManager;` and `const { xxxPage } = user.pageManager;`, then call `xxxPage.method()` directly. Same rule for one-off inline access — never `user.pageManager.xxxPage...`/`user.flowManager.xxxFlow...` reached for mid-body; pull it into the top-of-test destructuring instead, even for a single use.
 
@@ -185,7 +206,7 @@ Rules that apply to every test:
   ```ts
   await expect.poll(async () => { ... }, { timeout: DEFAULT_TIMEOUT }).toEqual(...);
   ```
-  or `await expect(async () => { ... }).toPass({ timeout: DEFAULT_TIMEOUT });` when the check itself is a multi-step callback rather than a single value. `DEFAULT_TIMEOUT` (10s) / `ACTION_TIMEOUT` (30s) / `LONG_TIMEOUT` (60s) come from `misc/constants.ts` (re-exported by `misc/fixtures.ts`) — never a literal like `10000`. Debounced-save races (URL, params/headers rows, auth fields, scripts, cookies, environment variables) are already waited out inside the Page/Flow methods (see "Timing & persistence" in `reference.md`), so don't add a sleep or retry for them in a spec.
+  or `await expect(async () => { ... }).toPass({ timeout: DEFAULT_TIMEOUT });` when the check itself is a multi-step callback rather than a single value. `DEFAULT_TIMEOUT` (10s) / `ACTION_TIMEOUT` (30s) / `LONG_TIMEOUT` (60s) come from `misc/constants.ts` (re-exported by `misc/fixtures.ts`) — never a literal like `10000`. Debounced-save races (URL, params/headers rows, auth fields, scripts, cookies, environment variables) are already waited out inside the Page/Flow methods (see "Framework facts" above), so don't add a sleep or retry for them in a spec.
 - **A dialog popped by an action that's expected to fail** (e.g. an unresolvable environment variable, an unreachable server, a business-error status) is not something you poll for — the Page method that triggers it is decorated with `@throwOnDialog` (`misc/decorators.ts`), so the call itself rejects with an `Error` whose message is the dialog's trimmed text. Assert with `.rejects.toThrow(...)`, not by reading dialog text after the fact:
   ```ts
   await expect(httpRequestFlow.send(request)).rejects.toThrow(
@@ -236,9 +257,9 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No file outside `tests/` was created or modified, unless it was a confirmed bug fix under the Scope Constraint's exception — any *gap* found in `flows/`/`pages/`/`models/` was reported to the user, not patched.
 - [ ] If a framework bug was fixed: it was confirmed as broken (not merely unsupported) via a probe, the fix was minimal and targeted at that bug only (no unrelated refactors/new methods), the probe was re-run to confirm the fix, and the bug + fix were called out to the user as their own item.
 - [ ] If the test documents a real Insomnia *app* bug (not a framework bug, per §9a): it asserts the expected/correct behavior (never the current buggy one), starts with `test.fail();`, and confirmed via a real run that it reports as an expected failure ("✘" but counted as passed), not a hard failure.
-- [ ] `import { expect } from "@playwright/test"` directly (`misc/fixtures` does not re-export it), and `test` comes from the relative path to `misc/fixtures` — except Git Sync specs, which import `test`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures` (see `reference.md`).
+- [ ] `import { expect } from "@playwright/test"` directly (`misc/fixtures` does not re-export it), and `test` comes from the relative path to `misc/fixtures` — except Git Sync specs, which import `test`/`GIT_CREDENTIAL`/`pushServerFile`/`buildCollectionFile`/`getServerBranches`/`getServerCommits` from `misc/git-fixtures`.
 - [ ] The test function takes only `{ user }` — no `workspaceFlow`/`pageManager`/other per-flow fixture in the parameter list.
-- [ ] Every Flow/Page method and every Model field used actually exists in `reference.md` or the real source file — nothing invented.
+- [ ] Every Flow/Page method and every Model field used actually exists in the real source file (confirmed by the step 3 scan) — nothing invented.
 - [ ] Every direct `pageManager.xxxPage` call was necessary because no Flow method covers that action (per "Prefer Flow methods over direct Page access") — never a Page call standing in for a step a Flow method already does.
 - [ ] All names via `faker`; all fixed values via `enums/`.
 - [ ] No hand-written `test.step(...)`.
@@ -251,8 +272,8 @@ Real example: `tests/document/happy-path.spec.ts`.
 - [ ] No `const { pageManager } = user;` / `const { flowManager } = user;` (whole-object destructure) anywhere, and no inline `user.pageManager.xxxPage...`/`user.flowManager.xxxFlow...` mid-body — every Page/Flow instance used is destructured by name at the top, from `user.pageManager`/`user.flowManager` directly.
 - [ ] File path and name follow §7, including its own directory if it uses a fixture file.
 - [ ] No leftover `_probe*.spec.ts` files from step 6.
-- [ ] An upgrade-style spec (old app → current app) marks every test with `upgradePhase(UpgradePhase.Before|After)` and extends `test` with `upgradeFixtures` — see "Upgrade specs" in `reference.md`.
-- [ ] If feasible, actually run it: `npx playwright test <new-file-path>` (from `packages/insomnia-test`; by default launches dev-mode against the sibling `packages/insomnia` source — see reference.md's "App launch" section; set `INSOMNIA_BINARY` or `INSOMNIA_DEV_MODE=false` to target a specific/packaged build instead) — confirm it passes for real, not just that it type-checks.
+- [ ] An upgrade-style spec (old app → current app) marks every test with `upgradePhase(UpgradePhase.Before|After)` and extends `test` with `upgradeFixtures` — find the existing upgrade specs and the `upgradePhase`/`upgradeFixtures` helpers by grep and match them.
+- [ ] If feasible, actually run it: `npx playwright test <new-file-path>` (from `packages/insomnia-test`; by default launches dev-mode against the sibling `packages/insomnia` source — set `INSOMNIA_BINARY` to launch a packaged binary instead, or `INSOMNIA_DEV_MODE=false` for the macOS `/Applications/Insomnia.app` build) — confirm it passes for real, not just that it type-checks.
 - [ ] `npm run lint -w insomnia-test` is clean for the touched files (this workspace has no `type-check`/`test` script of its own — `npx playwright test` is the test runner).
 
 ### 12. Summarize the finished test case for the user
@@ -264,7 +285,3 @@ Once the spec is written (or an existing one extended) and step 11's self-check 
 3. **Assertions** — what the trailing `expect` block actually checks, each on its own line in plain language (e.g. "Response status is 200", "Response body echoes the sent header").
 
 If step 2 concluded this was an edit to an existing file rather than a new one, describe the summary/procedure/assertions for the test *as it now stands* (the widened version), not just the delta that was added. If the test documents a real app bug (§9a) with `test.fail()`, say so explicitly in the summary line (e.g. "documents INS-1234 — expected to fail until fixed").
-
-## Reference
-
-See `reference.md` in this same folder for: the domain → fixture/flow/page/model table, every Flow method's exact signature, Model field lists, enum values, and mock-server URLs/ports.
