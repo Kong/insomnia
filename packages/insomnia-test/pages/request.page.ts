@@ -627,6 +627,26 @@ export abstract class RequestPage extends TabPanelPage {
   }
 
   /**
+   * Sets the request's query parameters through the Params tab's "Bulk
+   * Edit" text editor (one `name: value` line per pair) instead of
+   * per-row key/value editors, which sidesteps the stale-row-list save
+   * race that many separately saved rows can trigger. The pane stays in
+   * bulk mode afterwards, since that is an app-wide setting.
+   * @param params - The parameters to set, replacing any existing ones
+   */
+  async setParamsBulk(params: RequestParameter[]): Promise<void> {
+    await this.switchTab("params");
+    const panel = this.page.locator(this.TABPANEL);
+    const toggle = panel.locator('button:has-text("Bulk Edit")');
+    if ((await toggle.count()) > 0) await toggle.click();
+    await this.setCodeMirrorValue(
+      panel.locator(".CodeMirror").first(),
+      params.map(({ name, value }) => `${name}: ${value ?? ""}`).join("\n"),
+    );
+    await this.waitForPairsSettled(params);
+  }
+
+  /**
    * Sets the request URL by writing into the URL bar's CodeMirror editor.
    * `setCodeMirrorValue()` itself now handles retrying past a revert
    * (e.g. a `{{ }}`/`{% %}` tag's inline widget redrawing and racing the
