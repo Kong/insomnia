@@ -17,8 +17,8 @@ const WORKSPACE_ID = 'wrk_payload';
 const SOCKET_IO_REQUEST_ID = 'socketio-req_payload';
 const WEBSOCKET_REQUEST_ID = 'ws-req_payload';
 
-const exportWorkspace = (workspaceId = WORKSPACE_ID) =>
-  getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
+const exportWorkspace = async (workspaceId = WORKSPACE_ID) =>
+  (await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false })).yaml;
 
 const findNode = (yaml: string, name: string) =>
   YAML.parse(yaml).collection.find((item: { name: string }) => item.name === name);

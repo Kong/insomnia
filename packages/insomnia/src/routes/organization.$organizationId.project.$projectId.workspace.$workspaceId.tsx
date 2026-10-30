@@ -85,6 +85,9 @@ const workspaceFileIssueModalText: Partial<Record<FileIssueKind, { modalTitle: s
     summary:
       'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
   },
+  // `write-blocked` and `export-error` intentionally have no entry — they are
+  // reported as toasts, not this page-blocking modal, since the workspace's own
+  // file may still be valid and the user needs to edit the failing entity.
 };
 
 export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {

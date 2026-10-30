@@ -32,7 +32,8 @@ async function exportThroughDatabase(content: string) {
   }
   const workspace = data.find(models.workspace.isWorkspace);
   expect(workspace).toBeDefined();
-  return getInsomniaV5DataExport({ workspaceId: workspace!._id, includePrivateEnvironments: false });
+  const { yaml } = await getInsomniaV5DataExport({ workspaceId: workspace!._id, includePrivateEnvironments: false });
+  return yaml;
 }
 
 const buildCollection = (folders: { id: string; name: string; created: number }[]) => `type: collection.insomnia.rest/5.0
@@ -103,7 +104,13 @@ describe('canonical-file', () => {
 
     it('returns content it cannot replay unchanged', async () => {
       const notInsomnia = 'extends: spectral:oas\n';
-      // The export needs a base environment, which this MCP client file doesn't have
+
+      expect(await canonicalizeInsomniaFileContent(notInsomnia)).toBe(notInsomnia);
+    });
+
+    // Environments are optional in every workspace scope, so an MCP client file whose
+    // workspace has no base environment is replayed by the export instead of being skipped.
+    it('replays an MCP client file without a base environment', async () => {
       const mcpClient = `type: mcpClient.insomnia/5.0
 name: MCP
 meta:
@@ -120,8 +127,9 @@ mcpRequest:
     modified: 1000
 `;
 
-      expect(await canonicalizeInsomniaFileContent(notInsomnia)).toBe(notInsomnia);
-      expect(await canonicalizeInsomniaFileContent(mcpClient)).toBe(mcpClient);
+      const canonicalContent = await getCanonicalInsomniaFileContent(mcpClient);
+      expect(canonicalContent).not.toBeNull();
+      expect(canonicalContent).toBe(await exportThroughDatabase(mcpClient));
     });
 
     it('returns content unchanged when the replay fills in an entity it does not have', async () => {
