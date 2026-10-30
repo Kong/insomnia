@@ -21,11 +21,13 @@ test('Verify a modified non-Insomnia file and an added or deleted file show no u
   await pushServerFile({ path: otherFileName, content: `openapi: 3.0.0\ninfo:\n  title: ${faker.string.alpha(10)}\n` });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-undiscardable-'));
-  const { project, unknownFieldFiles } = await workspaceFlow.cloneWithScanReport(
-    new Project(faker.string.alphanumeric(10), ProjectType.Git),
+  const projectName = faker.string.alphanumeric(10);
+  const { unknownFieldFiles } = await workspaceFlow.cloneWithScanReport(
+    new Project(projectName, ProjectType.Git),
     GIT_CREDENTIAL.name,
     { cloneParentDir },
   );
+  const project = (await workspaceFlow.getProject(projectName))!;
   const deletedFile = faker.string.alpha(10).toLowerCase();
   const deletedCollection = await workspaceFlow.createCollection(
     project,

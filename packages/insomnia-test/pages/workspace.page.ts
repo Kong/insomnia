@@ -2258,6 +2258,18 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Reads the titles of any visible "resource not found" toasts, so a failing
+   * assertion names the route that raised it.
+   * @returns The toasts' full text, one entry per toast
+   */
+  async getResourceNotFoundToastTexts(): Promise<string[]> {
+    return this.page
+      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
+      .locator("xpath=..")
+      .allInnerTexts();
+  }
+
+  /**
    * Counts the "resource not found" warning toasts currently on screen.
    * @returns The number of matching toasts
    */

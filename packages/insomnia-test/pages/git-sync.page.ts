@@ -824,6 +824,11 @@ export class GitSyncPage extends BasePage {
       await this.selectEntityCardTab(entityName, tab, typeLabel);
     }
     const editor = card.locator('.monaco-diff-editor').first();
+    // The app only creates the Monaco editor once its (empty) container is within 300px of the
+    // viewport, so there is nothing to scroll to yet: bring the card itself into view first.
+    await card.scrollIntoViewIfNeeded();
+    await card.getByRole('tabpanel').first().scrollIntoViewIfNeeded();
+    await expect(editor).toBeAttached({ timeout: DEFAULT_TIMEOUT });
     await editor.scrollIntoViewIfNeeded();
     await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     await expect(editor.locator('.diff-hidden-lines').first()).toBeAttached({ timeout: DEFAULT_TIMEOUT });
@@ -1135,9 +1140,12 @@ export class GitSyncPage extends BasePage {
       await this.page.keyboard.press(key);
       let previous = -1;
       let count = 0;
+      // The decorations render a beat after the editor's lines do, so an early 0 is not "settled":
+      // give a first highlight a grace period, then require the count to stop changing.
+      const deadlineForFirstHighlight = Date.now() + DEFAULT_TIMEOUT / 2;
       await expect(async () => {
         count = await this.getUnknownFieldHighlightCount();
-        const isSettled = count === previous;
+        const isSettled = count === previous && (count > 0 || Date.now() > deadlineForFirstHighlight);
         previous = count;
         expect(isSettled).toBe(true);
       }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });

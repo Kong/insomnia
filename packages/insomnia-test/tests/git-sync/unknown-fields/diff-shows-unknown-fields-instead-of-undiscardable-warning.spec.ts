@@ -24,11 +24,13 @@ test('Verify cloning lists the file with unknown fields and the Commit Changes d
   await pushServerFile({ path: fileName, content });
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-unknown-fields-'));
-  const { project, unknownFieldFiles, unknownFieldsWarningText } = await workspaceFlow.cloneWithScanReport(
-    new Project(faker.string.alphanumeric(10), ProjectType.Git),
+  const projectName = faker.string.alphanumeric(10);
+  const { unknownFieldFiles, unknownFieldsWarningText } = await workspaceFlow.cloneWithScanReport(
+    new Project(projectName, ProjectType.Git),
     GIT_CREDENTIAL.name,
     { cloneParentDir },
   );
+  const project = await workspaceFlow.getProject(projectName);
   const collection = await workspaceFlow.getCollection({ name: collectionName });
   const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
   await expect
@@ -45,7 +47,7 @@ test('Verify cloning lists the file with unknown fields and the Commit Changes d
 
   expect(unknownFieldFiles).toEqual([fileName]);
   expect(unknownFieldsWarningText).toContain('Unknown Fields Detected');
-  expect(project.id).toBeTruthy();
+  expect(project?.id).toBeTruthy();
   expect(collection).toBeDefined();
   expect(gitDiff).toContain(`-    ${unknownField}: ${unknownValue}`);
   expect(hasBanner).toBe(true);

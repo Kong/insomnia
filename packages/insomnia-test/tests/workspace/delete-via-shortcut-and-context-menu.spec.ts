@@ -91,5 +91,5 @@ test("Verify Deleting a Request, Folder and Collection With Open Tabs via the De
       { timeout: DEFAULT_TIMEOUT },
     )
     .toEqual([false, false, false, false]);
-  expect(await workspacePage.countResourceNotFoundToasts()).toBe(0);
+  expect(await workspacePage.getResourceNotFoundToastTexts()).toEqual([]);
 });

@@ -10,6 +10,8 @@ import { Folder } from '../../../models/folder';
 test('Verify a Cloud Sync collection committed with every document type shows no unknown fields or unsupported warnings when each document is edited and committed again', async ({
   user,
 }) => {
+  // Creates every document type and commits each one twice, which alone takes most of the default 90s.
+  test.setTimeout(240_000);
   const {
     workspaceFlow,
     folderFlow,
