@@ -75,8 +75,8 @@ export class GraphQLRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.graphqlRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await page.navigate();
 
     await page.auth.fetchOAuth2Tokens();
@@ -95,8 +95,8 @@ export class GraphQLRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.graphqlRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await page.navigate();
     await this.applyAuthentication(page.auth, authentication);
   }
@@ -112,8 +112,8 @@ export class GraphQLRequestFlow extends BaseFlow {
     const graphqlRequestPage = this.pageManager.graphqlRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await graphqlRequestPage.navigate();
 
     await graphqlRequestPage.send();

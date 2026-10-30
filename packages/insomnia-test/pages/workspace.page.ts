@@ -927,6 +927,35 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Like `findItemNode()`, but for nodes that are expected to exist: waits
+   * up to `DEFAULT_TIMEOUT` (a loaded CI runner can take well over the 2s
+   * `findItemNode()` budget to render a new node) and throws naming the
+   * node instead of returning `undefined`. Use `findItemNode()` to assert
+   * a node is absent.
+   * @param item - Identifies the target node by id (preferred) or name
+   * @param type - If given, restricts the match to nodes of this type
+   * @param parent - If given, restricts the search to this node's subtree
+   * @returns The matching node
+   * @throws If no matching node appears within `DEFAULT_TIMEOUT`
+   */
+  async requireItemNode(
+    item: { id?: string; name: string },
+    type?: TreeNodeType,
+    parent?: TreeNode,
+  ): Promise<TreeNode> {
+    const node = await this.poll(
+      () => this.findItemNode(item, type, parent),
+      DEFAULT_TIMEOUT,
+    );
+    if (!node) {
+      throw new Error(
+        `Tree node not found within ${DEFAULT_TIMEOUT}ms: ${JSON.stringify({ ...item, type, parent: parent?.name })}`,
+      );
+    }
+    return node;
+  }
+
+  /**
    * Polls the tree until a node matching the given name (and optional
    * type) appears, since newly created nodes may not render immediately.
    * @param name - The node name to search for

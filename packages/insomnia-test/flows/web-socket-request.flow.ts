@@ -67,8 +67,8 @@ export class WebSocketRequestFlow extends BaseFlow {
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.disconnect(callback, timeout);
@@ -118,8 +118,8 @@ export class WebSocketRequestFlow extends BaseFlow {
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.connect(options);
@@ -141,8 +141,8 @@ export class WebSocketRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.webSocketRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await page.navigate();
     await this.applyAuthentication(page.auth, authentication);
   }
@@ -168,8 +168,8 @@ export class WebSocketRequestFlow extends BaseFlow {
     const webSocketRequestPage = this.pageManager.webSocketRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await webSocketRequestPage.navigate();
 
     await webSocketRequestPage.sendMessage(body, callback, timeout);

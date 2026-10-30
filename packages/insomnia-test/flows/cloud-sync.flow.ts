@@ -11,8 +11,8 @@ export class CloudSyncFlow extends BaseFlow {
    */
   async openProjectDashboard(project: Project): Promise<void> {
     const { workspacePage, cloudSyncPage } = this.pageManager;
-    const node = await workspacePage.findItemNode({ name: project.name });
-    await workspacePage.clickNode(node!);
+    const node = await workspacePage.requireItemNode({ name: project.name });
+    await workspacePage.clickNode(node);
     await cloudSyncPage.waitForDashboardLoaded();
   }
 

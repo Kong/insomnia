@@ -116,8 +116,8 @@ export class TemplateTagFlow extends BaseFlow {
     const templateTag = this.pageManager.templateTagPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await httpRequestPage.navigate();
 
     await templateTag.clickSend();
