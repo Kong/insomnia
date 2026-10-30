@@ -1,3 +1,5 @@
+const path = require('path');
+
 const BINARY_PREFIX = 'Insomnia.Core';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
@@ -197,6 +199,14 @@ const config = {
     base: 'core22',
   },
 };
+
+// Every signed file costs one code-signing token. The release workflow signs the secure wrapper Insomnia.exe
+// before `package:windows:dist` (see build-secure-wrapper.sh), but Squirrel signs the app exe again.
+// signExts entries starting with "!" exclude files whose path ends with that text from signing.
+// It is only set for the prepackaged dist step. In the unpacked step the stock Insomnia.exe still must be signed.
+if (process.env.SKIP_SIGN_PREPACKAGED_APP_EXE === 'true') {
+  config.win.signExts = ['!' + path.join('win-unpacked', 'Insomnia.exe')];
+}
 
 const {
   env: { BUILD_TARGETS },

@@ -232,12 +232,14 @@ jobs:
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into the installer
+      # SKIP_SIGN_PREPACKAGED_APP_EXE: the wrapper Insomnia.exe is signed above, Squirrel must not sign it again
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
+          SKIP_SIGN_PREPACKAGED_APP_EXE: 'true'
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
           SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
