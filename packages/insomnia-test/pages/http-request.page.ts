@@ -98,7 +98,7 @@ export class HttpRequestPage extends RequestPage {
   private async chooseBodyFile(filePath: string): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
     await this.stubFileChooser(filePath);
-    await panel.locator('button:has-text("Choose File")').click();
+    await panel.getByRole("button", { name: "Choose File" }).click();
   }
 
   private async getBodyFileName(): Promise<string | undefined> {
@@ -144,12 +144,12 @@ export class HttpRequestPage extends RequestPage {
 
   private async setBodyParams(params: RequestBodyParameter[]): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
-    const deleteAllBtn = panel.locator('button:has-text("Delete all")');
+    const deleteAllBtn = panel.getByRole("button", { name: "Delete all" });
     if (await deleteAllBtn.isEnabled()) {
       await deleteAllBtn.click();
     }
 
-    const addBtn = panel.locator('button:has-text("Add")');
+    const addBtn = panel.getByRole("button", { name: "Add", exact: true });
     const rows = panel.locator('[role="listbox"] [role="option"]');
 
     for (const [i, param] of params.entries()) {
@@ -187,7 +187,7 @@ export class HttpRequestPage extends RequestPage {
         await expect(fileModeOption).toBeVisible({ timeout: DEFAULT_TIMEOUT });
         await fileModeOption.click();
         await this.stubFileChooser(param.fileName);
-        await row.locator('button:has-text("Choose File")').click();
+        await row.getByRole("button", { name: "Choose File" }).click();
       } else {
         await setValue();
       }

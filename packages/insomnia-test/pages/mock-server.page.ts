@@ -14,13 +14,10 @@ type ResponseTab = "preview" | "headers" | "timeline" | "history";
 export class MockServerPage extends BasePage {
   private readonly REQUEST_PANE = '[data-testid="request-pane"]';
   private readonly RESPONSE_PANE = '[data-testid="response-pane"]';
-  private readonly BODY_EDITOR = `${this.REQUEST_PANE} #mock-response-body-editor + .CodeMirror`;
-  private readonly HISTORY_ROWS = `${this.RESPONSE_PANE} [role="tabpanel"] [class*="grid-cols"] > div`;
-  private readonly NEW_ROUTE_BUTTON = 'button:has-text("New Mock Route")';
+  private readonly BODY_EDITOR = `${this.REQUEST_PANE} [data-testid="CodeEditor"] .CodeMirror`;
+  private readonly HISTORY_ROWS = `${this.RESPONSE_PANE} [role="tabpanel"] div:has(> div:text-is("Method")) > div`;
   private readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
   private readonly ROUTE_ROW = '[aria-label="Mock Routes"] [role="row"]';
-  private readonly STATUS_CODE_INPUT = "#mock-response-status-code-editor";
-  private readonly STATUS_TEXT_INPUT = "#mock-response-status-text-editor";
 
   /**
    * Waits for the Mock Server view's route sidebar to be visible.
@@ -57,7 +54,10 @@ export class MockServerPage extends BasePage {
    * `data-key` it settled onto.
    */
   async createRoute(path: string, method?: HttpMethod): Promise<string> {
-    await this.page.locator(this.NEW_ROUTE_BUTTON).first().click();
+    await this.page
+      .getByRole("button", { name: "New Mock Route" })
+      .first()
+      .click();
     const dialog = this.page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Path" }).fill(path);
     if (method) {
@@ -121,12 +121,11 @@ export class MockServerPage extends BasePage {
    * Reads every route name listed in the sidebar, in order.
    */
   async getRoutePaths(): Promise<string[]> {
+    // Each row's aria-label is the route's name (the GridListItem's textValue).
     return this.page
       .locator(this.ROUTE_ROW)
       .evaluateAll((rows) =>
-        rows.map(
-          (row) => row.querySelector("span.truncate")?.textContent?.trim() ?? "",
-        ),
+        rows.map((row) => row.getAttribute("aria-label")?.trim() ?? ""),
       );
   }
 
@@ -189,7 +188,10 @@ export class MockServerPage extends BasePage {
    */
   async setStatusCode(statusCode: number): Promise<void> {
     await this.switchRequestTab("status");
-    await this.page.locator(this.STATUS_CODE_INPUT).fill(String(statusCode));
+    await this.page
+      .locator(this.REQUEST_PANE)
+      .getByLabel("Status Code", { exact: true })
+      .fill(String(statusCode));
     await this.waitForPersisted(
       ["insomnia.MockRoute.db"],
       (doc) => doc.statusCode === statusCode,
@@ -202,7 +204,10 @@ export class MockServerPage extends BasePage {
    */
   async setStatusText(statusText: string): Promise<void> {
     await this.switchRequestTab("status");
-    await this.page.locator(this.STATUS_TEXT_INPUT).fill(statusText);
+    await this.page
+      .locator(this.REQUEST_PANE)
+      .getByLabel("Status Text", { exact: true })
+      .fill(statusText);
     await this.waitForFieldPersisted(
       ["insomnia.MockRoute.db"],
       (doc) => doc.statusText,
@@ -216,8 +221,9 @@ export class MockServerPage extends BasePage {
   async setBodyType(bodyType: MockBodyType): Promise<void> {
     await this.switchRequestTab("content-type");
     await this.page
-      .locator(`${this.REQUEST_PANE} [role="tabpanel"] button`)
-      .filter({ hasText: /^Mock / })
+      .locator(this.REQUEST_PANE)
+      .getByRole("tabpanel")
+      .getByRole("button", { name: /^Mock / })
       .first()
       .click();
     await this.page
@@ -247,7 +253,7 @@ export class MockServerPage extends BasePage {
   async setHeaders(headers: RequestHeader[]): Promise<void> {
     await this.switchRequestTab("headers");
     const panel = this.page.locator(`${this.REQUEST_PANE} [role="tabpanel"]`);
-    const deleteAll = panel.locator('button:has-text("Delete all")');
+    const deleteAll = panel.getByRole("button", { name: "Delete all" });
     if (await deleteAll.isEnabled()) {
       await deleteAll.click();
     }
@@ -268,7 +274,7 @@ export class MockServerPage extends BasePage {
       );
       await this.setCodeMirrorValue(value, header.value);
       if (header.disabled) {
-        await row.locator('button[aria-pressed="true"]').click();
+        await row.getByRole("button", { pressed: true }).click();
       }
       await this.waitForRowPersisted(
         ["insomnia.MockRoute.db"],
@@ -308,7 +314,9 @@ export class MockServerPage extends BasePage {
       ).toBeGreaterThan(before);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     await expect(
-      this.page.locator(`${this.RESPONSE_PANE} [aria-live="polite"] .tag`).first(),
+      this.page
+        .locator(this.RESPONSE_PANE)
+        .getByTestId("response-status-tag"),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -396,8 +404,8 @@ export class MockServerPage extends BasePage {
 
   private async waitForRouteId(path: string): Promise<string> {
     const row = this.page
-      .locator(this.ROUTE_ROW)
-      .filter({ has: this.page.locator("span.truncate", { hasText: path }) })
+      .getByRole("grid", { name: "Mock Routes" })
+      .getByRole("row", { name: path })
       .last();
     await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     const key = await this.waitForStableAttribute(row, "data-key");

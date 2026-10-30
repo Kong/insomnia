@@ -83,7 +83,7 @@ export class VariableSourcePage extends BasePage {
    */
   async readVariableModal(): Promise<VariableSourceModal> {
     const dialog = this.page.getByRole("dialog");
-    const preview = dialog.locator("textarea");
+    const preview = dialog.getByLabel("Live Preview");
     await expect(preview).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     // The Source row is recomputed asynchronously after every template change,
     // so read an atomic snapshot (no visible-then-innerText race) and wait
@@ -91,7 +91,9 @@ export class VariableSourcePage extends BasePage {
     const snapshot = () =>
       dialog.evaluate((el, sel) => {
         const row = el.querySelector<HTMLElement>(sel);
-        const textarea = el.querySelector("textarea");
+        const textarea = el.querySelector<HTMLTextAreaElement>(
+          'textarea[aria-label="Live Preview"]',
+        );
         return {
           source: row ? row.innerText.replace(/\s+/g, " ").trim() : undefined,
           preview: textarea?.value ?? "",
@@ -117,7 +119,7 @@ export class VariableSourcePage extends BasePage {
    * `expected`, then returns the settled modal state.
    */
   async waitForModalPreview(expected: string): Promise<VariableSourceModal> {
-    await expect(this.page.getByRole("dialog").locator("textarea")).toHaveValue(
+    await expect(this.page.getByRole("dialog").getByLabel("Live Preview")).toHaveValue(
       expected,
       { timeout: DEFAULT_TIMEOUT * 1.5 },
     );
@@ -141,7 +143,7 @@ export class VariableSourcePage extends BasePage {
   async setModalCustomTemplate(template: string): Promise<void> {
     await this.page
       .getByRole("dialog")
-      .locator('input[type="text"]')
+      .getByLabel("Custom", { exact: true })
       .fill(template);
   }
 

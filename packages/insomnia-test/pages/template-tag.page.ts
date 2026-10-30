@@ -19,14 +19,16 @@ export class TemplateTagPage extends BasePage {
   }
 
   /**
-   * Clicks the `.nunjucks-tag` span whose `data-template` matches
+   * Clicks the nunjucks-tag span whose `data-template` matches
    * `template` exactly (e.g. one just typed into a CodeMirror field via
    * another Page's setter, which Insomnia's own syntax highlighting turns
    * into a clickable span), and waits for its "Edit Tag" modal to open.
    */
   async openTagByTemplate(template: string): Promise<void> {
     const escaped = template.replace(/["\\]/g, "\\$&");
-    await this.page.locator(`.nunjucks-tag[data-template="${escaped}"]`).click();
+    await this.page
+      .locator(`[data-nunjucks-tag="true"][data-template="${escaped}"]`)
+      .click();
     await this.navigate();
   }
 
@@ -44,14 +46,14 @@ export class TemplateTagPage extends BasePage {
    * Reads the `hash` tag's "Algorithm" argument (index 0).
    */
   async getAlgorithm(): Promise<string> {
-    return this.getArgumentField(0).locator("select").inputValue();
+    return this.getArgumentField(0).getByRole("combobox").inputValue();
   }
 
   /**
    * Switches the `hash` tag's "Algorithm" argument (index 0).
    */
   async setAlgorithm(algorithm: HashAlgorithm): Promise<void> {
-    const select = this.getArgumentField(0).locator("select");
+    const select = this.getArgumentField(0).getByRole("combobox");
     await select.selectOption(algorithm);
     // Confirmed live: reading .inputValue() immediately after
     // selectOption() can momentarily still report the old value in this
@@ -69,14 +71,14 @@ export class TemplateTagPage extends BasePage {
    * Reads the `hash` tag's "Digest Encoding" argument (index 1).
    */
   async getDigestEncoding(): Promise<string> {
-    return this.getArgumentField(1).locator("select").inputValue();
+    return this.getArgumentField(1).getByRole("combobox").inputValue();
   }
 
   /**
    * Switches the `hash` tag's "Digest Encoding" argument (index 1).
    */
   async setDigestEncoding(encoding: DigestEncoding): Promise<void> {
-    const select = this.getArgumentField(1).locator("select");
+    const select = this.getArgumentField(1).getByRole("combobox");
     await select.selectOption(encoding);
     await expect(select).toHaveValue(encoding, { timeout: DEFAULT_TIMEOUT });
     await this.waitForPreviewSettled();

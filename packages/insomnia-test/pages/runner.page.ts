@@ -25,15 +25,29 @@ const RUNNER_RESULT_FILTERS: RunnerResultFilter[] = [
 export class RunnerPage extends BasePage {
   private readonly REQUEST_PANE = '[data-testid="request-pane"]';
   private readonly RESULT_PANE = "#pane-two";
-  // Renamed from "Request Collection" — INS-3528.
-  private readonly REQUEST_LIST = `[data-testid="request-pane"] [role="grid"][aria-label="Request API Collection"]`;
   private readonly ITERATIONS_INPUT = `${this.REQUEST_PANE} input[name="Iterations"]`;
   private readonly DELAY_INPUT = `${this.REQUEST_PANE} input[name="Delay"]`;
-  private readonly UPLOAD_DATA_BUTTON = `${this.REQUEST_PANE} button:has-text("Upload Data")`;
-  private readonly RUN_BUTTON = `${this.REQUEST_PANE} button:has-text("Run")`;
   private readonly KEEP_LOGS_CHECKBOX = `${this.REQUEST_PANE} input[name="enable-log"]`;
   private readonly BAIL_CHECKBOX = `${this.REQUEST_PANE} input[name="bail"]`;
-  private readonly CANCEL_ALL_BUTTON = `${this.RESULT_PANE} button:has-text("Cancel all")`;
+
+  private get uploadDataButton(): Locator {
+    return this.page
+      .locator(this.REQUEST_PANE)
+      .getByRole("button", { name: "Upload Data", exact: true });
+  }
+
+  // `exact` keeps this off the neighbouring "Run Options" dropdown trigger.
+  private get runButton(): Locator {
+    return this.page
+      .locator(this.REQUEST_PANE)
+      .getByRole("button", { name: "Run", exact: true });
+  }
+
+  private get cancelAllButton(): Locator {
+    return this.page
+      .locator(this.RESULT_PANE)
+      .getByRole("button", { name: "Cancel all", exact: true });
+  }
 
   /**
    * Waits for the "Run" button to become visible and the request-order
@@ -41,11 +55,11 @@ export class RunnerPage extends BasePage {
    * list renders asynchronously slightly after the button itself appears.
    */
   async navigate(): Promise<void> {
-    await expect(this.page.locator(this.RUN_BUTTON)).toBeVisible({
+    await expect(this.runButton).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
     await expect(
-      this.page.locator(`${this.REQUEST_LIST} [role="row"]`).first(),
+      this.page.locator(this.REQUEST_PANE).getByTestId(/^runner-request-list-/).first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -121,7 +135,7 @@ export class RunnerPage extends BasePage {
    * rows overrides the Iterations input to N.
    */
   async uploadData(filePath: string): Promise<void> {
-    await this.page.locator(this.UPLOAD_DATA_BUTTON).click();
+    await this.uploadDataButton.click();
     const dialog = this.page.locator('[role="dialog"]');
     await dialog.locator('input[type="file"]').setInputFiles(filePath);
     const uploadButton = dialog.getByRole("button", {
@@ -138,7 +152,7 @@ export class RunnerPage extends BasePage {
    * selected requests.
    */
   async clickRun(): Promise<void> {
-    await this.page.locator(this.RUN_BUTTON).click();
+    await this.runButton.click();
   }
 
   /**
@@ -146,7 +160,7 @@ export class RunnerPage extends BasePage {
    * flight, canceling the rest of the run.
    */
   async cancelRun(): Promise<void> {
-    await this.page.locator(this.CANCEL_ALL_BUTTON).click();
+    await this.cancelAllButton.click();
   }
 
   /**
@@ -168,8 +182,8 @@ export class RunnerPage extends BasePage {
    */
   async getStatus(): Promise<RunnerLiveStatus | undefined> {
     const label = this.page
-      .locator(`${this.RESULT_PANE} span`)
-      .filter({ hasText: /^(Running|Finished) \d+ \/ \d+ requests/ })
+      .locator(this.RESULT_PANE)
+      .getByText(/^(Running|Finished) \d+ \/ \d+ requests/)
       .first();
     if ((await label.count()) === 0) return undefined;
     const text = (await label.innerText()).trim();
@@ -207,16 +221,22 @@ export class RunnerPage extends BasePage {
    * name, HTTP method, and whether it's selected to run.
    */
   async getRequestOrder(): Promise<RunnerRequestItem[]> {
-    const rows = this.page.locator(`${this.REQUEST_LIST} [role="row"]`);
+    const rows = this.page.locator(this.REQUEST_PANE).getByTestId(/^runner-request-list-/);
     const count = await rows.count();
     const items: RunnerRequestItem[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
+      // The row's data-testid carries the request name; the method is the
+      // text rendered just before it.
+      const name = (
+        (await row.getAttribute("data-testid")) ?? ""
+      ).replace(/^runner-request-list-/, "");
+      const text = (await row.innerText()).trim();
       items.push({
-        name: (await row.locator("span").last().innerText()).trim(),
-        method: (
-          await row.locator('span[class*="http-method-"]').innerText()
-        ).trim(),
+        name,
+        method: text.endsWith(name)
+          ? text.slice(0, text.length - name.length).trim()
+          : "",
         selected: (await row.getAttribute("aria-selected")) === "true",
       });
     }
@@ -228,10 +248,15 @@ export class RunnerPage extends BasePage {
    */
   async getTestResultCount(): Promise<RunnerTestResultCount> {
     const text = (
-      await this.page.locator(`${this.RESULT_PANE} .test-result-count`)
+      await this.page
+        .locator(this.RESULT_PANE)
+        .getByRole("tab", { name: /^Results/ })
         .innerText()
     ).trim();
-    const [passed, total] = text.split("/").map((n) => Number(n.trim()));
+    const [passed, total] = text
+      .replace(/^Results/, "")
+      .split("/")
+      .map((n) => Number(n.trim()));
     return { passed, total };
   }
 
@@ -259,7 +284,7 @@ export class RunnerPage extends BasePage {
     for (let i = 0; i < count; i++) {
       const block = blocks.nth(i);
       const label = (
-        await block.locator(".font-bold.uppercase").innerText()
+        await block.getByText(/^\s*Iteration \d+\s*$/).innerText()
       ).trim();
       const rows = block.locator('[data-testid^="request-test-result-"]');
       const rowCount = await rows.count();

@@ -439,10 +439,8 @@ export class CloudSyncPage extends BasePage {
    */
   async waitForBranchCreationError(message: string): Promise<void> {
     await expect(
-      this.branchesDialog
-        .locator('[data-icon="triangle-exclamation"]')
-        .locator("xpath=following-sibling::span"),
-    ).toHaveText(message, { timeout: DEFAULT_TIMEOUT });
+      this.branchesDialog.getByText(message, { exact: true }),
+    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

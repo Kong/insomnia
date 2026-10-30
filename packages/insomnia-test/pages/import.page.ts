@@ -13,24 +13,22 @@ export class ImportPage extends BasePage {
   private readonly FILE_INPUT =
     '[role="dialog"] input[data-test-id="import-file-input"]';
   private readonly HEADER = '[role="dialog"] .modal__header__children';
-  private readonly IMPORT_BUTTON = '[role="dialog"] button:has-text("Import")';
   private readonly MCP_URL_INPUT = '[role="dialog"] input[name="mcp"]';
   private readonly PROJECT_SELECT =
     '[role="dialog"] select[aria-label="Select Project"]';
-  private readonly SCAN_BUTTON = '[role="dialog"] button:has-text("Scan")';
   private readonly SOURCE_RADIO = (source: ImportSource) =>
     `[role="dialog"] label[data-test-id="import-from-${source}"]`;
   private readonly URL_INPUT = '[role="dialog"] input[name="uri"]';
 
   async clickImport(): Promise<void> {
-    await this.page.locator(this.IMPORT_BUTTON).click();
+    await this.page.getByRole("dialog").getByRole("button", { name: "Import" }).click();
     await expect(this.page.locator(this.DIALOG)).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
   }
 
   async clickScan(): Promise<void> {
-    await this.page.locator(this.SCAN_BUTTON).click();
+    await this.page.getByRole("dialog").getByRole("button", { name: "Scan" }).click();
     await expect(this.page.locator(this.PROJECT_SELECT)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });

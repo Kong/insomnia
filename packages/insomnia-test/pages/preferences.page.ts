@@ -87,7 +87,7 @@ export class PreferencesPage extends BasePage {
    * to appear.
    */
   async open(): Promise<void> {
-    await this.page.getByRole("button", { name: "Preferences" }).click();
+    await this.page.getByTestId("settings-button").click();
     await this.navigate();
   }
 
@@ -209,8 +209,7 @@ export class PreferencesPage extends BasePage {
    */
   async clickExportProject(name: string): Promise<void> {
     await this.dialog
-      .getByRole("button")
-      .filter({ hasText: "Export" })
+      .getByTestId("export-project-button")
       .filter({ hasText: `"${name}" Project` })
       .click();
   }
@@ -617,7 +616,15 @@ export class PreferencesPage extends BasePage {
 
   private getScriptSandboxRuleLabel(group: ScriptSandboxRuleGroup) {
     return this.dialog
-      .locator(`div:has(> h4:text-is("${group}"))`)
+      .locator("div")
+      .filter({
+        has: this.page.getByRole("heading", {
+          name: group,
+          level: 4,
+          exact: true,
+        }),
+      })
+      .last()
       .locator("label[data-react-aria-pressable]");
   }
 
@@ -1053,7 +1060,9 @@ export class PreferencesPage extends BasePage {
    */
   async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
     const smartCommitsSwitch = this.dialog
-      .locator("div.justify-between", { hasText: "Smart Commits" })
+      .locator("div")
+      .filter({ has: this.page.getByText("Smart Commits", { exact: true }) })
+      .filter({ has: this.page.getByRole("switch") })
       .last()
       .getByRole("switch");
     if ((await smartCommitsSwitch.isChecked()) !== enabled) {

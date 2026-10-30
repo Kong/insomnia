@@ -213,12 +213,12 @@ export class Tree {
         name: /^Expand /,
       });
       try {
-        await stableRow.scrollIntoViewIfNeeded({ timeout: 2000 });
-        await expandButton.click({ timeout: 2000 });
-        await expect(expandButton)
-          .toBeHidden({ timeout: 100 })
-          .catch(() => {});
-      } catch {}
+        await stableRow.scrollIntoViewIfNeeded({ timeout: DEFAULT_TIMEOUT });
+        await expandButton.click({ timeout: DEFAULT_TIMEOUT });
+      } catch (error) {
+        throw new Error(`Failed to expand tree row "${key}"`, { cause: error });
+      }
+      await expect(expandButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     }
   }
 
@@ -275,11 +275,10 @@ export class WorkspacePage extends BasePage {
   private readonly LINT_ENTRY_ROW = "div[aria-expanded]";
   private readonly LINT_PANEL = '[data-testid="lint-panel"]';
   private readonly LINT_PANEL_TOGGLE = '[data-testid="lint-panel-toggle"]';
-  private readonly NEW_SUITE_BUTTON = 'button:has-text("New test suite")';
   private readonly NEW_TEST_BUTTON = 'button[aria-label="New test"]';
   private readonly NO_LINT_PROBLEMS = "No lint problems";
-  private readonly PANE_ONE = ".pane-one";
-  private readonly PANE_TWO = ".pane-two";
+  private readonly PANE_ONE = '[data-panel-id="spec-pane-one"]';
+  private readonly PANE_TWO = '[data-panel-id="pane-two"]';
   private readonly PREVIEW_TOGGLE = '[data-testid="preview-toggle"]';
   private readonly REMOVE_RULESET_BUTTON =
     'button[aria-label="Remove custom ruleset"]';
@@ -536,7 +535,7 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.locator("button").click({ force: true });
+    await dropdown.getByRole("button").click({ force: true });
     await this.page
       .getByRole("menuitem", { name: target, exact: true })
       .click();
@@ -566,7 +565,7 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.locator("button").click({ force: true });
+    await dropdown.getByRole("button").click({ force: true });
     await this.page
       .getByRole("menuitem", { name: client, exact: true })
       .click();
@@ -1118,7 +1117,7 @@ export class WorkspacePage extends BasePage {
     const row = this.page
       .getByTestId("project-navigation-tree-container")
       .locator(`div[role="row"][data-key="${node._id}"]`);
-    const label = await row.locator('span[class*="w-10"]').first().innerText();
+    const label = await row.locator("span").first().innerText();
     return label.trim();
   }
 
@@ -1147,7 +1146,7 @@ export class WorkspacePage extends BasePage {
       .getByTestId("project-navigation-tree-container")
       .locator(`div[role="row"][data-key="${node._id}"]`);
     const icon = await row
-      .locator('div[class*="bg-(--color-"] svg[data-icon]')
+      .locator('svg[data-icon]:not([data-icon^="chevron"])')
       .first()
       .getAttribute("data-icon");
     return icon === "mcp" ? "mcpClient" : "collection";
@@ -1339,14 +1338,11 @@ export class WorkspacePage extends BasePage {
     // reading it back immediately can catch the DOM before that render has
     // happened. Draining the renderer's task queue first ensures it has.
     await this.waitForRendererIdle();
-    const indicator = this.page.locator(
-      '[class*="outline-(--color-surprise)"], [class*="outline-(--color-danger)"]',
-    );
+    const indicator = this.page.locator('[role="row"][data-drop-target]');
     if ((await indicator.count()) === 0) return undefined;
 
     const target = indicator.first();
-    const [className, ariaLabel, folderName] = await Promise.all([
-      target.getAttribute("class"),
+    const [ariaLabel, folderName] = await Promise.all([
       target
         .locator('[aria-roledescription="drop indicator"]')
         .getAttribute("aria-label"),
@@ -1356,8 +1352,12 @@ export class WorkspacePage extends BasePage {
         .innerText()
         .catch(() => ""),
     ]);
+    // react-aria labels an "on" drop "Drop on <name>"; line drops say
+    // "Insert ...". Validity is only conveyed visually (colour), so it is
+    // still read from the indicator's colour class.
+    const className = await target.getAttribute("class");
     const isValid = (className ?? "").includes("--color-surprise");
-    const isInto = (className ?? "").includes("rounded-sm");
+    const isInto = (ariaLabel ?? "").startsWith("Drop on");
     const between = ariaLabel?.match(/^Insert between (.+) and (.+)$/);
 
     return {
@@ -1565,7 +1565,7 @@ export class WorkspacePage extends BasePage {
   async createTestSuite(): Promise<void> {
     const rows = this.page.locator(this.TEST_SUITES_LIST).getByRole("row");
     const before = await rows.count();
-    await this.page.locator(this.NEW_SUITE_BUTTON).click();
+    await this.page.getByRole("button", { name: "New test suite" }).click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
   }
 
@@ -1637,7 +1637,7 @@ export class WorkspacePage extends BasePage {
       if (!summary) continue;
 
       if ((await row.getAttribute("aria-expanded")) !== "true") {
-        await row.locator("> button").first().click();
+        await row.getByRole("button").first().click();
       }
       const lineRefs = await row.getByText(/^Ln \d+$/).allInnerTexts();
       entries.push({ ...summary, lineRefs });
@@ -1758,9 +1758,9 @@ export class WorkspacePage extends BasePage {
       .evaluateAll((rows) =>
         rows.map((row) => ({
           path: row.dataset.key!.replace(/^paths\./, ""),
-          methods: Array.from(
-            row.querySelectorAll('button[class*="http-method-"]'),
-          ).map((button) => button.textContent?.trim() ?? ""),
+          methods: Array.from(row.querySelectorAll("button"))
+            .map((button) => button.textContent?.trim() ?? "")
+            .filter((text) => /^[A-Z]{2,7}$/.test(text)),
         })),
       );
 
@@ -1885,8 +1885,8 @@ export class WorkspacePage extends BasePage {
    * that setting on first.
    */
   async openTestsTab(): Promise<void> {
-    await this.page.getByRole("tab", { name: "Tests" }).click();
-    await expect(this.page.locator(this.NEW_SUITE_BUTTON)).toBeVisible({
+    await this.page.getByTestId("api-collection-tab-tests").click();
+    await expect(this.page.getByRole("button", { name: "New test suite" })).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -2099,7 +2099,7 @@ export class WorkspacePage extends BasePage {
   private async getLintRowSummary(
     row: Locator,
   ): Promise<Omit<LintEntry, "lineRefs"> | undefined> {
-    const header = row.locator("> button").first();
+    const header = row.getByRole("button").first();
     const text = await header.innerText();
     const match = text.match(/^\((\d+)\)\s*(\S+):\s*(.+)$/s);
     if (!match) return undefined;
@@ -2136,7 +2136,10 @@ export class WorkspacePage extends BasePage {
   }
 
   private async tabName(row: Locator): Promise<string> {
-    return (await row.locator('span[class*="mx-[8px]"]').innerText()).trim();
+    return (await row
+        .locator('span:not([aria-label="Tab Tag"])')
+        .filter({ hasText: /\S/ })
+        .first().innerText()).trim();
   }
 
   /**
