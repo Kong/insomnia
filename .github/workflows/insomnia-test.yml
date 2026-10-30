@@ -152,9 +152,15 @@ jobs:
           path: packages/insomnia/dist/linux-unpacked
 
       # upload/download-artifact go through zip and drop Unix file modes, so
-      # the binary would otherwise fail to spawn with EACCES.
+      # the binary and its helper executables (e.g. chrome_crashpad_handler)
+      # would otherwise fail to spawn with EACCES.
       - name: Make Insomnia binary executable
-        run: chmod +x packages/insomnia/dist/linux-unpacked/insomnia
+        run: |
+          cd packages/insomnia/dist/linux-unpacked
+          chmod +x insomnia
+          for f in chrome_crashpad_handler chrome-sandbox; do
+            if [ -f "$f" ]; then chmod +x "$f"; fi
+          done
 
       - name: Restore node_modules
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
