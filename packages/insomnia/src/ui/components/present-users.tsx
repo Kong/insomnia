@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -11,7 +11,7 @@ export const PresentUsers = () => {
   const { presence } = useInsomniaEventStreamContext();
   const { workspaceId } = useParams() as { workspaceId: string };
   const { userSession } = useRootLoaderData()!;
-  const projectData = useProjectLoaderData();
+  const projectData = useActiveProject();
   const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 

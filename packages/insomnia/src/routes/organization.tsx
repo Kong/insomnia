@@ -3,13 +3,12 @@ import type { Settings } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import { href, NavLink, Outlet, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useEditorHistoryTabCleanup } from '~/ui/components/.client/codemirror/editor-history-cleanup';
 import { CommandPalette } from '~/ui/components/command-palette';
@@ -34,12 +33,12 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useStartupSync } from '~/ui/hooks/use-startup-sync';
 import { useUntrackedProjects } from '~/ui/hooks/use-untracked-projects';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
-import type { AsyncTask } from '~/ui/utils/router';
 
 interface IndicatorProps {
-  asyncTaskStatus: 'error' | 'idle' | 'loading' | 'submitting';
+  asyncTaskStatus: 'error' | 'idle' | 'pending';
   settings: Settings;
   sync: () => void;
 }
@@ -62,7 +61,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
   return (
     <>
       {/* The sync indicator only show when network status is online */}
-      {/* use for show sync organization and projects status(1. first enter app 2. switch organization) */}
+      {/* use for show the startup sync status of organizations and projects */}
       {status === 'online' && asyncTaskStatus !== 'idle' ? (
         <TooltipTrigger>
           <Button
@@ -185,38 +184,13 @@ const Component = () => {
   const navigate = useNavigate();
   const isScratchpadWorkspace =
     workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
-  const { organizationId, projectId } = useParams() as {
+  const { organizationId } = useParams() as {
     organizationId: string;
     projectId?: string;
     workspaceId?: string;
   };
 
-  const location = useLocation();
-  const asyncTaskList = location.state?.asyncTaskList as AsyncTask[];
-
-  const syncOrgsAndProjectsFetcher = useSyncOrganizationsAndProjectsActionFetcher();
-
-  const asyncTaskStatus = syncOrgsAndProjectsFetcher.data?.error ? 'error' : syncOrgsAndProjectsFetcher.state;
-
-  const syncOrgsAndProjects = useCallback(() => {
-    const submit = syncOrgsAndProjectsFetcher.submit;
-
-    submit({
-      organizationId,
-      projectId: projectId || '',
-      asyncTaskList,
-    });
-  }, [asyncTaskList, organizationId, syncOrgsAndProjectsFetcher.submit, projectId]);
-
-  useEffect(() => {
-    // each route navigation will change history state, only submit this action when the asyncTaskList state is not empty
-    // currently we have 2 cases that will set the asyncTaskList state
-    // 1. first entry
-    // 2. when user switch to another organization
-    if (asyncTaskList?.length) {
-      syncOrgsAndProjects();
-    }
-  }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
+  const { status: asyncTaskStatus, retry: retryStartupSync } = useStartupSync(organizationId);
 
   useEffect(() => {
     window.main.setCurrentOrganizationId(organizationId);
@@ -428,7 +402,7 @@ const Component = () => {
                       <NetworkAndSyncIndicator
                         asyncTaskStatus={asyncTaskStatus}
                         settings={settings}
-                        sync={syncOrgsAndProjects}
+                        sync={retryStartupSync}
                       />
 
                       <Link>

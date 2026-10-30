@@ -1,7 +1,7 @@
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
 import { models, services } from 'insomnia-data';
-import type { FC } from 'react';
+import type { ComponentProps, FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
@@ -333,6 +333,14 @@ export const HydrateFallback = () => {
   );
 };
 
+// Root's import modal, with the workspace name for its header. Reads workspace data, which comes from
+// the query caches, so it renders inside the cache providers — unlike Root's own body, which
+// renders them. Reading it here also keeps Root from re-rendering on every organization data change.
+const RootImportModal = (props: Omit<ComponentProps<typeof ImportModal>, 'workspaceName'>) => {
+  const workspaceName = useWorkspaceLoaderData()?.activeWorkspace?.name;
+  return <ImportModal {...props} workspaceName={workspaceName} />;
+};
+
 const Root = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -350,8 +358,7 @@ const Root = () => {
 
   // INS-3544: pasting a cURL while no editable surface has focus starts the
   // import flow. Inside a workspace the current collection is offered as the
-  // default import target, which needs the workspace name for the modal header.
-  const workspaceName = useWorkspaceLoaderData()?.activeWorkspace?.name;
+  // default import target (see `RootImportModal`).
   const handleCurlPaste = async (curl: string) => {
     // The Scratchpad project holds a single collection; keep the import flow
     // out of it so a paste cannot create extra collections there.
@@ -817,12 +824,11 @@ const Root = () => {
         <AppHooks />
         {/* triggered by insomnia://app/import and pasting a cURL with no focus */}
         {importTrigger && (
-          <ImportModal
+          <RootImportModal
             key={importTrigger.source.startedAt}
             onHide={() => setImportTrigger(null)}
             defaultProjectId={projectId}
             organizationId={organizationId}
-            workspaceName={workspaceName}
             defaultWorkspaceId={importTrigger.workspaceId}
             from={importTrigger.source}
           />

@@ -1,4 +1,5 @@
-import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
+
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -6,7 +7,7 @@ import { useWorkspaceLoaderData } from '../../routes/organization.$organizationI
 // Git/VCS changes or a successful FS watcher sync of the backing YAML file.
 export function useGitVCSVersion() {
   const workspaceData = useWorkspaceLoaderData();
-  const projectData = useProjectLoaderData();
+  const projectData = useActiveProject();
   const gitRepository = workspaceData?.gitRepository || projectData?.activeProjectGitRepository;
   const gitFileLastSyncTime = workspaceData?.activeWorkspaceMeta?.gitFileLastSyncTime;
 
