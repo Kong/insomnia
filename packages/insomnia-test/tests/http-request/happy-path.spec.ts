@@ -65,6 +65,9 @@ test("Verify Create HTTP Request", async ({ user }) => {
   await expect
     .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
     .toContain("log: pre-request script");
+  await expect
+    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .toContain("log: after-response script");
   expect(responseView.body).toMatchObject({
     data: "Test",
     args: { [paramName]: paramValue },
