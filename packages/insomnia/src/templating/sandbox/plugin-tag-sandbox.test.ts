@@ -276,6 +276,31 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     expect(Date.now() - start).toBeLessThan(5000);
   });
 
+  it('times out an async loop that never yields to the host', async () => {
+    const source =
+      'module.exports.templateTags = [{ name: "spin", run: async function () { while (true) { await null; } } }];';
+    const start = Date.now();
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'spin', envelope: envelope([]), bridge: noBridge, timeoutMs: 200 }),
+    ).rejects.toThrow();
+    // Only cancellation is asserted: when the interrupt lands mid-microtask the surfaced message varies
+    // ("interrupted", "timed out", or an internal "not a function"), so it can't be matched reliably.
+    expect(Date.now() - start).toBeLessThan(5000);
+  });
+
+  it('times out cleanly when a bridge call never settles', async () => {
+    const source =
+      'module.exports.templateTags = [{ name: "hang", run: async function (ctx) { return await ctx.app.getPath("home"); } }];';
+    let settleLate: () => void = () => {};
+    const hanging: HostBridge = () => new Promise(resolve => (settleLate = () => resolve('late')));
+    await expect(
+      runTagInSandbox({ pluginSource: source, tagName: 'hang', envelope: envelope([]), bridge: hanging, timeoutMs: 200 }),
+    ).rejects.toThrow('Template tag sandbox timed out');
+    // The host call finishing after the context is gone must not throw or touch the disposed VM.
+    settleLate();
+    await new Promise(resolve => setTimeout(resolve, 10));
+  });
+
   it('rejects unbounded allocation instead of exhausting host memory', async () => {
     const source = `module.exports.templateTags = [{ name: "hog", run: function () {
       var chunks = [];
