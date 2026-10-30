@@ -153,6 +153,17 @@ export default defineConfig([
       'react/no-unescaped-entities': 'off',
       'react/prop-types': 'off',
       'react/no-array-index-key': 'error',
+      'react/no-danger': 'error',
+    },
+  },
+  // `dangerouslySetInnerHTML` is only safe behind the DOMPurify sanitizer in
+  // markdownToHTML (see markdown-to-html.ts). MarkdownPreview is the sole
+  // sanctioned consumer; every other component must render through it
+  // instead of adding its own raw HTML sink.
+  {
+    files: ['packages/insomnia/src/ui/components/markdown-preview.tsx'],
+    rules: {
+      'react/no-danger': 'off',
     },
   },
   // simple-import-sort section
