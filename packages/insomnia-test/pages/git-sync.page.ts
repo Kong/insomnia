@@ -1136,7 +1136,10 @@ export class GitSyncPage extends BasePage {
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
     await this.commitDialog.locator('.monaco-diff-editor .view-line').first().click();
     let total = 0;
-    for (const key of ['ControlOrMeta+ArrowUp', 'ControlOrMeta+ArrowDown']) {
+    // Ctrl+Arrow only jumps to the top/bottom on macOS (Cmd+Arrow); on Linux/Windows Monaco binds it to
+    // "scroll one line", which would leave everything past the first viewport unseen, so use Ctrl+Home/End there.
+    const jumpKeys = process.platform === 'darwin' ? ['Meta+ArrowUp', 'Meta+ArrowDown'] : ['Control+Home', 'Control+End'];
+    for (const key of jumpKeys) {
       await this.page.keyboard.press(key);
       let previous = -1;
       let count = 0;
