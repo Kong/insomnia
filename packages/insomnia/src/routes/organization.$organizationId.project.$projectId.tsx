@@ -5,12 +5,12 @@ import { href, Outlet, redirect, useOutletContext, useParams } from 'react-route
 
 import { organizationDataQuery } from '~/common/app-data';
 import { invariant } from '~/common/utils/invariant';
-import { useRootLoaderData } from '~/root';
 import { logout } from '~/ui/account/session';
 import { MissingEntityRedirect } from '~/ui/components/missing-entity-redirect';
 import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
 
