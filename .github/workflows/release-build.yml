@@ -164,6 +164,16 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
           SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
+      # Built before any Windows code-signing step on purpose: if this fails, no signing token is spent on a run
+      # that cannot finish. It must stay after the app packaging steps, install-libcurl-node swaps the libcurl binary.
+      - name: Package inso
+        run: |
+          npm run install-libcurl-node
+          npm run build:production -w insomnia-inso
+          npm run package -w insomnia-inso
+        env:
+          VERSION: ${{ env.INSO_VERSION }}
+
       # wraps the Insomnia.exe PE with another PE that will bootstrap particular security
       # features added to Windows 8 in order to stopgap CVE-2025-1353
       - name: Compile secure wrapper (Windows only)
@@ -280,14 +290,6 @@ jobs:
             Write-Host "  ✓ Valid signature" -ForegroundColor Green
           }
           Write-Host "✓ All executables are properly signed" -ForegroundColor Green
-
-      - name: Package inso
-        run: |
-          npm run install-libcurl-node
-          npm run build:production -w insomnia-inso
-          npm run package -w insomnia-inso
-        env:
-          VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign inso exe (Windows only)
         if: runner.os == 'Windows'
