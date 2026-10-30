@@ -931,8 +931,8 @@ export class WorkspaceFlow extends BaseFlow {
    */
   private async authorSpec(name: string, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
-    const node = await workspace.findItemNode({ name });
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode({ name });
+    await workspace.clickNode(node);
     await workspace.navigateSpec();
     await workspace.setSpecification(
       typeof spec === 'string'

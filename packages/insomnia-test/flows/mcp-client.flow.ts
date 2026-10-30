@@ -49,8 +49,8 @@ export class McpClientFlow extends BaseFlow {
     const mcpClientPage = this.pageManager.mcpClientPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
 
     await mcpClientPage.clickTool(tool);
@@ -77,8 +77,8 @@ export class McpClientFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
     await mcpClientPage.disconnect();
   }
@@ -93,8 +93,8 @@ export class McpClientFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
 
     await mcpClientPage.auth.fetchOAuth2Tokens();
@@ -113,8 +113,8 @@ export class McpClientFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
     await mcpClientPage.connect(options);
   }
@@ -132,14 +132,14 @@ export class McpClientFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
     await mcpClientPage.setUrl(client.url);
     // The tree node is the MCP workspace; the URL lives on its McpRequest child.
     const requestId = await this.waitForChildDocId(
       "insomnia.McpRequest.db",
-      node!._id,
+      node._id,
     );
     await this.waitForUrlPersisted(
       "insomnia.McpRequest.db",
@@ -188,8 +188,8 @@ export class McpClientFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const mcpClientPage = this.pageManager.mcpClientPage;
 
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await mcpClientPage.navigate();
     return mcpClientPage.getTools();
   }
@@ -264,8 +264,8 @@ export class McpClientFlow extends BaseFlow {
 
   private async open(client: McpClient): Promise<void> {
     const workspace = this.pageManager.workspacePage;
-    const node = await workspace.findItemNode(client);
-    await workspace.clickNode(node!);
+    const node = await workspace.requireItemNode(client);
+    await workspace.clickNode(node);
     await this.pageManager.mcpClientPage.navigate();
   }
 }

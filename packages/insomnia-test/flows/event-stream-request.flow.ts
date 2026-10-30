@@ -83,8 +83,8 @@ export class EventStreamRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.eventStreamRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await page.navigate();
 
     await page.auth.fetchOAuth2Tokens();
@@ -103,8 +103,8 @@ export class EventStreamRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const page = this.pageManager.eventStreamRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await page.navigate();
     await this.applyAuthentication(page.auth, authentication);
   }
@@ -124,8 +124,8 @@ export class EventStreamRequestFlow extends BaseFlow {
     const eventStreamRequestPage = this.pageManager.eventStreamRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await eventStreamRequestPage.navigate();
 
     await eventStreamRequestPage.connect(options);

@@ -48,8 +48,8 @@ export class HttpRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await httpRequestPage.navigate();
     await httpRequestPage.setParamsBulk(params);
   }
@@ -90,8 +90,8 @@ export class HttpRequestFlow extends BaseFlow {
     const httpRequestPage = this.pageManager.httpRequestPage;
     const responsePage = this.pageManager.responsePage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await httpRequestPage.navigate();
 
     await httpRequestPage.send();
@@ -113,8 +113,8 @@ export class HttpRequestFlow extends BaseFlow {
     const workspace = this.pageManager.workspacePage;
     const httpRequestPage = this.pageManager.httpRequestPage;
 
-    const node = await workspace.findItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node!);
+    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node);
     await httpRequestPage.navigate();
 
     await httpRequestPage.auth.fetchOAuth2Tokens();
