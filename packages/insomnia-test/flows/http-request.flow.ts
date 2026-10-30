@@ -3,7 +3,7 @@ import type { ResponseExportOption } from "../enums/response-export-option";
 import { TreeNodeType } from "../enums/tree-node-types";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
-import type { RequestAuthentication } from "../models/http-request";
+import type { RequestAuthentication, RequestParameter } from "../models/http-request";
 import { HttpRequest } from "../models/http-request";
 import type { ResponseView } from "../models/response";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
@@ -35,6 +35,23 @@ export class HttpRequestFlow extends BaseFlow {
     await this.applyRequestFields(httpRequestPage, request, requestNode._id);
 
     return this.assertCreated(await this.get(request.name), request.name);
+  }
+
+  /**
+   * Replaces `request`'s query parameters using the Params tab's bulk
+   * editor. Use after `create()` for requests with many params, where
+   * per-row editing is prone to a stale-row-list save race.
+   * @param request - The request to update (must exist in the sidebar)
+   * @param params - The parameters to set
+   */
+  async setParamsBulk(request: HttpRequest, params: RequestParameter[]): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const httpRequestPage = this.pageManager.httpRequestPage;
+
+    const node = await workspace.findItemNode(request, TreeNodeType.Request);
+    await workspace.openRequestNode(node!);
+    await httpRequestPage.navigate();
+    await httpRequestPage.setParamsBulk(params);
   }
 
   /**
