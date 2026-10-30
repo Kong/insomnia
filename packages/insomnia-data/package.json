@@ -1,5 +1,6 @@
 {
   "private": true,
+  "type": "module",
   "name": "insomnia-data",
   "license": "Apache-2.0",
   "version": "13.3.1",

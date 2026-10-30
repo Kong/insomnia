@@ -1,5 +1,6 @@
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
+import { step } from "../misc/step";
 import type { Collection } from "../models/collection";
 import { Folder } from "../models/folder";
 import type { OAuth2Tokens } from "../pages/auth-tab.page";
@@ -14,6 +15,7 @@ export class FolderFlow extends BaseFlow {
    * request (see `HttpRequestFlow.create()`), just with a different
    * context-menu item and a plain naming dialog instead of a rename step.
    */
+  @step()
   async create(parent: Collection | Folder, folder: Folder): Promise<Folder> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -44,6 +46,7 @@ export class FolderFlow extends BaseFlow {
    * Docs) via its "Open in New Tab" context-menu item — not the same as
    * its "Settings" item, which only opens a rename/move dialog.
    */
+  @step()
   async open(folder: Folder): Promise<FolderPage> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.findItemNode(
@@ -65,6 +68,7 @@ export class FolderFlow extends BaseFlow {
    * token exists, "Refresh Token" once one does), then reads back the
    * resulting Refresh/Identity/Access Token fields in one call.
    */
+  @step()
   async fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens> {
     const folderPage = await this.open(folder);
     await folderPage.auth.fetchOAuth2Tokens();
@@ -76,6 +80,7 @@ export class FolderFlow extends BaseFlow {
    * scripts (see `ScriptTabComponent.setScripts()`) — these run for
    * every descendant request before/after that request's own script.
    */
+  @step()
   async setScripts(folder: Folder, scripts: RequestScripts): Promise<void> {
     const folderPage = await this.open(folder);
     await folderPage.scripts.setScripts(scripts);
@@ -86,6 +91,7 @@ export class FolderFlow extends BaseFlow {
    * override the collection's base and sub-environment values for every
    * descendant request.
    */
+  @step()
   async setEnvironmentVariables(folder: Folder, variables: Record<string, string>): Promise<void> {
     const folderPage = await this.open(folder);
     await folderPage.setEnvironmentVariables(variables);

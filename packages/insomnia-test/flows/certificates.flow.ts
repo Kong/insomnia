@@ -1,3 +1,4 @@
+import { step } from "../misc/step";
 import type { ClientCertificate } from "../models/client-certificate";
 import type { Collection } from "../models/collection";
 import type { EventStreamRequest } from "../models/event-stream-request";
@@ -25,6 +26,7 @@ export class CertificatesFlow extends BaseFlow {
    * Certificates" dialog from `item`'s location. Overwrites any CA
    * certificate already set.
    */
+  @step()
   async setCaCertificate(item: CertificateTarget, path: string): Promise<void> {
     await this.openTarget(item);
 
@@ -38,6 +40,7 @@ export class CertificatesFlow extends BaseFlow {
    * Adds a client certificate to `item`'s workspace, opening the "Manage
    * Certificates" dialog from `item`'s location.
    */
+  @step()
   async addClientCertificate(
     item: CertificateTarget,
     certificate: ClientCertificate,
@@ -55,6 +58,7 @@ export class CertificatesFlow extends BaseFlow {
    * its `host`, opening the "Manage Certificates" dialog from `item`'s
    * location.
    */
+  @step()
   async setClientCertificateEnabled(
     item: CertificateTarget,
     host: string,
@@ -78,6 +82,7 @@ export class CertificatesFlow extends BaseFlow {
    * Toggles `item`'s workspace-wide CA Certificate's Enabled/Disabled
    * state, opening the "Manage Certificates" dialog from `item`'s location.
    */
+  @step()
   async setCaCertificateEnabled(
     item: CertificateTarget,
     enabled: boolean,
@@ -94,6 +99,7 @@ export class CertificatesFlow extends BaseFlow {
    * Toggles an MCP Client's "SSL Certificate Validation" switch, opening
    * the "Manage Certificates" dialog from the client's location.
    */
+  @step()
   async setSslValidationEnabled(
     client: McpClient,
     enabled: boolean,

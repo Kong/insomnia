@@ -29,7 +29,7 @@ const INSOMNIA_SRC_PACKAGE = path.resolve(import.meta.dirname, "..", "insomnia")
 ensureCerts();
 
 // The suite is serial by design: misc/git-fixtures.ts (`currentGitRepo`),
-// misc/step-instrumentation.ts (`currentPageGroup`) and the mock servers'
+// module-level state and the mock servers'
 // shared state all assume one test at a time. Fail fast instead of letting
 // `--workers=N` produce cross-test interference.
 const workersIdx = process.argv.findIndex((arg) => arg === "--workers" || arg.startsWith("--workers=") || arg === "-j");

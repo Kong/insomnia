@@ -5,6 +5,7 @@ import { LintSeverity } from '../enums/lint-severity';
 import { ProjectType } from '../enums/project-types';
 import { TreeNodeType } from '../enums/tree-node-types';
 import { DEFAULT_TIMEOUT } from '../misc/constants';
+import { step } from "../misc/step";
 import { Collection, TestSuite, UnitTest } from '../models/collection';
 import { Environment } from '../models/environment';
 import type { EventStreamRequest } from '../models/event-stream-request';
@@ -102,6 +103,7 @@ export class WorkspaceFlow extends BaseFlow {
    * already a repo) — instead of cloning from a remote URL: the "Open
    * local folder" mode of the create-project dialog's Git sub-form.
    */
+  @step()
   async openLocalGitFolder(item: Project): Promise<Project> {
     if (item.folderPath === undefined) {
       throw new Error(`openLocalGitFolder(): Project "${item.name}" has no folderPath to open`);
@@ -123,6 +125,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Preferences -> Credentials) rather than relying on whichever
    * credential the form defaults to.
    */
+  @step()
   async cloneGitProject(
     item: Project,
     credentialName: string,
@@ -213,6 +216,7 @@ export class WorkspaceFlow extends BaseFlow {
    * naming dialog. Authors `collection.spec` into the spec editor
    * afterward, if given.
    */
+  @step()
   async createInEmptyState(parent: Project, collection: Collection): Promise<Collection> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -231,6 +235,7 @@ export class WorkspaceFlow extends BaseFlow {
    * an action decorated with `@throwOnDialog`) by clicking its "Ok"
    * button, so a test can continue with further steps afterward.
    */
+  @step()
   async closeDialog(): Promise<void> {
     await this.pageManager.workspacePage.closeDialog();
   }
@@ -239,6 +244,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Reads whether the one-time "Welcome to focus mode" onboarding popover
    * is currently shown, then dismisses it if so.
    */
+  @step()
   async dismissFocusModePrompt(): Promise<boolean> {
     const { workspacePage } = this.pageManager;
     const shown = await workspacePage.isFocusModePromptShown();
@@ -252,6 +258,7 @@ export class WorkspaceFlow extends BaseFlow {
    * interaction via `pageManager.projectSettingsPage` (e.g. reading the
    * current git repo path, relocating it).
    */
+  @step()
   async openSettings(project: Project): Promise<void> {
     const { workspacePage, projectSettingsPage } = this.pageManager;
     const node = await workspacePage.resolveNode(project);
@@ -265,6 +272,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Project has no "Rename" context-menu item, so this is the only way
    * to rename one.
    */
+  @step()
   async renameProject(project: Project, newName: string): Promise<Project> {
     const { projectSettingsPage } = this.pageManager;
     await this.openSettings(project);
@@ -279,6 +287,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Right-clicks the tree node matching `item` and deletes it via the
    * context menu. Does nothing if no matching node is found.
    */
+  @step()
   async delete(
     item:
       | Project
@@ -304,6 +313,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Opens the command palette, searches for `query`, and reads back the
    * matching result names.
    */
+  @step()
   async search(query: string): Promise<string[]> {
     const { commandPalettePage } = this.pageManager;
     await commandPalettePage.open();
@@ -316,6 +326,7 @@ export class WorkspaceFlow extends BaseFlow {
    * generated code snippet via "Generate Code" — available for regular
    * requests, not gRPC.
    */
+  @step()
   async generateCode(
     request: HttpRequest | GraphQLRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     options?: { target?: string; client?: string },
@@ -335,6 +346,7 @@ export class WorkspaceFlow extends BaseFlow {
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
    */
+  @step()
   async duplicateCollection(item: Collection, newName: string, targetProject?: Project): Promise<Collection> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
     return this.assertCreated(await this.getCollection(newName), newName);
@@ -345,6 +357,7 @@ export class WorkspaceFlow extends BaseFlow {
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
    */
+  @step()
   async duplicateMcpClient(item: McpClient, newName: string, targetProject?: Project): Promise<McpClient> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
     return this.assertCreated(await this.getMcpClient(newName), newName);
@@ -355,6 +368,7 @@ export class WorkspaceFlow extends BaseFlow {
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
    */
+  @step()
   async duplicateEnvironment(item: Environment, newName: string, targetProject?: Project): Promise<Environment> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
 
@@ -374,6 +388,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
    */
+  @step()
   async duplicateRequest(item: RequestItem, newName: string): Promise<{ id: string; name: string }> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(item);
@@ -405,6 +420,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Right-clicks the tree node matching `request` and pins it via the
    * context menu's "Pin" action.
    */
+  @step()
   async pin(
     request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
@@ -415,6 +431,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Right-clicks the tree node matching `request` and unpins it via the
    * context menu's "Unpin" action.
    */
+  @step()
   async unpin(
     request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
@@ -438,6 +455,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Renames a Collection via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
    */
+  @step()
   async renameCollection(item: Collection, newName: string): Promise<Collection> {
     await this.renameViaContextMenu(item, newName);
     return this.assertCreated(await this.getCollection(newName), newName);
@@ -447,6 +465,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Renames an McpClient via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
    */
+  @step()
   async renameMcpClient(item: McpClient, newName: string): Promise<McpClient> {
     await this.renameViaContextMenu(item, newName);
     return this.assertCreated(await this.getMcpClient(newName), newName);
@@ -456,6 +475,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Renames an Environment via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
    */
+  @step()
   async renameEnvironment(item: Environment, newName: string): Promise<Environment> {
     await this.renameViaContextMenu(item, newName);
     return this.assertCreated(await this.getEnvironment(newName), newName);
@@ -464,6 +484,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Renames a request in place via its context menu's "Rename" action.
    */
+  @step()
   async renameRequest(item: RequestItem, newName: string): Promise<{ id: string; name: string }> {
     await this.renameViaContextMenu(item, newName);
     const newNode = await this.pageManager.workspacePage.findNode(newName, TreeNodeType.Request);
@@ -492,6 +513,7 @@ export class WorkspaceFlow extends BaseFlow {
    * with the Runner (e.g. Cancel/Skip) while it's in flight, rather than
    * waiting for it to finish.
    */
+  @step()
   async openRunner(collection: Collection, options?: RunnerOptions): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const runner = this.pageManager.runnerPage;
@@ -517,6 +539,7 @@ export class WorkspaceFlow extends BaseFlow {
    * request before returning the collected test-result count and
    * per-iteration results.
    */
+  @step()
   async run(collection: Collection, options?: RunnerOptions): Promise<RunnerRunResult> {
     const runner = this.pageManager.runnerPage;
     await this.openRunner(collection, options);
@@ -580,6 +603,7 @@ export class WorkspaceFlow extends BaseFlow {
    * doesn't carry a spec; use `getCollectionSpec()` instead for one that
    * does (or might).
    */
+  @step()
   async getCollection(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
@@ -596,6 +620,7 @@ export class WorkspaceFlow extends BaseFlow {
    * call `getLintState()` separately — it polls for the lint pass to
    * settle, which not every caller needs.
    */
+  @step()
   async getCollectionSpec(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
@@ -622,6 +647,7 @@ export class WorkspaceFlow extends BaseFlow {
    * creation), this can be called at any later point — e.g. filling in a
    * collection that started out with no spec.
    */
+  @step()
   async fillSpecification(item: Collection, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(item);
@@ -646,6 +672,7 @@ export class WorkspaceFlow extends BaseFlow {
    * renames it — the two nearly always happen together, since a fresh
    * suite is always named "New Suite".
    */
+  @step()
   async createTestSuite(item: string | { name: string; id?: string }, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     await this.openTests(item);
@@ -659,6 +686,7 @@ export class WorkspaceFlow extends BaseFlow {
    * the two nearly always happen together, since a fresh test is always
    * named "Returns 200".
    */
+  @step()
   async createUnitTest(testSuite: TestSuite, testName: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     await this.openTests(testSuite.collection);
@@ -672,6 +700,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Opens `item`'s Tests tab, then deletes `suiteName`'s test suite via its
    * confirm modal (`WorkspacePage.deleteTestSuite()`).
    */
+  @step()
   async deleteTestSuite(item: string | { name: string; id?: string }, suiteName: string): Promise<void> {
     await this.openTests(item);
     await this.pageManager.workspacePage.deleteTestSuite(suiteName);
@@ -688,6 +717,7 @@ export class WorkspaceFlow extends BaseFlow {
    * already on the collection's page after `create()`/`getCollectionSpec()`/
    * `WorkspacePage.setSpecification()`.
    */
+  @step()
   async getLintState(minLintErrors = 0): Promise<NonNullable<Collection['lint']>> {
     const workspace = this.pageManager.workspacePage;
 
@@ -729,6 +759,7 @@ export class WorkspaceFlow extends BaseFlow {
    * (`WorkspacePage.getUnitTestNames()`) and a reference back to `item`,
    * so the suite can be traced back to where it lives.
    */
+  @step()
   async getTestSuite(item: string | { name: string; id?: string }, testSuiteName: string): Promise<TestSuite> {
     const workspace = this.pageManager.workspacePage;
     const node = await this.openTests(item);
@@ -746,6 +777,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Opens `item`'s Tests tab and reads back every suite name currently
    * listed in the Test Suites sidebar (`WorkspacePage.getTestSuiteNames()`).
    */
+  @step()
   async getTestSuiteNames(item: string | { name: string; id?: string }): Promise<string[]> {
     await this.openTests(item);
     return this.pageManager.workspacePage.getTestSuiteNames();
@@ -756,6 +788,7 @@ export class WorkspaceFlow extends BaseFlow {
    * via its confirm modal (`WorkspacePage.removeRuleset()`), reverting to
    * the default OAS ruleset.
    */
+  @step()
   async removeRuleset(item: string | { name: string; id?: string }): Promise<void> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
@@ -770,6 +803,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Opens `testSuite`'s Tests tab, selects `testSuite`, runs every test in
    * it, and reads back the resulting pass/fail summary and per-test rows.
    */
+  @step()
   async runAllTests(testSuite: TestSuite): Promise<UnitTestRunResult> {
     const workspace = this.pageManager.workspacePage;
     await this.openTests(testSuite.collection);
@@ -792,6 +826,7 @@ export class WorkspaceFlow extends BaseFlow {
    * resulting "Invalid Spectral Ruleset" error dialog and returns
    * `"invalid"` instead, leaving the default ruleset active.
    */
+  @step()
   async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
     const workspace = this.pageManager.workspacePage;
     const result = await workspace.uploadRuleset(filePath);
@@ -859,6 +894,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Finds the tree node matching `item` and returns it as a Project model.
    */
+  @step()
   async getProject(item: string | { name: string; id?: string }): Promise<Project | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
@@ -961,6 +997,7 @@ export class WorkspaceFlow extends BaseFlow {
    * Deletes the tree node matching `item` with the sidebar's Delete shortcut
    * and confirms the dialog. Does nothing if no matching node is found.
    */
+  @step()
   async deleteViaShortcut(
     item:
       | Collection
@@ -985,6 +1022,7 @@ export class WorkspaceFlow extends BaseFlow {
    * reads the "Unknown Fields Detected" warning off the post-scan screen
    * before confirming the clone.
    */
+  @step()
   async cloneWithScanReport(
     item: Project,
     credentialName: string,

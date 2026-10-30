@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { step } from "../misc/step";
 import type { MockRoute, MockRouteHistoryEntry } from "../models/mock-route";
 import { MockServer } from "../models/mock-server";
 import type { Project } from "../models/project";
@@ -13,6 +14,7 @@ export class MockServerFlow extends BaseFlow {
    * Creates a self-hosted Mock Server under `parent` through the project's
    * create menu and the create dialog, then re-reads it from the tree.
    */
+  @step()
   async create(parent: Project, server: MockServer): Promise<MockServer> {
     const workspace = this.pageManager.workspacePage;
     const mockServerPage = this.pageManager.mockServerPage;
@@ -30,6 +32,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Finds a Mock Server's tree node by name/id and returns it as a model.
    */
+  @step()
   async get(item: string | { name: string; id?: string }): Promise<MockServer> {
     const identity = typeof item === "string" ? { name: item } : item;
     const node = await this.pageManager.workspacePage.findItemNode(identity);
@@ -41,6 +44,7 @@ export class MockServerFlow extends BaseFlow {
    * Duplicates `server` through its context menu's "Duplicate / Move"
    * dialog.
    */
+  @step()
   async duplicate(
     server: MockServer,
     newName: string,
@@ -62,6 +66,7 @@ export class MockServerFlow extends BaseFlow {
    * Exports `server` (as an Insomnia v5 YAML file) through its context
    * menu's "Export" item, writing it to `path`.
    */
+  @step()
   async export(server: MockServer, path: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const exportPage = this.pageManager.exportPage;
@@ -75,6 +80,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `server`'s Mock Server view.
    */
+  @step()
   async open(server: MockServer): Promise<void> {
     const workspace = this.pageManager.workspacePage;
     const mockServerPage = this.pageManager.mockServerPage;
@@ -89,6 +95,7 @@ export class MockServerFlow extends BaseFlow {
    * then, if it carries any, configures its response (status code/text,
    * body type, body and headers).
    */
+  @step()
   async createRoute(server: MockServer, route: MockRoute): Promise<MockRoute> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -105,6 +112,7 @@ export class MockServerFlow extends BaseFlow {
    * status code, status text, body type, body and headers — then moves
    * focus off the last edited editor so it pushes to the server.
    */
+  @step()
   async setResponse(route: MockRoute): Promise<void> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -140,6 +148,7 @@ export class MockServerFlow extends BaseFlow {
    * Opens `route` and edits its path and/or method through its action
    * menu's "Edit" dialog.
    */
+  @step()
   async editRoute(
     route: MockRoute,
     changes: Pick<MockRoute, "path" | "method">,
@@ -153,6 +162,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Deletes `route` through its action menu and the confirmation dialog.
    */
+  @step()
   async deleteRoute(route: MockRoute): Promise<void> {
     await this.pageManager.mockServerPage.deleteRoute(route.id!);
   }
@@ -160,6 +170,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `server` and lists the paths of the routes in its sidebar.
    */
+  @step()
   async getRoutePaths(server: MockServer): Promise<string[]> {
     await this.open(server);
     return this.pageManager.mockServerPage.getRoutePaths();
@@ -168,6 +179,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `route` and reads the method and path its URL bar shows.
    */
+  @step()
   async getRoute(route: MockRoute): Promise<{ method: string; path: string }> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -179,6 +191,7 @@ export class MockServerFlow extends BaseFlow {
    * Opens `route` and reads its full URL on the mock server out of the
    * "Show URL" dialog.
    */
+  @step()
   async getUrl(route: MockRoute): Promise<string> {
     const mockServerPage = this.pageManager.mockServerPage;
 
@@ -190,6 +203,7 @@ export class MockServerFlow extends BaseFlow {
    * Opens `route`, clicks "Test" and reads the response the mock server
    * answered with.
    */
+  @step()
   async test(route: MockRoute): Promise<ResponseView> {
     const mockServerPage = this.pageManager.mockServerPage;
     const responsePage = this.pageManager.responsePage;
@@ -204,6 +218,7 @@ export class MockServerFlow extends BaseFlow {
    * On the response `request` currently shows, opens the "→ Mock" tab and
    * creates a new Mock Route on `server` from it.
    */
+  @step()
   async createRouteFromResponse(
     server: MockServer,
     path?: string,
@@ -222,6 +237,7 @@ export class MockServerFlow extends BaseFlow {
    * On the response the request currently shows, opens the "→ Mock" tab
    * and overwrites `route` with it.
    */
+  @step()
   async overwriteRouteFromResponse(
     server: MockServer,
     route: MockRoute,
@@ -236,6 +252,7 @@ export class MockServerFlow extends BaseFlow {
   /**
    * Opens `route` and reads the hits its History tab has logged.
    */
+  @step()
   async getHistory(route: MockRoute): Promise<MockRouteHistoryEntry[]> {
     const mockServerPage = this.pageManager.mockServerPage;
 
