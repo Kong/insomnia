@@ -1,0 +1,17 @@
+diff --git a/node_modules/@grpc/grpc-js/build/src/compression-filter.js b/node_modules/@grpc/grpc-js/build/src/compression-filter.js
+index a3d422a..0ac9c54 100644
+--- a/node_modules/@grpc/grpc-js/build/src/compression-filter.js
++++ b/node_modules/@grpc/grpc-js/build/src/compression-filter.js
+@@ -49,7 +49,11 @@ class CompressionHandler {
+     async readMessage(data) {
+         const compressed = data.readUInt8(0) === 1;
+         let messageBuffer = data.slice(5);
+-        if (compressed) {
++        // A zero-length payload is unambiguously an empty message regardless of
++        // the compressed flag. Feeding it to zlib would throw ("unexpected end of
++        // file") because an empty buffer is not a valid gzip/deflate stream, which
++        // some servers nonetheless emit for empty messages when compression is on.
++        if (compressed && messageBuffer.length > 0) {
+             messageBuffer = await this.decompressMessage(messageBuffer);
+         }
+         return messageBuffer;
