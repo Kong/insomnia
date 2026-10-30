@@ -67,7 +67,7 @@ export class CommandPalettePage extends BasePage {
    * 250ms debounce and round trip have run.
    */
   async search(query: string): Promise<void> {
-    await this.page.locator(`${this.DIALOG} input`).fill(query);
+    await this.page.locator(this.DIALOG).getByRole("combobox").fill(query);
     await this.waitForStableValue(
       () => this.page.locator(this.OPTION).allTextContents(),
       4,

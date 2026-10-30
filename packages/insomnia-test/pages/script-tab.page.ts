@@ -18,8 +18,8 @@ export interface RequestScripts {
  * thing that differs between them.
  */
 export class ScriptTabComponent extends TabPanelPage {
-  protected readonly AFTER_RESPONSE_EDITOR = "div[data-key='after-response']";
-  protected readonly PRE_REQUEST_EDITOR = "div[data-key='pre-request']";
+  protected readonly AFTER_RESPONSE_EDITOR = "[role='tab'][data-key='after-response']";
+  protected readonly PRE_REQUEST_EDITOR = "[role='tab'][data-key='pre-request']";
 
   /**
    * Reads back both the pre-request and after-response scripts by

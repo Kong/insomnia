@@ -275,7 +275,7 @@ export class ProjectSettingsPage extends BasePage {
    */
   async getUnknownFieldFiles(): Promise<string[]> {
     await this.waitForScanResult();
-    return (await this.unknownFieldsWarning.locator("li").allInnerTexts()).map((text) => text.trim());
+    return (await this.unknownFieldsWarning.getByRole("listitem").allInnerTexts()).map((text) => text.trim());
   }
 
   /**

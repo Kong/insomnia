@@ -41,7 +41,7 @@ export class EnvironmentPage extends BasePage {
   private readonly RAW_EDIT_BUTTON = '#pane-one button[aria-label="Raw Edit"]';
   private readonly TABLE_EDIT_BUTTON =
     '#pane-one button[aria-label="Table Edit"]';
-  private readonly RAW_EDITOR = ".environment-editor";
+  private readonly RAW_EDITOR = '#pane-one [data-testid="CodeEditor"]';
   private readonly SIDEBAR = '[aria-label="Environments"]';
   private readonly PROJECT_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select a Project Environment"]';
@@ -315,7 +315,7 @@ export class EnvironmentPage extends BasePage {
    */
   async isEnvironmentPrivate(name: string): Promise<boolean> {
     const row = this.page.locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`);
-    return (await row.locator(".fa-lock").count()) > 0;
+    return (await row.locator('[data-icon="lock"]').count()) > 0;
   }
 
   /**
@@ -585,7 +585,7 @@ export class EnvironmentPage extends BasePage {
    * project environment page (which hides the picker) and waits for it.
    */
   async openManageEnvironmentsDialogByShortcut(): Promise<void> {
-    await this.page.locator(".app").press("ControlOrMeta+e");
+    await this.page.keyboard.press("ControlOrMeta+e");
     await expect(this.collectionEnvironmentDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });

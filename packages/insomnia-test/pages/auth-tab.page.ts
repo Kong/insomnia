@@ -152,7 +152,7 @@ export class AuthTabComponent extends TabPanelPage {
    */
   private async expandOAuth2AdvancedOptions(): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
-    if (await panel.locator("#Scope").count()) return;
+    if (await this.fieldByLabel("Scope").count()) return;
     const button = panel.getByRole("button", { name: "Advanced Options" });
     if ((await button.count()) === 0) return;
     await button.click();
@@ -342,10 +342,7 @@ export class AuthTabComponent extends TabPanelPage {
     if (fields.signatureMethod) {
       const signatureMethod = fields.signatureMethod;
       const selectMethod = async () => {
-        await this.page
-          .locator(this.TABPANEL)
-          .locator("#Signature-Method")
-          .selectOption(signatureMethod);
+        await this.fieldByLabel("Signature-Method").selectOption(signatureMethod);
       };
       await selectMethod();
       const edit: AuthFieldEdit = {
@@ -374,13 +371,13 @@ export class AuthTabComponent extends TabPanelPage {
    */
   async setOAuth2Fields(fields: Partial<AuthTypeOAuth2>): Promise<void> {
     await this.setAuthType(AuthType.OAuth2);
-    await expect(this.page.locator(this.TABPANEL).locator("#Grant-Type")).toBeVisible({
+    await expect(this.fieldByLabel("Grant-Type")).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
 
     const edits: AuthFieldEdit[] = [];
     const selectOnTab = async (id: string, value: string) => {
-      await this.page.locator(this.TABPANEL).locator(`#${id}`).selectOption(value);
+      await this.fieldByLabel(id).selectOption(value);
     };
     const applySelect = async (
       field: string,
@@ -439,7 +436,7 @@ export class AuthTabComponent extends TabPanelPage {
     }
     if (
       fields.responseType &&
-      (await this.page.locator(this.TABPANEL).locator("#Response-Type").count())
+      (await this.fieldByLabel("Response-Type").count())
     ) {
       await applySelect("responseType", "Response-Type", fields.responseType);
     }
@@ -464,9 +461,8 @@ export class AuthTabComponent extends TabPanelPage {
    */
   private async isToggleOn(id: string): Promise<boolean> {
     return (
-      (await this.page
-        .locator(this.TABPANEL)
-        .locator(`#${id} [data-testid="toggle-is-on"]`)
+      (await this.fieldByLabel(id)
+        .getByTestId("toggle-is-on")
         .count()) > 0
     );
   }
@@ -477,7 +473,7 @@ export class AuthTabComponent extends TabPanelPage {
    */
   private async setToggle(id: string, enabled: boolean): Promise<void> {
     if ((await this.isToggleOn(id)) !== enabled) {
-      await this.page.locator(this.TABPANEL).locator(`#${id}`).click();
+      await this.fieldByLabel(id).click();
       await expect(async () => {
         expect(await this.isToggleOn(id)).toBe(enabled);
       }).toPass({ timeout: DEFAULT_TIMEOUT });
@@ -535,6 +531,18 @@ export class AuthTabComponent extends TabPanelPage {
       }
       expect(missing.map((e) => e.field)).toEqual([]);
     }).toPass({ timeout: DEFAULT_TIMEOUT + settleMs, intervals: [250, 500] });
+  }
+
+  /**
+   * Builds the locator for a labelled Auth form control (a select or a
+   * toggle button) from its row's label, given in the row's id form
+   * (`Grant-Type` -> the "Grant Type" label). The app links each row's
+   * `<label>` to its control via `for`/`id`, so no `#id` selector is needed.
+   */
+  private fieldByLabel(id: string): Locator {
+    return this.page
+      .locator(this.TABPANEL)
+      .getByLabel(id.replace(/-/g, " "), { exact: true });
   }
 
   /**

@@ -58,7 +58,7 @@ export class SocketIORequestPage extends RequestPage {
   async setMessage(message: SocketIOMessage): Promise<void> {
     await this.switchTab("body");
     const panel = this.page.locator(this.TABPANEL);
-    await panel.locator('button:has-text("+ Arg")').click();
+    await panel.getByRole("button", { name: "+ Arg" }).click();
 
     const editor = panel.locator(".CodeMirror").first();
     await editor.evaluate((el, value) => {
