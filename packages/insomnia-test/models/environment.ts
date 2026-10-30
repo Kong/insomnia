@@ -3,12 +3,11 @@ import type {
   EnvironmentKvPairData,
   EnvironmentKvPairDataType as AppEnvironmentKvPairDataType,
 } from "insomnia-data";
-import { models } from "insomnia-data";
 
-const ENVIRONMENT_TYPE = models.environment.type;
+// Mirrors `models.environment.type`; a runtime import of insomnia-data would drag the whole data package into the CJS framework.
+const ENVIRONMENT_TYPE = "Environment";
 
-// Mirrors the app's enum. Playwright loads insomnia-data as CJS, so ESM named imports of its
-// re-exported enums fail at runtime; only the type is imported and the values are inlined here.
+// Mirrors the app's enum. insomnia-data is ESM-only, so only the type is imported and the values are inlined here.
 export type EnvironmentKvPairDataType = AppEnvironmentKvPairDataType;
 // eslint-disable-next-line @typescript-eslint/no-redeclare -- type and value intentionally share a name, like an enum
 export const EnvironmentKvPairDataType = {
