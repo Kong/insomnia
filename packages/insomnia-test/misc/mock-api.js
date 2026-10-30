@@ -12,10 +12,8 @@ const PROJECT_ID = "proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 
 // Feature-flag / storage-rule state, isolated per Electron instance via the
 // `x-session-id` header every request carries (sourced from
-// misc/fixtures.ts's INSOMNIA_SESSION.id, unique per Playwright worker slot).
-// Without this, one spec file's beforeAll toggling a flag would leak into
-// every other worker's concurrently-running Electron instance, since this
-// mock-api.js process is shared by all of them. The `_admin/features/*` PUTs
+// misc/launch.ts's SESSION_ID), so state set for one launch never leaks into
+// a later one that reuses this shared mock-api.js process. The `_admin/features/*` PUTs
 // below run *before* the Electron instance they're meant for has launched,
 // so they can't rely on a header — misc/fixtures.ts passes `sessionId`
 // explicitly in the body instead.

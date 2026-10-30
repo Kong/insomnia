@@ -28,10 +28,25 @@ const INSOMNIA_SRC_PACKAGE = path.resolve(__dirname, "..", "insomnia");
 // Do it here, once, before any webServer below starts reading them.
 ensureCerts();
 
+// The suite is serial by design: misc/git-fixtures.ts (`currentGitRepo`),
+// misc/step-instrumentation.ts (`currentPageGroup`) and the mock servers'
+// shared state all assume one test at a time. Fail fast instead of letting
+// `--workers=N` produce cross-test interference.
+const workersIdx = process.argv.findIndex((arg) => arg === "--workers" || arg.startsWith("--workers=") || arg === "-j");
+if (workersIdx !== -1) {
+  const arg = process.argv[workersIdx];
+  const value = arg.includes("=") ? arg.split("=")[1] : process.argv[workersIdx + 1];
+  if (value !== "1") {
+    throw new Error(
+      `insomnia-test must run with a single worker (got --workers ${value}); it relies on module-level state that is not parallel-safe.`,
+    );
+  }
+}
+
 export default defineConfig({
   timeout: 90 * 1000,
   testDir: "./tests",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
