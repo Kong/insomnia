@@ -102,7 +102,7 @@ jobs:
           USE_HARD_LINKS: 'false'
           # Package .map files so coverage reports show original (pre-compile) sources
           KEEP_SOURCEMAPS: 'true'
-        run: npx electron-builder build --config ../insomnia-test/electron-builder.config.cjs --linux --dir --publish never
+        run: npx electron-builder build --config ../insomnia-test/electron-builder.config.ts --linux --dir --publish never
 
       - name: Upload Insomnia binary
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
