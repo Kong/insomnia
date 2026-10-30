@@ -173,14 +173,27 @@ jobs:
 
       # Only Insomnia's own binaries go to /tosign. The vendor Electron .dll files (chrome_elf.dll, ffmpeg.dll, ...)
       # stay out: electron-builder does not sign them by default and every file costs one code-signing token.
-      - name: Move insomnia.dll and .exe files to /tosign (PowerShell)
+      #
+      # build-secure-wrapper.sh copies the stock Insomnia.exe, which electron-builder already signed while packaging
+      # the unpacked app, to insomnia.dll and Insomnia-origin-<version>.exe. Those copies keep that signature, so only
+      # files without a valid signature (the new wrapper Insomnia.exe) are moved. If electron-builder did not sign the
+      # stock exe, the copies are not valid either and they are signed here as a fallback.
+      - name: Move unsigned insomnia.dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -File |
             Where-Object { $_.Name -eq 'insomnia.dll' -or $_.Extension -eq '.exe' } |
-            Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+            ForEach-Object {
+              $status = (Get-AuthenticodeSignature -LiteralPath $_.FullName).Status
+              if ($status -eq 'Valid') {
+                Write-Host "Already signed, skipping: $($_.Name)"
+              } else {
+                Write-Host "To sign ($status): $($_.Name)"
+                Move-Item -LiteralPath $_.FullName -Destination "packages/insomnia/dist/win-unpacked/tosign"
+              }
+            }
 
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
