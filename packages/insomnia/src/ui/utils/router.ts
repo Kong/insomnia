@@ -1,4 +1,3 @@
-import type { Organization } from 'insomnia-api';
 import type { GitProject, GitRepository } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
@@ -6,7 +5,6 @@ import { href, matchPath, type PathMatch, useFetcher, useFetchers, useNavigation
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
-import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
 const getMatchParams = (location: string) => {
   const workspaceMatch = matchPath(
@@ -116,38 +114,9 @@ export const getInitialEntry = async () => {
 
     const user = await services.userSession.get();
     if (user.id) {
-      const organizations = JSON.parse(localStorage.getItem(`${user.accountId}:spaces`) || '[]') as Organization[];
-      // If no organizations are in local storage, go fetch from org index loader
-      if (organizations.length === 0) {
-        return href('/organization');
-      }
-
-      let organizationId = organizations[0].id;
-
-      // Check if the user has a last visited organization
-      try {
-        const lastVisitedOrganizationId = localStorage.getItem('lastVisitedOrganizationId');
-        // The Konnect organization is local-only, so it is never in the cached organization list.
-        const isKnownOrganization =
-          lastVisitedOrganizationId ===
-            (user.accountId && models.organization.getKonnectOrganizationId(user.accountId)) ||
-          organizations.some(o => o.id === lastVisitedOrganizationId);
-        if (lastVisitedOrganizationId && isKnownOrganization) {
-          organizationId = lastVisitedOrganizationId;
-        }
-      } catch {}
-
-      // The Konnect organization may have gone invisible since the previous session (entitlement
-      // revoked server-side, or its last local project removed elsewhere) — `refreshKonnectAccess()`
-      // already re-resolved that immediately before this call, in `entry.client.tsx`. Re-check before
-      // restoring a route into it, otherwise the app lands on a URL for an organization that no
-      // longer appears in the dropdown (this path resolves straight to a leaf route such as
-      // `.../project`, which never runs the org-index loader's own escape-route check).
-      const escapeRoute = models.organization.isKonnectOrganizationId(organizationId)
-        ? await getKonnectOrganizationEscapeRoute(organizationId)
-        : null;
-
-      return escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }));
+      // The organization index loader picks the organization and the route inside it, the same way
+      // as after signing in.
+      return href('/organization');
     }
 
     if (hasUserLoggedInBefore) {

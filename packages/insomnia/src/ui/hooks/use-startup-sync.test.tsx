@@ -11,13 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const queryClient = new QueryClient();
 
 vi.mock('insomnia-data', () => ({
-  services: { userSession: { get: vi.fn() } },
+  services: {
+    userSession: { get: vi.fn() },
+    project: { count: vi.fn(), create: vi.fn() },
+    workspace: { create: vi.fn() },
+  },
 }));
 vi.mock('~/common/project', () => ({ syncProjects: vi.fn() }));
-vi.mock('~/ui/organization-utils', () => ({
-  findMigrationTargetSpaceId: vi.fn(() => 'org_target'),
-  migrateProjectsUnderOrganization: vi.fn(),
-}));
 vi.mock('~/ui/hooks/use-query', () => ({
   useServerMutation: (options: Parameters<typeof useMutation>[0]) => useMutation(options, queryClient),
   useServerQuery: (options: Parameters<typeof useQuery>[0]) => useQuery(options, queryClient),
@@ -26,15 +26,18 @@ vi.mock('~/ui/hooks/use-query', () => ({
 import { services } from 'insomnia-data';
 
 import { syncProjects } from '~/common/project';
-import { migrateProjectsUnderOrganization } from '~/ui/organization-utils';
 
-import { useStartupSync } from './use-startup-sync';
+import { startupSyncQuery, useStartupSync } from './use-startup-sync';
 
 let root: Root;
 let container: HTMLDivElement;
 const result: { current: ReturnType<typeof useStartupSync> | null } = { current: null };
+const query: { current: { status: string; data: unknown } | null } = { current: null };
 
 const Harness = ({ organizationId }: { organizationId: string }) => {
+  // Read before the layout's own read, like the empty project view (a child, whose render and
+  // effects come before the organization layout's).
+  query.current = useQuery(startupSyncQuery(organizationId), queryClient);
   result.current = useStartupSync(organizationId);
   return null;
 };
@@ -58,8 +61,10 @@ describe('useStartupSync', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.mocked(services.userSession.get).mockResolvedValue({ id: 'sess_1', accountId: 'acct_1' } as any);
     vi.mocked(syncProjects).mockResolvedValue();
-    vi.mocked(migrateProjectsUnderOrganization).mockResolvedValue();
-    window.localStorage.setItem('acct_1:spaces', JSON.stringify([{ id: 'org_1' }]));
+    // Not the account's first landing, unless a test says otherwise.
+    window.localStorage.setItem('firstAccountLandingHandled:acct_1', 'true');
+    vi.mocked(services.project.count).mockResolvedValue(0);
+    vi.mocked(services.project.create).mockResolvedValue({ _id: 'proj_drafts' } as any);
     container = document.createElement('div');
     root = createRoot(container);
   });
@@ -72,31 +77,12 @@ describe('useStartupSync', () => {
     vi.restoreAllMocks();
   });
 
-  it('runs the migration and the project sync once per organization, despite the StrictMode double effect', async () => {
+  it('syncs the projects once per organization, despite the StrictMode double effect', async () => {
     await render('org_1');
 
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(1);
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledWith('org_target', 'sess_1');
     expect(syncProjects).toHaveBeenCalledTimes(1);
     expect(syncProjects).toHaveBeenCalledWith('org_1');
     expect(result.current?.status).toBe('idle');
-  });
-
-  it('syncs the projects only after the migration has finished', async () => {
-    let finishMigration = () => {};
-    vi.mocked(migrateProjectsUnderOrganization).mockReturnValue(
-      new Promise<void>(resolve => {
-        finishMigration = resolve;
-      }),
-    );
-
-    await render('org_1');
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(1);
-    expect(syncProjects).not.toHaveBeenCalled();
-
-    await act(async () => finishMigration());
-    await flush();
-    expect(syncProjects).toHaveBeenCalledWith('org_1');
   });
 
   it('syncs an organization entered later, but not one already synced in this session', async () => {
@@ -116,12 +102,11 @@ describe('useStartupSync', () => {
 
     await render('org_scratchpad');
 
-    expect(migrateProjectsUnderOrganization).not.toHaveBeenCalled();
     expect(syncProjects).not.toHaveBeenCalled();
     expect(result.current?.status).toBe('idle');
   });
 
-  it('reports an error without retrying by itself, even on remount, and a retry runs the full task set again', async () => {
+  it('reports an error without retrying by itself, even on remount, and a retry syncs again', async () => {
     vi.mocked(syncProjects).mockRejectedValueOnce(new Error('network'));
 
     await render('org_1');
@@ -137,7 +122,7 @@ describe('useStartupSync', () => {
     await act(async () => result.current?.retry());
     await flush();
 
-    expect(migrateProjectsUnderOrganization).toHaveBeenCalledTimes(2);
+    expect(syncProjects).toHaveBeenCalledTimes(2);
     expect(syncProjects).toHaveBeenLastCalledWith('org_1');
     expect(result.current?.status).toBe('idle');
   });
@@ -150,5 +135,87 @@ describe('useStartupSync', () => {
 
     await render('org_2');
     expect(result.current?.status).toBe('idle');
+  });
+
+  it('is pending from the first render until the run settles', async () => {
+    let finishSync = () => {};
+    vi.mocked(syncProjects).mockReturnValue(
+      new Promise<void>(resolve => {
+        finishSync = resolve;
+      }),
+    );
+
+    await act(async () => {
+      root.render(<Harness organizationId="org_1" />);
+    });
+    expect(query.current?.status).toBe('pending');
+    await flush();
+    expect(query.current?.status).toBe('pending');
+
+    await act(async () => finishSync());
+    await flush();
+    expect(query.current?.status).toBe('success');
+  });
+
+  describe('on the account\'s first landing', () => {
+    beforeEach(() => {
+      window.localStorage.clear();
+    });
+
+    it('creates the Drafts project after the sync when the organization is still empty', async () => {
+      const order: string[] = [];
+      vi.mocked(syncProjects).mockImplementation(async () => void order.push('sync'));
+      vi.mocked(services.project.count).mockImplementation(async () => {
+        order.push('count');
+        return 0;
+      });
+
+      await render('org_1');
+
+      expect(order).toEqual(['sync', 'count']);
+      expect(services.project.count).toHaveBeenCalledWith({ parentId: 'org_1' });
+      expect(services.project.create).toHaveBeenCalledWith({ name: 'Drafts', parentId: 'org_1' });
+      expect(services.workspace.create).toHaveBeenCalledWith({
+        name: 'My first collection',
+        scope: 'collection',
+        parentId: 'proj_drafts',
+      });
+      expect(query.current?.data).toEqual({ initialProjectId: 'proj_drafts' });
+    });
+
+    it('creates nothing when the sync brought projects in', async () => {
+      vi.mocked(services.project.count).mockResolvedValue(2);
+
+      await render('org_1');
+
+      expect(services.project.create).not.toHaveBeenCalled();
+      expect(query.current?.data).toEqual({ initialProjectId: undefined });
+    });
+
+    it('creates nothing when the sync failed', async () => {
+      vi.mocked(syncProjects).mockRejectedValueOnce(new Error('network'));
+
+      await render('org_1');
+
+      expect(services.project.count).not.toHaveBeenCalled();
+      expect(result.current?.status).toBe('error');
+    });
+
+    it('does not fail the sync when the creation fails', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      vi.mocked(services.project.create).mockRejectedValueOnce(new Error('db'));
+
+      await render('org_1');
+
+      expect(result.current?.status).toBe('idle');
+      expect(query.current?.data).toEqual({ initialProjectId: undefined });
+    });
+  });
+
+  it('creates nothing once the account has landed before', async () => {
+    await render('org_1');
+
+    expect(services.project.count).not.toHaveBeenCalled();
+    expect(services.project.create).not.toHaveBeenCalled();
   });
 });
