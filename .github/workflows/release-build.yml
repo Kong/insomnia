@@ -210,6 +210,19 @@ jobs:
           SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
 
+      # Fails the job now, before the installer signing steps spend more tokens, if signing did not work.
+      - name: Verify wrapper signature (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $signature = Get-AuthenticodeSignature -LiteralPath "packages/insomnia/dist/win-unpacked/tosign/Insomnia.exe"
+          Write-Host "Status: $($signature.Status)"
+          Write-Host "Signer: $($signature.SignerCertificate.Subject)"
+          if ($signature.Status -ne 'Valid') {
+            Write-Error "Insomnia.exe is not validly signed"
+            exit 1
+          }
+
       - name: Move .dll and .exe files back to win-unpacked and delete /tosign
         if: runner.os == 'Windows'
         shell: pwsh
