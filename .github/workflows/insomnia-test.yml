@@ -112,13 +112,64 @@ jobs:
           retention-days: 1
 
   # ---------------------------------------------------------------------------
+  # Counts the test cases with `playwright test --list` and derives the shard
+  # count as ceil(total / TESTS_PER_SHARD), then generates the matrix indices
+  # (1..N). Needs `build` only for the cached node_modules.
+  # ---------------------------------------------------------------------------
+  shards:
+    name: Shard Matrix
+    needs: build
+    runs-on: ubuntu-24.04
+    env:
+      TESTS_PER_SHARD: 10
+    outputs:
+      indices: ${{ steps.matrix.outputs.indices }}
+      total: ${{ steps.matrix.outputs.total }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - id: matrix
+        working-directory: packages/insomnia-test
+        run: |
+          count=$(npx playwright test --list 2>&1 | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+')
+          if [ -z "$count" ] || [ "$count" -lt 1 ]; then
+            echo "ERROR: could not determine test count"; exit 1
+          fi
+          total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
+          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard)"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
   # Run the whole suite across a fixed number of shards in parallel. Each shard restores the
   # downloaded binary and runs a slice of the suite, retrying failures in-process
   # (see playwright.config.ts `retries`).
   # ---------------------------------------------------------------------------
   parallel-test:
     name: Parallel Test
-    needs: build
+    needs: [build, shards]
     timeout-minutes: 60
     runs-on: ubuntu-24.04
     permissions:
@@ -127,8 +178,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2, 3, 4, 5, 6]
-        shardTotal: [6]
+        shardIndex: ${{ fromJSON(needs.shards.outputs.indices) }}
+        shardTotal: ${{ fromJSON(format('[{0}]', needs.shards.outputs.total)) }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
