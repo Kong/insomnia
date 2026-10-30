@@ -44,6 +44,8 @@ jobs:
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kong'
 
       - name: Expand swap space
         run: |
@@ -64,11 +66,6 @@ jobs:
             node_modules
             packages/*/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Remove verify-bundle-plugins from postinstall
-        if: steps.node-modules-cache.outputs.cache-hit != 'true'
-        run: |
-          sed -i 's/ && npm run verify-bundle-plugins -w insomnia//' package.json
 
       - name: Install dependencies
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
