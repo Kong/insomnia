@@ -2,6 +2,7 @@ import { defineConfig } from 'eslint/config';
 import playwright from 'eslint-plugin-playwright';
 import globals from 'globals';
 
+// @ts-expect-error root config is an untyped .mjs file
 import rootConfig from '../../eslint.config.mjs';
 
 export default defineConfig([
@@ -18,7 +19,7 @@ export default defineConfig([
   // Standalone mock servers/fixtures, run directly with `node`
   // (see package.json scripts) rather than bundled.
   {
-    files: ['misc/*.ts', '*.cjs'],
+    files: ['misc/*.ts', 'electron-builder.config.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
