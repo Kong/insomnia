@@ -212,7 +212,7 @@ jobs:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
           COVERAGE: 'true'
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       # Two paths here (not just coverage/raw/) because v8-report.json (see
       # misc/coverage.ts) must live as a sibling of raw/, not inside it — the

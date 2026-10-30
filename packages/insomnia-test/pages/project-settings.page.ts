@@ -163,7 +163,7 @@ export class ProjectSettingsPage extends BasePage {
       })
       .click();
     // The dialog only closes once the clone (git fetch + project creation) finishes.
-    await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT * 3 });
+    await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
