@@ -30,8 +30,11 @@ export abstract class RequestPage extends TabPanelPage {
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
   protected readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
-  protected readonly SEND_BUTTON: string =
-    '[data-testid="request-pane"] button:has-text("Send")';
+  protected get sendButtonLocator(): Locator {
+    return this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Send", exact: true });
+  }
 
   protected abstract readonly urlBarId: string;
 
@@ -99,7 +102,7 @@ export abstract class RequestPage extends TabPanelPage {
    * pass this to BasePage's isFocused() (not hasFocus()) to check focus.
    */
   get sendButton(): Locator {
-    return this.page.locator(this.SEND_BUTTON);
+    return this.sendButtonLocator;
   }
 
   /**
@@ -352,7 +355,7 @@ export abstract class RequestPage extends TabPanelPage {
    */
   @throwOnDialog()
   async send(): Promise<void> {
-    await this.page.locator(this.SEND_BUTTON).click();
+    await this.sendButtonLocator.click();
   }
 
   /**
@@ -389,7 +392,7 @@ export abstract class RequestPage extends TabPanelPage {
   ): Promise<void> {
     await this.switchTab(tab);
     const panel = this.page.locator(this.TABPANEL);
-    const deleteAllBtn = panel.locator('button:has-text("Delete all")');
+    const deleteAllBtn = panel.getByRole("button", { name: "Delete all" });
     if (await deleteAllBtn.isEnabled()) {
       await deleteAllBtn.click();
     }
@@ -398,7 +401,7 @@ export abstract class RequestPage extends TabPanelPage {
       // Without a trailing blank row the only blank row is the initial one
       // shown while the list is empty; later rows must be added explicitly.
       if (!this.hasTrailingBlankRow && index > 0) {
-        await panel.locator('button:has-text("Add")').click();
+        await panel.getByRole("button", { name: "Add", exact: true }).click();
       }
       // Locate the row by its fixed position: once it is persisted a new
       // trailing blank row is appended, so `.last()` would no longer be it.
@@ -616,7 +619,7 @@ export abstract class RequestPage extends TabPanelPage {
   async setParamsBulk(params: RequestParameter[]): Promise<void> {
     await this.switchTab("params");
     const panel = this.page.locator(this.TABPANEL);
-    const toggle = panel.locator('button:has-text("Bulk Edit")');
+    const toggle = panel.getByRole("button", { name: "Bulk Edit" });
     if ((await toggle.count()) > 0) await toggle.click();
     await this.setCodeMirrorValue(
       panel.locator(".CodeMirror").first(),
@@ -669,7 +672,7 @@ export abstract class RequestPage extends TabPanelPage {
    * Empty string if no tag is currently rendered there.
    */
   async getUrlPreview(): Promise<string> {
-    const tag = this.page.locator(`${this.URL_BAR} .nunjucks-tag`).first();
+    const tag = this.page.locator(`${this.URL_BAR} [data-nunjucks-tag]`).first();
     return (await tag.count()) === 0 ? "" : (await tag.getAttribute("title")) ?? "";
   }
 

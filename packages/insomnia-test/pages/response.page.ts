@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { RequestState } from '../enums/request-state';
 import type { ResponseExportOption } from '../enums/response-export-option';
@@ -29,13 +29,16 @@ function parseByteSize(raw: string): number | undefined {
 }
 
 export class ResponsePage extends BasePage {
-  private readonly CANCEL_REQUEST_BUTTON = '[data-testid="response-pane"] button:has-text("Cancel Request")';
   private readonly EVENT_PREVIEW_EDITOR = '[data-testid="response-pane"] #mcp-data-preview + .CodeMirror';
   private readonly EVENT_ROWS = '[data-testid="response-pane"] [role="tabpanel"] table tbody tr';
   private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"] .tag';
   private readonly NBSP = / /g;
   private readonly PANE = '[data-testid="response-pane"]';
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
+
+  private get cancelRequestButton(): Locator {
+    return this.page.locator(this.PANE).getByRole('button', { name: 'Cancel Request' });
+  }
 
   /**
    * Assembles the full response state currently shown in the response
@@ -226,7 +229,7 @@ export class ResponsePage extends BasePage {
    * Clicks "Cancel Request" while a request is in flight.
    */
   async cancelRequest(): Promise<void> {
-    await this.page.locator(this.CANCEL_REQUEST_BUTTON).click();
+    await this.cancelRequestButton.click();
   }
 
   /**
@@ -238,7 +241,7 @@ export class ResponsePage extends BasePage {
   }
 
   async getRequestState(): Promise<RequestState> {
-    const cancelButton = this.page.locator(this.CANCEL_REQUEST_BUTTON);
+    const cancelButton = this.cancelRequestButton;
     if ((await cancelButton.count()) === 0) return RequestState.Idle;
     return (await cancelButton.first().isVisible()) ? RequestState.Sending : RequestState.Idle;
   }

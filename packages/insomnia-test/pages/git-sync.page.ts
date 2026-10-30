@@ -344,7 +344,7 @@ export class GitSyncPage extends BasePage {
    * change and commits it, then waits for the Commit modal to close.
    */
   async confirmStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole("button", { name: "Yes" }).click();
+    await this.stageAllPrompt.getByTestId("stage-all-and-commit-confirm-button").click();
     await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -712,7 +712,7 @@ export class GitSyncPage extends BasePage {
    * Reads the action buttons shown on an entity's card, e.g. ["Discard", "Stage"].
    */
   async getEntityCardActions(entityName: string, typeLabel?: string): Promise<string[]> {
-    const labels = await this.entityCard(entityName, typeLabel).locator('button').allInnerTexts();
+    const labels = await this.entityCard(entityName, typeLabel).getByRole('button').allInnerTexts();
     return labels.map(label => label.trim()).filter(label => /^(Stage|Unstage|Discard|Confirm.*)$/.test(label));
   }
 
@@ -873,7 +873,7 @@ export class GitSyncPage extends BasePage {
    * turns into a confirmation prompt that lapses after about 2 seconds.
    */
   async startEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
-    const confirmButton = this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ });
+    const confirmButton = this.entityCard(entityName, typeLabel).getByRole('button').filter({ hasText: /^Confirm/ });
     await expect(async () => {
       await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Discard', exact: true }).click();
       await expect(confirmButton).toBeVisible({ timeout: 1000 });
@@ -885,14 +885,14 @@ export class GitSyncPage extends BasePage {
    * `startEntityDiscard()`, e.g. "Confirm" or "Confirm (discards its contents too)".
    */
   async getEntityDiscardConfirmLabel(entityName: string, typeLabel?: string): Promise<string> {
-    return (await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).innerText()).trim();
+    return (await this.entityCard(entityName, typeLabel).getByRole('button').filter({ hasText: /^Confirm/ }).innerText()).trim();
   }
 
   /**
    * Confirms a pending entity discard and waits for its card to leave the list.
    */
   async confirmEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
-    await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).click();
+    await this.entityCard(entityName, typeLabel).getByRole('button').filter({ hasText: /^Confirm/ }).click();
     await expect(this.entityCard(entityName, typeLabel)).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -1190,7 +1190,7 @@ export class GitSyncPage extends BasePage {
    * fields) follows and keeps the modal open.
    */
   async acceptStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole('button', { name: 'Yes' }).click();
+    await this.stageAllPrompt.getByTestId('stage-all-and-commit-confirm-button').click();
     await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 

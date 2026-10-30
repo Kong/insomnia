@@ -314,6 +314,6 @@ export class CookiePage extends BasePage {
   }
 
   private rows(): Locator {
-    return this.listDialog.getByRole("option");
+    return this.listDialog.getByTestId(/^cookie-test-iteration-/);
   }
 }

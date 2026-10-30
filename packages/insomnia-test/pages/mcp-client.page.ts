@@ -13,10 +13,9 @@ export interface McpCapabilityError {
 }
 
 export class McpClientPage extends RequestPage {
-  private readonly CALL_TOOL_BUTTON = `${this.TABPANEL} button:has-text("Call Tool")`;
   private readonly FILTER_INPUT =
     'input[aria-label="Server Capability filter"]';
-  private readonly SIDEBAR = "#sidebar-mcp-gridlist";
+  private readonly SIDEBAR = '[aria-label="Mcp Server Capabilities"]';
   private readonly TOOL_ROW = `${this.SIDEBAR} [role="row"][data-key^="tools_"]`;
   protected readonly urlBarId = "mcp-url-bar";
 
@@ -49,7 +48,10 @@ export class McpClientPage extends RequestPage {
    */
   async callTool(): Promise<void> {
     await this.switchTab("params");
-    await this.page.locator(this.CALL_TOOL_BUTTON).click();
+    await this.page
+      .locator(this.TABPANEL)
+      .getByRole("button", { name: "Call Tool" })
+      .click();
   }
 
   /**

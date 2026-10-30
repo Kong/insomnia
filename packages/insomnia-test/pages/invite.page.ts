@@ -98,7 +98,7 @@ export class InvitePage extends BasePage {
    * by clicking the dialog's "Invite" button.
    */
   async sendInvites(): Promise<void> {
-    await this.page.locator(".app").press("Escape");
+    await this.page.keyboard.press("Escape");
     await this.dialog.getByRole("button", { name: "Invite" }).click();
   }
 
@@ -123,8 +123,7 @@ export class InvitePage extends BasePage {
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
       const email = await row
-        .locator("span")
-        .filter({ hasText: "@" })
+        .getByText("@")
         .first()
         .innerText();
       const pendingBadge = row.getByText("Invite sent");
