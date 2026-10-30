@@ -35,7 +35,6 @@ export class FolderPage extends TabPanelPage {
    * Opens the folder's Environment tab and adds each variable as a row in
    * its key/value table, confirming every name and value against the
    * folder's on-disk document before moving on to the next row.
-   * @param variables - The folder environment's variable names and values
    */
   async setEnvironmentVariables(variables: Record<string, string>): Promise<void> {
     await this.switchTab("environment");
@@ -64,8 +63,6 @@ export class FolderPage extends TabPanelPage {
   /**
    * Also rewires the composed Auth/Scripts tab components, whose
    * persistence checks read the app's on-disk store via `insomnia`.
-   * @param page - The freshly-launched app's main window
-   * @param insomnia - The freshly-launched ElectronApplication, if any
    */
   override setContext(page: Page, insomnia?: ElectronApplication): void {
     super.setContext(page, insomnia);

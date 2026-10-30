@@ -10,9 +10,6 @@ export class ExportFlow extends BaseFlow {
    * Exports a single Collection to one file via its own sidebar/dashboard
    * "Export" context-menu item, confirming the request-selection step
    * (every request stays checked).
-   * @param item - The Collection to export
-   * @param format - The file format to export as
-   * @param path - Absolute path the exported file should be written to
    */
   async exportCollection(item: Collection, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, exportPage } = this.pageManager;
@@ -30,9 +27,6 @@ export class ExportFlow extends BaseFlow {
    * Exports every workspace under a Project to a directory (one file
    * each) via Preferences -> Data, selecting `format`. Skips the
    * request-selection step, which only Collection-scoped exports show.
-   * @param item - The Project to export
-   * @param format - The file format to export as
-   * @param path - Absolute directory path the exported files should be written into
    */
   async exportProject(item: Project, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, preferencesPage, exportPage } = this.pageManager;
@@ -52,7 +46,6 @@ export class ExportFlow extends BaseFlow {
    * Exports every Project in the app to a directory (one file per
    * workspace) via Preferences -> Data. Always writes as Insomnia v5 —
    * this entry point has no request-selection or format-selection step.
-   * @param directoryPath - Absolute directory path the exported files should be written into
    */
   async exportAllData(directoryPath: string): Promise<void> {
     const { preferencesPage, exportPage } = this.pageManager;
@@ -73,9 +66,6 @@ export class ExportFlow extends BaseFlow {
    * `ExportPage.exportOpenApiSpec()` is decorated with `@throwOnDialog`,
    * so this rejects with that alert's trimmed text in that case; dismiss
    * it with `workspaceFlow.closeDialog()` before continuing.
-   * @param item - The Collection whose OpenAPI spec to export
-   * @param format - YAML or JSON
-   * @param path - Absolute file path the exported spec should be written to
    */
   async exportOpenApiSpec(
     item: Collection,

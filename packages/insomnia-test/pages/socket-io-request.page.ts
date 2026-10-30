@@ -11,7 +11,6 @@ export class SocketIORequestPage extends RequestPage {
   /**
    * Reads the full Socket.IO request state from the UI (url, headers, and
    * the composed message).
-   * @returns the request's url, headers, and message
    */
   async get(): Promise<{
     url: string;
@@ -27,7 +26,6 @@ export class SocketIORequestPage extends RequestPage {
 
   /**
    * Reads the currently composed event name and payload from the body tab.
-   * @returns the event name and payload, or `undefined` if both are empty
    */
   private async getMessage(): Promise<SocketIOMessage | undefined> {
     await this.switchTab("body");
@@ -56,7 +54,6 @@ export class SocketIORequestPage extends RequestPage {
    * Composes a Socket.IO message: switches to the body tab, adds a new
    * argument row via "+ Arg", sets its payload directly on the CodeMirror
    * instance, and fills in the event name.
-   * @param message - the event name and payload to set
    */
   async setMessage(message: SocketIOMessage): Promise<void> {
     await this.switchTab("body");

@@ -6,7 +6,6 @@ import { BaseFlow } from "./base.flow";
 export class GitSyncFlow extends BaseFlow {
   /**
    * Checks out `branch` directly from the Git Sync dropdown's branch list.
-   * @param branch - The branch to check out
    */
   async switchBranch(branch: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -16,8 +15,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Stages all changes, commits with `message` (no push), and reads back
    * the resulting commit's id from History.
-   * @param message - The commit message
-   * @returns The created Commit, with `id` populated
    */
   async commit(message: string): Promise<Commit> {
     const { gitSyncPage } = this.pageManager;
@@ -39,8 +36,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Stages all changes, commits with `message`, then pushes, and reads
    * back the resulting commit's id from History.
-   * @param message - The commit message
-   * @returns The created Commit, with `id` populated
    */
   async commitAndPush(message: string): Promise<Commit> {
     const { gitSyncPage } = this.pageManager;
@@ -62,7 +57,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Reads the file names currently listed as staged and unstaged in the
    * Commit modal, then closes it.
-   * @returns The staged and unstaged file names
    */
   async getChanges(): Promise<{ staged: string[]; unstaged: string[] }> {
     const { gitSyncPage } = this.pageManager;
@@ -76,7 +70,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Stages each of `fileNames` individually from the Commit modal, then
    * closes it.
-   * @param fileNames - File names as listed in the modal, e.g. "foo.yaml"
    */
   async stageChanges(fileNames: string[]): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -90,7 +83,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Unstages each of `fileNames` individually from the Commit modal, then
    * closes it.
-   * @param fileNames - File names as listed in the modal, e.g. "foo.yaml"
    */
   async unstageChanges(fileNames: string[]): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -105,8 +97,6 @@ export class GitSyncFlow extends BaseFlow {
    * Commits only what is already staged (nothing is staged for you),
    * closes the Commit modal if it's still open, and reads the resulting
    * commit back from History.
-   * @param message - The commit message
-   * @returns The created Commit, with `id` populated
    */
   async commitStaged(message: string): Promise<Commit> {
     const { gitSyncPage } = this.pageManager;
@@ -141,7 +131,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Creates `branch` from the current branch, which switches to it
    * immediately.
-   * @param branch - The new branch's name
    */
   async createBranch(branch: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -153,8 +142,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Attempts to create `branch` from the Branches modal and reads back the
    * validation error the app shows instead, then closes the modal.
-   * @param branch - A branch name expected to be rejected
-   * @returns The error text shown under the "New branch name" field
    */
   async createBranchExpectingError(branch: string): Promise<string> {
     const { gitSyncPage } = this.pageManager;
@@ -168,7 +155,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Reads the local and remote-only branch lists from the Branches modal,
    * then closes it.
-   * @returns The local branch names and the remote-only branch names
    */
   async getBranches(): Promise<{ local: string[]; remote: string[] }> {
     const { gitSyncPage } = this.pageManager;
@@ -182,7 +168,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Fetches `branch` (a branch that exists only on the remote) and checks
    * it out via the Branches modal.
-   * @param branch - The remote-only branch to check out
    */
   async checkoutRemoteBranch(branch: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -218,7 +203,6 @@ export class GitSyncFlow extends BaseFlow {
 
   /**
    * Merges `branch` into whichever branch is currently checked out.
-   * @param branch - The branch to merge in
    */
   async mergeBranch(branch: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -230,8 +214,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Merges `branch` into the current branch, expecting conflicts, and
    * resolves all of them by taking the same side.
-   * @param branch - The branch to merge in
-   * @param version - "Current" keeps the local change, "Incoming" takes `branch`'s
    */
   async mergeBranchResolvingConflicts(
     branch: string,
@@ -247,8 +229,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Checks out `switchToBranch` (since a branch can't be deleted while
    * checked out) and deletes `branch`.
-   * @param branch - The branch to delete
-   * @param switchToBranch - The branch to check out first; defaults to "master"
    */
   async deleteBranch(branch: string, switchToBranch = "master"): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -262,8 +242,6 @@ export class GitSyncFlow extends BaseFlow {
    * Like `commitStaged()`, but for staged files with unknown fields: after
    * clicking Commit, continues past the "Unrecognized Fields" confirmation
    * before reading the resulting commit back from History.
-   * @param message - The commit message
-   * @returns The created Commit, with `id` populated
    */
   async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
     const { gitSyncPage } = this.pageManager;
@@ -291,7 +269,6 @@ export class GitSyncFlow extends BaseFlow {
    * Opens a file's diff and discards it, confirming the dialog, without
    * waiting for the file to leave the unstaged list (so it also works for a
    * change that comes straight back), then closes the modal.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async discardChangeAfterReview(fileName: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -305,8 +282,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Opens the Commit modal (if it isn't already open), selects a file in
    * the given list and switches its diff pane to the Visual (Beta) view.
-   * @param list - Which list the file is in
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -319,9 +294,6 @@ export class GitSyncFlow extends BaseFlow {
 
   /**
    * Stages one entity from its card in the Visual view of an unstaged file.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -331,9 +303,6 @@ export class GitSyncFlow extends BaseFlow {
 
   /**
    * Unstages one entity from its card in the Visual view of a staged file.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;
@@ -344,9 +313,6 @@ export class GitSyncFlow extends BaseFlow {
   /**
    * Discards one entity from its card in the Visual view of an unstaged
    * file, confirming the prompt.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
     const { gitSyncPage } = this.pageManager;

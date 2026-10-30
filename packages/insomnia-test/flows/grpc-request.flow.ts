@@ -16,9 +16,6 @@ export class GrpcRequestFlow extends BaseFlow {
   /**
    * Creates a gRPC request under `parent` via the standalone project tree,
    * then verifies it was created.
-   * @param parent - The Collection or Folder under which the request is created
-   * @param request - The request fields to apply after creation
-   * @returns The created request, re-read from the UI
    */
   async create(parent: Collection | Folder, request: GrpcRequest): Promise<GrpcRequest> {
     const workspace = this.pageManager.workspacePage;
@@ -42,9 +39,6 @@ export class GrpcRequestFlow extends BaseFlow {
   /**
    * Reads back an existing gRPC request's fields via the standalone
    * project tree.
-   * @param item - The request name, or an object identifying it by name/id
-   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
-   * @returns The request's fields, or undefined if it could not be found
    */
   async get(
     item: string | { name: string; id?: string },
@@ -68,8 +62,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * Cancels `request`'s in-flight call — a still-in-flight unary/
    * server-streaming call, or an open client/bidi-streaming call — then
    * reads back the resulting gRPC status.
-   * @param request - The request whose call should be cancelled
-   * @returns The gRPC status received after cancelling
    */
   async cancel(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
@@ -81,8 +73,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * Closes the client half of `request`'s open client-streaming or
    * bidi-streaming call by clicking "Commit", then reads back the
    * resulting gRPC status and message(s).
-   * @param request - The request whose open call should be committed
-   * @returns The gRPC status and message(s) received after committing
    */
   async commit(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
@@ -97,8 +87,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * for client/bidi-streaming methods, use `start()` instead since no
    * response arrives until `commit()` closes the client's half of the
    * stream.
-   * @param request - The request to send
-   * @returns The gRPC status and message(s) received after sending
    */
   async send(request: GrpcRequest): Promise<GrpcResponse> {
     const grpcRequestPage = await this.openRequest(request);
@@ -110,7 +98,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * Opens a client-streaming or bidi-streaming call by clicking "Start".
    * Unlike `send()`, this does not wait for a response — none arrives
    * until `commit()` closes the client's half of the stream.
-   * @param request - The request to start streaming
    */
   async start(request: GrpcRequest): Promise<void> {
     const grpcRequestPage = await this.openRequest(request);
@@ -121,8 +108,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * Replaces `request`'s message body and waits until it has landed both
    * on disk and in the request pane's loader data, so a following
    * `send()` can't go out with the previous body.
-   * @param request - The request to update — must carry `id` (set by `create()`/`get()`)
-   * @param body - The new message body
    */
   async setBody(request: GrpcRequest, body: string): Promise<void> {
     if (!request.id) {
@@ -140,8 +125,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * Sends one message over `request`'s open client-streaming or
    * bidi-streaming call. Can be called repeatedly with different bodies
    * before calling `commit()`.
-   * @param request - The request whose open call the message is sent over — must carry `id` (set by `create()`/`get()`) so the just-set body can be confirmed persisted before streaming it
-   * @param body - The message body to stream
    */
   async streamMessage(request: GrpcRequest, body: string): Promise<void> {
     if (!request.id) {
@@ -187,8 +170,6 @@ export class GrpcRequestFlow extends BaseFlow {
    * just typed into a freshly-added header row (its value, typed slightly
    * later, survived the remount), and separately let a streamed message go
    * out with the previous body instead of the one just set.
-   * @param id - The `_id` of the gRPC request whose body was just set
-   * @param content - The body text that must be the persisted value
    */
   private async waitForBodyPersisted(id: string, content: string): Promise<void> {
     await this.waitForFieldPersisted(
@@ -202,8 +183,6 @@ export class GrpcRequestFlow extends BaseFlow {
   /**
    * Locates and opens `request`'s request pane via the standalone project
    * tree.
-   * @param request - The request to open
-   * @returns The opened gRPC request page
    */
   private async openRequest(request: GrpcRequest): Promise<GrpcRequestPage> {
     const workspace = this.pageManager.workspacePage;
@@ -218,7 +197,6 @@ export class GrpcRequestFlow extends BaseFlow {
   /**
    * Reads back the gRPC status and message(s) currently shown in the
    * response pane.
-   * @returns The gRPC status and message(s)
    */
   private async readResponse(): Promise<GrpcResponse> {
     const responsePage = this.pageManager.responsePage;

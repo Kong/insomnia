@@ -50,7 +50,6 @@ export class ExportPage extends BasePage {
 
   /**
    * Chooses the export file format on the "Select Export Type" dialog.
-   * @param format - The format to export as
    */
   async selectFormat(format: ExportFormat): Promise<void> {
     await this.selectExportTypeDialog
@@ -79,7 +78,6 @@ export class ExportPage extends BasePage {
    * have appeared instead (the spec was empty/missing), so this is a
    * no-op — the alert is left open, and `@throwOnDialog` (below) then
    * rejects with its trimmed text once this method returns.
-   * @param format - The format to export the spec as
    */
   @throwOnDialog()
   async exportOpenApiSpec(format: ApiSpecExportFormat): Promise<void> {
@@ -120,7 +118,6 @@ export class ExportPage extends BasePage {
   /**
    * Stubs the native save-file dialog so a single-file (Collection)
    * export writes to `filePath` instead of prompting.
-   * @param filePath - Absolute path the export should be written to
    */
   async stubSaveFileLocation(filePath: string): Promise<void> {
     await this.stubSaveDialog(filePath);
@@ -129,7 +126,6 @@ export class ExportPage extends BasePage {
   /**
    * Stubs the native folder-picker dialog so a multi-file (Project/
    * all-data) export writes into `directoryPath` instead of prompting.
-   * @param directoryPath - Absolute directory path the export should be written into
    */
   async stubSaveDirectoryLocation(directoryPath: string): Promise<void> {
     await this.stubFileChooser(directoryPath);

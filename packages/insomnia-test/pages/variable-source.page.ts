@@ -47,7 +47,6 @@ export class VariableSourcePage extends BasePage {
    * popover without asserting the trigger's label afterwards — an
    * imported project environment's trigger shows its base environment's
    * own name ("Base Environment"), not the container name picked here.
-   * @param optionName - The option's accessible name in the popover
    */
   async selectProjectEnvironment(optionName: string): Promise<void> {
     await this.page.getByLabel("Select a Project Environment").click();
@@ -61,7 +60,6 @@ export class VariableSourcePage extends BasePage {
 
   /**
    * Selects an environment row inside the open Manage Environments modal.
-   * @param name - The environment row's accessible name
    */
   async selectModalEnvironment(name: string): Promise<void> {
     await this.modal.getByRole("row", { name, exact: true }).click();
@@ -71,7 +69,6 @@ export class VariableSourcePage extends BasePage {
    * Clicks a rendered template tag matching `snippet` in the request body
    * to open its tag editor modal, then reads its Source row and Live
    * Preview. `source` is undefined when the modal shows no Source row.
-   * @param snippet - A substring of the tag's `data-template`
    */
   async openVariableModal(snippet: string): Promise<VariableSourceModal> {
     const chip = this.getChip(snippet, "page");
@@ -118,7 +115,6 @@ export class VariableSourcePage extends BasePage {
   /**
    * Polls the open tag editor modal until its Live Preview equals
    * `expected`, then returns the settled modal state.
-   * @param expected - The preview text to wait for
    */
   async waitForModalPreview(expected: string): Promise<VariableSourceModal> {
     await expect(this.page.getByRole("dialog").locator("textarea")).toHaveValue(
@@ -131,7 +127,6 @@ export class VariableSourcePage extends BasePage {
   /**
    * Picks an option in the open tag editor modal's "Environment Variable"
    * select, by its option value or visible label.
-   * @param option - The option value (e.g. `{{ _.subOnlyVar }}`) or `{ label }`
    */
   async selectModalVariable(option: string | { label: string }): Promise<void> {
     await this.page
@@ -142,7 +137,6 @@ export class VariableSourcePage extends BasePage {
 
   /**
    * Replaces the open tag editor modal's custom template text.
-   * @param template - The raw template text to type
    */
   async setModalCustomTemplate(template: string): Promise<void> {
     await this.page
@@ -162,8 +156,6 @@ export class VariableSourcePage extends BasePage {
    * Hovers the template tag matching `snippet` until the variable-source
    * tooltip appears (re-entering the tag if its mark was rebuilt under
    * the pointer), then reads the tooltip text and the chip's own text.
-   * @param snippet - A substring of the tag's `data-template`
-   * @param scope - Whether the tag lives in the request page or inside the Manage Environments modal
    */
   async hoverVariable(
     snippet: string,
@@ -210,8 +202,6 @@ export class VariableSourcePage extends BasePage {
    * Hovers `snippet`'s tag, waits for the tooltip, then reads the tooltip
    * text once it contains `expected` (used when the tooltip swaps content
    * as the pointer moves between tags).
-   * @param snippet - A substring of the tag's `data-template`
-   * @param expected - Text the tooltip must come to contain
    */
   async hoverVariableUntilTooltipContains(
     snippet: string,
@@ -250,7 +240,6 @@ export class VariableSourcePage extends BasePage {
   /**
    * Reports whether an environment row (in the page's Environments grid)
    * is selected, polling until it reaches the expected state.
-   * @param name - The row's accessible name
    */
   async isEnvironmentRowSelected(name: string): Promise<boolean> {
     const row = this.page
@@ -270,7 +259,6 @@ export class VariableSourcePage extends BasePage {
   /**
    * Waits (best effort) for the window URL to match `pattern`, then reads
    * it back — callers assert on the returned URL.
-   * @param pattern - The URL pattern the window is expected to reach
    */
   async waitForUrl(pattern: RegExp): Promise<string> {
     try {

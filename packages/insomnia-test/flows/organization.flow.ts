@@ -27,7 +27,6 @@ export class OrganizationFlow extends BaseFlow {
    * listed — has its current role read back and is only changed if it
    * doesn't already match, rather than always clicking through the role
    * menu.
-   * @param collaborators - The invitees to add and/or collaborators whose role to check/change
    */
   async invite(...collaborators: Collaborator[]): Promise<void> {
     const { invitePage } = this.pageManager;

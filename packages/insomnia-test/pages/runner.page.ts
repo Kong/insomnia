@@ -52,7 +52,6 @@ export class RunnerPage extends BasePage {
   /**
    * Switches between the "Request Order" and "Advanced" tabs on the left
    * (request configuration) pane.
-   * @param tab - The tab to switch to
    */
   async switchRequestTab(tab: RunnerRequestTab): Promise<void> {
     await this.page
@@ -63,7 +62,6 @@ export class RunnerPage extends BasePage {
   /**
    * Checks/unchecks "Keep logs after run" on the "Advanced" tab, switching
    * to that tab first since its checkboxes only render while active.
-   * @param enabled - Whether logs should be kept after the run completes
    */
   async setKeepLogs(enabled: boolean): Promise<void> {
     await this.switchRequestTab("advanced");
@@ -74,7 +72,6 @@ export class RunnerPage extends BasePage {
    * Checks/unchecks "Stop run if an error occurs" on the "Advanced" tab,
    * switching to that tab first since its checkboxes only render while
    * active.
-   * @param enabled - Whether the run should bail on the first error
    */
   async setBail(enabled: boolean): Promise<void> {
     await this.switchRequestTab("advanced");
@@ -92,7 +89,6 @@ export class RunnerPage extends BasePage {
 
   /**
    * Fills the "Iterations" input and verifies the value stuck.
-   * @param count - The number of iterations to run
    */
   async setIterations(count: number): Promise<void> {
     const input = this.page.locator(this.ITERATIONS_INPUT);
@@ -102,7 +98,6 @@ export class RunnerPage extends BasePage {
 
   /**
    * Reads the current value of the "Iterations" input.
-   * @returns The configured number of iterations
    */
   async getIterations(): Promise<number> {
     return Number(
@@ -112,7 +107,6 @@ export class RunnerPage extends BasePage {
 
   /**
    * Fills the "Delay (ms)" input and verifies the value stuck.
-   * @param ms - The delay between requests, in milliseconds
    */
   async setDelay(ms: number): Promise<void> {
     const input = this.page.locator(this.DELAY_INPUT);
@@ -125,7 +119,6 @@ export class RunnerPage extends BasePage {
    * (JSON/CSV) file input, waits for the parsed preview to render, then
    * confirms via the modal's own "Upload" button. Uploading data with N
    * rows overrides the Iterations input to N.
-   * @param filePath - Absolute path to the .json/.csv data file to upload
    */
   async uploadData(filePath: string): Promise<void> {
     await this.page.locator(this.UPLOAD_DATA_BUTTON).click();
@@ -159,7 +152,6 @@ export class RunnerPage extends BasePage {
   /**
    * Clicks the "Skip" button on a specific request's live progress card,
    * available only while that item is still "pending" or "running".
-   * @param name - The exact request name shown on the live progress card
    */
   async skipItem(name: string): Promise<void> {
     await this.page
@@ -173,8 +165,6 @@ export class RunnerPage extends BasePage {
    * Reads the live progress pane's summary line (e.g. "Running 2 / 6
    * requests (1 skipped, 0 canceled)"), available only while a run is in
    * flight or was just canceled.
-   * @returns The parsed live-run status, or undefined if the live progress
-   * pane isn't currently shown
    */
   async getStatus(): Promise<RunnerLiveStatus | undefined> {
     const label = this.page
@@ -201,8 +191,6 @@ export class RunnerPage extends BasePage {
    * "RUNNING", "200 OK") off its live progress card. If the same request
    * name appears in more than one iteration, reads the earliest (first in
    * DOM order) occurrence — the same one `skipItem()` targets.
-   * @param name - The exact request name shown on the live progress card
-   * @returns The badge's trimmed text, or undefined if no such card exists
    */
   async getItemStatus(name: string): Promise<string | undefined> {
     const card = this.page
@@ -217,7 +205,6 @@ export class RunnerPage extends BasePage {
   /**
    * Reads the request-order list as currently rendered: each request's
    * name, HTTP method, and whether it's selected to run.
-   * @returns The request-order list, top to bottom
    */
   async getRequestOrder(): Promise<RunnerRequestItem[]> {
     const rows = this.page.locator(`${this.REQUEST_LIST} [role="row"]`);
@@ -238,7 +225,6 @@ export class RunnerPage extends BasePage {
 
   /**
    * Reads the "passed / total" count badge shown on the "Results" tab.
-   * @returns The passed and total test counts
    */
   async getTestResultCount(): Promise<RunnerTestResultCount> {
     const text = (
@@ -252,7 +238,6 @@ export class RunnerPage extends BasePage {
   /**
    * Clicks one of the "All" / "Passed" / "Failed" / "Skipped" filter
    * buttons above the results list.
-   * @param filter - The filter to apply
    */
   private async setResultFilter(filter: RunnerResultFilter): Promise<void> {
     await this.page
@@ -264,7 +249,6 @@ export class RunnerPage extends BasePage {
   /**
    * Reads every iteration block from the "Results" tab, each with its
    * per-request status, name, elapsed time, and byte size.
-   * @returns The results grouped by iteration, in run order
    */
   async getIterationResults(): Promise<RunnerIterationResult[]> {
     const blocks = this.page.locator(
@@ -296,7 +280,6 @@ export class RunnerPage extends BasePage {
    * clicking each filter button in turn via `setResultFilter()` before
    * re-scraping with `getIterationResults()`. Leaves the "All" filter
    * active afterward.
-   * @returns The iteration results scraped under each filter, keyed by filter name
    */
   async getIterationResultsByFilter(): Promise<RunnerResultsByFilter> {
     const results: RunnerResultsByFilter = new Map();

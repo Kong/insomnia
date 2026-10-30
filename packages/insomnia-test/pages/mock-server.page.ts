@@ -35,7 +35,6 @@ export class MockServerPage extends BasePage {
    * Fills the "What is your self-hosted mock server URL?" field and makes
    * sure the "Self Hosted Mock" radio is the selected hosting type. Must
    * be called while the create-mock-server dialog is open.
-   * @param url - The self-hosted server's base URL
    */
   async setSelfHostedUrl(url: string): Promise<void> {
     const dialog = this.page.getByRole("dialog");
@@ -56,9 +55,6 @@ export class MockServerPage extends BasePage {
    * Opens the "New Mock Route" dialog, fills it in and submits it, then
    * waits for the new route to appear in the sidebar and returns the
    * `data-key` it settled onto.
-   * @param path - The route path (must begin with `/`)
-   * @param method - The HTTP method; left at the dialog's default (GET) if omitted
-   * @returns The new route's id
    */
   async createRoute(path: string, method?: HttpMethod): Promise<string> {
     await this.page.locator(this.NEW_ROUTE_BUTTON).first().click();
@@ -75,8 +71,6 @@ export class MockServerPage extends BasePage {
   /**
    * Opens the route's "Edit Mock Route" dialog from its row's action menu,
    * applies whichever of `path`/`method` is given and submits it.
-   * @param routeId - The route to edit
-   * @param changes - The new path and/or method
    */
   async editRoute(
     routeId: string,
@@ -97,7 +91,6 @@ export class MockServerPage extends BasePage {
   /**
    * Deletes a route through its action menu's "Delete" item and the
    * confirmation dialog, then waits for its row to disappear.
-   * @param routeId - The route to delete
    */
   async deleteRoute(routeId: string): Promise<void> {
     await this.clickRouteAction(routeId, "Delete");
@@ -111,7 +104,6 @@ export class MockServerPage extends BasePage {
   /**
    * Clicks a route's sidebar row to open it, and waits for its URL bar to
    * show that row's path.
-   * @param routeId - The route to open
    */
   async openRoute(routeId: string): Promise<void> {
     await this.routeRow(routeId).click();
@@ -127,7 +119,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Reads every route name listed in the sidebar, in order.
-   * @returns The route paths currently shown
    */
   async getRoutePaths(): Promise<string[]> {
     return this.page
@@ -141,7 +132,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Reads the method and path shown in the open route's URL bar.
-   * @returns The selected route's method and path
    */
   async getOpenRoute(): Promise<{ method: string; path: string }> {
     const bar = this.page
@@ -159,7 +149,6 @@ export class MockServerPage extends BasePage {
   /**
    * Opens the "Show URL" dialog, reads the full mock URL out of it and
    * dismisses it with Cancel.
-   * @returns The route's full URL on its mock server
    */
   async showUrl(): Promise<string> {
     await this.page
@@ -178,7 +167,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Switches the request pane to one of its tabs.
-   * @param tab - The tab's data-key
    */
   async switchRequestTab(tab: RequestTab): Promise<void> {
     await this.page
@@ -188,7 +176,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Switches the response pane to one of its tabs.
-   * @param tab - The tab's data-key
    */
   async switchResponseTab(tab: ResponseTab): Promise<void> {
     await this.page
@@ -199,7 +186,6 @@ export class MockServerPage extends BasePage {
   /**
    * Sets the "Mock Status" tab's status code and waits for it to be
    * persisted.
-   * @param statusCode - The status code to return
    */
   async setStatusCode(statusCode: number): Promise<void> {
     await this.switchRequestTab("status");
@@ -213,7 +199,6 @@ export class MockServerPage extends BasePage {
   /**
    * Sets the "Mock Status" tab's status text and waits for it to be
    * persisted.
-   * @param statusText - The status text to return
    */
   async setStatusText(statusText: string): Promise<void> {
     await this.switchRequestTab("status");
@@ -227,7 +212,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Picks a body type from the "Mock Body" tab's dropdown.
-   * @param bodyType - The body type to pick
    */
   async setBodyType(bodyType: MockBodyType): Promise<void> {
     await this.switchRequestTab("content-type");
@@ -244,7 +228,6 @@ export class MockServerPage extends BasePage {
   /**
    * Types the mock response body into the "Mock Body" tab's editor and
    * waits for it to be persisted.
-   * @param body - The body text to return
    */
   async setBody(body: string): Promise<void> {
     await this.switchRequestTab("content-type");
@@ -260,7 +243,6 @@ export class MockServerPage extends BasePage {
   /**
    * Replaces the "Mock Headers" tab's rows with `headers`, then waits for
    * every one of them to be persisted.
-   * @param headers - The response headers to return
    */
   async setHeaders(headers: RequestHeader[]): Promise<void> {
     await this.switchRequestTab("headers");
@@ -332,7 +314,6 @@ export class MockServerPage extends BasePage {
 
   /**
    * Reads the History tab's rows (method + full URL of each logged hit).
-   * @returns The logged requests, newest first as displayed
    */
   async getHistory(): Promise<MockRouteHistoryEntry[]> {
     await this.switchResponseTab("preview");
@@ -350,7 +331,6 @@ export class MockServerPage extends BasePage {
   /**
    * Opens the response pane's "→ Mock" tab on a request that already has a
    * response and picks the Mock Server to put the response into.
-   * @param serverName - The target Mock Server's name
    */
   async openResponseToMock(serverName: string): Promise<void> {
     await this.page
@@ -365,7 +345,6 @@ export class MockServerPage extends BasePage {
    * On the "→ Mock" tab, creates a new Mock Route from the response: clicks
    * "Create", optionally replaces the path the dialog pre-fills from the
    * response URL, and submits it.
-   * @param path - The route path to use instead of the pre-filled one
    */
   async createRouteFromResponse(path?: string): Promise<void> {
     await this.page
@@ -383,7 +362,6 @@ export class MockServerPage extends BasePage {
   /**
    * On the "→ Mock" tab, overwrites an existing Mock Route with the
    * response: picks the route and clicks "Overwrite".
-   * @param routeId - The existing route to overwrite
    */
   async overwriteRouteFromResponse(routeId: string): Promise<void> {
     await this.page.getByLabel("Choose Mock Route").selectOption(routeId);
@@ -396,8 +374,6 @@ export class MockServerPage extends BasePage {
   /**
    * Waits for a route with `path` to be listed in the sidebar and returns
    * its id.
-   * @param path - The route path to wait for
-   * @returns The route's id
    */
   async findRouteId(path: string): Promise<string> {
     return this.waitForRouteId(path);

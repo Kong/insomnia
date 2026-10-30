@@ -23,7 +23,6 @@ export class TemplateTagPage extends BasePage {
    * `template` exactly (e.g. one just typed into a CodeMirror field via
    * another Page's setter, which Insomnia's own syntax highlighting turns
    * into a clickable span), and waits for its "Edit Tag" modal to open.
-   * @param template - The exact raw tag text (e.g. "{% uuid 'v4' %}")
    */
   async openTagByTemplate(template: string): Promise<void> {
     const escaped = template.replace(/["\\]/g, "\\$&");
@@ -33,7 +32,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Reads the "Function to Perform" select's current tag type.
-   * @returns The selected tag's name (e.g. "uuid", "base64")
    */
   async getFunctionName(): Promise<string> {
     return this.page
@@ -44,7 +42,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Reads the `hash` tag's "Algorithm" argument (index 0).
-   * @returns The currently selected algorithm
    */
   async getAlgorithm(): Promise<string> {
     return this.getArgumentField(0).locator("select").inputValue();
@@ -52,7 +49,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Switches the `hash` tag's "Algorithm" argument (index 0).
-   * @param algorithm - The algorithm to select
    */
   async setAlgorithm(algorithm: HashAlgorithm): Promise<void> {
     const select = this.getArgumentField(0).locator("select");
@@ -71,7 +67,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Reads the `hash` tag's "Digest Encoding" argument (index 1).
-   * @returns The currently selected digest encoding
    */
   async getDigestEncoding(): Promise<string> {
     return this.getArgumentField(1).locator("select").inputValue();
@@ -79,7 +74,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Switches the `hash` tag's "Digest Encoding" argument (index 1).
-   * @param encoding - The digest encoding to select
    */
   async setDigestEncoding(encoding: DigestEncoding): Promise<void> {
     const select = this.getArgumentField(1).locator("select");
@@ -90,7 +84,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Reads the `hash` tag's "Input" argument (index 2) — the raw value to hash.
-   * @returns The current input text
    */
   async getInput(): Promise<string> {
     return this.getArgumentField(2).locator("input").inputValue();
@@ -98,7 +91,6 @@ export class TemplateTagPage extends BasePage {
 
   /**
    * Sets the `hash` tag's "Input" argument (index 2) — the raw value to hash.
-   * @param value - The text to hash
    */
   async setInput(value: string): Promise<void> {
     const input = this.getArgumentField(2).locator("input");
@@ -111,7 +103,6 @@ export class TemplateTagPage extends BasePage {
    * Reads the modal's "Live Preview" — the tag's resolved value against
    * the current environment, re-rendered on every argument change. Waits
    * out the transient "rendering..." state first.
-   * @returns The resolved preview text (or its error text, on a render error)
    */
   async getPreview(): Promise<string> {
     await this.waitForPreviewSettled();
@@ -132,8 +123,6 @@ export class TemplateTagPage extends BasePage {
    * latest one) wins, silently reverting the preview to a stale value.
    * Calling this after every setter forces each recompute to finish before
    * the next argument change fires, so they never overlap.
-   * @param requireNonEmpty - Also rejects a transient empty value (only
-   * `vault`'s async credential re-fetch needs this)
    */
   private async waitForPreviewSettled(requireNonEmpty = false): Promise<void> {
     const preview = this.page.locator(this.LIVE_PREVIEW);
@@ -164,7 +153,6 @@ export class TemplateTagPage extends BasePage {
    * "rendering..." state `getPreview()` already waits out — so this polls
    * until two consecutive reads agree on a non-empty, non-"rendering..."
    * value instead of racing any single transient shape.
-   * @param name - The cloud credential's display name
    */
   async selectVaultCredential(name: string): Promise<void> {
     const select = this.page
@@ -217,9 +205,6 @@ export class TemplateTagPage extends BasePage {
   /**
    * Waits for a `prompt` tag's input dialog (identified by its label
    * text), reads its input's `type`, fills in `value` and submits.
-   * @param label - The prompt tag's title/label text shown in the dialog
-   * @param value - The value to submit
-   * @returns The input's `type` attribute (e.g. `"password"` for a masked prompt)
    */
   async answerPrompt(label: string, value: string): Promise<string> {
     const dialog = this.page.getByRole("dialog").filter({ hasText: label });
