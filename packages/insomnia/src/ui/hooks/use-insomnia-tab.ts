@@ -318,16 +318,30 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
 
   // Sync active tab with current route (only activates existing tabs, or creates/updates temporary tab if no match)
   useEffect(() => {
-    const currentOrgTab = appTabsRef?.current?.[organizationId];
-    const currentTabList = currentOrgTab?.tabList;
-    const currentActiveTabId = currentOrgTab?.activeTabId;
+    let cancelled = false;
+    // Route identity is pathname + search (runner tabs differ only by `?folder=`).
+    const routeAtStart = window.location.pathname + window.location.search;
+    // This effect syncs the tab for the route it started on. Cleanup only runs once the
+    // next route has rendered, so also compare against the live location: in between, the
+    // app has already moved on and any result would apply to a route the user left.
+    // Dropping a run is safe: `routeInfo` is derived from the same location, so every
+    // location change also re-runs this effect for the settled route.
+    const isStale = () => cancelled || window.location.pathname + window.location.search !== routeAtStart;
 
     (async () => {
       const routeTabId = await getNavigationTabId(routeInfo);
+      if (isStale()) return;
+      // Read the tab list after the await: the user may have closed or switched tabs
+      // while resources loaded. Deciding from a pre-await snapshot would then re-open a
+      // tab the user just closed.
+      const currentOrgTab = appTabsRef?.current?.[organizationId];
+      const currentTabList = currentOrgTab?.tabList;
+      const currentActiveTabId = currentOrgTab?.activeTabId;
       const matchingTab = (routeTabId && currentTabList?.find(tab => tab.id === routeTabId)) || null;
 
       if (!matchingTab && routeInfo) {
         const newTemporaryTab = await buildTabFromNavigation(routeInfo, getNavigationResources);
+        if (isStale()) return;
 
         if (newTemporaryTab) {
           addTemporaryTab(newTemporaryTab, { setActive: true });
@@ -335,10 +349,14 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
         }
       }
 
-      if (currentActiveTabId !== matchingTab?.id) {
+      if (!isStale() && currentActiveTabId !== matchingTab?.id) {
         changeActiveTab(matchingTab?.id ?? '');
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo]);
 
   // Keyboard shortcut to close current tab

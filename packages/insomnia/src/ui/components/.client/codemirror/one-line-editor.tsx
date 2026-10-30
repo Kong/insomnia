@@ -46,6 +46,21 @@ import { hideVariableSourceTooltip, isVariableSourceTooltipInside } from './exte
 // A new object per render would cause initEditor to re-run on every render.
 const PREVIEW_NUNJUCKS_OPTIONS: UseNunjucksOptions = { renderContext: { purpose: 'preview' } };
 
+// Whether DOM focus already sits in a field the user can type into. `autoFocus` must
+// not pull focus out of such a field: the user may have moved there on purpose, e.g.
+// the sidebar inline rename that opens right after a request is created.
+const isTypingTarget = (element: Element | null): boolean => {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+  return (
+    element.tagName === 'INPUT' ||
+    element.tagName === 'TEXTAREA' ||
+    element.tagName === 'SELECT' ||
+    element.isContentEditable
+  );
+};
+
 // Replace the editor's entire value while PRESERVING undo/redo history and the
 // cursor. Unlike cm.setValue(), which clears history, replaceRange records the
 // change as a normal, undoable edit. No-ops when the value is unchanged so we
@@ -370,7 +385,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     reactUse.useMount(() => {
       initEditor();
       if (autoFocus && !readOnly) {
+        // Read focus before notifying the caller, so an `onAutoFocus` that moves focus itself
+        // cannot change the decision below.
+        const userIsTypingElsewhere = isTypingTarget(document.activeElement);
+        // Consume the caller's one-shot flag either way: the moment to focus has passed, and
+        // leaving it set would let a later remount of this editor steal focus mid-edit.
         onAutoFocus?.();
+        if (userIsTypingElsewhere) {
+          return;
+        }
         // An enclosing React Aria ListBox (params/headers/environment grids) restores DOM focus to
         // the row right after we focus the editor, and a single deferred focus loses that race on
         // slower/headless machines. So we re-assert focus across a short window, re-grabbing only when
