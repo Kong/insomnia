@@ -81,7 +81,6 @@ export class KonnectPage extends BasePage {
   /**
    * Fills the Kong Konnect settings modal's "Personal Access Token" field.
    * Must be called with the modal already open (see `clickConfigure()`).
-   * @param pat - The Personal Access Token to enter
    */
   async setPat(pat: string): Promise<void> {
     await this.page.getByLabel("Personal Access Token").fill(pat);
@@ -124,7 +123,6 @@ export class KonnectPage extends BasePage {
   /**
    * Reports whether a synced control-plane project node is present in the
    * sidebar project tree.
-   * @param name - The control plane (project) name
    */
   async isControlPlaneVisible(name: string): Promise<boolean> {
     return this.page.getByTestId(`project-node-${name}`).isVisible();
@@ -133,7 +131,6 @@ export class KonnectPage extends BasePage {
   /**
    * Reports whether a synced gateway-service collection node is present in
    * the sidebar project tree.
-   * @param name - The gateway service (workspace) name
    */
   async isServiceVisible(name: string): Promise<boolean> {
     return this.page.getByTestId(`workspace-node-${name}`).isVisible();

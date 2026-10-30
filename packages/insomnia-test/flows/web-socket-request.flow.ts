@@ -18,9 +18,6 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Creates a new WebSocket request under `parent`, naming it via the
    * rename flow and applying its fields on the request page.
-   * @param parent - The Collection or Folder under which the request is created
-   * @param request - The request definition to create, including its fields
-   * @returns The created request, read back and asserted to exist
    */
   async create(
     parent: Collection | Folder,
@@ -53,10 +50,6 @@ export class WebSocketRequestFlow extends BaseFlow {
    * once the disconnect completes (or after `timeout` ms elapses), and
    * returns the resulting response, locating it via the standalone
    * project tree.
-   * @param request - The request whose connection should be closed
-   * @param callback - Invoked once the disconnect completes; defaults to a no-op
-   * @param timeout - Maximum time in milliseconds to wait for the disconnect; defaults to DEFAULT_TIMEOUT
-   * @returns The response view received after disconnecting
    */
   async disconnect(
     request: WebSocketRequest,
@@ -81,9 +74,6 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Reads back an existing request's fields by name or identity via the
    * standalone project tree.
-   * @param item - The request's name, or an object identifying it by name and optional id
-   * @param parent - The Collection the request belongs to, if any (unused — kept for call-site symmetry with other request flows)
-   * @returns The request populated with its current fields, or undefined if not found
    */
   async get(
     item: string | { name: string; id?: string },
@@ -106,9 +96,6 @@ export class WebSocketRequestFlow extends BaseFlow {
   /**
    * Opens the WebSocket connection for `request` and returns the
    * resulting response, locating it via the standalone project tree.
-   * @param request - The request whose connection should be opened
-   * @param options - Forwarded to the page's `connect()`
-   * @returns The response view received after connecting
    */
   async send(
     request: WebSocketRequest,
@@ -131,8 +118,6 @@ export class WebSocketRequestFlow extends BaseFlow {
 
   /**
    * Opens `request` and applies `authentication` on its Auth tab.
-   * @param request - The WebSocket request whose Auth tab to edit
-   * @param authentication - The authentication config to apply
    */
   async setAuthentication(
     request: WebSocketRequest,
@@ -152,11 +137,6 @@ export class WebSocketRequestFlow extends BaseFlow {
    * connection, invoking `callback` once the send completes (or after
    * `timeout` ms elapses), and returns the resulting response, locating it
    * via the standalone project tree.
-   * @param request - The request whose connection the message is sent over
-   * @param body - The message body to send
-   * @param callback - Invoked once the send completes; defaults to a no-op
-   * @param timeout - Maximum time in milliseconds to wait for the send; defaults to DEFAULT_TIMEOUT
-   * @returns The response view received after sending the message
    */
   async sendMessage(
     request: WebSocketRequest,

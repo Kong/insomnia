@@ -26,7 +26,6 @@ export class CommandPalettePage extends BasePage {
    * Reads back the names of every currently listed result, across all
    * sections (Requests/API Collections/Environments/etc — the "Collections
    * and documents" section was renamed "API Collections" by INS-3528).
-   * @returns The visible result names, in on-screen order
    */
   async getResultNames(): Promise<string[]> {
     return this.page.locator(this.OPTION).allInnerTexts();
@@ -66,7 +65,6 @@ export class CommandPalettePage extends BasePage {
    * Types into the search input and polls until the listed results stop
    * changing, so they reflect the given query once the search's own
    * 250ms debounce and round trip have run.
-   * @param query - The search text to type
    */
   async search(query: string): Promise<void> {
     await this.page.locator(`${this.DIALOG} input`).fill(query);
@@ -79,7 +77,6 @@ export class CommandPalettePage extends BasePage {
   /**
    * Clicks the first result whose visible text contains the given name,
    * navigating to it.
-   * @param name - The result's name (or a substring of it) to select
    */
   async selectResult(name: string): Promise<void> {
     await this.page

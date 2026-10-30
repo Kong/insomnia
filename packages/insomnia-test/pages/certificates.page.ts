@@ -51,7 +51,6 @@ export class CertificatesPage extends BasePage {
    * confirmed live this control is a plain `<input type="file">`, so no
    * `stubFileChooser()` is needed here). Overwrites any CA certificate
    * already set.
-   * @param path - Absolute path to a PEM-format CA certificate file
    */
   async addCaCertificate(path: string): Promise<void> {
     await this.dialog
@@ -68,7 +67,6 @@ export class CertificatesPage extends BasePage {
    * key files, not the "PFX or PKCS12" tab — unconfirmed live, not covered
    * here). Both file fields are plain native `<input type="file">`
    * elements, set directly via `setInputFiles()` with no dialog stubbing.
-   * @param certificate - The client certificate to add
    */
   async addClientCertificate(certificate: ClientCertificate): Promise<void> {
     await this.dialog
@@ -96,8 +94,6 @@ export class CertificatesPage extends BasePage {
   /**
    * Toggles a client certificate's Enabled/Disabled state, identified by
    * its `host`. A no-op if it already matches `enabled`.
-   * @param host - The client certificate's configured host
-   * @param enabled - Whether the client certificate should be enabled
    */
   async setClientCertificateEnabled(
     host: string,
@@ -143,7 +139,6 @@ export class CertificatesPage extends BasePage {
   /**
    * Toggles the workspace CA Certificate's Enabled/Disabled state. A no-op
    * if it already matches `enabled`.
-   * @param enabled - Whether the CA certificate should be enabled
    */
   async setCaCertificateEnabled(enabled: boolean): Promise<void> {
     await this.setRowEnabled(this.caCertificateRow(), enabled);
@@ -153,7 +148,6 @@ export class CertificatesPage extends BasePage {
    * Toggles the MCP Client "Manage Certificates" dialog's "SSL Certificate
    * Validation" switch (`McpRequest.sslValidation`). A no-op if it already
    * matches `enabled`.
-   * @param enabled - Whether SSL certificate validation should be enabled
    */
   async setSslValidationEnabled(enabled: boolean): Promise<void> {
     const toggle = this.dialog.locator(

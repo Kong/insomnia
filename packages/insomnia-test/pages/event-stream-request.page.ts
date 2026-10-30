@@ -16,7 +16,6 @@ export class EventStreamRequestPage extends RequestPage {
    * Reads the full event-stream request state from the UI (method, url,
    * params, body, and scripts). Headers are always returned empty since
    * event-stream requests don't expose a headers tab.
-   * @returns the event-stream request fields, excluding `name`
    */
   async get(): Promise<Omit<EventStreamRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -33,7 +32,6 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Reads the current body from the content-type body editor.
-   * @returns the body's mime type and text, or `undefined` if no body is set
    */
   private async getBody(): Promise<EventStreamRequestBody | undefined> {
     const body = await this.getContentTypeBody(ContentType.NoBody);
@@ -70,7 +68,6 @@ export class EventStreamRequestPage extends RequestPage {
   /**
    * Sets the request body via the content-type body editor. No-ops if the
    * body has no `mimeType`.
-   * @param body - the event-stream request body to apply
    */
   async setBody(body: EventStreamRequestBody): Promise<void> {
     if (body.mimeType == null) return;

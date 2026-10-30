@@ -57,8 +57,6 @@ export class EnvironmentPage extends BasePage {
    * the sidebar row count to increase before assuming the new environment
    * exists. Only ever nests directly under Base Environment — the app has
    * no way to create a sub-environment nested under another sub-environment.
-   * @param name - The name to give the newly created sub-environment
-   * @param isPrivate - Whether to create a private environment instead of a shared one
    */
   async createSubEnvironment(
     name: string,
@@ -103,7 +101,6 @@ export class EnvironmentPage extends BasePage {
    * Deletes a single key/value pair row via its "Delete Row" button.
    * It's a confirm button: the first click only arms it, the second
    * confirms and actually deletes the row.
-   * @param row - The row locator to delete
    */
   async deleteRow(row: Locator): Promise<void> {
     const rows = this.page.locator(this.LISTBOX).locator('[role="option"]');
@@ -117,7 +114,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Disables a key/value pair row and waits for the row to flip to its
    * disabled state (its toggle button becomes "Enable Row").
-   * @param row - The row locator to disable
    */
   async disableRow(row: Locator): Promise<void> {
     await row.getByRole("button", { name: "Disable Row" }).click();
@@ -129,8 +125,6 @@ export class EnvironmentPage extends BasePage {
    * passing into `deleteRow()`. Only matches rows whose name/value text
    * contains the given name, so it never matches the always-present
    * trailing blank row.
-   * @param name - The row's current name value
-   * @returns A Locator for the matching row
    */
   getRow(name: string): Locator {
     return this.page
@@ -142,8 +136,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Looks up an environment's stable `data-key` identifier from its
    * sidebar row.
-   * @param name - The environment's display name (matched via `aria-label`)
-   * @returns The environment's `data-key`, or `undefined` if no row with that name exists
    */
   async getEnvironmentId(name: string): Promise<string | undefined> {
     const row = this.page.locator(
@@ -156,7 +148,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reads the names of every environment listed in the sidebar, in
    * display order.
-   * @returns Each row's `aria-label` (empty string if a row has none)
    */
   async getEnvironmentNames(): Promise<string[]> {
     return this.page
@@ -170,7 +161,6 @@ export class EnvironmentPage extends BasePage {
    * Reads every key/value pair row currently shown in the listbox,
    * including its type and enabled/disabled state. Rows with both an
    * empty name and value are omitted.
-   * @returns The variables currently displayed
    */
   async getVariables(): Promise<EnvironmentKvPairData[]> {
     const listbox = this.page.locator(this.LISTBOX);
@@ -203,8 +193,6 @@ export class EnvironmentPage extends BasePage {
    * anymore. Passing `containerName` alone as "No Project Environment"
    * unlinks whichever project environment is currently linked, since that
    * sentinel is itself a normal row in the list.
-   * @param containerName - The project environment's own (base) name to select
-   * @param environmentName - The global sub-environment to select; defaults to "Base Environment", in which case `containerName` itself is selected instead
    */
   async linkProjectEnvironment(
     containerName: string,
@@ -227,7 +215,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Opens one of the two independent environment pickers in the
    * collection toolbar.
-   * @param picker - Which picker's trigger button to click
    */
   async openEnvironmentPicker(picker: "project" | "collection"): Promise<void> {
     const trigger = this.page.locator(
@@ -241,7 +228,6 @@ export class EnvironmentPage extends BasePage {
 
   /**
    * Reports which environment picker popovers are currently open.
-   * @returns The pickers whose listbox is visible right now
    */
   async getOpenEnvironmentPickers(): Promise<("project" | "collection")[]> {
     const open: ("project" | "collection")[] = [];
@@ -270,8 +256,6 @@ export class EnvironmentPage extends BasePage {
    * Environment" button, then returns to the collection the picker belongs
    * to. Creating navigates into the new environment's own page and does
    * not link it to the collection.
-   * @param name - The new Project Environment's name
-   * @param collectionName - The collection to return to afterwards
    */
   async addProjectEnvironment(name: string, collectionName: string): Promise<void> {
     await this.openEnvironmentPicker("project");
@@ -288,7 +272,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reads the project picker's current selection label and, after
    * opening it, the names of the options it lists, then closes it.
-   * @returns The trigger's visible text and the listed option names
    */
   async getProjectEnvironmentPickerState(): Promise<{ selected: string; options: string[] }> {
     const selected = ((await this.page.locator(this.PROJECT_ENVIRONMENT_TRIGGER).innerText()) ?? "").trim();
@@ -329,7 +312,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reports whether the named environment row is shown with the lock icon
    * that marks a private environment.
-   * @param name - The environment row's display name
    */
   async isEnvironmentPrivate(name: string): Promise<boolean> {
     const row = this.page.locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`);
@@ -346,7 +328,6 @@ export class EnvironmentPage extends BasePage {
    * live: both pickers operate independently, and selecting a Collection
    * Environment doesn't clear whichever Project Environment is already
    * linked; their variables merge into the same active render context.
-   * @param name - The collection's own environment/sub-environment name to activate
    */
   async selectCollectionEnvironment(name: string): Promise<void> {
     const trigger = this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER);
@@ -383,8 +364,6 @@ export class EnvironmentPage extends BasePage {
    * real key — confirmed live via a polling probe. Waiting here for the
    * key to settle (unchanged across consecutive reads) avoids grabbing
    * the soon-to-be-stale key and losing the row mid-rename.
-   * @param oldName - The environment's current display name
-   * @param newName - The name to rename it to
    */
   async renameEnvironment(oldName: string, newName: string): Promise<void> {
     const row = this.page.locator(
@@ -409,7 +388,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Clicks the sidebar row matching the given environment name to select
    * it.
-   * @param name - The environment's display name (matched via `aria-label`)
    */
   async selectEnvironment(name: string): Promise<void> {
     await this.page
@@ -439,7 +417,6 @@ export class EnvironmentPage extends BasePage {
    * always appended last, so each iteration locates the freshly added
    * row by grabbing the current last row's `data-key` before filling it
    * in. Disables a row afterward if `enabled` is explicitly `false`.
-   * @param variables - The variables to set as the new complete list
    */
   async setVariables(variables: EnvironmentKvPairData[]): Promise<void> {
     await this.deleteAll();
@@ -483,7 +460,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Reads the current environment's raw JSON text, once the raw editor
    * view is showing (see `toggleRawEdit()`).
-   * @returns The raw JSON text currently in the editor
    */
   async getRawJson(): Promise<string> {
     return this.readCodeMirror(
@@ -494,7 +470,6 @@ export class EnvironmentPage extends BasePage {
   /**
    * Replaces the current environment's raw JSON text, once the raw
    * editor view is showing (see `toggleRawEdit()`).
-   * @param json - The raw JSON text to set
    */
   async setRawJson(json: string): Promise<void> {
     await this.setCodeMirrorValue(
@@ -522,8 +497,6 @@ export class EnvironmentPage extends BasePage {
    * its key/value pairs, confirming the row's debounced save has landed
    * (and the row has settled onto its persisted key) before the next edit
    * builds on it. Skipped for a blank name, which the app never persists.
-   * @param variable - The variable whose row was just edited
-   * @param options.checkValue - Whether the value must match too, or only the name (right after the name is typed)
    */
   private async waitForVariablePersisted(
     variable: EnvironmentKvPairData,
@@ -580,9 +553,6 @@ export class EnvironmentPage extends BasePage {
    * `variable` until its source tooltip appears, then reads the tooltip.
    * The chip can be rebuilt right after the editor mounts, silently
    * dropping the pointer, so the hover is retried until the tooltip shows.
-   * @param variable - The variable name referenced by the chip's template
-   * @param inDialog - Whether to look inside the open "Manage Environments" dialog instead of the whole page
-   * @returns The tooltip's trimmed text, e.g. "Project Environment : Base Environment"
    */
   async hoverVariableSource(
     variable: string,
@@ -623,7 +593,6 @@ export class EnvironmentPage extends BasePage {
 
   /**
    * Clicks an environment's row inside the open "Manage Environments" dialog.
-   * @param name - The environment row's accessible name
    */
   async selectEnvironmentInDialog(name: string): Promise<void> {
     await this.collectionEnvironmentDialog
@@ -633,8 +602,6 @@ export class EnvironmentPage extends BasePage {
 
   /**
    * Whether an environment row in the "Environments" grid is selected.
-   * @param name - The environment row's accessible name
-   * @param inDialog - Whether to read the row inside the open "Manage Environments" dialog instead of the page's own grid
    */
   async isEnvironmentRowSelected(
     name: string,
@@ -660,7 +627,6 @@ export class EnvironmentPage extends BasePage {
    * Fills the last (empty) row of the open "Manage Environments" dialog
    * with `variable`, then closes the dialog and the picker popover behind it.
    * Requires `openCollectionEnvironmentEditor()` to have been called first.
-   * @param variable - The variable's name and value to add
    */
   async addCollectionEnvironmentVariable(
     variable: EnvironmentKvPairData,

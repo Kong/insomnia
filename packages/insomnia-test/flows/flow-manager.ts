@@ -60,7 +60,6 @@ export class FlowManager implements FlowContext {
   /**
    * The underlying ElectronApplication handle, for AppFlow to reach the
    * main process directly without going through a DOM-facing Page.
-   * @returns The ElectronApplication handle, or undefined if none was passed in
    */
   get electronApp(): ElectronApplication | undefined {
     return this.insomnia;
@@ -69,7 +68,6 @@ export class FlowManager implements FlowContext {
   /**
    * The launch parameters this session's `insomnia` fixture originally
    * used — see `AppFlow.restart()`.
-   * @returns The original launch config, or undefined if none was passed in
    */
   get launchConfig(): AppLaunchConfig | undefined {
     return this.appLaunchConfig;
@@ -78,7 +76,6 @@ export class FlowManager implements FlowContext {
   /**
    * Rewires `electronApp` onto a freshly-relaunched ElectronApplication —
    * called by `AppFlow.restart()` once the new app is up.
-   * @param insomnia - The freshly-launched ElectronApplication
    */
   setElectronApp(insomnia: ElectronApplication): void {
     this.insomnia = insomnia;
@@ -86,7 +83,6 @@ export class FlowManager implements FlowContext {
 
   /**
    * Reads the main process's `userData` directory.
-   * @returns The absolute path to the app's data directory
    */
   async getDataPath(): Promise<string> {
     return this.insomnia!.evaluate(({ app }) => app.getPath("userData"));

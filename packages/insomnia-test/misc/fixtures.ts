@@ -34,7 +34,6 @@ export { launchInsomniaElectron, SESSION_ID };
  *
  * Scoped to this worker's SESSION_ID, so it never affects Electron instances
  * running concurrently in other workers — see SESSION_ID's comment.
- * @param enabled - Whether the Git Sync feature should be enabled
  */
 export async function setGitSyncFeatureFlag(enabled: boolean): Promise<void> {
   await fetch(`${MOCK_API_SERVER}/_admin/features/git-sync`, {
@@ -49,7 +48,6 @@ export async function setGitSyncFeatureFlag(enabled: boolean): Promise<void> {
  * app reads once at startup to decide whether Git projects are disabled by
  * org storage policy. Same pre-launch timing/reset requirements and
  * per-worker scoping as `setGitSyncFeatureFlag()`.
- * @param enabled - Whether the storage rule should allow Git Sync
  */
 export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
   await fetch(`${MOCK_API_SERVER}/_admin/storage-rule/git-sync`, {
@@ -66,7 +64,6 @@ export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
  * only appears in the organization switcher once this (or a local Konnect
  * project) makes it visible. Same pre-launch timing/reset requirements and
  * per-worker scoping as `setGitSyncFeatureFlag()`.
- * @param enabled - Whether the account should hold the Konnect entitlement
  */
 export async function setKonnectEntitlement(enabled: boolean): Promise<void> {
   await fetch(`${MOCK_API_SERVER}/_admin/features/konnect-entitlement`, {
@@ -92,134 +89,6 @@ export async function resetCloudSyncState(): Promise<void> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionId: SESSION_ID }),
-  });
-}
-
-/**
- * Stalls `misc/mock-api.js`'s Cloud Sync GraphQL responses for this worker's
- * session by `ms` before replying, until called again with `0` — a test-only
- * concurrency knob (INS-2026), not a real network fault. Unlike the other
- * mock servers' `x-reply-delay-ms` header, these GraphQL calls are made by
- * the app's Electron main process (`insomnia-vcs`'s `runVcsGraphQL`), not the
- * renderer, so there's no request a spec can attach a header to; this holds
- * the *response* instead, from the server side.
- *
- * Pass `projectId` (a backend project's own id, e.g. read from its local
- * `meta.json`) to delay only requests naming that project — as
- * `variables.id`, `.projectId`, or `.teamProjectId`, covering `project`/
- * `branch`/`snapshotsCreate`/`projectCreate` alike — and let every other
- * workspace's calls on the same session through immediately. Omit it (or
- * pass `undefined`) to delay every request for the session instead — but
- * note a workspace's own creation can trigger its own immediate push on the
- * very same session, so an unscoped delay stalls that too (confirmed live: a
- * 6s unscoped delay ballooned an unrelated "New Collection" to ~48s).
- *
- * Use this to widen one workspace's in-flight sync.invoke call (e.g. mid-
- * `push`) long enough to deterministically land a second, concurrent
- * workspace's own sync.invoke call inside that window.
- * `resetCloudSyncState()` does not clear this; call with `0` explicitly once
- * the window is no longer needed.
- * @param ms - How long to hold each matching response, in milliseconds; `0` clears it
- * @param projectId - Only delay requests naming this backend project id; omit to delay every request for the session
- */
-export async function setCloudSyncGraphQLDelay(
-  ms: number,
-  projectId?: string,
-): Promise<void> {
-  await fetch(`${MOCK_API_SERVER}/_admin/cloud-sync/delay`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId: SESSION_ID, ms, projectId }),
-  });
-}
-
-/**
- * Reads back misc/mock-api.js's log of every Cloud Sync GraphQL request this
- * worker's session has made so far, in arrival order — each entry is
- * `{ operationName, projectId, at }`, where `projectId` is whatever the
- * request actually carried as `variables.id`/`.projectId`/`.teamProjectId`
- * (`null` if none of those were present) and `at` is the server's
- * `Date.now()` when the request arrived (before any `setCloudSyncGraphQLDelay`
- * hold is applied, so it reflects when the app *sent* the request, not when
- * the response resolved).
- *
- * Use this to assert on the actual wire-level shape of a concurrency bug
- * directly — e.g. that every `snapshots`/`blobs` query belonging to one
- * workspace's in-flight pull still carried *that* workspace's own project id
- * throughout, rather than inferring the same thing indirectly from which
- * workspace's on-disk files ended up with new content.
- * `resetCloudSyncState()` clears this along with the rest of the session's
- * Cloud Sync state.
- */
-export async function getCloudSyncGraphQLRequestLog(): Promise<
-  { operationName: string; projectId: string | null; at: number }[]
-> {
-  const response = await fetch(
-    `${MOCK_API_SERVER}/_admin/cloud-sync/request-log?sessionId=${SESSION_ID}`,
-  );
-  const { requestLog } = await response.json();
-  return requestLog;
-}
-
-/**
- * Forces `misc/mock-api.js`'s `projectArchive` GraphQL mutation to return an
- * error instead of succeeding, for this worker's session — a test-only
- * failure knob (INS-2026 case 5) simulating a failed dashboard delete (e.g.
- * offline or revoked access) without an actual network fault. Call with
- * `false` to restore normal success once the failure has been observed.
- * @param enabled - Whether `projectArchive` should fail for this session
- */
-export async function setCloudSyncArchiveFailure(
-  enabled: boolean,
-): Promise<void> {
-  await fetch(`${MOCK_API_SERVER}/_admin/cloud-sync/archive-failure`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId: SESSION_ID, enabled }),
-  });
-}
-
-/**
- * Reads back one of `misc/mock-api.js`'s seeded Cloud Sync fixture projects
- * by name (`"My Collection R1"`, `"My Environment"`, `"My MCP Client"`, or
- * `"Ghost Collection"` — a project pre-seeded with a mismatched
- * `rootDocumentId`, simulating the INS-2026 bug's end state) — its own
- * backend project id, `rootDocumentId`, the `wrk_*` key inside its latest
- * snapshot's `state[]`, and whether it's already been archived this
- * session. Lets a test assert on a *never-pulled* remote file's identity
- * and on-backend state without a local `meta.json` to read.
- * @param name - The fixture project's name
- */
-export async function getCloudSyncProjectInfo(name: string): Promise<{
-  id: string;
-  rootDocumentId: string;
-  latestSnapshotWorkspaceKey: string | null;
-  deleted: boolean;
-}> {
-  const response = await fetch(
-    `${MOCK_API_SERVER}/_admin/cloud-sync/project-info?sessionId=${SESSION_ID}&name=${encodeURIComponent(name)}`,
-  );
-  return response.json();
-}
-
-/**
- * Adds a remote-only Cloud Sync project to misc/mock-api.js for this
- * worker's session, with a single "Initial Snapshot" holding `docs` exactly
- * as given — so a spec controls what the remote blobs contain, e.g. a
- * request with a field this version of Insomnia doesn't know, or one that
- * fails its schema. It shows up as an unsynced file, fetchable by `name`
- * via `cloudSyncFlow.fetch()`. `resetCloudSyncState()` clears it.
- * @param name - The project's (and fetched collection's) name
- * @param docs - The raw documents to store, workspace first; each needs an `_id` (its key in the snapshot) and its own `parentId`/`type`
- */
-export async function seedCloudSyncProject(
-  name: string,
-  docs: { _id: string; name?: string }[],
-): Promise<void> {
-  await fetch(`${MOCK_API_SERVER}/_admin/cloud-sync/seed-project`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId: SESSION_ID, name, docs }),
   });
 }
 
@@ -266,13 +135,19 @@ export const test = base.extend<Fixtures>({
   // use) => { ...seed files into it...; await use(dataPath); } })` to
   // pre-seed NeDB `.db` files before Electron ever launches — mirrors
   // insomnia-smoke-test's own `playwright/test.ts` `dataPath` fixture.
-  dataPath: async ({}, use) => {
+  dataPath: async ({}, use, testInfo) => {
     const dataPath = path.join(
       os.tmpdir(),
       "insomnia-test",
       crypto.randomUUID(),
     );
     await use(dataPath);
+    // Keep the data directory of a failed test so its database can be
+    // inspected; the path is surfaced in the report.
+    if (testInfo.status !== testInfo.expectedStatus) {
+      testInfo.annotations.push({ type: "data-path", description: dataPath });
+      return;
+    }
     fs.rmSync(dataPath, { recursive: true, force: true });
   },
 

@@ -53,7 +53,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the branch name (or "Not synced") currently shown on the Git
    * Sync dropdown trigger.
-   * @returns The current branch label
    */
   async getCurrentBranch(): Promise<string> {
     return (await this.syncDropdownButton.innerText()).trim();
@@ -63,7 +62,6 @@ export class GitSyncPage extends BasePage {
    * Checks out `branch` directly from the Git Sync dropdown's branch list
    * (a faster path than opening the Branches modal), and waits for the
    * dropdown's label to show it as the current branch.
-   * @param branch - The branch to check out
    */
   async switchBranch(branch: string): Promise<void> {
     await this.openSyncMenu();
@@ -178,7 +176,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Stages all changes, fills the commit message, and commits (without
    * pushing). Requires `openCommitDialog()` to have been called first.
-   * @param message - The commit message
    */
   async commit(message: string): Promise<void> {
     await this.stageAllChanges();
@@ -198,7 +195,6 @@ export class GitSyncPage extends BasePage {
    * by a caller doing further UI work in between — and it's a different
    * message than the standalone `push()` action's "Push completed").
    * Requires `openCommitDialog()` to have been called first.
-   * @param message - The commit message
    */
   async commitAndPush(message: string): Promise<void> {
     await this.stageAllChanges();
@@ -235,7 +231,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the file names listed under "Staged changes" in the open Commit
    * modal. Requires `openCommitDialog()` to have been called first.
-   * @returns The staged file names
    */
   async getStagedChanges(): Promise<string[]> {
     return this.readChangeRows("Staged changes");
@@ -244,7 +239,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the file names listed under "Unstaged changes" in the open
    * Commit modal. Requires `openCommitDialog()` to have been called first.
-   * @returns The unstaged file names
    */
   async getUnstagedChanges(): Promise<string[]> {
     return this.readChangeRows("Unstaged changes");
@@ -254,7 +248,6 @@ export class GitSyncPage extends BasePage {
    * Stages a single file from the open Commit modal's unstaged list and
    * waits for it to move to the staged list. Requires `openCommitDialog()`
    * to have been called first.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async stageChange(fileName: string): Promise<void> {
     const row = this.changeRow("Unstaged changes", fileName);
@@ -269,7 +262,6 @@ export class GitSyncPage extends BasePage {
    * Unstages a single file from the open Commit modal's staged list and
    * waits for it to move back to the unstaged list. Requires
    * `openCommitDialog()` to have been called first.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async unstageChange(fileName: string): Promise<void> {
     const row = this.changeRow("Staged changes", fileName);
@@ -296,7 +288,6 @@ export class GitSyncPage extends BasePage {
    * Discards a single unstaged file from the open Commit modal, confirming
    * the prompt, and waits for it to leave the unstaged list. Requires
    * `openCommitDialog()` to have been called first.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async discardChange(fileName: string): Promise<void> {
     const row = this.changeRow("Unstaged changes", fileName);
@@ -313,7 +304,6 @@ export class GitSyncPage extends BasePage {
    * list to empty rather than for the modal to close, since the modal
    * stays open while unstaged changes remain. Requires `openCommitDialog()`
    * to have been called first.
-   * @param message - The commit message; omit to submit with an empty message
    */
   async commitStaged(message?: string): Promise<void> {
     await this.commitDialog
@@ -326,7 +316,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Whether the Commit modal is currently open.
-   * @returns true if the modal is visible
    */
   async isCommitDialogOpen(): Promise<boolean> {
     return this.commitDialog.isVisible();
@@ -335,7 +324,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the text of the "Stage All Changes" prompt the Commit modal opens
    * when Commit is clicked with nothing staged. Waits for it to appear.
-   * @returns The prompt's text
    */
   async getStageAllPromptText(): Promise<string> {
     await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -417,7 +405,6 @@ export class GitSyncPage extends BasePage {
    * commit row while the log is still being fetched. Only actual data rows
    * get a `data-key`, so waiting for one to appear here doubles as waiting
    * for the log to finish loading.
-   * @returns The latest commit's id and message, or undefined if the log is empty
    */
   async getLatestCommit(): Promise<
     { id: string; message: string } | undefined
@@ -459,7 +446,6 @@ export class GitSyncPage extends BasePage {
    * stays disabled while the request is in flight, so this can't just
    * wait for the click to resolve). Requires `openBranchesDialog()` to
    * have been called first.
-   * @param branch - The new branch's name
    */
   async createBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -476,7 +462,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Checks out `branch` from its row in the Branches modal. Requires
    * `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to check out
    */
   async checkoutBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -488,7 +473,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Deletes `branch` from its row in the Branches modal, confirming the
    * prompt. Requires `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to delete
    */
   async deleteBranch(branch: string): Promise<void> {
     const row = this.branchesDialog.getByRole("row", {
@@ -502,7 +486,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Merges `branch` into the current branch, confirming the prompt.
    * Requires `openBranchesDialog()` to have been called first.
-   * @param branch - The branch to merge in
    */
   async mergeBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -517,7 +500,6 @@ export class GitSyncPage extends BasePage {
    * without waiting for it to become the active branch — for names the app
    * is expected to reject. Requires `openBranchesDialog()` to have been
    * called first.
-   * @param branch - The branch name to attempt to create
    */
   async submitNewBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -532,7 +514,6 @@ export class GitSyncPage extends BasePage {
    * Reads the validation error shown under the Branches modal's "New
    * branch name" field after a rejected `submitNewBranch()`. Waits for it
    * to appear. Requires `openBranchesDialog()` to have been called first.
-   * @returns The error text
    */
   async getNewBranchError(): Promise<string> {
     const error = this.branchesDialog.locator("form p");
@@ -544,7 +525,6 @@ export class GitSyncPage extends BasePage {
    * Reads the names listed under "Local Branches" (without the current
    * branch's trailing " *"). Requires `openBranchesDialog()` to have been
    * called first.
-   * @returns The local branch names
    */
   async getLocalBranches(): Promise<string[]> {
     return this.readBranchRows("Branches list");
@@ -554,7 +534,6 @@ export class GitSyncPage extends BasePage {
    * Reads the names listed under "Remote Branches" (remote-only branches).
    * Waits for the "Fetching remote branches..." placeholder to clear.
    * Requires `openBranchesDialog()` to have been called first.
-   * @returns The remote-only branch names
    */
   async getRemoteBranches(): Promise<string[]> {
     await expect(
@@ -567,7 +546,6 @@ export class GitSyncPage extends BasePage {
    * Checks out a remote-only branch via its "Fetch and checkout" button and
    * waits for it to become the active branch. Requires
    * `openBranchesDialog()` to have been called first.
-   * @param branch - The remote-only branch to check out
    */
   async checkoutRemoteBranch(branch: string): Promise<void> {
     await this.branchesDialog
@@ -586,7 +564,6 @@ export class GitSyncPage extends BasePage {
    * by taking the same side for each (via "Take all current/incoming
    * changes" in the merge editor, confirming the prompt), then submits and waits for the modal to
    * close. Call after `mergeBranch()` or `pull()` hit conflicts.
-   * @param version - "Current" keeps the local change, "Incoming" takes the merged-in one
    */
   async resolveMergeConflicts(version: "Current" | "Incoming"): Promise<void> {
     await expect(this.mergeConflictsDialog).toBeVisible({
@@ -677,8 +654,6 @@ export class GitSyncPage extends BasePage {
    * — the undiscardable flag arrives with the same loader data as the
    * diff, so once the pane is up the warning's presence is settled.
    * Requires `openCommitDialog()` to have been called first.
-   * @param list - Which list the file is in
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async openChangeDiff(list: GitChangeList, fileName: string): Promise<void> {
     await this.changeRow(list, fileName).click();
@@ -692,7 +667,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Switches the open Commit modal's diff pane between the Text and Visual
    * (Beta) views. Requires `openChangeDiff()` to have been called first.
-   * @param view - The view to show
    */
   async switchDiffView(view: GitDiffView): Promise<void> {
     await this.commitDialog.getByRole('button', { name: view, exact: true }).click();
@@ -701,7 +675,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads which diff view the open Commit modal's diff pane is showing,
    * from the view switch's highlighted button.
-   * @returns The active view
    */
   async getDiffView(): Promise<GitDiffView> {
     const visualClass = (await this.commitDialog.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('class')) ?? '';
@@ -710,8 +683,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads whether the diff pane's view switch offers a given view.
-   * @param view - The view to look for
-   * @returns True if a button with that label is visible
    */
   async hasDiffViewOption(view: GitDiffView): Promise<boolean> {
     return this.commitDialog.getByRole('button', { name: view, exact: true }).isVisible();
@@ -721,7 +692,6 @@ export class GitSyncPage extends BasePage {
    * Waits for the Visual view to settle (cards, or one of its notices) and
    * reads every entity card's name, in display order. Requires the Visual
    * view to be showing.
-   * @returns The entity names, one per card
    */
   async getEntityCardNames(): Promise<string[]> {
     await this.commitDialog
@@ -740,9 +710,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the action buttons shown on an entity's card, e.g. ["Discard", "Stage"].
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns The buttons' labels
    */
   async getEntityCardActions(entityName: string, typeLabel?: string): Promise<string[]> {
     const labels = await this.entityCard(entityName, typeLabel).locator('button').allInnerTexts();
@@ -751,9 +718,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the full text of an entity's card (header, tabs, field diffs).
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns The card's text
    */
   async getEntityCardText(entityName: string, typeLabel?: string): Promise<string> {
     return (await this.entityCard(entityName, typeLabel).innerText()).trim();
@@ -761,9 +725,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the change-section tab labels on an entity's card, e.g. ["Params 1", "Headers 2"].
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns The tab labels
    */
   async getEntityCardTabs(entityName: string, typeLabel?: string): Promise<string[]> {
     const labels = await this.entityCard(entityName, typeLabel).getByRole('tab').allInnerTexts();
@@ -772,9 +733,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Selects a change-section tab on an entity's card.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @param tab - The tab's label without its count, e.g. "Secrets"
    */
   async selectEntityCardTab(entityName: string, tab: string, typeLabel?: string): Promise<void> {
     await this.entityCard(entityName, typeLabel).getByRole('tab', { name: new RegExp(`^\\s*${tab.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}`) }).click();
@@ -784,8 +742,6 @@ export class GitSyncPage extends BasePage {
    * Reads a card's header: its method badge, name and URL texts, and
    * whether the three share one line (their boxes overlap vertically).
    * Only meaningful for cards with a badge and URL, e.g. a request's.
-   * @param entityName - The entity's name as shown on its card
-   * @returns The header's texts and whether they sit on one line
    */
   async getEntityCardHeader(entityName: string): Promise<{ badge: string; name: string; url: string; onOneLine: boolean }> {
     const header = this.entityCard(entityName).locator('div.items-baseline').first();
@@ -809,10 +765,6 @@ export class GitSyncPage extends BasePage {
    * view, waits for its lazily created Monaco diff editor, and reads how
    * it rendered: how many editors, how many folded unchanged regions, and
    * how many lines the changed (right) side actually draws.
-   * @param entityName - The entity's name as shown on its card
-   * @param tab - A change-section tab to select first, e.g. "Body"; omit for the card's current tab
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns The compact diff's editor count, folded region count and drawn line count
    */
   async getEntityCardCompactDiff(
     entityName: string,
@@ -842,9 +794,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether an entity card currently shows a compact Monaco diff
    * (long values) rather than the plain inline before/after form.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns True if the card contains a compact diff editor
    */
   async hasEntityCardCompactDiff(entityName: string, typeLabel?: string): Promise<boolean> {
     return (await this.entityCard(entityName, typeLabel).locator('.monaco-diff-editor').count()) > 0;
@@ -852,7 +801,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the Visual view's "N entities changed" summary line.
-   * @returns The summary text, e.g. "3 entities changed"
    */
   async getEntitySummary(): Promise<string> {
     return (await this.commitDialog.getByText(/^\d+ (entity|entities) changed$/).innerText()).trim();
@@ -861,8 +809,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Stages one entity from its card in the Visual view (Unstaged side) and
    * waits for its card to leave the list.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async stageEntity(entityName: string, typeLabel?: string): Promise<void> {
     await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Stage', exact: true }).click();
@@ -871,9 +817,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads whether an entity card's Stage button is enabled.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns True if the Stage button is enabled
    */
   async isEntityStageEnabled(entityName: string, typeLabel?: string): Promise<boolean> {
     return this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Stage', exact: true }).isEnabled();
@@ -885,7 +828,6 @@ export class GitSyncPage extends BasePage {
    * double click would — then waits for the first entity's card to leave
    * the list. Every click after the first lands while its action is still
    * pending.
-   * @param entityNames - The entities' names as shown on their cards, first one wins
    */
   async stageEntitiesInQuickSuccession(entityNames: string[]): Promise<void> {
     await this.commitDialog.evaluate((root, names) => {
@@ -904,7 +846,6 @@ export class GitSyncPage extends BasePage {
    * Clicks Stage on an entity's card and then "Stage this file" within one
    * browser task, so the file-level action fires while the entity action is
    * still pending.
-   * @param entityName - The entity's name as shown on its card
    */
   async stageEntityThenFileInQuickSuccession(entityName: string): Promise<void> {
     await this.commitDialog.evaluate((root, name) => {
@@ -921,8 +862,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Unstages one entity from its card in the Visual view (Staged side) and
    * waits for its card to leave the list.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async unstageEntity(entityName: string, typeLabel?: string): Promise<void> {
     await this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Unstage', exact: true }).click();
@@ -932,8 +871,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Clicks Discard on an entity's card, without confirming. The button
    * turns into a confirmation prompt that lapses after about 2 seconds.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async startEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
     const confirmButton = this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ });
@@ -946,9 +883,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the label of the confirmation prompt shown after
    * `startEntityDiscard()`, e.g. "Confirm" or "Confirm (discards its contents too)".
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns The prompt's label
    */
   async getEntityDiscardConfirmLabel(entityName: string, typeLabel?: string): Promise<string> {
     return (await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).innerText()).trim();
@@ -956,8 +890,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Confirms a pending entity discard and waits for its card to leave the list.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async confirmEntityDiscard(entityName: string, typeLabel?: string): Promise<void> {
     await this.entityCard(entityName, typeLabel).locator('button').filter({ hasText: /^Confirm/ }).click();
@@ -966,8 +898,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Waits for an entity's confirmation prompt to lapse back to "Discard".
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
    */
   async waitForEntityDiscardPromptToLapse(entityName: string, typeLabel?: string): Promise<void> {
     await expect(this.entityCard(entityName, typeLabel).getByRole('button', { name: 'Discard', exact: true })).toBeVisible({
@@ -977,9 +907,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads whether an entity has a card in the Visual view right now.
-   * @param entityName - The entity's name as shown on its card
-   * @param typeLabel - The card's type badge (e.g. "API Spec"), only needed when several cards share a name
-   * @returns True if its card is visible
    */
   async isEntityCardVisible(entityName: string, typeLabel?: string): Promise<boolean> {
     return this.entityCard(entityName, typeLabel).isVisible();
@@ -989,7 +916,6 @@ export class GitSyncPage extends BasePage {
    * Reads the notice the Visual view shows instead of cards ("Unable to
    * parse this file for a visual diff." or "No requests, folders,
    * environments or settings changed…"). Waits for it to appear.
-   * @returns The notice text
    */
   async getVisualDiffNotice(): Promise<string> {
     const notice = this.visualDiffNotice.locator('xpath=..');
@@ -1002,7 +928,6 @@ export class GitSyncPage extends BasePage {
    * isn't in the format Insomnia writes ("This file isn't in the format
    * Insomnia writes…"). The check runs in the background after the cards
    * render, so this waits for the warning to appear.
-   * @returns The warning text
    */
   async getVisualDiffFormatWarning(): Promise<string> {
     const warning = this.commitDialog.getByTestId('visual-diff-format-warning');
@@ -1021,7 +946,6 @@ export class GitSyncPage extends BasePage {
    * Reads whether the Visual view shows no format warning once its
    * background format check has had time to finish. Requires the cards or
    * a notice to be showing.
-   * @returns True if the format warning is not visible
    */
   async isVisualDiffFormatWarningAbsent(): Promise<boolean> {
     return !(await this.commitDialog.getByTestId('visual-diff-format-warning').isVisible());
@@ -1037,7 +961,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads the title and description of the error toast an entity action
    * raises ("Failed to stage/unstage/discard changes").
-   * @returns The toast's text
    */
   async getErrorToastText(): Promise<string> {
     const toast = this.page.getByText(/Failed to (stage|unstage|discard) changes/);
@@ -1048,7 +971,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether the open Commit modal's diff pane shows the "can't be
    * discarded" warning. Requires `openChangeDiff()` to have been called.
-   * @returns True if the warning banner is visible in the diff pane
    */
   async isUndiscardableWarningVisible(): Promise<boolean> {
     return this.commitDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
@@ -1057,7 +979,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Clicks Discard on a file's row and waits for the confirmation dialog,
    * without confirming. Requires `openCommitDialog()` to have been called.
-   * @param fileName - The file name as listed in the modal, e.g. "foo.yaml"
    */
   async openDiscardConfirmation(fileName: string): Promise<void> {
     const row = this.changeRow(GitChangeList.Unstaged, fileName);
@@ -1078,7 +999,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the open Discard confirmation dialog's body text.
-   * @returns The dialog's text content
    */
   async getDiscardConfirmationText(): Promise<string> {
     return (await this.discardDialog.innerText()).trim();
@@ -1087,7 +1007,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether the open Discard confirmation dialog shows the "can't be
    * discarded" warning.
-   * @returns True if the warning is visible in the dialog
    */
   async isUndiscardableWarningVisibleInDiscardDialog(): Promise<boolean> {
     return this.discardDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
@@ -1096,7 +1015,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether the open Commit modal's diff pane shows the unknown
    * fields banner. Requires `openChangeDiff()` to have been called.
-   * @returns True if the banner is visible in the diff pane
    */
   async isUnknownFieldsDiffWarningVisible(): Promise<boolean> {
     return this.commitDialog.getByTestId('unknown-fields-diff-warning').isVisible();
@@ -1104,7 +1022,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Reads the unknown fields banner's text from the open Commit modal's diff pane.
-   * @returns The banner's text, or an empty string when it isn't shown
    */
   async getUnknownFieldsDiffWarningText(): Promise<string> {
     const banner = this.commitDialog.getByTestId('unknown-fields-diff-warning');
@@ -1118,7 +1035,6 @@ export class GitSyncPage extends BasePage {
    * down a long file is not seen — use
    * `getUnknownFieldHighlightCountAcrossDiff()` for that. Requires
    * `openChangeDiff()` to have been called.
-   * @returns The number of highlighted lines in view
    */
   async getUnknownFieldHighlightCount(): Promise<number> {
     return this.commitDialog.locator('.unknown-field-line-bg').count();
@@ -1134,7 +1050,6 @@ export class GitSyncPage extends BasePage {
    * with the mouse wheel rather than the keyboard, as moving the cursor does
    * not scroll an editor that short. Requires `openChangeDiff()` to have been
    * called.
-   * @returns The highlighted lines seen at every scroll position, summed
    */
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
     const diffEditor = this.commitDialog.locator('.monaco-diff-editor').first();
@@ -1173,7 +1088,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether the "Unrecognized Fields" confirmation is open, as shown
    * when committing a file whose committed version has unknown fields.
-   * @returns True if the confirmation dialog is visible
    */
   async isUnknownFieldsConfirmationVisible(): Promise<boolean> {
     return this.unknownFieldsConfirmDialog.isVisible();
@@ -1181,7 +1095,6 @@ export class GitSyncPage extends BasePage {
 
   /**
    * Waits for the "Unrecognized Fields" confirmation and reads its text.
-   * @returns The dialog's text content
    */
   async getUnknownFieldsConfirmationText(): Promise<string> {
     await expect(this.unknownFieldsConfirmDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -1226,7 +1139,6 @@ export class GitSyncPage extends BasePage {
   /**
    * Reads whether the Git Sync menu's "Commit" item is enabled, i.e.
    * whether anything is uncommitted. Opens and closes the menu.
-   * @returns True if there are uncommitted changes
    */
   async hasUncommittedChanges(): Promise<boolean> {
     await this.openSyncMenu();
@@ -1242,7 +1154,6 @@ export class GitSyncPage extends BasePage {
    * modal to close, so a confirmation raised by the click (e.g. the
    * "Unrecognized Fields" one) can be handled by the caller. Requires
    * `openCommitDialog()` to have been called first.
-   * @param message - The commit message
    */
   async commitStagedAndPush(message: string): Promise<void> {
     await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
@@ -1266,7 +1177,6 @@ export class GitSyncPage extends BasePage {
    * Clicks "Commit" (or "Commit and push") on the generated commit groups
    * without waiting for the modal to close, so a confirmation raised by the
    * click can be handled by the caller. Requires `generateCommits()` first.
-   * @param push - Click "Commit and push" instead of "Commit"
    */
   async submitGeneratedCommits(push = false): Promise<void> {
     await this.commitDialog

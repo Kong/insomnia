@@ -26,8 +26,6 @@ export type CookieTarget =
 export class CookieFlow extends BaseFlow {
   /**
    * Reads the current cookie jar, opening it from `item`'s location.
-   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from
-   * @returns The current cookie jar
    */
   private async get(item: CookieTarget): Promise<Cookie[]> {
     await this.openTarget(item);
@@ -41,9 +39,6 @@ export class CookieFlow extends BaseFlow {
   /**
    * Replaces the entire cookie jar with `cookies`, opening the jar from
    * `item`'s location, then reads it back.
-   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from
-   * @param cookies - The full set of cookies the jar should contain afterward
-   * @returns The cookie jar read back after setting
    */
   async link<T extends CookieTarget>(
     item: T,
@@ -78,8 +73,6 @@ export class CookieFlow extends BaseFlow {
    * open→setCookies→close write once per mismatch. The dialog's unmount
    * can cancel the app's debounced save, so a lost cookie write has to be
    * repeated, not only waited for.
-   * @param item - The Collection/request whose location the Cookie Jar dialog is opened from, for a retry
-   * @param cookies - The cookies that must all be present in the persisted jar
    */
   private async waitForPersisted(
     item: CookieTarget,

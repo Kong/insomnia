@@ -13,9 +13,6 @@ export class FolderFlow extends BaseFlow {
    * pick the create option -> name it -> Create" sequence as creating a
    * request (see `HttpRequestFlow.create()`), just with a different
    * context-menu item and a plain naming dialog instead of a rename step.
-   * @param parent - The Collection or Folder under which the folder is created
-   * @param folder - The folder definition to create
-   * @returns The created folder, read back and asserted to exist
    */
   async create(parent: Collection | Folder, folder: Folder): Promise<Folder> {
     const workspace = this.pageManager.workspacePage;
@@ -30,8 +27,6 @@ export class FolderFlow extends BaseFlow {
 
   /**
    * Reads back an existing folder's identity by name.
-   * @param name - The folder's name
-   * @returns The folder populated with its id, or undefined if not found
    */
   private async get(name: string): Promise<Folder | undefined> {
     const node = await this.pageManager.workspacePage.findItemNode(
@@ -48,8 +43,6 @@ export class FolderFlow extends BaseFlow {
    * Opens a folder's own editor tab (Auth/Headers/Scripts/Environment/
    * Docs) via its "Open in New Tab" context-menu item — not the same as
    * its "Settings" item, which only opens a rename/move dialog.
-   * @param folder - The folder to open, as returned by `create()`/`get()`
-   * @returns The FolderPage, once its tab pane is confirmed visible
    */
   async open(folder: Folder): Promise<FolderPage> {
     const workspace = this.pageManager.workspacePage;
@@ -71,8 +64,6 @@ export class FolderFlow extends BaseFlow {
    * `AuthTabComponent.fetchOAuth2Tokens()` — "Fetch Tokens" before any
    * token exists, "Refresh Token" once one does), then reads back the
    * resulting Refresh/Identity/Access Token fields in one call.
-   * @param folder - The folder whose Auth tab already has OAuth 2.0 configured
-   * @returns The tokens now stored on that folder's Auth tab
    */
   async fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens> {
     const folderPage = await this.open(folder);
@@ -84,8 +75,6 @@ export class FolderFlow extends BaseFlow {
    * Opens `folder` and sets its own pre-request and/or after-response
    * scripts (see `ScriptTabComponent.setScripts()`) — these run for
    * every descendant request before/after that request's own script.
-   * @param folder - The folder to set scripts on, as returned by `create()`/`get()`
-   * @param scripts - The script(s) to set
    */
   async setScripts(folder: Folder, scripts: RequestScripts): Promise<void> {
     const folderPage = await this.open(folder);
@@ -96,8 +85,6 @@ export class FolderFlow extends BaseFlow {
    * Opens `folder` and sets its own Environment tab variables — they
    * override the collection's base and sub-environment values for every
    * descendant request.
-   * @param folder - The folder to set variables on, as returned by `create()`/`get()`
-   * @param variables - Variable names and values
    */
   async setEnvironmentVariables(folder: Folder, variables: Record<string, string>): Promise<void> {
     const folderPage = await this.open(folder);

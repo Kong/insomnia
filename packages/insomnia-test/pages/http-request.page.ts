@@ -18,7 +18,6 @@ export class HttpRequestPage extends RequestPage {
    * pane — method, URL, params, body, and pre-request/after-response
    * scripts. Headers are always returned empty; this page doesn't read
    * them back.
-   * @returns The request data, omitting its name
    */
   async get(): Promise<Omit<HttpRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -38,8 +37,6 @@ export class HttpRequestPage extends RequestPage {
    * "content-type" tab and inspecting the mime type select, then reading
    * the type-specific content — form/multipart params, the chosen file
    * name, or the raw text from the CodeMirror editor.
-   * @returns The current body, or undefined when no body is set or no
-   * editor is present
    */
   async getBody(): Promise<HttpRequestBody | undefined> {
     await this.switchTab("content-type");
@@ -75,7 +72,6 @@ export class HttpRequestPage extends RequestPage {
    * filling in the type-specific content — form/multipart parameters, a
    * file path, or raw text typed into the code editor. Does nothing when
    * no mime type is given, and skips content entirely for `NoBody`.
-   * @param body - The body to apply, including its mime type and content
    */
   async setBody(body: HttpRequestBody): Promise<void> {
     if (body.mimeType == null) return;

@@ -94,8 +94,6 @@ export class Tree {
    * reached, then reconstructs the hierarchy from indentation. This is
    * needed because the tree is virtualized, so not all nodes are in the
    * DOM at once.
-   * @param page - The Playwright page containing the navigation tree
-   * @returns A Tree built from the fully-scraped rows
    */
   static async fromPage(page: Page): Promise<Tree> {
     const grid = page.getByRole("grid", { name: "Project Navigation Tree" });
@@ -157,8 +155,6 @@ export class Tree {
    * Rebuilds the parent/child hierarchy from a flat list of tree rows by
    * sorting them into visual order and using each row's indentation level
    * to determine nesting.
-   * @param rows - The flat, unordered tree rows scraped from the DOM
-   * @returns A Tree whose roots reflect the reconstructed hierarchy
    */
   static fromRows(rows: TreeRow[]): Tree {
     const ordered = [...rows].sort((a, b) => a.order - b.order);
@@ -198,7 +194,6 @@ export class Tree {
    * those can hold unrelated, pre-existing content outside the current
    * test's scope. Capped to guard against an unexpected toggle that
    * doesn't actually collapse on click.
-   * @param grid - The navigation tree grid to search for collapsed rows
    */
   private static async expandAllCollapsed(grid: Locator): Promise<void> {
     const collapsedWorkspaceRows = grid.locator(
@@ -241,7 +236,6 @@ export class Tree {
   /**
    * Depth-first flattens the tree into a single array, useful for
    * searching across all nodes regardless of nesting.
-   * @returns All nodes in the tree, in depth-first order
    */
   flatten(): TreeNode[] {
     const out: TreeNode[] = [];
@@ -317,7 +311,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Clicks the given tab, making it the active tab, and waits for the
    * route change to settle before returning.
-   * @param name - The tab's request/resource name
    */
   async clickTab(name: string): Promise<void> {
     await this.tab(name).click();
@@ -329,7 +322,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Clicks a tab's close ("x") button.
-   * @param name - The tab's request/resource name
    */
   async closeTab(name: string): Promise<void> {
     await this.tab(name).locator('[data-testid="tab-close-button"]').click();
@@ -337,7 +329,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Reads back the currently active (selected) tab's name.
-   * @returns The active tab's name, or undefined if no tab is selected
    */
   async getActiveTabName(): Promise<string | undefined> {
     const active = this.page.locator(`${this.TAB_ROW}[aria-selected="true"]`);
@@ -348,8 +339,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads back this tab's method tag text (e.g. "GET"), for request
    * tabs.
-   * @param name - The tab's request name
-   * @returns The tag text shown on the tab
    */
   async getTabMethodTag(name: string): Promise<string> {
     return (
@@ -360,7 +349,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads back the names of every currently open tab, in on-screen
    * (left-to-right) order.
-   * @returns The open tabs' names
    */
   async getTabNames(): Promise<string[]> {
     const rows = this.page.locator(this.TAB_ROW);
@@ -374,8 +362,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Checks whether a tab with the given name is currently open.
-   * @param name - The tab's request/resource name
-   * @returns Whether a matching tab exists
    */
   async isTabOpen(name: string): Promise<boolean> {
     return (await this.tab(name).count()) > 0;
@@ -385,7 +371,6 @@ export class WorkspacePage extends BasePage {
    * Double-clicks a temporary (italicized preview) tab to pin it, so
    * navigating to a different request reuses a new temporary tab instead
    * of replacing this one.
-   * @param name - The tab's request/resource name
    */
   async pinTab(name: string): Promise<void> {
     await this.tab(name).dblclick();
@@ -404,7 +389,6 @@ export class WorkspacePage extends BasePage {
    * Exposed (unlike `clickContextMenu`) so a caller can assert visibility
    * without clicking, e.g. confirming an item is offered on a given
    * surface.
-   * @param item - The context-menu item to locate
    */
   getContextMenuItem(item: ContextMenuItem): Locator {
     const menu = this.page.getByRole("menu");
@@ -416,7 +400,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Clicks a context-menu item, matching either a menuitem or a
    * menuitemradio role since some menu entries render as radio options.
-   * @param item - The context-menu item to click
    */
   async clickContextMenu(item: ContextMenuItem): Promise<void> {
     await this.getContextMenuItem(item).click();
@@ -426,7 +409,6 @@ export class WorkspacePage extends BasePage {
    * Opens a workspace row's "⋮" actions dropdown (the "SideBar Workspace
    * Actions" trigger, only rendered on hover) — the same underlying menu
    * `rightClick()` also opens.
-   * @param node - The workspace tree node to open the dropdown for
    */
   async openWorkspaceActionsDropdown(node: TreeNode): Promise<void> {
     const row = this.page
@@ -440,11 +422,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Clicks the "Create" button and waits for the create/update dialog to
    * close.
-   * @param timeoutMs - How long to wait for the dialog to close; defaults
-   * to `DEFAULT_TIMEOUT`. Callers that create a Git-backed collection
-   * should pass a longer budget — that path writes the new file into the
-   * repo and stages it before the dialog closes, which can run past the
-   * default timeout under CI load.
    */
   async clickCreate(timeoutMs: number = DEFAULT_TIMEOUT): Promise<void> {
     const createButton = this.page.getByRole("button", {
@@ -532,7 +509,6 @@ export class WorkspacePage extends BasePage {
    * Reads the code snippet shown in the "Generate Client Code" dialog
    * (opened via `ContextMenuItem.GenerateCode`), then closes it via
    * "Done".
-   * @returns The generated code snippet's text (curl by default)
    */
   async getGeneratedCode(): Promise<string> {
     const code = await this.readCodeMirror(this.generateCodeCodeMirror);
@@ -551,7 +527,6 @@ export class WorkspacePage extends BasePage {
    * asynchronously (~1s) after the menu item click, so a caller reading
    * `getGeneratedCode()` immediately after would race a stale snippet.
    * No-ops if `target` is already the dropdown's current selection.
-   * @param target - The target language's exact menu item label, e.g. "Node.js"
    */
   async setGenerateCodeTarget(target: string): Promise<void> {
     const dropdown = this.generateCodeDialog
@@ -582,7 +557,6 @@ export class WorkspacePage extends BasePage {
    * waits for the snippet to re-render with the new client, same as
    * `setGenerateCodeTarget()`. No-ops if `client` is already the
    * dropdown's current selection.
-   * @param client - The client's exact menu item label, e.g. "Axios"
    */
   async setGenerateCodeClient(client: string): Promise<void> {
     const dropdown = this.generateCodeDialog
@@ -652,7 +626,6 @@ export class WorkspacePage extends BasePage {
    * Reports whether a login-screen entry point (e.g. `"Continue with
    * Email"`, `"Use local Scratch Pad"`) is currently visible. Must be
    * called after `logOut()`.
-   * @param name - The entry point's accessible label
    */
   async isLoginEntryPointVisible(name: string): Promise<boolean> {
     return this.page.getByLabel(name).isVisible();
@@ -671,7 +644,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Scrolls a tree node's row into view and left-clicks it.
-   * @param node - The tree node to click
    */
   async clickNode(node: TreeNode): Promise<void> {
     const row = this.page
@@ -686,7 +658,6 @@ export class WorkspacePage extends BasePage {
    * one. Without this, a request page's `navigate()` can resolve against
    * the previously open request's still-mounted editor, so a following
    * Send/Connect click acts on the wrong request.
-   * @param node - The request's tree node
    */
   async openRequestNode(node: TreeNode): Promise<void> {
     await this.clickNode(node);
@@ -706,7 +677,6 @@ export class WorkspacePage extends BasePage {
    * `requestGroupMeta` via a DB round trip before patching the UI's query
    * cache), so the bare keypress can resolve tens of ms before the row's
    * expanded state actually changes.
-   * @param node - The folder node to expand
    */
   async expand(node: TreeNode): Promise<void> {
     await this.pressArrowOnNode(node, "ArrowRight");
@@ -718,7 +688,6 @@ export class WorkspacePage extends BasePage {
    * collapsing it (a no-op if it's already collapsed). See `expand()` for
    * why this waits for the toggle to settle rather than returning as soon
    * as the keypress itself resolves.
-   * @param node - The folder node to collapse
    */
   async collapse(node: TreeNode): Promise<void> {
     await this.pressArrowOnNode(node, "ArrowLeft");
@@ -729,8 +698,6 @@ export class WorkspacePage extends BasePage {
    * Polls `isExpanded()` until it reaches the expected state, rather than
    * trusting a single snapshot read right after a keypress — see
    * `expand()`'s doc comment for the underlying async gap this covers.
-   * @param node - The folder node to check
-   * @param expected - The expanded state to wait for
    */
   private async waitForExpanded(node: TreeNode, expected: boolean): Promise<void> {
     await expect(async () => {
@@ -742,8 +709,6 @@ export class WorkspacePage extends BasePage {
    * Focuses a tree row (Playwright's `press()` focuses its target first)
    * and sends the given arrow key, mirroring the sidebar's own
    * `onKeyDownCapture` expand/collapse handler.
-   * @param node - The node whose row to focus
-   * @param key - The arrow key to send
    */
   private async pressArrowOnNode(
     node: TreeNode,
@@ -760,8 +725,6 @@ export class WorkspacePage extends BasePage {
    * Checks whether a folder node is currently expanded, via its own
    * "Collapse {name}" toggle button (only rendered while expanded — the
    * same convention `expandAllCollapsed()` reads for "Expand {name}").
-   * @param node - The folder node to check
-   * @returns Whether the folder is currently expanded
    */
   async isExpanded(node: TreeNode): Promise<boolean> {
     const row = this.page
@@ -781,7 +744,6 @@ export class WorkspacePage extends BasePage {
    * Confirmed live: the shortcut only opens the menu — it does not create
    * anything by itself, unlike `workspaceFlow.createCollection()`'s own "+"-button
    * dropdown path.
-   * @param node - The node to select before opening the create menu
    */
   async openCreateShortcut(node: TreeNode): Promise<void> {
     await this.clickNode(node);
@@ -819,7 +781,6 @@ export class WorkspacePage extends BasePage {
    * Polls a row's `aria-selected` attribute until it reports `"true"`
    * across two consecutive reads — see `openCreateShortcut()`'s doc
    * comment for the async selection catch-up this waits out.
-   * @param node - The node whose row was just clicked to select it
    */
   private async waitForSelectionSettled(node: TreeNode): Promise<void> {
     const row = this.page
@@ -911,10 +872,6 @@ export class WorkspacePage extends BasePage {
    * Finds a node by id or name, optionally scoped to a parent's subtree.
    * Delegates to findNodeUnder, findNodeById, or findNode depending on
    * which identifying information is available.
-   * @param item - Identifies the target node by id (preferred) or name
-   * @param type - If given, restricts the match to nodes of this type
-   * @param parent - If given, restricts the search to this node's subtree
-   * @returns The matching node, or undefined if it is not found
    */
   async findItemNode(
     item: { id?: string; name: string },
@@ -932,10 +889,6 @@ export class WorkspacePage extends BasePage {
    * `findItemNode()` budget to render a new node) and throws naming the
    * node instead of returning `undefined`. Use `findItemNode()` to assert
    * a node is absent.
-   * @param item - Identifies the target node by id (preferred) or name
-   * @param type - If given, restricts the match to nodes of this type
-   * @param parent - If given, restricts the search to this node's subtree
-   * @returns The matching node
    * @throws If no matching node appears within `DEFAULT_TIMEOUT`
    */
   async requireItemNode(
@@ -958,9 +911,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Polls the tree until a node matching the given name (and optional
    * type) appears, since newly created nodes may not render immediately.
-   * @param name - The node name to search for
-   * @param type - If given, restricts the match to nodes of this type
-   * @returns The matching node, or undefined if it never appears within the poll timeout
    */
   async findNode(
     name: string,
@@ -979,9 +929,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Polls the tree until a node matching the given id (and optional
    * type) appears, since newly created nodes may not render immediately.
-   * @param id - The node id to search for
-   * @param type - If given, restricts the match to nodes of this type
-   * @returns The matching node, or undefined if it never appears within the poll timeout
    */
   private async findNodeById(
     id: string,
@@ -999,10 +946,6 @@ export class WorkspacePage extends BasePage {
    * Polls the tree until a descendant of the given parent matching the
    * given id or name (and optional type) appears. Searches only within
    * the parent's subtree, not the whole tree.
-   * @param parent - The ancestor node whose descendants are searched
-   * @param item - Identifies the target node by id (preferred) or name
-   * @param type - If given, restricts the match to nodes of this type
-   * @returns The matching descendant node, or undefined if it never appears within the poll timeout
    */
   private async findNodeUnder(
     parent: TreeNode,
@@ -1040,7 +983,6 @@ export class WorkspacePage extends BasePage {
    * workspace type or creation path). Fills its placeholder-labeled name
    * input and commits by pressing Enter (the input sits inside a native
    * form, so Enter submits it) instead of clicking a "Create" button.
-   * @param name - The name to give the new collection
    */
   async createCollectionInEmptyState(name: string): Promise<void> {
     await this.page
@@ -1060,7 +1002,6 @@ export class WorkspacePage extends BasePage {
    * renders just the first two levels. A request's level renders its HTTP
    * method above its name (e.g. "GET\nMy Request"); that method prefix is
    * stripped so callers only see the label.
-   * @returns The breadcrumb labels, in on-screen order
    */
   async getBreadcrumb(): Promise<string[]> {
     const labels = await this.page
@@ -1073,8 +1014,6 @@ export class WorkspacePage extends BasePage {
    * Polls `getBreadcrumb()` until it matches `expected`, rather than
    * trusting a single read right after selecting a node — the breadcrumb
    * lags the newly-selected item by a render tick.
-   * @param expected - The breadcrumb labels to wait for, in on-screen order
-   * @returns The settled breadcrumb labels
    */
   async waitForBreadcrumbSettled(expected: string[]): Promise<string[]> {
     let breadcrumb: string[] = [];
@@ -1087,7 +1026,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Convenience accessor for the full flattened list of tree nodes.
-   * @returns All nodes in the current tree, in depth-first order
    */
   async getNodes() {
     return (await this.getTree()).flatten();
@@ -1124,7 +1062,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Types into the sidebar's "Projects filter" search box, narrowing the
    * project/workspace/collection-child tree down to matching nodes.
-   * @param text - The filter text to type
    */
   async filterSidebar(text: string): Promise<void> {
     await this.page
@@ -1138,8 +1075,6 @@ export class WorkspacePage extends BasePage {
    * open. Every simple modal in the app (Request/Collection Settings,
    * etc.) shares the same generic dialog role, so callers scope by
    * heading text to tell them apart.
-   * @param headingText - Text expected somewhere in the dialog's heading
-   * @returns Whether a matching dialog is currently open
    */
   async isModalOpen(headingText: string): Promise<boolean> {
     return (
@@ -1154,8 +1089,6 @@ export class WorkspacePage extends BasePage {
    * Checks whether a request currently appears in the sidebar's
    * top-level "Pinned" section (distinct from its regular row in its
    * actual folder position).
-   * @param name - The request's name
-   * @returns Whether the request is currently pinned
    */
   async isPinned(name: string): Promise<boolean> {
     return (
@@ -1169,8 +1102,6 @@ export class WorkspacePage extends BasePage {
    * Renames a request in place via the sidebar's inline editable label
    * (double-click to edit, Enter to submit) — distinct from the
    * context-menu "Rename" dialog `workspaceFlow.rename*()` drives.
-   * @param name - The request's current name
-   * @param newName - The name to give it
    */
   async renameRequestInline(name: string, newName: string): Promise<void> {
     const row = this.page.locator(`[data-testid="request-node-${name}"]`);
@@ -1182,8 +1113,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads the request-type label (e.g. GET, GraphQL) shown next to a
    * request node's row.
-   * @param node - The request tree node to inspect
-   * @returns The trimmed request-type label text
    */
   async getRequestTypeLabel(node: TreeNode): Promise<string> {
     const row = this.page
@@ -1196,7 +1125,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Scrapes and reconstructs the current state of the project navigation
    * tree.
-   * @returns The current Tree
    */
   async getTree(): Promise<Tree> {
     return await Tree.fromPage(this.page);
@@ -1205,8 +1133,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Determines the kind of workspace item a tree node represents by
    * inspecting its row icon.
-   * @param node - The workspace-level tree node to inspect
-   * @returns The workspace item kind: "collection", "document", or "mcpClient"
    */
   /**
    * A legacy Document workspace (pre-INS-3528) still renders with its own
@@ -1240,7 +1166,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Opens the organization switcher and selects the organization with the
    * given name (e.g. "Control Planes" for the Konnect organization).
-   * @param name - The organization's display name
    */
   async switchOrganization(name: string): Promise<void> {
     await this.page.getByRole("button", { name: "Organizations" }).click();
@@ -1250,8 +1175,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Resolves a node reference to a full TreeNode, looking it up by name
    * (and optional id) if it isn't already a TreeNode.
-   * @param parent - Either an existing TreeNode or a name/id reference to resolve
-   * @returns The resolved TreeNode
    */
   async resolveNode(
     parent: TreeNode | { name: string; id?: string },
@@ -1269,7 +1192,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Scrolls a tree node's row into view and right-clicks it to open its
    * context menu.
-   * @param node - The tree node to right-click
    */
   async rightClick(node: TreeNode): Promise<void> {
     const row = this.page
@@ -1297,7 +1219,6 @@ export class WorkspacePage extends BasePage {
    * slightly before the underlying row is removed from the DOM, so a
    * `getNodes()`/`getTree()` read taken immediately after confirming a
    * delete can still briefly see the stale row.
-   * @param node - The deleted node whose row should no longer be present
    */
   async waitForNodeRemoved(node: TreeNode): Promise<void> {
     const row = this.page
@@ -1311,7 +1232,6 @@ export class WorkspacePage extends BasePage {
    * pixels, crossing react-aria's own drag-start threshold so the row
    * picks up `data-dragging="true"`. Leaves the mouse button held down —
    * pair with one or more `dragOver()` calls and a final `releaseDrag()`.
-   * @param node - The tree node to start dragging
    */
   async startDrag(node: TreeNode): Promise<void> {
     const row = this.dragRow(node);
@@ -1340,9 +1260,6 @@ export class WorkspacePage extends BasePage {
    * a preferred indent level there, per `levelFromX()` in
    * `use-sidebar-drag-and-drop.tsx`; elsewhere it's ignored, only the row
    * itself and the vertical position matter.
-   * @param node - The row to hover the drag over
-   * @param xFraction - Horizontal position within the row, 0 (left edge) to 1 (right edge)
-   * @param yFraction - Vertical position within the row, 0 (top edge) to 1 (bottom edge)
    */
   async dragOver(
     node: TreeNode,
@@ -1366,9 +1283,6 @@ export class WorkspacePage extends BasePage {
    * nesting depths, where `levelFromX()`'s indent-level math is
    * sensitive to a handful of pixels and a row-width-relative fraction
    * isn't precise enough to land on a specific depth.
-   * @param node - The row to hover the drag over
-   * @param xPixels - Horizontal position within the row, in pixels from its left edge
-   * @param yFraction - Vertical position within the row, 0 (top edge) to 1 (bottom edge)
    */
   async dragOverPixels(
     node: TreeNode,
@@ -1396,10 +1310,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Convenience wrapper around `startDrag()`/`dragOver()`/`releaseDrag()`
    * for a scenario that doesn't need to inspect the indicator mid-drag.
-   * @param source - The node to drag
-   * @param target - The row to drop it on
-   * @param xFraction - Horizontal position within the target row, 0-1 (default 0.5)
-   * @param yFraction - Vertical position within the target row, 0-1 (default 0.5)
    */
   async dragAndDrop(
     source: TreeNode,
@@ -1421,7 +1331,6 @@ export class WorkspacePage extends BasePage {
    * comes from the sidebar's own destination-naming badge, which only
    * renders once a boundary is resolved to land inside a folder — not for
    * a plain "on" drop (a whole-row highlight with no name badge at all).
-   * @returns The indicator's current state, or undefined if none is rendered
    */
   async getDropIndicator(): Promise<DropIndicator | undefined> {
     // dragOver()'s pointer moves are handled asynchronously (react-aria's
@@ -1463,7 +1372,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Locates a tree row for drag-and-drop use.
-   * @param node - The tree node whose row to locate
    */
   private dragRow(node: TreeNode): Locator {
     return this.page
@@ -1476,9 +1384,6 @@ export class WorkspacePage extends BasePage {
    * its visible label. Unlike clickContextMenu, the label isn't
    * restricted to the fixed ContextMenuItem enum, so this also covers
    * dynamically-labeled entries such as plugin-injected menu items.
-   * @param nodeName - The name of the node to right-click
-   * @param contextMenu - The visible label of the context-menu item to click
-   * @param parent - If given, restricts the node search to this node's subtree
    * @throws If the node or the context-menu item is never found
    */
   async clickItemContextMenu(
@@ -1509,7 +1414,6 @@ export class WorkspacePage extends BasePage {
    * Selects the target project in the duplicate dialog's project
    * dropdown. If no project name is given, selects the option marked
    * "(current)".
-   * @param projectName - The name of the project to select; defaults to the current project
    */
   async selectDuplicateProject(projectName?: string): Promise<void> {
     const select = this.page
@@ -1530,7 +1434,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Fills the name field in the duplicate dialog and verifies the value
    * stuck.
-   * @param name - The duplicate name to enter
    */
   async setDuplicateName(name: string): Promise<void> {
     const input = this.page.getByRole("dialog").locator('input[name="name"]');
@@ -1541,7 +1444,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Fills the generic prompt input (used for naming new items such as
    * requests, folders, or documents).
-   * @param value - The value to enter
    */
   async setItemName(value: string): Promise<void> {
     await this.page.locator(this.PROMPT_INPUT).fill(value);
@@ -1549,7 +1451,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Fills the new item name prompt input and verifies the value stuck.
-   * @param name - The name to enter
    */
   async setNewItemName(name: string): Promise<void> {
     const input = this.page.locator(this.PROJECT_NAME);
@@ -1563,7 +1464,6 @@ export class WorkspacePage extends BasePage {
    * Collection under a Git Sync project (Git projects store one file per
    * collection, decoupled from its display name). Must be called while the
    * create-collection dialog is open.
-   * @param fileName - The on-disk file name (without extension)
    */
   async setCollectionFileName(fileName: string): Promise<void> {
     const input = this.page.getByRole("textbox", { name: "File name" });
@@ -1581,7 +1481,6 @@ export class WorkspacePage extends BasePage {
    * the "Setup Git Credentials" card (no credential configured yet) or the
    * "Git Setup Form" (a credential already exists) — leaving the rest of
    * the form to GitSyncPage/GitSyncFlow.
-   * @param type - The project type to select
    */
   async setNewProjectType(type: ProjectType): Promise<void> {
     await this.page
@@ -1606,7 +1505,6 @@ export class WorkspacePage extends BasePage {
    * `setNewProjectType()`. Needed when the type is expected to be blocked
    * (Git Sync disabled via feature flag), where that success wait would
    * never resolve.
-   * @param type - The project type tile to click
    */
   async clickProjectTypeTile(type: ProjectType): Promise<void> {
     await this.page
@@ -1618,8 +1516,6 @@ export class WorkspacePage extends BasePage {
    * Waits until a parent node's first child is no longer the placeholder
    * "emptyCollection" row, i.e. a real child has been created, re-reading
    * the tree in a loop until that happens.
-   * @param parentId - The id of the parent node to watch
-   * @returns The parent's first real (non-placeholder) child node
    */
   async waitForFirstRealChild(parentId: string): Promise<TreeNode> {
     const deadline = Date.now() + DEFAULT_TIMEOUT;
@@ -1676,7 +1572,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Opens `suiteName`'s "Unit Test Actions" menu from the Test Suites list
    * and deletes it via the "Delete suite" confirm modal.
-   * @param suiteName - The exact name of the suite to delete
    */
   async deleteTestSuite(suiteName: string): Promise<void> {
     const row = this.page
@@ -1716,7 +1611,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads the currently selected spec format from the format button's
    * label.
-   * @returns The active spec format
    */
   async getFormat(): Promise<SpecFormat> {
     const text = (
@@ -1731,7 +1625,6 @@ export class WorkspacePage extends BasePage {
    * leaves every entry expanded afterward, and costs one click per entry,
    * so prefer `getLintEntryCodes()` when only the rule ids are needed (e.g.
    * inside a poll).
-   * @returns The parsed lint entries, e.g. `[{code: "oas3-schema", count: 1, description: 'must have required property "paths"', severity: LintSeverity.Error, lineRefs: ["Ln 3"]}]`
    */
   async getLintEntries(): Promise<LintEntry[]> {
     const rows = this.page.locator(this.LINT_PANEL).locator(this.LINT_ENTRY_ROW);
@@ -1756,7 +1649,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads every rule id currently listed in the (already expanded) lint
    * panel, without expanding any entry.
-   * @returns The Spectral rule ids shown, e.g. `["oas3-schema"]`
    */
   async getLintEntryCodes(): Promise<string[]> {
     const rows = this.page.locator(this.LINT_PANEL).locator(this.LINT_ENTRY_ROW);
@@ -1773,7 +1665,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Reads the lint toggle's error/warning summary.
-   * @returns `"none"` if the spec has no content yet, or the editor reports no lint problems; otherwise the parsed error/warning counts
    */
   async getLintSummary(): Promise<
     { errors: number; warnings: number } | "none"
@@ -1812,7 +1703,6 @@ export class WorkspacePage extends BasePage {
    * Reads which ruleset is currently active, based on whether the "View
    * selected ruleset content" button (custom) or the default OAS ruleset
    * label is showing.
-   * @returns The active ruleset type
    */
   async getRulesetType(): Promise<RulesetType> {
     const isCustom = await this.page
@@ -1843,7 +1733,6 @@ export class WorkspacePage extends BasePage {
    * `host`/`basePath`/`schemes` (no "Servers" section renders for a
    * Swagger 2.0 doc) or the license's `url` (only the license name is
    * shown as text) — those simply aren't recoverable from this UI.
-   * @returns The parsed specification, or `undefined` if there's no "Info" section at all (e.g. the collection has no recognized OpenAPI/Swagger spec)
    */
   async getSpecification(): Promise<Specification | undefined> {
     const infoButton = this.page.getByRole("button", { name: "Info" });
@@ -1899,7 +1788,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads every test title and pass/fail state from the "Tests
    * passed/failed" result screen shown after `runAllTests()`.
-   * @returns Each test's title and whether it passed
    */
   async getTestResultRows(): Promise<UnitTestResultRow[]> {
     const rows = this.page.locator(this.TEST_RESULTS).locator("> div");
@@ -1954,7 +1842,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Waits for the spec's CodeMirror editor to become visible, confirming
    * the collection's spec/landing view is ready for interaction.
-   * @param workspaceId - The collection's workspace id, when known, so the wait can tell from its persisted spec whether the Outline or the empty-state landing view should render
    */
   async navigateSpec(workspaceId?: string): Promise<void> {
     await expect(this.page.locator(this.SPEC_EDITOR)).toBeVisible({
@@ -2022,8 +1909,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Double-clicks the currently open suite's editable title, retypes it,
    * and confirms with Enter.
-   * @param currentName - The suite's exact current name
-   * @param newName - The name to give it
    */
   async renameTestSuite(currentName: string, newName: string): Promise<void> {
     const detailPane = this.page.locator("#workspace-content");
@@ -2047,8 +1932,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Double-clicks `currentName`'s editable title within the Unit tests
    * list, retypes it, and confirms with Enter.
-   * @param currentName - The test's exact current name
-   * @param newName - The name to give it
    */
   async renameUnitTest(currentName: string, newName: string): Promise<void> {
     const list = this.page.locator(this.UNIT_TESTS_LIST);
@@ -2079,7 +1962,6 @@ export class WorkspacePage extends BasePage {
    * Opens the spec format menu and selects the given format, waiting
    * for the format button's label to update to confirm the change took
    * effect.
-   * @param format - The spec format to select
    */
   async selectFormat(format: SpecFormat): Promise<void> {
     const formatButton = this.page.locator(this.FORMAT_BUTTON);
@@ -2092,7 +1974,6 @@ export class WorkspacePage extends BasePage {
    * Clicks `suiteName`'s row in the Test Suites sidebar, navigating into
    * it (a no-op if it's already the selected suite), and waits for it to
    * become the selected row.
-   * @param suiteName - The exact name of the suite to select
    */
   async selectTestSuite(suiteName: string): Promise<void> {
     const row = this.page
@@ -2107,7 +1988,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Replaces the entire spec editor's content via CodeMirror's
    * `setValue()` API.
-   * @param text - The full spec text to set
    */
   async setSpecification(text: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.SPEC_EDITOR), text);
@@ -2121,7 +2001,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Clicks the docs-preview toggle, waiting for `.pane-two` to flip to the
    * opposite of its visibility beforehand.
-   * @returns `true` if the docs preview pane is open after toggling, `false` if it's now hidden
    */
   async togglePreview(): Promise<boolean> {
     const wasOpen = await this.isPreviewOpen();
@@ -2141,8 +2020,6 @@ export class WorkspacePage extends BasePage {
    * "Invalid Spectral Ruleset" error dialog (ruleset rejected). Dismiss
    * the error dialog afterward via `closeDialog()` — it's the app's shared
    * error modal, so no dedicated close method lives here.
-   * @param filePath - Absolute path to the `.spectral.yaml` ruleset file to upload
-   * @returns `"success"` if the ruleset was accepted, `"invalid"` if it was rejected
    */
   async uploadRuleset(filePath: string): Promise<"success" | "invalid"> {
     await this.stubFileChooser(filePath);
@@ -2159,8 +2036,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Expands an outline section (if collapsed) and reads the `data-key` of
    * every entry under it, in panel order.
-   * @param section - Which outline section to read
-   * @returns The entries' keys, e.g. `"servers.0"`, `"components.schemas.Pet"`
    */
   async getOutlineEntryKeys(section: OutlineSection): Promise<string[]> {
     const prefix = OUTLINE_SECTIONS[section].prefix;
@@ -2177,9 +2052,6 @@ export class WorkspacePage extends BasePage {
    * Expands an outline section (if collapsed) and clicks one entry, which
    * makes the editor select the matching line. For a `paths` entry, pass
    * `method` to click that method's badge instead of the path row.
-   * @param section - The outline section the entry lives in
-   * @param name - The entry's name: `"title"`/`"description"`/`"version"`/`"license"` for info, a zero-based index for servers, the path for paths, the component name otherwise
-   * @param method - For `paths` only, the HTTP method badge to click instead of the row
    */
   async clickOutlineEntry(
     section: OutlineSection,
@@ -2196,7 +2068,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Reads where the spec editor's selection currently sits.
-   * @returns The 1-based line number of the selection's start and that line's trimmed text
    */
   async getEditorSelection(): Promise<{ line: number; text: string }> {
     return this.page.locator(this.SPEC_EDITOR).evaluate((el) => {
@@ -2224,8 +2095,6 @@ export class WorkspacePage extends BasePage {
    * Parses a single lint entry row's header button — its rule id,
    * occurrence count, description, and severity (from the warning-triangle
    * vs. error-circle icon) — without expanding the row.
-   * @param row - One `LINT_ENTRY_ROW` locator from the lint panel
-   * @returns The parsed fields, or `undefined` if the row's text doesn't match the expected `"(N) code: description"` shape
    */
   private async getLintRowSummary(
     row: Locator,
@@ -2274,7 +2143,6 @@ export class WorkspacePage extends BasePage {
    * Selects a tree node's row, focuses the row itself (the shortcut ignores
    * inner controls) and presses the sidebar's Delete shortcut, opening the
    * node's delete confirmation dialog.
-   * @param node - The tree node to delete
    */
   async pressDeleteShortcut(node: TreeNode): Promise<void> {
     const row = this.page
@@ -2289,7 +2157,6 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads the titles of any visible "resource not found" toasts, so a failing
    * assertion names the route that raised it.
-   * @returns The toasts' full text, one entry per toast
    */
   async getResourceNotFoundToastTexts(): Promise<string[]> {
     return this.page
@@ -2300,7 +2167,6 @@ export class WorkspacePage extends BasePage {
 
   /**
    * Counts the "resource not found" warning toasts currently on screen.
-   * @returns The number of matching toasts
    */
   async countResourceNotFoundToasts(): Promise<number> {
     return this.page

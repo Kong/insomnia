@@ -25,7 +25,6 @@ export class ScriptTabComponent extends TabPanelPage {
    * Reads back both the pre-request and after-response scripts by
    * switching to each script's editor pane in turn. Returns undefined
    * if both scripts are empty.
-   * @returns The current script(s), or undefined if neither script has content
    */
   async getScripts(): Promise<RequestScripts | undefined> {
     await this.page
@@ -54,7 +53,6 @@ export class ScriptTabComponent extends TabPanelPage {
    * Sets the pre-request and/or after-response scripts, switching to
    * each script's editor pane before writing into it. Only scripts that
    * are provided are written.
-   * @param scripts - The script(s) to set
    */
   async setScripts(scripts: RequestScripts): Promise<void> {
     if (scripts.preRequest) {
@@ -93,7 +91,6 @@ export class ScriptTabComponent extends TabPanelPage {
    * outright like `setScripts()`), so it builds genuine CodeMirror undo
    * history the way a user's typing would. Only scripts that are
    * provided are typed into.
-   * @param scripts - The script(s) to type at the end of their current content
    */
   async typeScripts(scripts: RequestScripts): Promise<void> {
     if (scripts.preRequest) {
@@ -120,8 +117,6 @@ export class ScriptTabComponent extends TabPanelPage {
    * Polls the on-disk request/folder documents until one holds `editor`'s
    * current content as its `field` script, confirming the editor's
    * debounced autosave has landed after typing into it.
-   * @param field - The script property the editor is bound to
-   * @param editor - The `.CodeMirror` element that was just typed into
    */
   private async waitForScriptPersisted(
     field: "preRequestScript" | "afterResponseScript",
@@ -139,7 +134,6 @@ export class ScriptTabComponent extends TabPanelPage {
    * Switches to the Scripts tab's Pre-request or After-response sub-tab,
    * clicks into its editor, and sends the platform's Undo shortcut
    * (Cmd+Z on macOS, Ctrl+Z elsewhere).
-   * @param which - Which script's editor to undo in
    */
   async undoScript(which: ScriptTab): Promise<void> {
     await this.switchScriptTab(which);
@@ -150,7 +144,6 @@ export class ScriptTabComponent extends TabPanelPage {
 
   /**
    * Switches to the Scripts tab, then to the given script's own sub-tab.
-   * @param which - Which script's sub-tab to switch to
    */
   async switchScriptTab(which: ScriptTab): Promise<void> {
     await this.switchTab("scripts");

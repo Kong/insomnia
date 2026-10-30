@@ -70,13 +70,6 @@ export interface UnitTestRunResult {
 }
 
 export class WorkspaceFlow extends BaseFlow {
-  /**
-   * @param flowManager - The owning FlowManager
-   * @param pageManager - The shared PageManager
-   * @param preferencesFlow - Used to enable settings the workspace flows depend on
-   * @param requestFlows - Used to resolve a request tree node to its typed request model
-   * @param gitRepoUrl - The default repo URL to clone from when creating a Git Sync project without an explicit `repo.uri`; injected by the `git-fixtures` `user` fixture
-   */
   constructor(
     flowManager: FlowContext,
     pageManager: PageManager,
@@ -89,8 +82,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Creates a new top-level Project through the create-project dialog.
-   * @param item - The Project to create
-   * @returns The created Project, with `id` populated
    */
   async createProject(item: Project): Promise<Project> {
     const workspace = this.pageManager.workspacePage;
@@ -110,8 +101,6 @@ export class WorkspaceFlow extends BaseFlow {
    * existing local folder (running `git init` inside it if it isn't
    * already a repo) — instead of cloning from a remote URL: the "Open
    * local folder" mode of the create-project dialog's Git sub-form.
-   * @param item - The Project to create (type must be ProjectType.Git, with `folderPath` set)
-   * @returns The created Project, with `id` populated
    */
   async openLocalGitFolder(item: Project): Promise<Project> {
     if (item.folderPath === undefined) {
@@ -133,10 +122,6 @@ export class WorkspaceFlow extends BaseFlow {
    * selecting `credentialName` (a credential already configured in
    * Preferences -> Credentials) rather than relying on whichever
    * credential the form defaults to.
-   * @param item - The Project to create (type must be ProjectType.Git)
-   * @param credentialName - The display name of the credential to use, e.g. "Custom Git Credential"
-   * @param repo - Overrides for the repo to clone; `uri` defaults to the injected `gitRepoUrl`, `branch` defaults to "master"
-   * @returns The created Project, with `id` populated
    */
   async cloneGitProject(
     item: Project,
@@ -172,12 +157,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Creates a Collection under `parent`. If it carries a `spec`, authors
    * it into the spec editor right after creation and returns the fuller
    * `getCollectionSpec()` read instead of the plain `getCollection()` one.
-   * @param parent - The Project to create `item` under
-   * @param item - The Collection to create
-   * @param fileName - An explicit on-disk file name (without extension),
-   * decoupled from `item.name` — only meaningful for Git Sync projects,
-   * where each collection is backed by its own file
-   * @returns The created Collection, with `id` populated
    */
   async createCollection(parent: Project, item: Collection, fileName?: string): Promise<Collection> {
     const workspace = this.pageManager.workspacePage;
@@ -202,9 +181,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Creates an McpClient under `parent`.
-   * @param parent - The Project to create `item` under
-   * @param item - The McpClient to create
-   * @returns The created McpClient, with `id` populated
    */
   async createMcpClient(parent: Project, item: McpClient): Promise<McpClient> {
     const workspace = this.pageManager.workspacePage;
@@ -218,9 +194,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Creates an Environment under `parent`.
-   * @param parent - The Project to create `item` under
-   * @param item - The Environment to create
-   * @returns The created Environment, with `id` populated
    */
   async createEnvironment(parent: Project, item: Pick<Environment, 'name'>): Promise<Environment> {
     const workspace = this.pageManager.workspacePage;
@@ -239,9 +212,6 @@ export class WorkspaceFlow extends BaseFlow {
    * context menu — a different entry point into the same underlying
    * naming dialog. Authors `collection.spec` into the spec editor
    * afterward, if given.
-   * @param parent - The Project to create the collection in (must currently be empty)
-   * @param collection - The collection to create, with an optional `spec` to author
-   * @returns The created collection, re-fetched via `getCollectionSpec()`/`getCollection()`
    */
   async createInEmptyState(parent: Project, collection: Collection): Promise<Collection> {
     const workspace = this.pageManager.workspacePage;
@@ -268,7 +238,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Reads whether the one-time "Welcome to focus mode" onboarding popover
    * is currently shown, then dismisses it if so.
-   * @returns Whether the popover was shown before being dismissed
    */
   async dismissFocusModePrompt(): Promise<boolean> {
     const { workspacePage } = this.pageManager;
@@ -282,7 +251,6 @@ export class WorkspaceFlow extends BaseFlow {
    * action and waits for it to load, leaving it open for further
    * interaction via `pageManager.projectSettingsPage` (e.g. reading the
    * current git repo path, relocating it).
-   * @param project - The Project whose Settings dialog to open
    */
   async openSettings(project: Project): Promise<void> {
     const { workspacePage, projectSettingsPage } = this.pageManager;
@@ -296,9 +264,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Renames `project` via its Settings dialog's "Project name" field —
    * Project has no "Rename" context-menu item, so this is the only way
    * to rename one.
-   * @param project - The Project to rename
-   * @param newName - The name to give it
-   * @returns `project` with `name` updated
    */
   async renameProject(project: Project, newName: string): Promise<Project> {
     const { projectSettingsPage } = this.pageManager;
@@ -313,7 +278,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Right-clicks the tree node matching `item` and deletes it via the
    * context menu. Does nothing if no matching node is found.
-   * @param item - The workspace item or request to delete
    */
   async delete(
     item:
@@ -339,8 +303,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Opens the command palette, searches for `query`, and reads back the
    * matching result names.
-   * @param query - The search text to type
-   * @returns The visible result names, in on-screen order
    */
   async search(query: string): Promise<string[]> {
     const { commandPalettePage } = this.pageManager;
@@ -353,11 +315,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Right-clicks the tree node matching `request` and reads back the
    * generated code snippet via "Generate Code" — available for regular
    * requests, not gRPC.
-   * @param request - The request to generate a code snippet for
-   * @param options - Optionally switch the dialog's target language
-   * and/or client library before reading the snippet back (defaults to
-   * Shell/cURL, whatever the dialog itself opens with)
-   * @returns The generated code snippet's text (curl by default)
    */
   async generateCode(
     request: HttpRequest | GraphQLRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
@@ -377,10 +334,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Duplicates a Collection via its context menu's "Duplicate" action,
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
-   * @param item - The Collection to duplicate
-   * @param newName - The name to give the duplicated Collection
-   * @param targetProject - An optional Project to duplicate the Collection into
-   * @returns The duplicated Collection
    */
   async duplicateCollection(item: Collection, newName: string, targetProject?: Project): Promise<Collection> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
@@ -391,10 +344,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Duplicates an McpClient via its context menu's "Duplicate" action,
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
-   * @param item - The McpClient to duplicate
-   * @param newName - The name to give the duplicated McpClient
-   * @param targetProject - An optional Project to duplicate the McpClient into
-   * @returns The duplicated McpClient
    */
   async duplicateMcpClient(item: McpClient, newName: string, targetProject?: Project): Promise<McpClient> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
@@ -405,10 +354,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Duplicates an Environment via its context menu's "Duplicate" action,
    * optionally moving the copy into `targetProject`, then re-fetches it as
    * its full model.
-   * @param item - The Environment to duplicate
-   * @param newName - The name to give the duplicated Environment
-   * @param targetProject - An optional Project to duplicate the Environment into
-   * @returns The duplicated Environment, with `containerName` populated
    */
   async duplicateEnvironment(item: Environment, newName: string, targetProject?: Project): Promise<Environment> {
     await this.duplicateViaContextMenu(item, newName, targetProject);
@@ -428,9 +373,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
-   * @param item - The request to duplicate
-   * @param newName - The name to give the duplicated request
-   * @returns The duplicated request's id and name
    */
   async duplicateRequest(item: RequestItem, newName: string): Promise<{ id: string; name: string }> {
     const workspace = this.pageManager.workspacePage;
@@ -462,7 +404,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Right-clicks the tree node matching `request` and pins it via the
    * context menu's "Pin" action.
-   * @param request - The request to pin
    */
   async pin(
     request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
@@ -473,7 +414,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Right-clicks the tree node matching `request` and unpins it via the
    * context menu's "Unpin" action.
-   * @param request - The request to unpin
    */
   async unpin(
     request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
@@ -497,9 +437,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Renames a Collection via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
-   * @param item - The Collection to rename
-   * @param newName - The name to give it
-   * @returns The renamed Collection, re-fetched under `newName`
    */
   async renameCollection(item: Collection, newName: string): Promise<Collection> {
     await this.renameViaContextMenu(item, newName);
@@ -509,9 +446,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Renames an McpClient via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
-   * @param item - The McpClient to rename
-   * @param newName - The name to give it
-   * @returns The renamed McpClient, re-fetched under `newName`
    */
   async renameMcpClient(item: McpClient, newName: string): Promise<McpClient> {
     await this.renameViaContextMenu(item, newName);
@@ -521,9 +455,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Renames an Environment via its context menu's "Rename" action, then
    * re-fetches it as its full model under the new name.
-   * @param item - The Environment to rename
-   * @param newName - The name to give it
-   * @returns The renamed Environment, re-fetched under `newName`
    */
   async renameEnvironment(item: Environment, newName: string): Promise<Environment> {
     await this.renameViaContextMenu(item, newName);
@@ -532,9 +463,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Renames a request in place via its context menu's "Rename" action.
-   * @param item - The request to rename
-   * @param newName - The name to give it
-   * @returns The renamed request's id and name
    */
   async renameRequest(item: RequestItem, newName: string): Promise<{ id: string; name: string }> {
     await this.renameViaContextMenu(item, newName);
@@ -563,8 +491,6 @@ export class WorkspaceFlow extends BaseFlow {
    * "Run" — use this instead of `run()` when a test needs to interact
    * with the Runner (e.g. Cancel/Skip) while it's in flight, rather than
    * waiting for it to finish.
-   * @param collection - The Collection to run
-   * @param options - Iterations/delay/keep-logs/bail settings to apply before running
    */
   async openRunner(collection: Collection, options?: RunnerOptions): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -590,13 +516,6 @@ export class WorkspaceFlow extends BaseFlow {
    * every configured iteration has produced a result for every selected
    * request before returning the collected test-result count and
    * per-iteration results.
-   * @param collection - The Collection to run
-   * @param options - Iterations/delay/keep-logs/bail settings to apply before running
-   * @returns The pass/total test-result count and every iteration's per-request
-   * results, scraped once per All/Passed/Failed/Skipped filter — note that since
-   * those filters only toggle a request's nested test-assertion detail (not
-   * whether the request's own result row appears), each filter's array has the
-   * same request rows; only their per-assertion detail differs
    */
   async run(collection: Collection, options?: RunnerOptions): Promise<RunnerRunResult> {
     const runner = this.pageManager.runnerPage;
@@ -629,9 +548,6 @@ export class WorkspaceFlow extends BaseFlow {
    * request type) matching `item`, optionally scoped to a parent Project
    * or Collection node, and tags the result with a `kind` discriminant
    * identifying its concrete type.
-   * @param item - The item name, or an object with name and optional id to match
-   * @param parent - An optional Project or Collection to scope the lookup within
-   * @returns The resolved item cast to `T`, or undefined if no matching node exists
    */
   async get<T = WorkspaceItem>(
     item: string | { name: string; id?: string },
@@ -649,8 +565,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Opens the command palette, searches for `item`'s name, selects the
    * first matching result (navigating to it), then resolves it the same
    * way `get()` does.
-   * @param item - The item name, or an object with name and optional id to match
-   * @returns The resolved item cast to `T`, or undefined if no matching node exists
    */
   async getByPalette<T = WorkspaceItem>(name: string): Promise<T | undefined> {
     const { commandPalettePage } = this.pageManager;
@@ -665,8 +579,6 @@ export class WorkspaceFlow extends BaseFlow {
    * model. A lightweight read — just `id`/`name` — for a collection that
    * doesn't carry a spec; use `getCollectionSpec()` instead for one that
    * does (or might).
-   * @param item - The collection name, or an object with name and optional id to match
-   * @returns The matching Collection with `id` populated, or undefined if not found
    */
   async getCollection(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
@@ -683,8 +595,6 @@ export class WorkspaceFlow extends BaseFlow {
    * INS-3528 unified the two workspace types). For the lint summary/codes,
    * call `getLintState()` separately — it polls for the lint pass to
    * settle, which not every caller needs.
-   * @param item - The collection's name, or an object with `name`/`id`
-   * @returns The found collection (with `specification`/`rulesetType`/`version` populated), or `undefined` if not found
    */
   async getCollectionSpec(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
@@ -711,8 +621,6 @@ export class WorkspaceFlow extends BaseFlow {
    * `spec` passed to `create()` (which only authors right after
    * creation), this can be called at any later point — e.g. filling in a
    * collection that started out with no spec.
-   * @param item - The collection to author into
-   * @param spec - The spec to author; written verbatim when given as a string, boilerplate-wrapped into Swagger 2.0 JSON when given as a `Specification`
    */
   async fillSpecification(item: Collection, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -737,8 +645,6 @@ export class WorkspaceFlow extends BaseFlow {
    * `WorkspacePage.createTestSuite()`, which also navigates into it) and
    * renames it — the two nearly always happen together, since a fresh
    * suite is always named "New Suite".
-   * @param item - The collection's name, or an object with `name`/`id`
-   * @param name - The name to give the new suite
    */
   async createTestSuite(item: string | { name: string; id?: string }, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -752,8 +658,6 @@ export class WorkspaceFlow extends BaseFlow {
    * default-named test (via `WorkspacePage.createTest()`) and renames it —
    * the two nearly always happen together, since a fresh test is always
    * named "Returns 200".
-   * @param testSuite - The suite to add the test to
-   * @param testName - The name to give the new test
    */
   async createUnitTest(testSuite: TestSuite, testName: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -767,8 +671,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Opens `item`'s Tests tab, then deletes `suiteName`'s test suite via its
    * confirm modal (`WorkspacePage.deleteTestSuite()`).
-   * @param item - The collection's name, or an object with `name`/`id`
-   * @param suiteName - The exact name of the suite to delete
    */
   async deleteTestSuite(item: string | { name: string; id?: string }, suiteName: string): Promise<void> {
     await this.openTests(item);
@@ -785,8 +687,6 @@ export class WorkspaceFlow extends BaseFlow {
    * wants), so call it directly whenever you need the lint state — you're
    * already on the collection's page after `create()`/`getCollectionSpec()`/
    * `WorkspacePage.setSpecification()`.
-   * @param minLintErrors - The minimum error count to wait for before reading the settled lint state; leave at 0 when no errors are expected
-   * @returns The settled lint summary and fired rule codes
    */
   async getLintState(minLintErrors = 0): Promise<NonNullable<Collection['lint']>> {
     const workspace = this.pageManager.workspacePage;
@@ -828,9 +728,6 @@ export class WorkspaceFlow extends BaseFlow {
    * with every unit test currently listed under it
    * (`WorkspacePage.getUnitTestNames()`) and a reference back to `item`,
    * so the suite can be traced back to where it lives.
-   * @param item - The collection's name, an object with `name`/`id`, or an already-resolved `Collection` (reused as-is, so any `specification`/`spec`/`lint` it already carries stays attached)
-   * @param testSuiteName - The exact name of the suite to select and read
-   * @returns The selected suite, with its unit tests and source collection populated
    */
   async getTestSuite(item: string | { name: string; id?: string }, testSuiteName: string): Promise<TestSuite> {
     const workspace = this.pageManager.workspacePage;
@@ -848,7 +745,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Opens `item`'s Tests tab and reads back every suite name currently
    * listed in the Test Suites sidebar (`WorkspacePage.getTestSuiteNames()`).
-   * @param item - The collection's name, or an object with `name`/`id`
    */
   async getTestSuiteNames(item: string | { name: string; id?: string }): Promise<string[]> {
     await this.openTests(item);
@@ -859,7 +755,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Navigates to `item`'s page, then removes the active custom ruleset
    * via its confirm modal (`WorkspacePage.removeRuleset()`), reverting to
    * the default OAS ruleset.
-   * @param item - The collection's name, or an object with `name`/`id`
    */
   async removeRuleset(item: string | { name: string; id?: string }): Promise<void> {
     const identity = typeof item === 'string' ? { name: item } : item;
@@ -874,8 +769,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Opens `testSuite`'s Tests tab, selects `testSuite`, runs every test in
    * it, and reads back the resulting pass/fail summary and per-test rows.
-   * @param testSuite - The suite to run
-   * @returns The settled run summary and each test's title/pass state
    */
   async runAllTests(testSuite: TestSuite): Promise<UnitTestRunResult> {
     const workspace = this.pageManager.workspacePage;
@@ -898,9 +791,6 @@ export class WorkspaceFlow extends BaseFlow {
    * list — and returns the settled rule list. If rejected, dismisses the
    * resulting "Invalid Spectral Ruleset" error dialog and returns
    * `"invalid"` instead, leaving the default ruleset active.
-   * @param filePath - Absolute path to the ruleset file to upload
-   * @param expectCode - A rule id the accepted ruleset should introduce, e.g. "require-x-test-marker" — omit when uploading a ruleset expected to be rejected
-   * @returns The settled list of fired rule ids if accepted, or `"invalid"` if rejected
    */
   async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
     const workspace = this.pageManager.workspacePage;
@@ -926,8 +816,6 @@ export class WorkspaceFlow extends BaseFlow {
    * boilerplate-wrapped into Swagger 2.0 JSON when given as a
    * `Specification`, written verbatim otherwise (e.g. a hand-built
    * OpenAPI 3.0 payload).
-   * @param name - The name of the just-created collection to author into
-   * @param spec - The spec to author
    */
   private async authorSpec(name: string, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
@@ -958,8 +846,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Finds the tree node matching `item` and returns it as an McpClient model.
-   * @param item - The MCP Client name, or an object with name and optional id to match
-   * @returns The matching McpClient with `id` populated, or undefined if not found
    */
   private async getMcpClient(item: string | { name: string; id?: string }): Promise<McpClient | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
@@ -972,8 +858,6 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Finds the tree node matching `item` and returns it as a Project model.
-   * @param item - The project name, or an object with name and optional id to match
-   * @returns The matching Project with `id` populated, or undefined if not found
    */
   async getProject(item: string | { name: string; id?: string }): Promise<Project | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
@@ -1060,8 +944,6 @@ export class WorkspaceFlow extends BaseFlow {
    * the "Show legacy unit tests" setting first (see
    * `ensureLegacyUnitTestsEnabled()`), since the tab doesn't render at all
    * while it's off.
-   * @param item - The collection's name, or an object with `name`/`id`
-   * @returns The resolved tree node, or `undefined` if `item` couldn't be found
    */
   private async openTests(item: string | { name: string; id?: string }): Promise<{ _id: string } | undefined> {
     await this.ensureLegacyUnitTestsEnabled();
@@ -1078,7 +960,6 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Deletes the tree node matching `item` with the sidebar's Delete shortcut
    * and confirms the dialog. Does nothing if no matching node is found.
-   * @param item - The workspace item, folder or request to delete
    */
   async deleteViaShortcut(
     item:
@@ -1103,10 +984,6 @@ export class WorkspaceFlow extends BaseFlow {
    * Clones a Git Sync Project like `cloneGitProject(item, credentialName, repo)`, but
    * reads the "Unknown Fields Detected" warning off the post-scan screen
    * before confirming the clone.
-   * @param item - The Project to create (type must be ProjectType.Git)
-   * @param credentialName - The display name of the credential to use, e.g. "Custom Git Credential"
-   * @param repo - Overrides for the repo to clone; `uri` defaults to the injected `gitRepoUrl`, `branch` defaults to "master"
-   * @returns The created Project, and the warning's file list and text (both empty when the scan found no unknown fields)
    */
   async cloneWithScanReport(
     item: Project,
