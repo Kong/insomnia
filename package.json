@@ -83,7 +83,9 @@
     },
     "jshint": {
       "lodash": "4.18.1"
-    }
+    },
+    "@simple-git/argv-parser@<2.0.1": "2.0.1",
+    "@azure/msal-node@<7.1.0": "7.1.0"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.3.0",
