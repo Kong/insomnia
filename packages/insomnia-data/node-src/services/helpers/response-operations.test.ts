@@ -6,7 +6,7 @@ import type { McpResponse, Response, RunnerTestResult, SocketIOResponse, WebSock
 import { database as db, models, services } from 'insomnia-data';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { removeAllResponseHistory } from './response-operations';
+import { getResponseTimeline, removeAllResponseHistory } from './response-operations';
 
 const writeFile = (dir: string, name: string) => {
   const filePath = path.join(dir, name);
@@ -106,5 +106,59 @@ describe('removeAllResponseHistory', () => {
     // A file left behind still holds the confidential body, so the caller must hear about it
     // instead of being told the history was cleared.
     await expect(removeAllResponseHistory()).rejects.toThrow('EPERM');
+  });
+});
+
+describe('getResponseTimeline', () => {
+  const writeTimeline = (dir: string) => {
+    const timelinePath = path.join(dir, 'timeline');
+    fs.writeFileSync(
+      timelinePath,
+      `${JSON.stringify({ name: 'HeaderIn', timestamp: 1, value: 'content-type: application/json' })}\n`,
+    );
+    return timelinePath;
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('includes the response body in the console timeline when asked', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'response-timeline-'));
+    const timelinePath = writeTimeline(dir);
+    const bodyPath = path.join(dir, 'body');
+    fs.writeFileSync(bodyPath, '{"ok":true}');
+
+    const timeline = await getResponseTimeline({ timelinePath, bodyPath } as unknown as Response, true);
+
+    expect(timeline).toEqual([
+      { name: 'HeaderIn', timestamp: 1, value: 'content-type: application/json' },
+      expect.objectContaining({ name: 'DataOut', value: '{"ok":true}' }),
+    ]);
+  });
+
+  it('omits the body when showBody is not set', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'response-timeline-'));
+    const timelinePath = writeTimeline(dir);
+    const bodyPath = path.join(dir, 'body');
+    fs.writeFileSync(bodyPath, '{"ok":true}');
+
+    const timeline = await getResponseTimeline({ timelinePath, bodyPath } as unknown as Response);
+
+    expect(timeline).toEqual([
+      { name: 'HeaderIn', timestamp: 1, value: 'content-type: application/json' },
+    ]);
+  });
+
+  it('still returns the timeline when the body file is missing', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'response-timeline-'));
+    const timelinePath = writeTimeline(dir);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const timeline = await getResponseTimeline({ timelinePath, bodyPath: '' } as unknown as Response, true);
+
+    expect(timeline).toEqual([
+      { name: 'HeaderIn', timestamp: 1, value: 'content-type: application/json' },
+    ]);
   });
 });
