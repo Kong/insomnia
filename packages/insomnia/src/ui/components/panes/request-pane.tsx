@@ -97,6 +97,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const isBodyEmpty = Boolean(typeof activeRequest.body.mimeType !== 'string' && !activeRequest.body.text);
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
+  const activeRequestTabKey = `request-tab-selection:${requestId}`;
+  const [activeRequestTab, setActiveRequestTab] = reactUse.useLocalStorage(activeRequestTabKey, 'params');
 
   return (
     <Pane type="request">
@@ -115,7 +117,11 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs aria-label="Request pane tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs 
+          aria-label="Request pane tabs" 
+          className="flex h-full w-full flex-1 flex-col" 
+          selectedKey={activeRequestTab || 'params'}
+          onSelectionChange={(key) => setActiveRequestTab(key as string)}>
         <TabList
           className="scrollbar-thin flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
           aria-label="Request pane tabs"
