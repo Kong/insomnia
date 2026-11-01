@@ -463,7 +463,14 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           inputType: maskText ? 'password' : 'text',
         });
 
-        if (storageKey && value !== null) {
+        // A null result means the dialog was dismissed instead of submitted.
+        // Rendering it as an empty value would send the request anyway, silently
+        // replacing the user's input with "".
+        if (value === null) {
+          throw new Error(`Prompt ${title} cancelled`);
+        }
+
+        if (storageKey) {
           console.log(`[prompt] Stored value under ${storageKey}`);
           await context.store.setItem(storageKey, value);
         }
