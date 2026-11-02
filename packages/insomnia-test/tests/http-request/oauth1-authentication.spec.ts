@@ -40,10 +40,10 @@ test("Verify OAuth 1.0 auth fields persist and sign the sent request", async ({
   });
 
   const responseView = await httpRequestFlow.send(request);
-  const authHeader = (responseView.body as { headers: Record<string, string> })
+  const authHeader = (responseView.preview as { headers: Record<string, string> })
     .headers.authorization;
 
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(authHeader).toContain("OAuth ");
   expect(authHeader).toContain(
     `oauth_consumer_key="${authentication.consumerKey}"`,

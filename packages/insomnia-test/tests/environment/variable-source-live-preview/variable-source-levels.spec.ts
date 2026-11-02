@@ -146,9 +146,9 @@ for (const scenario of scenarios) {
       scenario.landingRow,
     );
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusBar.code).toBe(200);
     expect(
-      JSON.parse((response.body as { data: string }).data)[scenario.field],
+      JSON.parse((response.preview as { data: string }).data)[scenario.field],
     ).toBe(scenario.value);
     expect(modal.source).toContain(scenario.source);
     expect(modal.preview).toBe(scenario.value);

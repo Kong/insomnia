@@ -77,8 +77,8 @@ test("Verify pending async work in a pre-request script (Promise, setTimeout, se
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     json: {
       asyncDoneViaPromise: true,
       asyncDoneViaTimeout: true,

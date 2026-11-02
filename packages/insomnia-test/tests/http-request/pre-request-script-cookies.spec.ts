@@ -35,8 +35,8 @@ test('Verify pre-request script manages cookies via insomnia.cookies.jar() and t
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toEqual({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toEqual({
     cookies: { [keptName]: keptValue, [objectName]: objectValue },
   });
 });
