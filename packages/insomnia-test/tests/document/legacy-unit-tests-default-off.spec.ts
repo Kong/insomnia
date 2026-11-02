@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify the legacy unit test setting defaults off and hides the Tests tab for a profile with no existing test suites", async ({
   user,
