@@ -1,9 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { getServerBranches, GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify creating a new branch in a Git Sync project switches to it', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;

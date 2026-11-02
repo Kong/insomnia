@@ -1,12 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
 import { HTTP_SERVER } from '@package/misc/fixtures';
 import { getServerCommits, GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify committing a new collection and then a new request in a Git Sync project appears in History', async ({
   user,
