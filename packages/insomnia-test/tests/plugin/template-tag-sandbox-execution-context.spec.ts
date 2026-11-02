@@ -15,7 +15,7 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
 }) => {
   const { appFlow, workspaceFlow, httpRequestFlow, preferencesFlow } =
     user.flowManager;
-  const { preferencesPage } = user.pageManager;
+  const { preferencesPage, preferencesPluginsPage } = user.pageManager;
 
   const pluginName = faker.lorem.slug(2);
   const tagName = `probeCtx${faker.string.alphanumeric(6)}`;
@@ -48,7 +48,7 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
       },
     }];`,
   );
-  await preferencesPage.reloadPlugins();
+  await preferencesPluginsPage.reloadPlugins();
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
