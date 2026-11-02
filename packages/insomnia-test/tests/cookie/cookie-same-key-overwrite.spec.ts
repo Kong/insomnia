@@ -40,7 +40,7 @@ test("Verify Re-Linking Same Cookie Key Overwrites Previous Value", async ({
 
   const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = responseView.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.preview as { cookies: Record<string, string> };
   expect(cookieList.filter((cookie) => cookie.key === key)).toHaveLength(1);
   expect(cookieList).toMatchObject([{ key, value: freshValue }]);
   expect(cookies).toMatchObject({ [key]: freshValue });

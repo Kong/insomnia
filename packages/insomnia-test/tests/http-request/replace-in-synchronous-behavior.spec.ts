@@ -37,9 +37,9 @@ test("Verify insomnia.environment.replaceIn resolves and returns a string synchr
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`log: string ${variableValue}`);
-  const consoleText = await responseView.console?.();
+  const consoleText = await responseView.console();
   expect(consoleText).not.toContain("Promise");
 });
 
@@ -71,6 +71,6 @@ test("Verify a script that awaits insomnia.environment.replaceIn as a workaround
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`log: string ${variableValue}`);
 });

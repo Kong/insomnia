@@ -49,8 +49,8 @@ test("Verify LiquidJS control flow tags render correctly", async ({ user }) => {
   } satisfies HttpRequest);
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: `${envValue}-big-123-yes`,
   });
 });
