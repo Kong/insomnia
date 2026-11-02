@@ -1,13 +1,12 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { RulesetType } from "@package/enums/ruleset-type";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const VALID_RULESET = path.join(import.meta.dirname, "custom.spectral.yaml");
 const INVALID_RULESET = path.join(import.meta.dirname, "invalid.spectral.yaml");

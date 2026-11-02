@@ -2,13 +2,12 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { waitForExportedFile } from "@package/misc/export-file";
 import { MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
 import { MockServer } from "@package/models/mock-server";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Exported Mock Server Can Be Imported Into Another Project", async ({
   user,
