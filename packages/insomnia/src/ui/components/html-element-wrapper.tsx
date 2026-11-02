@@ -1,7 +1,8 @@
 import React, { type FC, useEffect, useRef } from 'react';
 
 interface Props {
-  el: HTMLElement;
+  // A live element from this renderer, or the HTML a plugin-window dialog serialized over IPC.
+  el?: HTMLElement | string;
   onUnmount?: () => void;
 }
 
@@ -13,8 +14,14 @@ export const HtmlElementWrapper: FC<Props> = ({ el, onUnmount }) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current) {
-      ref.current.innerHTML = '';
-      ref.current.append(el);
+      ref.current.replaceChildren();
+      if (typeof el === 'string') {
+        // Markup a plugin serialized in the plugin window, so it is trusted at the same level as the
+        // plugin itself (which runs with Node access).
+        ref.current.innerHTML = el;
+      } else if (el) {
+        ref.current.append(el);
+      }
     }
     return () => {
       onUnmount && onUnmount();

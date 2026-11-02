@@ -250,7 +250,7 @@ export const IN_SANDBOX_BOOTSTRAP = [
   '    var ctx = {',
   '      app: {',
   '        alert: function (title, message) { return __bridge("app.alert", { title: title, message: message }); },',
-  '        dialog: function (title) { return __bridge("app.dialog", { title: title }); },',
+  '        dialog: function (title, body, options) { return __bridge("app.dialog", { title: title, body: body, options: options }); },',
   '        prompt: function (title, options) { return __bridge("app.prompt", { title: title, options: options }); },',
   '        getPath: function (name) { return __bridge("app.getPath", { name: name }); },',
   '        getInfo: function () { return { version: env.appInfo.version, platform: env.appInfo.platform }; },',
