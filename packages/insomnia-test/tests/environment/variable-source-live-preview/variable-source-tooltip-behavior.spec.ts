@@ -19,7 +19,7 @@ test("Verify hovering an undefined variable swaps the tooltip to the render erro
   );
   await importFlow.importFile(
     project,
-    path.join(__dirname, "collection-for-global-environments.yaml"),
+    path.join(import.meta.dirname, "collection-for-global-environments.yaml"),
   );
   const collection = new Collection("collection-for-global-environments");
   await environmentFlow.activate(collection, "ExampleA");
@@ -45,7 +45,7 @@ test("Verify hovering the tooltip's own content keeps it visible", async ({ user
   );
   await importFlow.importFile(
     project,
-    path.join(__dirname, "environment-cascade-collection.yaml"),
+    path.join(import.meta.dirname, "environment-cascade-collection.yaml"),
   );
   const collection = new Collection("Environment Cascade");
   await environmentFlow.activate(collection, "Base Environment");
