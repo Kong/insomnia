@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, test, WS_SERVER } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Import from URL Moves Query String Into Params and Preserves It on Connect", async ({
   user,
