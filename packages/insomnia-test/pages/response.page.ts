@@ -2,7 +2,7 @@ import { ResponseViewerComponent } from '@package/components/response-viewer.com
 import { RequestState } from '@package/enums/request-state';
 import type { ResponseExportOption } from '@package/enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
-import type { ResponseHeader, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
+import type { ResponseHeader, ResponseStatusBar, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
 import { expect, type Locator } from '@playwright/test';
 
 import { BasePage } from './base.page';
@@ -47,14 +47,14 @@ export class ResponsePage extends BasePage {
 
   /**
    * Assembles the full response state currently shown in the response
-   * pane — summary stats, streamed events, headers, console log, and
-   * body.
+   * pane — status bar, preview, headers, console log, streamed events and
+   * script test results.
    */
   async get(): Promise<ResponseView> {
     return {
-      ...(await this.getSummary()),
+      statusBar: await this.getStatusBar(),
       headers: (await this.getHeaders()) ?? [],
-      body: await this.getBody(),
+      preview: await this.getPreview(),
       events: async () => (await this.getEvents()) ?? [],
       console: async () => (await this.getConsole()) ?? '',
       tests: async () => this.getTestResults(),
@@ -62,10 +62,10 @@ export class ResponsePage extends BasePage {
   }
 
   /**
-   * Reads the response body shown on the "preview" tab, parsing it as
-   * JSON when possible and falling back to the raw text otherwise.
+   * Reads the content shown on the "preview" tab, parsing it as JSON when
+   * possible and falling back to the raw text otherwise.
    */
-  private async getBody(): Promise<unknown> {
+  private async getPreview(): Promise<unknown> {
     if (!(await this.switchTab('preview'))) return undefined;
     const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
     if ((await editor.count()) === 0) return undefined;
@@ -251,26 +251,26 @@ export class ResponsePage extends BasePage {
    * Reads the response's HTTP status tag and splits it into a numeric
    * status code and message.
    */
-  private async getStatus(): Promise<{ code: number; message: string } | undefined> {
+  private async getStatus(): Promise<{ code: number; message: string; text: string } | undefined> {
     const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-status-tag');
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
     const statusCode = Number(code);
     if (Number.isNaN(statusCode)) return undefined;
-    return { code: statusCode, message: rest.join(' ') };
+    return { code: statusCode, message: rest.join(' '), text: raw };
   }
 
   /**
-   * Gathers the response's headline stats — status code, status message,
-   * elapsed time, and byte size — as shown in the response pane's header
-   * tags.
+   * Gathers the response pane's header bar — status, elapsed time, and
+   * byte size — as shown in its header tags.
    */
-  private async getSummary(): Promise<Pick<ResponseView, 'statusCode' | 'statusMessage' | 'elapsedTime' | 'bytesContent'>> {
+  private async getStatusBar(): Promise<ResponseStatusBar> {
     const status = await this.getStatus();
     return {
-      statusCode: status?.code,
-      statusMessage: status?.message,
+      text: status?.text,
+      code: status?.code,
+      message: status?.message,
       elapsedTime: await this.getElapsedTime(),
       bytesContent: await this.getBytesContent(),
     };
