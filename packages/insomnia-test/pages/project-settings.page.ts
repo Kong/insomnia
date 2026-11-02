@@ -117,11 +117,11 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Picks the clone destination's parent folder via the native folder
-   * picker, stubbed to return `folderPath` immediately.
+   * Clicks "Choose folder" to pick the clone destination's parent folder.
+   * The native folder picker must already be stubbed to return the
+   * wanted path (see `FlowContext.stubFileChooser`).
    */
-  async chooseCloneLocation(folderPath: string): Promise<void> {
-    await this.stubFileChooser(folderPath);
+  async chooseCloneLocation(): Promise<void> {
     await this.gitSetupForm
       .getByRole("button", { name: "Choose folder" })
       .click();
@@ -172,12 +172,12 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Picks the folder to adopt via the native folder picker, stubbed to
-   * return `folderPath` immediately. Requires `selectGitOpenMode()` to
-   * have been called first.
+   * Clicks "Choose folder" to pick the folder to adopt. The native folder
+   * picker must already be stubbed to return the wanted path (see
+   * `FlowContext.stubFileChooser`). Requires `selectGitOpenMode()` to have
+   * been called first.
    */
-  async chooseOpenFolderLocation(folderPath: string): Promise<void> {
-    await this.stubFileChooser(folderPath);
+  async chooseOpenFolderLocation(): Promise<void> {
     await this.chooseOpenFolderButton.click();
   }
 
@@ -236,16 +236,16 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Stubs the native folder picker to return `destinationDir`, then clicks
-   * "Move repository to another folder" to relocate the repo directly into
-   * `destinationDir` (the picked folder itself becomes the new repository
+   * Clicks "Move repository to another folder" to relocate the repo
+   * directly into the folder the (already stubbed — see
+   * `FlowContext.stubFileChooser`) native folder picker returns (the picked
+   * folder itself becomes the new repository
    * path — no nested repo-name subfolder is created). Does not wait for
    * the result — the new path (or a collision error) settles
    * asynchronously; read it back via
    * `getRepositoryPath()`/`getRelocationError()`.
    */
-  async relocateRepository(destinationDir: string): Promise<void> {
-    await this.stubFileChooser(destinationDir);
+  async relocateRepository(): Promise<void> {
     await this.relocateButton.click();
   }
 

@@ -72,7 +72,7 @@ export class MockServerFlow extends BaseFlow {
     const exportPage = this.pageManager.exportPage;
 
     const node = await workspace.resolveNode(server);
-    await exportPage.stubSaveFileLocation(path);
+    await this.context.stubSaveDialog(path);
     await workspace.rightClick(node);
     await workspace.clickContextMenu(ContextMenuItem.Export);
   }

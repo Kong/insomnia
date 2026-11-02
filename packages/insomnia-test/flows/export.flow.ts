@@ -17,7 +17,7 @@ export class ExportFlow extends BaseFlow {
   async exportCollection(item: Collection, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, exportPage } = this.pageManager;
     const node = await workspacePage.resolveNode(item);
-    await exportPage.stubSaveFileLocation(path);
+    await this.context.stubSaveDialog(path);
     await workspacePage.rightClick(node);
     await workspacePage.clickContextMenu(ContextMenuItem.Export);
     await exportPage.navigate();
@@ -35,7 +35,7 @@ export class ExportFlow extends BaseFlow {
   async exportProject(item: Project, format: ExportFormat, path: string): Promise<void> {
     const { workspacePage, preferencesPage, exportPage } = this.pageManager;
     await workspacePage.clickNode(await workspacePage.resolveNode(item));
-    await exportPage.stubSaveDirectoryLocation(path);
+    await this.context.stubFileChooser(path);
     await preferencesPage.open();
     await preferencesPage.openDataTab();
     await preferencesPage.clickExportProject(item.name);
@@ -54,7 +54,7 @@ export class ExportFlow extends BaseFlow {
   @step()
   async exportAllData(directoryPath: string): Promise<void> {
     const { preferencesPage, exportPage } = this.pageManager;
-    await exportPage.stubSaveDirectoryLocation(directoryPath);
+    await this.context.stubFileChooser(directoryPath);
     await preferencesPage.open();
     await preferencesPage.openDataTab();
     await preferencesPage.clickExportAllData();
@@ -80,7 +80,7 @@ export class ExportFlow extends BaseFlow {
   ): Promise<void> {
     const { workspacePage, exportPage } = this.pageManager;
     const node = await workspacePage.resolveNode(item);
-    await exportPage.stubSaveFileLocation(path);
+    await this.context.stubSaveDialog(path);
     await workspacePage.openWorkspaceActionsDropdown(node);
     await workspacePage.clickContextMenu(ContextMenuItem.ExportOpenApiSpec);
     await exportPage.exportOpenApiSpec(format);

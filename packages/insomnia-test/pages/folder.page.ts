@@ -1,4 +1,3 @@
-import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
 import { AuthTabComponent } from "./auth-tab.page";
@@ -25,10 +24,10 @@ export class FolderPage extends TabPanelPage {
   /** The Scripts tab component for this folder's own pane. */
   readonly scripts: ScriptTabComponent;
 
-  constructor(page: Page, insomnia?: ElectronApplication) {
-    super(page, FOLDER_PANE, insomnia);
-    this.auth = new AuthTabComponent(page, FOLDER_PANE, insomnia);
-    this.scripts = new ScriptTabComponent(page, FOLDER_PANE, insomnia);
+  constructor(page: Page) {
+    super(page, FOLDER_PANE);
+    this.auth = new AuthTabComponent(page, FOLDER_PANE);
+    this.scripts = new ScriptTabComponent(page, FOLDER_PANE);
   }
 
   /**
@@ -61,12 +60,12 @@ export class FolderPage extends TabPanelPage {
   }
 
   /**
-   * Also rewires the composed Auth/Scripts tab components, whose
-   * persistence checks read the app's on-disk store via `insomnia`.
+   * Also rewires the composed Auth/Scripts tab components onto the new
+   * window.
    */
-  override setContext(page: Page, insomnia?: ElectronApplication): void {
-    super.setContext(page, insomnia);
-    this.auth.setContext(page, insomnia);
-    this.scripts.setContext(page, insomnia);
+  override setContext(page: Page): void {
+    super.setContext(page);
+    this.auth.setContext(page);
+    this.scripts.setContext(page);
   }
 }

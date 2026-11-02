@@ -4,7 +4,7 @@ import { SelectComponent } from "@package/components/select.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
-import type { ElectronApplication, Locator } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
   RequestHeader,
@@ -71,20 +71,20 @@ export abstract class RequestPage extends TabPanelPage {
   /** The Scripts tab component for this request's own pane. */
   readonly scripts: ScriptTabComponent;
 
-  constructor(page: Page, insomnia?: ElectronApplication) {
-    super(page, REQUEST_PANE, insomnia);
-    this.auth = new AuthTabComponent(page, REQUEST_PANE, insomnia);
-    this.scripts = new ScriptTabComponent(page, REQUEST_PANE, insomnia);
+  constructor(page: Page) {
+    super(page, REQUEST_PANE);
+    this.auth = new AuthTabComponent(page, REQUEST_PANE);
+    this.scripts = new ScriptTabComponent(page, REQUEST_PANE);
   }
 
   /**
-   * Also rewires the composed Auth/Scripts tab components, whose
-   * persistence checks read the app's on-disk store via `insomnia`.
+   * Also rewires the composed Auth/Scripts tab components onto the new
+   * window.
    */
-  override setContext(page: Page, insomnia?: ElectronApplication): void {
-    super.setContext(page, insomnia);
-    this.auth.setContext(page, insomnia);
-    this.scripts.setContext(page, insomnia);
+  override setContext(page: Page): void {
+    super.setContext(page);
+    this.auth.setContext(page);
+    this.scripts.setContext(page);
   }
 
   /**

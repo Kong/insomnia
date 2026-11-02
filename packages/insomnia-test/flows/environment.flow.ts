@@ -171,7 +171,8 @@ export class EnvironmentFlow extends BaseFlow {
     const node = await workspace.resolveNode(collection);
     await workspace.clickNode(node);
 
-    await environmentPage.addProjectEnvironment(name, collection.name);
+    await environmentPage.addProjectEnvironment(name);
+    await workspace.clickNode(node);
     return environmentPage.getProjectEnvironmentPickerState();
   }
 

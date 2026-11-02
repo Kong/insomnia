@@ -121,7 +121,8 @@ export class HttpRequestFlow extends BaseFlow {
    */
   @step()
   async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
-    await this.pageManager.responsePage.exportResponse(option, filePath);
+    await this.context.stubSaveDialog(filePath);
+    await this.pageManager.responsePage.exportResponse(option);
   }
 
   /**
@@ -130,7 +131,8 @@ export class HttpRequestFlow extends BaseFlow {
    */
   @step()
   async saveResponseToFile(filePath: string): Promise<void> {
-    await this.pageManager.responsePage.saveResponseToFile(filePath);
+    await this.context.stubSaveDialog(filePath);
+    await this.pageManager.responsePage.saveResponseToFile();
   }
 
   /**
@@ -159,7 +161,7 @@ export class HttpRequestFlow extends BaseFlow {
       await page.setHeaders(request.headers);
     }
     if (request.body) {
-      await page.setBody(request.body);
+      await page.setBody(request.body, (filePath) => this.context.stubFileChooser(filePath));
     }
     if (request.authentication) {
       await this.applyHttpAuthentication(page, request.authentication);

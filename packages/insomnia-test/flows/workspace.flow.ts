@@ -116,7 +116,8 @@ export class WorkspaceFlow extends BaseFlow {
     await projectPage.setNewProjectType(item.type);
 
     await projectSettingsPage.selectGitOpenMode();
-    await projectSettingsPage.chooseOpenFolderLocation(item.folderPath);
+    await this.context.stubFileChooser(item.folderPath);
+    await projectSettingsPage.chooseOpenFolderLocation();
     await projectSettingsPage.confirmOpenFolder();
     return this.assertCreated(await this.getProject(item.name), item.name);
   }
@@ -150,7 +151,8 @@ export class WorkspaceFlow extends BaseFlow {
     await projectSettingsPage.setRepositoryUrl(uri);
     await projectSettingsPage.selectBranch(branch);
     if (repo?.cloneParentDir) {
-      await projectSettingsPage.chooseCloneLocation(repo.cloneParentDir);
+      await this.context.stubFileChooser(repo.cloneParentDir);
+      await projectSettingsPage.chooseCloneLocation();
     }
     await projectSettingsPage.submitScanForFiles();
     await projectSettingsPage.confirmClone();
@@ -840,7 +842,8 @@ export class WorkspaceFlow extends BaseFlow {
   async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
     const workspace = this.pageManager.workspacePage;
     const specPage = this.pageManager.specPage;
-    const result = await specPage.uploadRuleset(filePath);
+    await this.context.stubFileChooser(filePath);
+    const result = await specPage.uploadRuleset();
     if (result === 'invalid') {
       await workspace.closeDialog();
       return 'invalid';
@@ -1058,7 +1061,8 @@ export class WorkspaceFlow extends BaseFlow {
     await projectSettingsPage.setRepositoryUrl(uri);
     await projectSettingsPage.selectBranch(branch);
     if (repo?.cloneParentDir) {
-      await projectSettingsPage.chooseCloneLocation(repo.cloneParentDir);
+      await this.context.stubFileChooser(repo.cloneParentDir);
+      await projectSettingsPage.chooseCloneLocation();
     }
     await projectSettingsPage.submitScanForFiles();
     const unknownFieldFiles = await projectSettingsPage.getUnknownFieldFiles();

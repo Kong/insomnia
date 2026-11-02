@@ -309,21 +309,21 @@ export class ResponsePage extends BasePage {
 
   /**
    * Exports the response currently shown via the "Preview" dropdown,
-   * writing it to `filePath` through a stubbed native save dialog.
+   * writing it through the native save dialog, which must already be
+   * stubbed (see `FlowContext.stubSaveDialog`).
    */
-  async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
-    await this.stubSaveDialog(filePath);
+  async exportResponse(option: ResponseExportOption): Promise<void> {
     await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
     await this.page.getByRole('menuitem', { name: option }).click();
   }
 
   /**
    * Clicks the "Save To File" button that only renders for responses over
-   * the large-response threshold, writing the raw body to `filePath`
-   * through a stubbed native save dialog.
+   * the large-response threshold, writing the raw body through the native
+   * save dialog, which must already be stubbed (see
+   * `FlowContext.stubSaveDialog`).
    */
-  async saveResponseToFile(filePath: string): Promise<void> {
-    await this.stubSaveDialog(filePath);
+  async saveResponseToFile(): Promise<void> {
     await this.page.locator(this.PANE).getByRole('button', { name: 'Save To File' }).click();
   }
 

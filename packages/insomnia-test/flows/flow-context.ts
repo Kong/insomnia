@@ -26,4 +26,14 @@ export interface FlowContext {
   setElectronApp(insomnia: ElectronApplication): void;
   /** Reads the main process's `userData` directory. */
   getDataPath(): Promise<string>;
+  /**
+   * Stubs Electron's native open/folder-picker dialog so the next "Choose
+   * File"/"Choose folder" click resolves to `filePath` without an OS prompt.
+   */
+  stubFileChooser(filePath: string): Promise<void>;
+  /**
+   * Stubs Electron's native save dialog so the next export/save action
+   * writes to `filePath` without an OS prompt.
+   */
+  stubSaveDialog(filePath: string): Promise<void>;
 }
