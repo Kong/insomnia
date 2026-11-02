@@ -1,8 +1,6 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -10,17 +8,15 @@ import { BasePage } from "./base.page";
  * `CloudSyncPage.openHistory()`.
  */
 export class CloudSyncHistoryDialogPage extends BasePage {
-  // A getter, not a field: `AppFlow.restart()` swaps `this.page` on the
-  // retained page object, so the locator must follow the current window.
-  private get historyModal(): ModalComponent {
-    return ModalComponent.byTitle(this.page, "History");
-  }
+  private readonly historyDialog = this.page
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
 
   /**
    * Waits for the History modal to be visible.
    */
   async navigate(): Promise<void> {
-    await this.historyModal.waitForVisible();
+    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -29,19 +25,17 @@ export class CloudSyncHistoryDialogPage extends BasePage {
    * `openHistory()` to have been called first.
    */
   async restoreSnapshot(message: string): Promise<void> {
-    const row = new TableComponent(this.page, this.historyModal.root).row(
-      message,
-    );
-    await row.getByRole("button", { name: "Restore" }).click();
-    // A dblclick can fire its 2nd click before React re-renders the
-    // button into its "Confirm" state, so wait for it explicitly.
-    await row.getByRole("button", { name: "Confirm" }).click();
+    await this.historyDialog
+      .getByRole("row", { name: message })
+      .getByRole("button", { name: "Restore" })
+      .dblclick();
   }
 
   /**
    * Closes the History modal.
    */
   async closeHistory(): Promise<void> {
-    await this.historyModal.close();
+    await this.historyDialog.locator('[data-icon="x"]').click();
+    await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 }

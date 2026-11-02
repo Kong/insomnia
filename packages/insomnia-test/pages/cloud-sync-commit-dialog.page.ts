@@ -1,8 +1,7 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TooltipComponent } from "@package/components/tooltip.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { TooltipComponent } from "../components/tooltip.component";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -11,16 +10,15 @@ import { BasePage } from "./base.page";
  * `CloudSyncPage.openCommitDialog()`.
  */
 export class CloudSyncCommitDialogPage extends BasePage {
-  private readonly commitModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Commit changes" }),
-  );
+  private readonly commitDialog = this.page.getByRole("dialog", {
+    name: "Commit changes",
+  });
 
   /**
    * Waits for the Commit modal to be visible.
    */
   async navigate(): Promise<void> {
-    await this.commitModal.waitForVisible();
+    await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -29,7 +27,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * called first.
    */
   private async stageChange(name: string): Promise<void> {
-    const row = this.commitModal.root.getByRole("row", { name });
+    const row = this.commitDialog.getByRole("row", { name });
     await row.locator('[data-icon="plus"]').click();
     // Staging is an async action: committing before the row has moved to
     // the staged list (its button turns into a "minus") commits nothing.
@@ -49,25 +47,25 @@ export class CloudSyncCommitDialogPage extends BasePage {
    */
   async commit(name: string, message: string): Promise<void> {
     await this.stageChange(name);
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("textbox", { name: "Message" })
       .fill(message);
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("button", { name: "Commit", exact: true })
       .click();
-    await expect(this.commitModal.root.getByRole("row", { name })).toHaveCount(0, {
+    await expect(this.commitDialog.getByRole("row", { name })).toHaveCount(0, {
       timeout: DEFAULT_TIMEOUT,
     });
-    const closedItself = await this.commitModal.root
+    const closedItself = await this.commitDialog
       .waitFor({ state: "hidden", timeout: 3000 })
       .then(
         () => true,
         () => false,
       );
     if (!closedItself) {
-      await this.commitModal.root.locator('[data-icon="x"]').click();
+      await this.commitDialog.locator('[data-icon="x"]').click();
     }
-    await this.commitModal.waitForHidden();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -76,25 +74,25 @@ export class CloudSyncCommitDialogPage extends BasePage {
    */
   async commitAndPush(name: string, message: string): Promise<void> {
     await this.stageChange(name);
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("textbox", { name: "Message" })
       .fill(message);
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("button", { name: "Commit and push" })
       .click();
   }
 
-  private readonly unknownFieldsConfirmModal = ModalComponent.byTitle(
-    this.page,
-    "Unrecognized Fields",
-  );
+  private readonly unknownFieldsConfirmDialog = this.page
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "Unrecognized Fields" }) });
 
   /**
    * Closes the open Commit modal with its close (x) button and waits for
    * it to be hidden.
    */
   async closeCommitDialog(): Promise<void> {
-    await this.commitModal.close();
+    await this.commitDialog.locator('[data-icon="x"]').click();
+    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -103,7 +101,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * called first.
    */
   async getChangeNames(): Promise<string[]> {
-    const rows = this.commitModal.root
+    const rows = this.commitDialog
       .getByRole("row")
       .filter({ has: this.page.locator('[data-icon="plus"], [data-icon="minus"]') });
     await rows.first().waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
@@ -117,9 +115,9 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * have been called first.
    */
   async openChangeDiff(name: string): Promise<void> {
-    await this.commitModal.root.getByRole("row", { name }).click();
+    await this.commitDialog.getByRole("row", { name }).click();
     await expect(
-      this.commitModal.root.getByRole("heading", { name, exact: true }),
+      this.commitDialog.getByRole("heading", { name, exact: true }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -128,7 +126,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * fields banner. Requires `openChangeDiff()` to have been called.
    */
   async isUnknownFieldsDiffWarningVisible(): Promise<boolean> {
-    return this.commitModal.root.getByTestId("unknown-fields-diff-warning").isVisible();
+    return this.commitDialog.getByTestId("unknown-fields-diff-warning").isVisible();
   }
 
   /**
@@ -136,7 +134,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * Commit modal. Requires `openChangeDiff()` to have been called.
    */
   async getUnknownFieldHighlightCount(): Promise<number> {
-    return this.commitModal.root.locator(".unknown-field-line-bg").count();
+    return this.commitDialog.locator(".unknown-field-line-bg").count();
   }
 
   /**
@@ -144,7 +142,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * diff pane. Requires `openChangeDiff()` to have been called.
    */
   async getUnsupportedDocDiffErrorText(): Promise<string> {
-    const banner = this.commitModal.root.getByTestId("unsupported-doc-diff-error");
+    const banner = this.commitDialog.getByTestId("unsupported-doc-diff-error");
     return (await banner.isVisible()) ? (await banner.innerText()).trim() : "";
   }
 
@@ -163,7 +161,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
   }
 
   private async readRowIconTooltip(name: string, iconLabel: string): Promise<string> {
-    const icon = this.commitModal.root.getByRole("row", { name }).getByLabel(iconLabel);
+    const icon = this.commitDialog.getByRole("row", { name }).getByLabel(iconLabel);
     return new TooltipComponent(this.page, icon).read();
   }
 
@@ -175,7 +173,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    */
   async submitCommit(name: string, message: string): Promise<void> {
     await this.stageChange(name);
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("textbox", { name: "Message" })
       .fill(message);
     await this.clickCommit();
@@ -186,7 +184,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * whatever message is already filled in.
    */
   async clickCommit(): Promise<void> {
-    await this.commitModal.root
+    await this.commitDialog
       .getByRole("button", { name: "Commit", exact: true })
       .click();
   }
@@ -196,7 +194,7 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * unstage "minus" button) in the open Commit modal.
    */
   async isChangeStaged(name: string): Promise<boolean> {
-    return this.commitModal.root
+    return this.commitDialog
       .getByRole("row", { name })
       .locator('[data-icon="minus"]')
       .isVisible();
@@ -206,15 +204,15 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * Reads whether the "Unrecognized Fields" confirmation is open.
    */
   async isUnknownFieldsConfirmationVisible(): Promise<boolean> {
-    return this.unknownFieldsConfirmModal.root.isVisible();
+    return this.unknownFieldsConfirmDialog.isVisible();
   }
 
   /**
    * Waits for the "Unrecognized Fields" confirmation and reads its text.
    */
   async getUnknownFieldsConfirmationText(): Promise<string> {
-    await this.unknownFieldsConfirmModal.waitForVisible();
-    return (await this.unknownFieldsConfirmModal.root.innerText()).trim();
+    await expect(this.unknownFieldsConfirmDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await this.unknownFieldsConfirmDialog.innerText()).trim();
   }
 
   /**
@@ -222,8 +220,8 @@ export class CloudSyncCommitDialogPage extends BasePage {
    * commit not created.
    */
   async cancelUnknownFieldsConfirmation(): Promise<void> {
-    await this.unknownFieldsConfirmModal.root.getByRole("button", { name: "Cancel" }).click();
-    await this.unknownFieldsConfirmModal.waitForHidden();
+    await this.unknownFieldsConfirmDialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -232,8 +230,8 @@ export class CloudSyncCommitDialogPage extends BasePage {
    */
   async confirmUnknownFieldsCommit(name: string): Promise<void> {
     await this.page.getByTestId("unknown-fields-commit-confirm-button").click();
-    await this.unknownFieldsConfirmModal.waitForHidden();
-    await expect(this.commitModal.root.getByRole("row", { name })).toHaveCount(0, {
+    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog.getByRole("row", { name })).toHaveCount(0, {
       timeout: DEFAULT_TIMEOUT,
     });
   }

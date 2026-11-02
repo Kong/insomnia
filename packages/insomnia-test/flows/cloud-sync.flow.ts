@@ -43,9 +43,9 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async commitAndPush(requestName: string, message: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncCommitDialogPage } = this.pageManager;
     await cloudSyncPage.openCommitDialog();
-    await cloudSyncPage.commitAndPush(requestName, message);
+    await cloudSyncCommitDialogPage.commitAndPush(requestName, message);
   }
 
   /**
@@ -53,9 +53,9 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async commit(requestName: string, message: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncCommitDialogPage } = this.pageManager;
     await cloudSyncPage.openCommitDialog();
-    await cloudSyncPage.commit(requestName, message);
+    await cloudSyncCommitDialogPage.commit(requestName, message);
   }
 
   /**
@@ -64,10 +64,10 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async restoreSnapshot(message: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncHistoryDialogPage } = this.pageManager;
     await cloudSyncPage.openHistory();
-    await cloudSyncPage.restoreSnapshot(message);
-    await cloudSyncPage.closeHistory();
+    await cloudSyncHistoryDialogPage.restoreSnapshot(message);
+    await cloudSyncHistoryDialogPage.closeHistory();
   }
 
   /**
@@ -76,10 +76,10 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async createBranch(branch: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncPage.createBranch(branch);
-    await cloudSyncPage.closeBranchesDialog();
+    await cloudSyncBranchesDialogPage.createBranch(branch);
+    await cloudSyncBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -88,10 +88,10 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async mergeBranch(branch: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncPage.mergeBranch(branch);
-    await cloudSyncPage.closeBranchesDialog();
+    await cloudSyncBranchesDialogPage.mergeBranch(branch);
+    await cloudSyncBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -103,11 +103,11 @@ export class CloudSyncFlow extends BaseFlow {
     branch: string,
     version: "Current" | "Incoming",
   ): Promise<string[]> {
-    const { cloudSyncPage } = this.pageManager;
+    const { cloudSyncPage, cloudSyncBranchesDialogPage } = this.pageManager;
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncPage.mergeBranch(branch);
-    const conflicts = await cloudSyncPage.resolveMergeConflicts(version);
-    await cloudSyncPage.closeBranchesDialog();
+    await cloudSyncBranchesDialogPage.mergeBranch(branch);
+    const conflicts = await cloudSyncBranchesDialogPage.resolveMergeConflicts(version);
+    await cloudSyncBranchesDialogPage.closeBranchesDialog();
     return conflicts;
   }
 
@@ -119,9 +119,9 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async delete(name: string, mode: DeleteMode): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
-    await cloudSyncPage.openDeleteWorkspaceDialog(name);
-    await (mode === DeleteMode.Local ? cloudSyncPage.deleteWorkspaceLocalOnly() : cloudSyncPage.deleteWorkspacePermanently());
+    const { cloudSyncFileDeletePage } = this.pageManager;
+    await cloudSyncFileDeletePage.openDeleteWorkspaceDialog(name);
+    await (mode === DeleteMode.Local ? cloudSyncFileDeletePage.deleteWorkspaceLocalOnly() : cloudSyncFileDeletePage.deleteWorkspacePermanently());
   }
 
   /**
@@ -132,8 +132,8 @@ export class CloudSyncFlow extends BaseFlow {
    */
   @step()
   async deleteUnsyncedFile(name: string): Promise<void> {
-    const { cloudSyncPage } = this.pageManager;
-    await cloudSyncPage.openFileDeleteDialog(name);
-    await cloudSyncPage.confirmFileDelete();
+    const { cloudSyncFileDeletePage } = this.pageManager;
+    await cloudSyncFileDeletePage.openFileDeleteDialog(name);
+    await cloudSyncFileDeletePage.confirmFileDelete();
   }
 }
