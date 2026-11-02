@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, SOCKET_SERVER_AUTH_TOKEN, SOCKET_SERVER_PROTECTED, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, SOCKET_SERVER_AUTH_TOKEN, SOCKET_SERVER_PROTECTED, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Socket.IO Handshake Is Accepted With the Token and Rejected Without It", async ({
   user,
