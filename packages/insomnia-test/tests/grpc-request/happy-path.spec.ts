@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { GRPC_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { EnvironmentKvPairDataType } from "../../models/environment";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { GRPC_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { EnvironmentKvPairDataType } from "@package/models/environment";
+import { Project } from "@package/models/project";
 
 test("Verify Create gRPC Request", async ({ user }) => {
   const { environmentFlow, grpcRequestFlow, workspaceFlow } = user.flowManager;
