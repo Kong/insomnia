@@ -1,9 +1,9 @@
-import type { RequestAuthentication } from "insomnia-data";
 
 import { ContextMenuItem } from "../enums/context-menu-items";
 import { TreeNodeType } from "../enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { step } from "../misc/step";
+import type { RequestAuthentication } from "../models/authentication";
 import type { Collection } from "../models/collection";
 import type { Folder } from "../models/folder";
 import type { ResponseView } from "../models/response";
