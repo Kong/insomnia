@@ -1,14 +1,15 @@
 
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { step } from "../misc/step";
-import type { RequestAuthentication } from "../models/authentication";
-import type { Collection } from "../models/collection";
-import { EventStreamRequest } from "../models/event-stream-request";
-import type { Folder } from "../models/folder";
-import type { ResponseView } from "../models/response";
-import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { EventStreamRequestPage } from "../pages/event-stream-request.page";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { step } from "@package/misc/step";
+import type { RequestAuthentication } from "@package/models/authentication";
+import type { Collection } from "@package/models/collection";
+import { EventStreamRequest } from "@package/models/event-stream-request";
+import type { Folder } from "@package/models/folder";
+import type { ResponseView } from "@package/models/response";
+import type { OAuth2Tokens } from "@package/pages/auth-tab.page";
+import type { EventStreamRequestPage } from "@package/pages/event-stream-request.page";
+
 import { BaseFlow } from "./base.flow";
 
 export class EventStreamRequestFlow extends BaseFlow {

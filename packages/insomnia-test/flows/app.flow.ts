@@ -1,14 +1,14 @@
-import type { Page } from "playwright-core";
-
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import {
   collectHiddenWindowCoverage,
   collectWindowCoverage,
   startWindowCoverage,
   trackHiddenWindowCoverage,
-} from "../misc/coverage";
-import { launchInsomniaElectron } from "../misc/launch";
-import { step } from "../misc/step";
+} from "@package/misc/coverage";
+import { launchInsomniaElectron } from "@package/misc/launch";
+import { step } from "@package/misc/step";
+import type { Page } from "playwright-core";
+
 import { BaseFlow } from "./base.flow";
 
 export class AppFlow extends BaseFlow {

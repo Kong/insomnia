@@ -1,8 +1,7 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { waitForRendererIdle, waitForStableValue } from "@package/misc/wait";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { waitForRendererIdle, waitForStableValue } from "../misc/wait";
 
 /**
  * Root of the component layer (flow → page → component). A component wraps

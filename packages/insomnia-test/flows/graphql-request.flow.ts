@@ -1,14 +1,15 @@
 
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { step } from "../misc/step";
-import type { RequestAuthentication } from "../models/authentication";
-import type { Collection } from "../models/collection";
-import type { Folder } from "../models/folder";
-import { GraphQLRequest } from "../models/graphql-request";
-import type { ResponseView } from "../models/response";
-import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { GraphQLRequestPage } from "../pages/graphql-request.page";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { step } from "@package/misc/step";
+import type { RequestAuthentication } from "@package/models/authentication";
+import type { Collection } from "@package/models/collection";
+import type { Folder } from "@package/models/folder";
+import { GraphQLRequest } from "@package/models/graphql-request";
+import type { ResponseView } from "@package/models/response";
+import type { OAuth2Tokens } from "@package/pages/auth-tab.page";
+import type { GraphQLRequestPage } from "@package/pages/graphql-request.page";
+
 import { BaseFlow } from "./base.flow";
 
 export class GraphQLRequestFlow extends BaseFlow {

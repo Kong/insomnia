@@ -1,7 +1,4 @@
-import type { Locator } from "@playwright/test";
-import { expect } from "@playwright/test";
-
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   RunnerIterationResult,
   RunnerLiveStatus,
@@ -10,7 +7,10 @@ import type {
   RunnerResultsByFilter,
   RunnerTestResult,
   RunnerTestResultCount,
-} from "../models/runner";
+} from "@package/models/runner";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
+
 import { BasePage } from "./base.page";
 
 export type RunnerRequestTab = "request-order" | "advanced";

@@ -1,3 +1,4 @@
+import type { HttpMethod } from "@package/enums/http-method";
 import type {
   AuthTypeOAuth1,
   AuthTypeOAuth2,
@@ -8,7 +9,6 @@ import type {
   RequestParameter,
 } from "insomnia-data";
 
-import type { HttpMethod } from "../enums/http-method";
 import type { RequestAuthentication as BaseRequestAuthentication } from "./authentication";
 
 /** Base auth types plus OAuth 1.0, which only the HTTP Auth tab offers. */

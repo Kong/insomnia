@@ -1,7 +1,8 @@
-import { GitChangeList } from "../enums/git-change-list";
-import { GitDiffView } from "../enums/git-diff-view";
-import { step } from "../misc/step";
-import { Commit } from "../models/commit";
+import { GitChangeList } from "@package/enums/git-change-list";
+import { GitDiffView } from "@package/enums/git-diff-view";
+import { step } from "@package/misc/step";
+import { Commit } from "@package/models/commit";
+
 import { BaseFlow } from "./base.flow";
 
 export class GitSyncFlow extends BaseFlow {

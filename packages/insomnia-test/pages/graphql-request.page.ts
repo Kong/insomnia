@@ -1,15 +1,15 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { expect } from "@playwright/test";
-
-import { ContentType } from "../enums/content-type";
-import type { HttpMethod } from "../enums/http-method";
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
+import { ContentType } from "@package/enums/content-type";
+import type { HttpMethod } from "@package/enums/http-method";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   GraphQLRequest,
   GraphQLRequestBody,
   GraphQLSchema,
-} from "../models/graphql-request";
+} from "@package/models/graphql-request";
+import { expect } from "@playwright/test";
+
 import { RequestPage } from "./request.page";
 
 export class GraphQLRequestPage extends RequestPage {

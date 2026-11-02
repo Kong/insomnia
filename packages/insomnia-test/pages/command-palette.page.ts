@@ -1,6 +1,6 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class CommandPalettePage extends BasePage {

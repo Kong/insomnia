@@ -1,5 +1,6 @@
-import type { CollaboratorRole } from "../enums/collaborator-role";
-import { step } from "../misc/step";
+import type { CollaboratorRole } from "@package/enums/collaborator-role";
+import { step } from "@package/misc/step";
+
 import { BaseFlow } from "./base.flow";
 
 /**

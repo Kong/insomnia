@@ -1,15 +1,15 @@
-import { expect } from "@playwright/test";
-
-import { FileInputComponent } from "../components/file-input.component";
-import { SelectComponent } from "../components/select.component";
-import { ContentType } from "../enums/content-type";
-import type { HttpMethod } from "../enums/http-method";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { FileInputComponent } from "@package/components/file-input.component";
+import { SelectComponent } from "@package/components/select.component";
+import { ContentType } from "@package/enums/content-type";
+import type { HttpMethod } from "@package/enums/http-method";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   HttpRequest,
   HttpRequestBody,
   RequestBodyParameter,
-} from "../models/http-request";
+} from "@package/models/http-request";
+import { expect } from "@playwright/test";
+
 import { RequestPage } from "./request.page";
 
 export class HttpRequestPage extends RequestPage {

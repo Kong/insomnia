@@ -1,9 +1,10 @@
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
 import type {
   VariableSourceModal,
   VariableSourceScope,
-} from "../pages/variable-source.page";
+} from "@package/pages/variable-source.page";
+
 import { BaseFlow } from "./base.flow";
 
 export type VariableSourceLanding = "environments-modal" | "environment-page" | "folder-pane";

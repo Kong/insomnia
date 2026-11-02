@@ -1,8 +1,8 @@
+import type { McpListAction } from "@package/enums/mcp-capability";
+import type { McpCapabilityType, McpPrimitiveType } from "@package/enums/mcp-capability";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect, type Locator } from "@playwright/test";
 
-import type { McpListAction } from "../enums/mcp-capability";
-import type { McpCapabilityType, McpPrimitiveType } from "../enums/mcp-capability";
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { RequestPage } from "./request.page";
 
 /** The error panel embedded in a capability item's row. */

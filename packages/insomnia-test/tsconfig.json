@@ -11,7 +11,11 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "moduleDetection": "force",
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@package/*": ["./*"]
+    }
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "playwright-report", "blob-report", "coverage", "test-results"]

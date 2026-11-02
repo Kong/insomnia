@@ -1,4 +1,4 @@
-import { MOCK_API_SERVER, SESSION_ID } from "../../../misc/fixtures";
+import { MOCK_API_SERVER, SESSION_ID } from "@package/misc/fixtures";
 
 // Test-only controls for misc/mock-api.ts's Cloud Sync GraphQL mock. The app
 // calls it from the Electron main process, so a spec can't attach a header or

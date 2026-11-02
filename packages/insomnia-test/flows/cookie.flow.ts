@@ -1,14 +1,14 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Collection } from "@package/models/collection";
+import type { Cookie } from "@package/models/cookie";
+import type { EventStreamRequest } from "@package/models/event-stream-request";
+import type { GraphQLRequest } from "@package/models/graphql-request";
+import type { GrpcRequest } from "@package/models/grpc-request";
+import type { HttpRequest } from "@package/models/http-request";
+import type { SocketIORequest } from "@package/models/socket-io-request";
+import type { WebSocketRequest } from "@package/models/websocket-request";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { Collection } from "../models/collection";
-import type { Cookie } from "../models/cookie";
-import type { EventStreamRequest } from "../models/event-stream-request";
-import type { GraphQLRequest } from "../models/graphql-request";
-import type { GrpcRequest } from "../models/grpc-request";
-import type { HttpRequest } from "../models/http-request";
-import type { SocketIORequest } from "../models/socket-io-request";
-import type { WebSocketRequest } from "../models/websocket-request";
 import { BaseFlow } from "./base.flow";
 
 export type CookieTarget =

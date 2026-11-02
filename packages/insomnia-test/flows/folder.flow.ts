@@ -1,11 +1,12 @@
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
-import { Folder } from "../models/folder";
-import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { FolderPage } from "../pages/folder.page";
-import type { RequestScripts } from "../pages/script-tab.page";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
+import { Folder } from "@package/models/folder";
+import type { OAuth2Tokens } from "@package/pages/auth-tab.page";
+import type { FolderPage } from "@package/pages/folder.page";
+import type { RequestScripts } from "@package/pages/script-tab.page";
+
 import { BaseFlow } from "./base.flow";
 
 export class FolderFlow extends BaseFlow {

@@ -1,8 +1,8 @@
+import { GitChangeList } from "@package/enums/git-change-list";
+import { GitDiffView } from "@package/enums/git-diff-view";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from "../enums/git-change-list";
-import { GitDiffView } from "../enums/git-diff-view";
-import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**

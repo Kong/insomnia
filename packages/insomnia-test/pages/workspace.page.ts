@@ -1,26 +1,26 @@
-import { expect } from "@playwright/test";
-import type { Locator, Page } from "playwright-core";
-
-import { DropdownComponent } from "../components/dropdown.component";
-import { SearchFieldComponent } from "../components/search-field.component";
-import { TabBarComponent } from "../components/tab-bar.component";
-import { TreeComponent } from "../components/tree.component";
-import type { ContextMenuItem } from "../enums/context-menu-items";
-import { HttpMethod } from "../enums/http-method";
-import { LintSeverity } from "../enums/lint-severity";
-import { ProjectType } from "../enums/project-types";
-import { RulesetType } from "../enums/ruleset-type";
-import type { SpecFormat } from "../enums/spec-format";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
+import { DropdownComponent } from "@package/components/dropdown.component";
+import { SearchFieldComponent } from "@package/components/search-field.component";
+import { TabBarComponent } from "@package/components/tab-bar.component";
+import { TreeComponent } from "@package/components/tree.component";
+import type { ContextMenuItem } from "@package/enums/context-menu-items";
+import { HttpMethod } from "@package/enums/http-method";
+import { LintSeverity } from "@package/enums/lint-severity";
+import { ProjectType } from "@package/enums/project-types";
+import { RulesetType } from "@package/enums/ruleset-type";
+import type { SpecFormat } from "@package/enums/spec-format";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import type {
   LintEntry,
-  PathItem} from "../models/collection";
+  PathItem} from "@package/models/collection";
 import {
   Info,
   License,
   Specification,
-} from "../models/collection";
+} from "@package/models/collection";
+import { expect } from "@playwright/test";
+import type { Locator, Page } from "playwright-core";
+
 import { BasePage } from "./base.page";
 import { NEW_PROJECT_BUTTON } from "./project.page";
 

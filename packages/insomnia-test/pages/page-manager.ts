@@ -1,7 +1,7 @@
+import { findDocs } from "@package/misc/db";
 import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
-import { findDocs } from "../misc/db";
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
 import { CloudSyncPage } from "./cloud-sync.page";

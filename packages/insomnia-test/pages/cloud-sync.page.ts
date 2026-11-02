@@ -1,7 +1,7 @@
+import { SyncStatus } from "@package/enums/sync-status";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { SyncStatus } from "../enums/sync-status";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**

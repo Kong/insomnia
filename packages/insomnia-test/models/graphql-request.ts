@@ -1,10 +1,10 @@
+import type { HttpMethod } from "@package/enums/http-method";
 import type {
   Request as AppRequest,
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
 
-import type { HttpMethod } from "../enums/http-method";
 import type { RequestAuthentication } from "./authentication";
 import type { HttpRequestBody } from "./http-request";
 

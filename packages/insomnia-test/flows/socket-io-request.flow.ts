@@ -1,12 +1,13 @@
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
-import type { Folder } from "../models/folder";
-import type { ResponseView } from "../models/response";
-import { SocketIORequest } from "../models/socket-io-request";
-import type { SocketIORequestPage } from "../pages/socket-io-request.page";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
+import type { Folder } from "@package/models/folder";
+import type { ResponseView } from "@package/models/response";
+import { SocketIORequest } from "@package/models/socket-io-request";
+import type { SocketIORequestPage } from "@package/pages/socket-io-request.page";
+
 import { BaseFlow } from "./base.flow";
 
 export class SocketIORequestFlow extends BaseFlow {

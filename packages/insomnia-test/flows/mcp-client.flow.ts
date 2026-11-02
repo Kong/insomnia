@@ -1,14 +1,14 @@
+import { type McpCapabilityType, McpListAction } from "@package/enums/mcp-capability";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { step } from "@package/misc/step";
+import { McpClient } from "@package/models/mcp-client";
+import type { Project } from "@package/models/project";
+import type { ResponseView } from "@package/models/response";
+import type { OAuth2Tokens } from "@package/pages/auth-tab.page";
+import type { McpCapabilityError } from "@package/pages/mcp-client.page";
+import type { PageManager } from "@package/pages/page-manager";
 import { expect } from "@playwright/test";
 
-import { type McpCapabilityType, McpListAction } from "../enums/mcp-capability";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { step } from "../misc/step";
-import { McpClient } from "../models/mcp-client";
-import type { Project } from "../models/project";
-import type { ResponseView } from "../models/response";
-import type { OAuth2Tokens } from "../pages/auth-tab.page";
-import type { McpCapabilityError } from "../pages/mcp-client.page";
-import type { PageManager } from "../pages/page-manager";
 import { BaseFlow } from "./base.flow";
 import type { FlowContext } from "./flow-context";
 import type { WorkspaceFlow } from "./workspace.flow";

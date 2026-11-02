@@ -1,12 +1,12 @@
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { step } from "@package/misc/step";
+import type { MockRoute, MockRouteHistoryEntry } from "@package/models/mock-route";
+import { MockServer } from "@package/models/mock-server";
+import type { Project } from "@package/models/project";
+import type { ResponseView } from "@package/models/response";
 import { expect } from "@playwright/test";
 
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { step } from "../misc/step";
-import type { MockRoute, MockRouteHistoryEntry } from "../models/mock-route";
-import { MockServer } from "../models/mock-server";
-import type { Project } from "../models/project";
-import type { ResponseView } from "../models/response";
 import { BaseFlow } from "./base.flow";
 
 export class MockServerFlow extends BaseFlow {

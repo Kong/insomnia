@@ -1,11 +1,10 @@
+import { CodeEditorComponent } from "@package/components/code-editor.component";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { findDocs } from "@package/misc/db";
+import { waitForRendererIdle, waitForStableValue } from "@package/misc/wait";
 import type { Locator } from "@playwright/test";
 import { type ElectronApplication,expect } from "@playwright/test";
 import type { Page } from "playwright-core";
-
-import { CodeEditorComponent } from "../components/code-editor.component";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { findDocs } from "../misc/db";
-import { waitForRendererIdle, waitForStableValue } from "../misc/wait";
 
 export abstract class BasePage {
   constructor(

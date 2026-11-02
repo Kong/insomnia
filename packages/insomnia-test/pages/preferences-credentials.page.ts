@@ -1,8 +1,8 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { GitCredential } from "@package/models/git-credential";
+import type { CloudCredential } from "@package/models/settings";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { GitCredential } from "../models/git-credential";
-import type { CloudCredential } from "../models/settings";
 import { PreferencesTabPage } from "./preferences-tab.page";
 
 type AwsCloudCredential = Extract<CloudCredential, { provider: "aws" }>;
