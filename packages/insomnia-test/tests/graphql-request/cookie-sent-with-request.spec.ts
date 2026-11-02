@@ -37,8 +37,8 @@ test("Verify Linked Cookie Is Sent With GraphQL Request", async ({ user }) => {
 
   const responseView = await graphqlRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       cookie: `${cookieKey}=${cookieValue}`,
     }),

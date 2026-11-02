@@ -35,14 +35,14 @@ test('Verify GraphQL Request Sends the OAuth 2.0 Header Until Authentication Is 
   await graphqlRequestFlow.setAuthentication(request, { type: 'none' });
   const unauthenticatedResponse = await graphqlRequestFlow.send(request);
 
-  expect(authenticatedResponse.statusCode).toBe(200);
-  expect(authenticatedResponse.body).toMatchObject({
+  expect(authenticatedResponse.statusBar.code).toBe(200);
+  expect(authenticatedResponse.preview).toMatchObject({
     headers: expect.objectContaining({
       authorization: `Bearer ${tokens.accessToken}`,
     }),
   });
-  expect(unauthenticatedResponse.statusCode).toBe(200);
-  expect((unauthenticatedResponse.body as { headers: Record<string, string> }).headers).not.toHaveProperty(
+  expect(unauthenticatedResponse.statusBar.code).toBe(200);
+  expect((unauthenticatedResponse.preview as { headers: Record<string, string> }).headers).not.toHaveProperty(
     'authorization',
   );
 });
