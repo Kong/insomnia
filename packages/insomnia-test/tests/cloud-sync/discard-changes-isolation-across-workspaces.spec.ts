@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { test } from "../../misc/fixtures";
+import { test } from "@package/misc/fixtures";
 
 test("Verify discarding changes on one Cloud-synced workspace does not affect another workspace's uncommitted edits", async ({
   user,
