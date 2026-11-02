@@ -495,4 +495,57 @@ describe('openapi-3', () => {
       expect(anyPetContentTypeHeader?.value).toBe('application/json');
     });
   });
+
+  describe('circular $ref', () => {
+    it('should import a schema that references itself without recursing forever', async () => {
+      const openApiDoc: OpenAPIV3.Document = {
+        openapi: '3.0.3',
+        info: { title: 'Tree API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/nodes': {
+            post: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/Node' },
+                  },
+                },
+              },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+        components: {
+          schemas: {
+            Node: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                parent: { $ref: '#/components/schemas/Node' },
+                children: { type: 'array', items: { $ref: '#/components/schemas/Node' } },
+              },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      expect(result).not.toBeNull();
+      const request = result?.find(item => item._type === 'request');
+
+      const body = JSON.parse(request.body.text);
+      expect(body.name).toBe('string');
+      expect(Array.isArray(body.children)).toBe(true);
+      // the cycle is cut off with null instead of expanding forever
+      let node = body;
+      let depth = 0;
+      while (node && depth < 10) {
+        node = node.parent;
+        depth++;
+      }
+      expect(node).toBeNull();
+      expect(depth).toBeLessThan(10);
+    });
+  });
 });
