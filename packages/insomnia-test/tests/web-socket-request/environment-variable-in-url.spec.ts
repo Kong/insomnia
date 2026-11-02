@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Environment Variable in WebSocket Request URL Is Resolved", async ({
   user,
