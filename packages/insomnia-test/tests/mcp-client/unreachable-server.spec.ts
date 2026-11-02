@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, test } from "../../misc/fixtures";
-import { McpClient } from "../../models/mcp-client";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { McpClient } from "@package/models/mcp-client";
+import { Project } from "@package/models/project";
 
 const unreachableUrl = "http://localhost:1/mcp";
 
