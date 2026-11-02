@@ -5,14 +5,14 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ExportFormat } from "../../../enums/export-format";
-import { HttpMethod } from "../../../enums/http-method";
-import { ProjectType } from "../../../enums/project-types";
-import { waitForExportedFile } from "../../../misc/export-file";
-import { test } from "../../../misc/fixtures";
-import { Collection } from "../../../models/collection";
-import { HttpRequest } from "../../../models/http-request";
-import { Project } from "../../../models/project";
+import { ExportFormat } from "@package/enums/export-format";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { waitForExportedFile } from "@package/misc/export-file";
+import { test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { HttpRequest } from "@package/models/http-request";
+import { Project } from "@package/models/project";
 
 test("Verify exporting a Collection via its context menu (HAR and Insomnia v5) and a Project via Preferences -> Data each write the expected files", async ({
   user,
