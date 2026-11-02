@@ -164,23 +164,15 @@ export class GraphQLRequestPage extends RequestPage {
     }
 
     const schemaSection = this.page.getByTestId("graphql-explorer-schema");
-    const rootTypes = Object.fromEntries(
-      (
-        await schemaSection
-          .getByTestId("graphql-explorer-root-type")
-          .filter({ hasText: /\S/ })
-          .evaluateAll((items) =>
-            items.map((item) => [
-              item
-                .querySelector('[data-testid="graphql-explorer-root-type-name"]')
-                ?.textContent?.trim() ?? "",
-              item
-                .querySelector('[data-testid="graphql-explorer-type-link"]')
-                ?.textContent?.trim() ?? "",
-            ]),
-          )
-      ).filter(([key]) => key),
-    );
+    const rootTypes: Record<string, string> = {};
+    for (const kind of ["query", "mutation", "subscription"]) {
+      const rootType = schemaSection.getByTestId(`graphql-explorer-root-type-${kind}`);
+      const typeLink = rootType.getByTestId("graphql-explorer-type-link");
+      // The <li> is always rendered, but empty when the schema lacks that root type.
+      if (await typeLink.count()) {
+        rootTypes[kind] = ((await typeLink.textContent()) ?? "").trim();
+      }
+    }
 
     await schemaSection.getByTestId("graphql-explorer-type-link").first().click();
 
