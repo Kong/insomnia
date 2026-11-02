@@ -1,12 +1,11 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify the tag modal's source follows the edited template and hides for non-variable content", async ({
   user,
