@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ProjectType } from '../../enums/project-types';
-import { getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
-import { Collection } from '../../models/collection';
-import { Project } from '../../models/project';
+import { ProjectType } from '@package/enums/project-types';
+import { getServerBranches, GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 
 test(
   'Verify merging a branch carries its committed changes into the current branch',

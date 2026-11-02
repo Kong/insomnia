@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { test } from "../../misc/fixtures";
+import { test } from "@package/misc/fixtures";
 
 test("Verify branch, commit, merge, and restore actions on one Cloud-synced workspace do not affect another workspace's branches or content", async ({
   user,
