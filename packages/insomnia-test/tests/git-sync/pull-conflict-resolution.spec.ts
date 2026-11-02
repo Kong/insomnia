@@ -14,7 +14,7 @@ for (const { version, keepsLocal } of [
     user,
   }) => {
     const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
-    const { gitSyncPage, workspacePage } = user.pageManager;
+    const { gitSyncPage, workspacePage, gitBranchesDialogPage } = user.pageManager;
 
     await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
     const project = await workspaceFlow.cloneGitProject(
@@ -31,7 +31,7 @@ for (const { version, keepsLocal } of [
     await gitSyncFlow.commit(faker.string.alphanumeric(10));
     await pushServerFile({ path: `${fileName}.yaml`, content: buildCollectionFile(remoteCollection.name) });
     await gitSyncFlow.pull();
-    await gitSyncPage.resolveMergeConflicts(version);
+    await gitBranchesDialogPage.resolveMergeConflicts(version);
 
     const keptCollection = keepsLocal ? localCollection : remoteCollection;
     await expect
