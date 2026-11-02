@@ -4,12 +4,11 @@ import * as net from "node:net";
 import type { Duplex } from "node:stream";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, test, WS_SERVER } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const startRecordingProxy = async () => {
   const targets: string[] = [];
