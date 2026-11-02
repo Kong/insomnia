@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Disconnecting a Socket.IO Request Before the Server Replies Delivers No Echo", async ({
   user,
