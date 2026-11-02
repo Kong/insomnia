@@ -20,7 +20,7 @@ test("Verify pre-request script reads and replaces the client certificate via in
 
   await preferencesFlow.set({
     validateSSL: false,
-    dataFolders: [path.join(__dirname, "../../misc/fixtures")],
+    dataFolders: [path.join(import.meta.dirname, "../../misc/fixtures")],
   });
 
   const project = await workspaceFlow.createProject(
