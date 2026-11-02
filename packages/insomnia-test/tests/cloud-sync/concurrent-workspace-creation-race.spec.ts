@@ -4,8 +4,9 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { getCloudSyncGraphQLRequestLog, MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, setCloudSyncGraphQLDelay, test } from "../../misc/fixtures";
+import { MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
+import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "./support/cloud-sync-mock";
 
 // Every Cloud Sync workspace used to share one VCS singleton, so creating a sibling
 // collection Y could repoint the singleton's `_backendProject` mid-flight,
