@@ -15,7 +15,7 @@ test("Import OpenAPI Spec by File", async ({ user }) => {
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const filePath = path.join(__dirname, "httpbingo-get.json");
+  const filePath = path.join(import.meta.dirname, "httpbingo-get.json");
   await importFlow.importFile(project, filePath);
 
   const nodes = await workspacePage.getNodes();
@@ -30,7 +30,7 @@ test("Import OpenAPI Spec by YAML File", async ({ user }) => {
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const filePath = path.join(__dirname, "httpbingo-get.yaml");
+  const filePath = path.join(import.meta.dirname, "httpbingo-get.yaml");
   await importFlow.importFile(project, filePath);
 
   const nodes = await workspacePage.getNodes();

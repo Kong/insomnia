@@ -14,7 +14,7 @@ test("Import Multiple Workspaces From Single File", async ({ user }) => {
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  const filePath = path.join(__dirname, "multiple-workspaces.yaml");
+  const filePath = path.join(import.meta.dirname, "multiple-workspaces.yaml");
   await importFlow.importFile(project, filePath);
 
   const collection1 = await workspaceFlow.getCollection("Collection 1");
