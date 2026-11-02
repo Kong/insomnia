@@ -1,11 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from '@package/misc/fixtures';
 import { Collection } from '@package/models/collection';
 import { EventStreamMethod } from '@package/models/event-stream-request';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify Event Stream Request Sends the API Key Header Until Authentication Is Set to None', async ({ user }) => {
   const { eventStreamRequestFlow, workspaceFlow } = user.flowManager;

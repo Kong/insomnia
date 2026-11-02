@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { EVENT_STREAM_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import { EventStreamMethod } from "@package/models/event-stream-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const variableName = "unlinked";
 
