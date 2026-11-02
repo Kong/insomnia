@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { test } from "../../../misc/fixtures";
+import { test } from "@package/misc/fixtures";
 
 const LEGACY_DB_DIR = path.join(import.meta.dirname, "insomnia-legacy-db");
 
