@@ -1,7 +1,6 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { MOCK_LLM_SERVER, test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify an LLM backend's config persists and can be activated then deactivated in AI Settings", async ({
   user,
