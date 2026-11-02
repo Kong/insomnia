@@ -340,6 +340,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      actions: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
@@ -432,6 +433,23 @@ jobs:
           name: playwright-report
           path: packages/insomnia-test/playwright-report/
           retention-days: 30
+
+      # Runs only after every shard passed: a failed run keeps all its
+      # intermediates so "Re-run failed jobs" still has the binary and the
+      # other shards' blob/coverage data to merge with. `gh api` instead of
+      # a third-party action keeps this within the repo's pinned-action set.
+      - name: Delete per-shard intermediate artifacts
+        if: ${{ always() && needs.parallel-test.result == 'success' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+            --jq '.artifacts[] | select(.name | test("^(coverage-raw-|playwright-report-|blob-report-)") or . == "insomnia-linux-unpacked") | "\(.id) \(.name)"' |
+          while read -r id name; do
+            echo "Deleting artifact $name ($id)"
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" || echo "::warning::Failed to delete $name"
+          done
 
       - name: Warn if a merge step failed
         if: ${{ always() && (steps.merge-coverage.outcome == 'failure' || steps.merge-report.outcome == 'failure') }}
