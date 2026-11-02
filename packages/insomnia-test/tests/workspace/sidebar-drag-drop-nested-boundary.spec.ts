@@ -1,13 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { ProjectType } from "../../enums/project-types";
-import { TreeNodeType } from "../../enums/tree-node-types";
-import { HTTP_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Folder } from "../../models/folder";
-import { Project } from "../../models/project";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Folder } from "@package/models/folder";
+import { Project } from "@package/models/project";
 
 const SCAN_OFFSETS_PX = [1, 5, 10, 20, 30, 45, 65, 90, 120, 160, 210, 270, 340];
 

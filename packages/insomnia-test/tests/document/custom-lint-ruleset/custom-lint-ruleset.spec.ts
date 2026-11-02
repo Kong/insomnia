@@ -3,11 +3,11 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../../enums/project-types";
-import { RulesetType } from "../../../enums/ruleset-type";
-import { test } from "../../../misc/fixtures";
-import { Collection } from "../../../models/collection";
-import { Project } from "../../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { RulesetType } from "@package/enums/ruleset-type";
+import { test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 const VALID_RULESET = path.join(import.meta.dirname, "custom.spectral.yaml");
 const INVALID_RULESET = path.join(import.meta.dirname, "invalid.spectral.yaml");
