@@ -44,7 +44,7 @@ test("Verify Cookie With Mismatched Path Is Not Sent With HTTP Request", async (
 
   const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = responseView.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.preview as { cookies: Record<string, string> };
   expect(cookies).not.toHaveProperty(mismatchedCookie.key);
   expect(cookies).toMatchObject({ [matchedCookie.key]: matchedCookie.value });
 });
