@@ -36,13 +36,13 @@ test("Verify GraphQL Request Sends the Bearer Token Header Until Authentication 
   await graphqlRequestFlow.setAuthentication(request, { type: "none" });
   const unauthenticatedResponse = await graphqlRequestFlow.send(request);
 
-  expect(authenticatedResponse.statusCode).toBe(200);
-  expect(authenticatedResponse.body).toMatchObject({
+  expect(authenticatedResponse.statusBar.code).toBe(200);
+  expect(authenticatedResponse.preview).toMatchObject({
     headers: expect.objectContaining({ authorization: `Bearer ${token}` }),
   });
-  expect(unauthenticatedResponse.statusCode).toBe(200);
+  expect(unauthenticatedResponse.statusBar.code).toBe(200);
   expect(
-    (unauthenticatedResponse.body as { headers: Record<string, string> })
+    (unauthenticatedResponse.preview as { headers: Record<string, string> })
       .headers,
   ).not.toHaveProperty("authorization");
 });
