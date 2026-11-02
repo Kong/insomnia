@@ -4,10 +4,10 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { SyncStatus } from "../../enums/sync-status";
-import { HTTP_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
+import { HttpMethod } from "@package/enums/http-method";
+import { SyncStatus } from "@package/enums/sync-status";
+import { HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
 
 test("Verify a new collection is not left in an unsynced state after an app restart", async ({
   user,
