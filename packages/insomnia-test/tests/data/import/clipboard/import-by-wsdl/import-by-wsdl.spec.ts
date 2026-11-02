@@ -34,7 +34,7 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   });
 
   const responseView = await httpRequestFlow.send(request!);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toContain("AddResult");
-  expect(responseView.body).toContain("9");
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toContain("AddResult");
+  expect(responseView.preview).toContain("9");
 });
