@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ProjectType } from '../../enums/project-types';
-import { getServerBranches, GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
-import { Project } from '../../models/project';
+import { ProjectType } from '@package/enums/project-types';
+import { getServerBranches, GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
+import { Project } from '@package/models/project';
 
 test(
   'Verify deleting a branch checks out master and removes it from the list',

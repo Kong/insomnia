@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { DeleteMode } from "../../enums/delete-mode";
-import { resetCloudSyncState, test } from "../../misc/fixtures";
+import { DeleteMode } from "@package/enums/delete-mode";
+import { resetCloudSyncState, test } from "@package/misc/fixtures";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
