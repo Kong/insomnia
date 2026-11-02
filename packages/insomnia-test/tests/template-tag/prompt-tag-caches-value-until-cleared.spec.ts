@@ -49,10 +49,10 @@ test("Verify a prompt Tag Caches its Value Under the Storage Key Until it is Cle
 
   expect(previewBeforeSend.functionName).toBe("prompt");
   expect(first.promptInputType).toBe("password");
-  expect(first.response.statusCode).toBe(200);
-  expect(first.response.body).toMatchObject({ data: firstValue });
-  expect(cached.statusCode).toBe(200);
-  expect(cached.body).toMatchObject({ data: firstValue });
-  expect(second.response.statusCode).toBe(200);
-  expect(second.response.body).toMatchObject({ data: secondValue });
+  expect(first.response.statusBar.code).toBe(200);
+  expect(first.response.preview).toMatchObject({ data: firstValue });
+  expect(cached.statusBar.code).toBe(200);
+  expect(cached.preview).toMatchObject({ data: firstValue });
+  expect(second.response.statusBar.code).toBe(200);
+  expect(second.response.preview).toMatchObject({ data: secondValue });
 });

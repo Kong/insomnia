@@ -61,8 +61,8 @@ test("Verify Variable Names Are Case Sensitive Across Environment Levels", async
   } satisfies HttpRequest);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     args: { lower: baseValue, upper: subValue },
   });
 });
