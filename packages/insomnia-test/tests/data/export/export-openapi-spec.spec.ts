@@ -4,12 +4,12 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ApiSpecExportFormat } from '../../../enums/api-spec-export-format';
-import { ProjectType } from '../../../enums/project-types';
-import { waitForExportedFile } from '../../../misc/export-file';
-import { test } from '../../../misc/fixtures';
-import { Collection } from '../../../models/collection';
-import { Project } from '../../../models/project';
+import { ApiSpecExportFormat } from '@package/enums/api-spec-export-format';
+import { ProjectType } from '@package/enums/project-types';
+import { waitForExportedFile } from '@package/misc/export-file';
+import { test } from '@package/misc/fixtures';
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 
 const petStoreSpec = (title: string) =>
   `openapi: 3.0.4
