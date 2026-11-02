@@ -41,6 +41,6 @@ test("Import HTTP Request by Curl Command With -k/--insecure and --compressed Fl
   const responseView = await httpRequestFlow.send(request);
 
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ data: `${dataKey}=${dataValue}` });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ data: `${dataKey}=${dataValue}` });
 });

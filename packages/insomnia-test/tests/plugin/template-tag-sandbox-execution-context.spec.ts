@@ -71,9 +71,9 @@ test("Verify a plugin template tag runs in the QuickJS sandbox when enabled and 
   const responseWithSandboxEnabled = await httpRequestFlow.send(request!);
 
   expect(
-    (responseWithSandboxDisabled.body as any)?.headers?.["x-sandbox-ctx"],
+    (responseWithSandboxDisabled.preview as any)?.headers?.["x-sandbox-ctx"],
   ).toBe("main-process");
   expect(
-    (responseWithSandboxEnabled.body as any)?.headers?.["x-sandbox-ctx"],
+    (responseWithSandboxEnabled.preview as any)?.headers?.["x-sandbox-ctx"],
   ).toBe("sandbox");
 });

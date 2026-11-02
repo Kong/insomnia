@@ -49,8 +49,8 @@ test("Import HTTP Request by Curl Command With --data-raw and --data-binary Both
 
   expect(await httpRequestFlow.get(rawUrl)).toMatchObject(rawRequest);
   expect(await httpRequestFlow.get(binaryUrl)).toMatchObject(binaryRequest);
-  expect(rawResponse.statusCode).toBe(200);
-  expect(rawResponse.body).toMatchObject({ data: rawBody });
-  expect(binaryResponse.statusCode).toBe(201);
-  expect(binaryResponse.body).toMatchObject(JSON.parse(binaryBody));
+  expect(rawResponse.statusBar.code).toBe(200);
+  expect(rawResponse.preview).toMatchObject({ data: rawBody });
+  expect(binaryResponse.statusBar.code).toBe(201);
+  expect(binaryResponse.preview).toMatchObject(JSON.parse(binaryBody));
 });
