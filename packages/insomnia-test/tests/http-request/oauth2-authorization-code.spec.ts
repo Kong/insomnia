@@ -46,13 +46,13 @@ test("Verify Authorization Code grant fetches tokens via a popup and authorizes 
   ).json();
 
   const responseView = await httpRequestFlow.send(request);
-  const body = responseView.body as { authorization?: string };
+  const body = responseView.preview as { authorization?: string };
 
   expect(tokens.accessToken).not.toBe("");
   expect(tokens.refreshToken).not.toBe("");
   expect(tokens.identityToken).not.toBe("");
   expect(lastTokenRequest.grantType).toBe("authorization_code");
   expect(lastTokenRequest.pkceUsed).toBe(false);
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });
