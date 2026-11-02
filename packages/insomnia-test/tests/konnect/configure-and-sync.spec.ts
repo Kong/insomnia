@@ -14,9 +14,9 @@ test.afterAll(async () => {
 test(
   'Verify configuring a Konnect PAT closes the settings modal, shows the Sync Konnect button, and leaves the Projects tab usable',
   async ({ user }) => {
-    const { konnectPage, workspacePage } = user.pageManager;
+    const { konnectPage, workspacePage, projectPage } = user.pageManager;
 
-    await workspacePage.switchOrganization('Control Planes');
+    await projectPage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     const introVisibleBeforeConfigure = await konnectPage.isIntroCardVisible();
     await konnectPage.clickConfigure();
@@ -39,9 +39,9 @@ test(
 test(
   'Verify the initial Konnect sync creates the control plane project and a collection for each gateway service',
   async ({ user }) => {
-    const { konnectPage, workspacePage } = user.pageManager;
+    const { konnectPage, workspacePage, projectPage } = user.pageManager;
 
-    await workspacePage.switchOrganization('Control Planes');
+    await projectPage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     await konnectPage.clickConfigure();
     await konnectPage.setPat(`kpat_${faker.string.alphanumeric(20)}`);
@@ -69,9 +69,9 @@ test(
 test(
   'Verify syncing Konnect again after the first sync completes without errors',
   async ({ user }) => {
-    const { konnectPage, workspacePage } = user.pageManager;
+    const { konnectPage, workspacePage, projectPage } = user.pageManager;
 
-    await workspacePage.switchOrganization('Control Planes');
+    await projectPage.switchOrganization('Control Planes');
     await konnectPage.openTab();
     await konnectPage.clickConfigure();
     await konnectPage.setPat(`kpat_${faker.string.alphanumeric(20)}`);
