@@ -43,9 +43,9 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
       expect.objectContaining({ name: paramName2, value: paramValue2 }),
     ]),
   );
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(
       `Preparing request to ${baseUrl}?${paramName1}=${paramValue1}&${paramName2}=${paramValue2}`,
     );

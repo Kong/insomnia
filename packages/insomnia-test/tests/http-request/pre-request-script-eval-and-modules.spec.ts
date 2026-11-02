@@ -100,8 +100,8 @@ test("Verify pre-request script can eval() and require Node built-in modules, ex
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     json: {
       evalResult: 16,
       hash: parsedUrl.hash,
