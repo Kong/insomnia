@@ -74,12 +74,12 @@ testWithVaultKey(
     await environmentFlow.activate(collection, "base with vault");
     const invalidRequest = await httpRequestFlow.get("legacy-invalid-vault");
 
-    expect(arrayResponse.statusCode).toBe(200);
-    expect((arrayResponse.body as { data: string }).data).toBe(
+    expect(arrayResponse.statusBar.code).toBe(200);
+    expect((arrayResponse.preview as { data: string }).data).toBe(
       "vault_array_a\nvault_array_b",
     );
-    expect(objectResponse.statusCode).toBe(200);
-    expect((objectResponse.body as { data: string }).data).toBe("secv1\nsecv2");
+    expect(objectResponse.statusBar.code).toBe(200);
+    expect((objectResponse.preview as { data: string }).data).toBe("secv1\nsecv2");
     await expect(httpRequestFlow.send(invalidRequest!)).rejects.toThrow(
       /vault is a reserved key for insomnia vault/,
     );
