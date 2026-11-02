@@ -1,8 +1,8 @@
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT, setGitSyncStorageRule } from "../../misc/fixtures";
-import { test } from "../../misc/git-fixtures";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, setGitSyncStorageRule } from "@package/misc/fixtures";
+import { test } from "@package/misc/git-fixtures";
 
 test.beforeAll(async () => {
   await setGitSyncStorageRule(false);
