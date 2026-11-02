@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "@package/misc/fixtures";
 import { McpClient } from "@package/models/mcp-client";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify MCP Client Sends the Bearer Token Header Only When Authentication Is Configured", async ({
   user,
