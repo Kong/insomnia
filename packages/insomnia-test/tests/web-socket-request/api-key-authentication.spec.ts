@@ -1,10 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, test, WS_SERVER } from '@package/misc/fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify WebSocket Connection Sends the API Key Header Until Authentication Is Set to None', async ({ user }) => {
   const { webSocketRequestFlow, workspaceFlow } = user.flowManager;
