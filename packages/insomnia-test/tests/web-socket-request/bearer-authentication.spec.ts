@@ -29,7 +29,7 @@ test("Verify WebSocket Connection Sends the Bearer Token Header Until Authentica
   const authenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`authorization: Bearer ${token}`);
@@ -40,11 +40,11 @@ test("Verify WebSocket Connection Sends the Bearer Token Header Until Authentica
     await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain("host:");
-  expect(await unauthenticatedResponse.console?.()).not.toContain(
+  expect(await unauthenticatedResponse.console()).not.toContain(
     "authorization:",
   );
 });
