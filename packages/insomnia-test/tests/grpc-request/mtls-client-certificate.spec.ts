@@ -17,7 +17,7 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For gRPC Reques
 
   await preferencesFlow.set({
     validateSSL: false,
-    dataFolders: [path.join(__dirname, "../../misc/fixtures")],
+    dataFolders: [path.join(import.meta.dirname, "../../misc/fixtures")],
   });
 
   const project = await workspaceFlow.createProject(
