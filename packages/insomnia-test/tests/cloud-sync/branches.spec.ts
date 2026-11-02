@@ -1,7 +1,6 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify fetching a remote branch, checking out, deleting a local branch, and creating a new branch on a Cloud-synced workspace", async ({
   user,

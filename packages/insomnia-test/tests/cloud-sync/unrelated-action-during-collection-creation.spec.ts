@@ -2,11 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { Environment } from "@package/models/environment";
+import { expect } from "@playwright/test";
+
 import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "./support/cloud-sync-mock";
 
 test.afterAll(async () => {

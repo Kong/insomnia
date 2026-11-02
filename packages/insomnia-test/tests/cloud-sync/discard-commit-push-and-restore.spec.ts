@@ -1,8 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContentType } from "@package/enums/content-type";
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify discarding changes, committing and pushing, and restoring an earlier snapshot on a Cloud-synced workspace", async ({
   user,
