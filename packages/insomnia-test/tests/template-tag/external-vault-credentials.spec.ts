@@ -95,12 +95,12 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
   expect(awsResult.preview).toBe("aws-secret-value");
   expect(gcpResult.preview).toBe("gcp-secret-value");
   expect(hashicorpResult.preview).toBe("hashicorp-secret-value");
-  expect((responseView.body as { data: string }).data).toContain("aws-secret-value");
-  expect((responseView.body as { data: string }).data).toContain("gcp-secret-value");
-  expect((responseView.body as { data: string }).data).toContain(
+  expect((responseView.preview as { data: string }).data).toContain("aws-secret-value");
+  expect((responseView.preview as { data: string }).data).toContain("gcp-secret-value");
+  expect((responseView.preview as { data: string }).data).toContain(
     "hashicorp-secret-value",
   );
-  expect((secondResponse.body as { data: string }).data).toContain(
+  expect((secondResponse.preview as { data: string }).data).toContain(
     "aws-secret-value",
   );
 });

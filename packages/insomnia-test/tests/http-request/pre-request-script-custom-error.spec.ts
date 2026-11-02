@@ -32,7 +32,7 @@ test("Verify a thrown error in pre-request script surfaces in the response conso
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(errorMessage);
 });
 
@@ -58,6 +58,6 @@ test("Verify accessing an invalid field in pre-request script surfaces in the re
   const responseView = await httpRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Cannot read properties of undefined (reading 'set')");
 });
