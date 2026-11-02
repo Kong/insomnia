@@ -1,7 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-import type { AWSCredentialType, HashiCorpCredentialType, HashiCorpVaultAuthMethod } from "insomnia-data";
-
 import { ContentType } from "@package/enums/content-type";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
@@ -9,6 +6,8 @@ import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { HttpRequest } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+import type { AWSCredentialType, HashiCorpCredentialType, HashiCorpVaultAuthMethod } from "insomnia-data";
 
 test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template Tag", async ({
   user,
