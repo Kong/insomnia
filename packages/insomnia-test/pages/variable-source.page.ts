@@ -1,7 +1,7 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export type VariableSourceScope = "page" | "modal";
@@ -108,7 +108,7 @@ export class VariableSourcePage extends BasePage {
           previous = current;
           return settled;
         },
-        { timeout: DEFAULT_TIMEOUT, intervals: [200] },
+        { timeout: DEFAULT_TIMEOUT, intervals: [POLL_INTERVAL] },
       )
       .toBe(true);
     return previous;

@@ -1,12 +1,11 @@
-import * as fs from "node:fs";
-import path from "node:path";
-
 import type { Locator } from "@playwright/test";
 import { type ElectronApplication,expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
 import { CodeEditorComponent } from "../components/code-editor.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { latestLiveDocs, readNedbLines } from "../misc/nedb";
+import { waitForRendererIdle, waitForStableValue } from "../misc/wait";
 
 export abstract class BasePage {
   constructor(
@@ -70,27 +69,8 @@ export abstract class BasePage {
     );
   }
 
-  /**
-   * Waits for the page's own event loop to drain everything already
-   * queued in it — every pending microtask (promise `.then()` chains),
-   * then one full macrotask turn — before returning. Use right before an
-   * action whose outcome depends on a React state update that a
-   * just-confirmed async write (e.g. a fetcher action landing in NeDB)
-   * triggers a moment *later* rather than synchronously, such as a
-   * React Router loader revalidation. Because this round-trips through
-   * the renderer's own task queue instead of guessing a duration from the
-   * test process (`page.waitForTimeout()`), anything already scheduled
-   * inside the page — including a slow revalidation stalled behind a busy
-   * main thread under CI load — is guaranteed to have run by the time
-   * this resolves, in a way a fixed sleep can't reliably promise.
-   */
   protected async waitForRendererIdle(): Promise<void> {
-    await this.page.evaluate(
-      () =>
-        new Promise<void>((resolve) => {
-          setTimeout(() => setTimeout(resolve, 0), 0);
-        }),
-    );
+    await waitForRendererIdle(this.page);
   }
 
   /**
@@ -101,16 +81,7 @@ export abstract class BasePage {
     const dataPath = await this.insomnia!.evaluate(({ app }) =>
       app.getPath("userData"),
     );
-    const latest = new Map<string, any>();
-    for (const line of fs
-      .readFileSync(path.join(dataPath, dbFile), "utf8")
-      .split("\n")
-      .filter(Boolean)) {
-      const doc = JSON.parse(line);
-      if (doc.$$deleted) latest.delete(doc._id);
-      else latest.set(doc._id, doc);
-    }
-    return [...latest.values()];
+    return latestLiveDocs(readNedbLines(dataPath, dbFile));
   }
 
   /**
@@ -178,28 +149,12 @@ export abstract class BasePage {
     );
   }
 
-  /**
-   * Polls `read` until it returns the same value (compared by JSON) on
-   * consecutive reads — the poll-based replacement for sleeping while a
-   * debounced/async re-render (a filtered list, a search result set, a
-   * tree after a drop) settles.
-   */
   protected async waitForStableValue<T>(
     read: () => Promise<T>,
-    stableReads = 3,
-    timeout = DEFAULT_TIMEOUT,
+    stableReads?: number,
+    timeout?: number,
   ): Promise<T> {
-    let previous = "";
-    let streak = 0;
-    let value!: T;
-    await expect(async () => {
-      value = await read();
-      const serialized = JSON.stringify(value);
-      streak = serialized === previous ? streak + 1 : 1;
-      previous = serialized;
-      expect(streak).toBeGreaterThanOrEqual(stableReads);
-    }).toPass({ timeout, intervals: [100] });
-    return value;
+    return waitForStableValue(read, stableReads, timeout);
   }
 
   /**
