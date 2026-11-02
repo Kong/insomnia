@@ -1,7 +1,6 @@
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { latestLiveDocs, readNedbLines } from "../misc/nedb";
 import type { Collection } from "../models/collection";
 import type { Cookie } from "../models/cookie";
 import type { EventStreamRequest } from "../models/event-stream-request";
@@ -66,7 +65,7 @@ export class CookieFlow extends BaseFlow {
   }
 
   /**
-   * Polls the on-disk `CookieJar` NeDB file directly until it contains
+   * Polls the app's `CookieJar` documents until it contains
    * every one of `cookies` by key/value, re-running the whole
    * open→setCookies→close write once per mismatch. The dialog's unmount
    * can cancel the app's debounced save, so a lost cookie write has to be
@@ -76,11 +75,9 @@ export class CookieFlow extends BaseFlow {
     item: CookieTarget,
     cookies: Cookie[],
   ): Promise<void> {
-    const dataPath = await this.context.getDataPath();
-
-    const isPersisted = (): boolean => {
-      const persisted = latestLiveDocs(
-        readNedbLines(dataPath, "insomnia.CookieJar.db"),
+    const isPersisted = async (): Promise<boolean> => {
+      const persisted = (
+        await this.pageManager.findDocs("insomnia.CookieJar.db")
       ).flatMap((doc) => doc.cookies ?? []);
 
       return cookies.every((cookie) =>
@@ -91,13 +88,13 @@ export class CookieFlow extends BaseFlow {
     };
 
     await expect(async () => {
-      if (!isPersisted()) {
+      if (!(await isPersisted())) {
         await this.openTarget(item);
         await this.pageManager.cookiePage.open();
         await this.pageManager.cookiePage.setCookies(cookies);
         await this.pageManager.cookiePage.close();
       }
-      expect(isPersisted()).toBe(true);
+      expect(await isPersisted()).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 

@@ -1,7 +1,6 @@
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { readNedbLines } from "../misc/nedb";
 import type { RequestAuthentication } from "../models/authentication";
 import type { AuthTabComponent } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
@@ -62,13 +61,13 @@ export abstract class BaseFlow {
   }
 
   /**
-   * Polls the on-disk `dbFile` NeDB file directly until `id`'s persisted
+   * Polls the app's `dbFile` model until `id`'s persisted
    * document settles on `expected` for `field`, optionally re-running
    * `onMismatch` first whenever a read still disagrees. The app can patch
    * a just-written field into a document's on-disk state in the
    * background rather than synchronously, so a UI read-back right after a
    * setter call can observe a value that a later background write then
-   * reverts — reading the same on-disk store the app itself acts on is
+   * reverts — reading the same database the app itself acts on is
    * the only way to know a value has actually landed.
    *
    * Most callers only need to wait (`onMismatch` omitted) for that
@@ -106,7 +105,7 @@ export abstract class BaseFlow {
    * "URL is required" error or hits the previous address. Passive waiting
    * never recovers from that — the value only lands once the write is
    * repeated after the initial patch has landed — so this re-sends the
-   * same write once the on-disk store shows it was lost.
+   * same write once the database shows it was lost.
    */
   protected async waitForUrlPersisted(
     dbFile: string,
@@ -124,7 +123,7 @@ export abstract class BaseFlow {
   }
 
   /**
-   * Polls the on-disk `dbFile` NeDB file until a document whose `parentId`
+   * Polls the app's `dbFile` model until a document whose `parentId`
    * is `parentId` exists, and returns its `_id`. For models created by the
    * app as a hidden child of a node the UI exposes (e.g. an MCP Client's
    * McpRequest under its workspace), so the tree node's id is the parent's
@@ -134,29 +133,17 @@ export abstract class BaseFlow {
     dbFile: string,
     parentId: string,
   ): Promise<string> {
-    const dataPath = await this.context.getDataPath();
-
     let id: string | undefined;
     await expect(async () => {
-      for (const doc of readNedbLines(dataPath, dbFile)) {
-        if (doc.parentId === parentId) id = doc._id;
-      }
+      const docs = await this.pageManager.findDocs(dbFile, { parentId });
+      id = docs.at(-1)?._id;
       expect(id).toBeDefined();
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     return id!;
   }
 
-  /**
-   * Reads the on-disk `dbFile` NeDB file directly for `id`'s
-   * currently-persisted document, keeping only its latest revision.
-   */
+  /** Reads `id`'s currently-persisted document from the app's database. */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
-    const dataPath = await this.context.getDataPath();
-
-    let latest: any;
-    for (const doc of readNedbLines(dataPath, dbFile)) {
-      if (doc._id === id) latest = doc;
-    }
-    return latest;
+    return (await this.pageManager.findDocs(dbFile, { _id: id }))[0];
   }
 }
