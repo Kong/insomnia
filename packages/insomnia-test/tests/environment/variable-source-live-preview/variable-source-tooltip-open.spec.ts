@@ -8,10 +8,10 @@ import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
-const cascadeFixture = path.join(__dirname, "environment-cascade-collection.yaml");
-const globalCollectionFixture = path.join(__dirname, "collection-for-global-environments.yaml");
-const globalEnvironmentFixture = path.join(__dirname, "global-environment.yaml");
-const projectEnvironmentSourceFixture = path.join(__dirname, "project-environment-source.yaml");
+const cascadeFixture = path.join(import.meta.dirname, "environment-cascade-collection.yaml");
+const globalCollectionFixture = path.join(import.meta.dirname, "collection-for-global-environments.yaml");
+const globalEnvironmentFixture = path.join(import.meta.dirname, "global-environment.yaml");
+const projectEnvironmentSourceFixture = path.join(import.meta.dirname, "project-environment-source.yaml");
 
 test("Verify the tooltip's Open inside the Manage Environments modal selects the source environment, and works again after selecting another", async ({
   user,
