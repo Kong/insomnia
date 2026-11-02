@@ -10,7 +10,7 @@ test('Verify committing with nothing staged prompts to stage all, and cancelling
   user,
 }) => {
   const { preferencesFlow, workspaceFlow } = user.flowManager;
-  const { gitSyncPage } = user.pageManager;
+  const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const project = await workspaceFlow.cloneGitProject(
@@ -21,23 +21,23 @@ test('Verify committing with nothing staged prompts to stage all, and cancelling
   await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)), fileName);
 
   await gitSyncPage.openHistory();
-  const initialCommit = await gitSyncPage.getLatestCommit();
-  await gitSyncPage.closeHistory();
+  const initialCommit = await gitHistoryDialogPage.getLatestCommit();
+  await gitHistoryDialogPage.closeHistory();
 
   await gitSyncPage.openCommitDialog();
-  await gitSyncPage.commitStaged(faker.string.alphanumeric(10));
-  const promptText = await gitSyncPage.getStageAllPromptText();
-  await gitSyncPage.cancelStageAllPrompt();
-  const stagedAfterCancel = await gitSyncPage.getStagedChanges();
-  await gitSyncPage.stageChange(`${fileName}.yaml`);
-  await gitSyncPage.commitStaged();
-  const dialogOpenWithoutMessage = await gitSyncPage.isCommitDialogOpen();
-  const stagedWithoutMessage = await gitSyncPage.getStagedChanges();
-  await gitSyncPage.closeCommitDialog();
+  await gitCommitDialogPage.commitStaged(faker.string.alphanumeric(10));
+  const promptText = await gitCommitDialogPage.getStageAllPromptText();
+  await gitCommitDialogPage.cancelStageAllPrompt();
+  const stagedAfterCancel = await gitCommitDialogPage.getStagedChanges();
+  await gitCommitDialogPage.stageChange(`${fileName}.yaml`);
+  await gitCommitDialogPage.commitStaged();
+  const dialogOpenWithoutMessage = await gitCommitDialogPage.isCommitDialogOpen();
+  const stagedWithoutMessage = await gitCommitDialogPage.getStagedChanges();
+  await gitCommitDialogPage.closeCommitDialog();
 
   await gitSyncPage.openHistory();
-  const latestCommit = await gitSyncPage.getLatestCommit();
-  await gitSyncPage.closeHistory();
+  const latestCommit = await gitHistoryDialogPage.getLatestCommit();
+  await gitHistoryDialogPage.closeHistory();
 
   expect(promptText).toContain('There are no staged changes to commit');
   expect(stagedAfterCancel).toEqual([]);
@@ -48,7 +48,7 @@ test('Verify committing with nothing staged prompts to stage all, and cancelling
 
 test('Verify confirming the stage-all prompt stages every change and commits it', async ({ user }) => {
   const { preferencesFlow, workspaceFlow } = user.flowManager;
-  const { gitSyncPage } = user.pageManager;
+  const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = user.pageManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   const project = await workspaceFlow.cloneGitProject(
@@ -68,11 +68,11 @@ test('Verify confirming the stage-all prompt stages every change and commits it'
 
   const message = faker.string.alphanumeric(10);
   await gitSyncPage.openCommitDialog();
-  await gitSyncPage.commitStaged(message);
-  await gitSyncPage.confirmStageAllPrompt();
+  await gitCommitDialogPage.commitStaged(message);
+  await gitCommitDialogPage.confirmStageAllPrompt();
   await gitSyncPage.openHistory();
-  const latestCommit = await gitSyncPage.getLatestCommit();
-  await gitSyncPage.closeHistory();
+  const latestCommit = await gitHistoryDialogPage.getLatestCommit();
+  await gitHistoryDialogPage.closeHistory();
 
   expect(latestCommit?.message).toBe(message);
 });
