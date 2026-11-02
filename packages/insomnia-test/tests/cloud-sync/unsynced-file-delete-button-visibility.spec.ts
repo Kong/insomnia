@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { DialogDismissMethod } from "../../pages/cloud-sync-file-delete.page";
+import { test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { DialogDismissMethod } from "@package/pages/cloud-sync-file-delete.page";
 
 test("Verify the dashboard's unsynced-file delete button only appears on unsynced cards, is revealed on hover and keyboard focus, and cancelling its dialog leaves the file intact", async ({
   user,
