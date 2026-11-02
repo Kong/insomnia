@@ -45,7 +45,7 @@ test("Verify Expired Cookie Is Not Sent With HTTP Request", async ({
 
   const responseView = await httpRequestFlow.send(request);
 
-  const { cookies } = responseView.body as { cookies: Record<string, string> };
+  const { cookies } = responseView.preview as { cookies: Record<string, string> };
   expect(cookies).not.toHaveProperty(expiredCookie.key);
   expect(cookies).toMatchObject({ [activeCookie.key]: activeCookie.value });
 });

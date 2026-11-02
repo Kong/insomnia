@@ -50,14 +50,14 @@ test("Verify pre-request script's sendRequest serializes raw, urlencoded, graphq
   const responseView = await httpRequestFlow.send(request);
 
   const results = (
-    responseView.body as { json: { results: Record<string, string> } }
+    responseView.preview as { json: { results: Record<string, string> } }
   ).json.results;
   const raw = JSON.parse(results.raw);
   const urlencoded = JSON.parse(results.urlencoded);
   const graphql = JSON.parse(results.graphql);
   const formdata = JSON.parse(results.formdata);
 
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(raw.data).toBe(rawValue);
   expect(urlencoded.data).toBe("a=1&b=2");
   expect(graphql.json).toMatchObject({

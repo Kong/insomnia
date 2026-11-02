@@ -47,11 +47,11 @@ test("Verify Client Credentials grant fetches tokens with no popup and authorize
   ).json();
 
   const responseView = await httpRequestFlow.send(request);
-  const body = responseView.body as { authorization?: string };
+  const body = responseView.preview as { authorization?: string };
 
   expect(tokens.accessToken).not.toBe("");
   expect(windowsAfterFetch).toBe(windowsBeforeFetch);
   expect(lastTokenRequest.grantType).toBe("client_credentials");
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });
