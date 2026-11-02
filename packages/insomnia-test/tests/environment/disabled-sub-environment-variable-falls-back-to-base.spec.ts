@@ -60,6 +60,6 @@ test("Verify a disabled sub-environment variable falls back to the base environm
   } satisfies HttpRequest);
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ args: { value: baseValue } });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ args: { value: baseValue } });
 });
