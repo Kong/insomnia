@@ -39,6 +39,6 @@ test("Verify Enabling a Proxy Routes Event Stream Requests Through It", async ({
   });
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Using proxy: http://127.0.0.1:1111");
 });

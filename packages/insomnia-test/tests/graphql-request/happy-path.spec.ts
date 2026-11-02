@@ -35,8 +35,8 @@ test("Verify Create GraphQL Request", async ({ user }) => {
     body: body,
   });
   const responseView = await graphqlRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.statusMessage).toBe("OK");
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusBar.message).toBe("OK");
   expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
@@ -45,7 +45,7 @@ test("Verify Create GraphQL Request", async ({ user }) => {
       }),
     ]),
   );
-  expect(responseView.body).toMatchObject({
+  expect(responseView.preview).toMatchObject({
     data: {
       characters: {
         results: expect.arrayContaining(

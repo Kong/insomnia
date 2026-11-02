@@ -24,7 +24,7 @@ test('Verify Event Stream Request Sends the API Key Header Until Authentication 
   const authenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`${apiKeyName}: ${apiKeyValue}`);
@@ -33,9 +33,9 @@ test('Verify Event Stream Request Sends the API Key Header Until Authentication 
   const unauthenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('GET /sse-events/1');
-  expect(await unauthenticatedResponse.console?.()).not.toContain(apiKeyName);
+  expect(await unauthenticatedResponse.console()).not.toContain(apiKeyName);
 });
