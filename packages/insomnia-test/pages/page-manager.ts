@@ -4,12 +4,19 @@ import type { Page } from "playwright-core";
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
 import { CloudSyncPage } from "./cloud-sync.page";
+import { CloudSyncBranchesDialogPage } from "./cloud-sync-branches-dialog.page";
+import { CloudSyncCommitDialogPage } from "./cloud-sync-commit-dialog.page";
+import { CloudSyncFileDeletePage } from "./cloud-sync-file-delete.page";
+import { CloudSyncHistoryDialogPage } from "./cloud-sync-history-dialog.page";
 import { CommandPalettePage } from "./command-palette.page";
 import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { EventStreamRequestPage } from "./event-stream-request.page";
 import { ExportPage } from "./export.page";
 import { FolderPage } from "./folder.page";
+import { GitBranchesDialogPage } from "./git-branches-dialog.page";
+import { GitCommitDialogPage } from "./git-commit-dialog.page";
+import { GitHistoryDialogPage } from "./git-history-dialog.page";
 import { GitSyncPage } from "./git-sync.page";
 import { GraphQLRequestPage } from "./graphql-request.page";
 import { GrpcRequestPage } from "./grpc-request.page";
@@ -20,6 +27,10 @@ import { KonnectPage } from "./konnect.page";
 import { McpClientPage } from "./mcp-client.page";
 import { MockServerPage } from "./mock-server.page";
 import { PreferencesPage } from "./preferences.page";
+import { PreferencesAiPage } from "./preferences-ai.page";
+import { PreferencesCredentialsPage } from "./preferences-credentials.page";
+import { PreferencesPluginsPage } from "./preferences-plugins.page";
+import { PreferencesVaultPage } from "./preferences-vault.page";
 import { ProjectPage } from "./project.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
@@ -128,6 +139,27 @@ export class PageManager {
       "gitSync",
       () => new GitSyncPage(this.page, this.insomnia),
     );
+  }
+
+  /**
+   * Lazily creates (and caches) the GitCommitDialogPage instance.
+   */
+  get gitCommitDialogPage(): GitCommitDialogPage {
+    return this.getOrCreate("gitCommitDialog", () => new GitCommitDialogPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the GitBranchesDialogPage instance.
+   */
+  get gitBranchesDialogPage(): GitBranchesDialogPage {
+    return this.getOrCreate("gitBranchesDialog", () => new GitBranchesDialogPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the GitHistoryDialogPage instance.
+   */
+  get gitHistoryDialogPage(): GitHistoryDialogPage {
+    return this.getOrCreate("gitHistoryDialog", () => new GitHistoryDialogPage(this.page, this.insomnia));
   }
 
   /**
@@ -273,6 +305,62 @@ export class PageManager {
       "webSocketRequest",
       () => new WebSocketRequestPage(this.page, this.insomnia),
     );
+  }
+
+  /**
+   * Lazily creates (and caches) the PreferencesCredentialsPage instance.
+   */
+  get preferencesCredentialsPage(): PreferencesCredentialsPage {
+    return this.getOrCreate("preferencesCredentials", () => new PreferencesCredentialsPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the PreferencesPluginsPage instance.
+   */
+  get preferencesPluginsPage(): PreferencesPluginsPage {
+    return this.getOrCreate("preferencesPlugins", () => new PreferencesPluginsPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the PreferencesAiPage instance.
+   */
+  get preferencesAiPage(): PreferencesAiPage {
+    return this.getOrCreate("preferencesAi", () => new PreferencesAiPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the PreferencesVaultPage instance.
+   */
+  get preferencesVaultPage(): PreferencesVaultPage {
+    return this.getOrCreate("preferencesVault", () => new PreferencesVaultPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the CloudSyncCommitDialogPage instance.
+   */
+  get cloudSyncCommitDialogPage(): CloudSyncCommitDialogPage {
+    return this.getOrCreate("cloudSyncCommitDialog", () => new CloudSyncCommitDialogPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the CloudSyncHistoryDialogPage instance.
+   */
+  get cloudSyncHistoryDialogPage(): CloudSyncHistoryDialogPage {
+    return this.getOrCreate("cloudSyncHistoryDialog", () => new CloudSyncHistoryDialogPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the CloudSyncBranchesDialogPage instance.
+   */
+  get cloudSyncBranchesDialogPage(): CloudSyncBranchesDialogPage {
+    return this.getOrCreate("cloudSyncBranchesDialog", () => new CloudSyncBranchesDialogPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the CloudSyncFileDeletePage instance.
+   */
+  get cloudSyncFileDeletePage(): CloudSyncFileDeletePage {
+    return this.getOrCreate("cloudSyncFileDelete", () => new CloudSyncFileDeletePage(this.page, this.insomnia));
   }
 
   /**

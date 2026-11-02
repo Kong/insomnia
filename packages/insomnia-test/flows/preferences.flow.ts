@@ -6,7 +6,7 @@ import { step } from "../misc/step";
 import type { GitCredential } from "../models/git-credential";
 import type { AiUrlBackendSettings} from "../models/settings";
 import { Settings } from "../models/settings";
-import type { LlmUrlBackendFormFields } from "../pages/preferences.page";
+import type { LlmUrlBackendFormFields } from "../pages/preferences-ai.page";
 import { BaseFlow } from "./base.flow";
 
 export class PreferencesFlow extends BaseFlow {
@@ -17,7 +17,7 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async set(settings: Settings): Promise<Settings> {
-    const preferencesPage = this.pageManager.preferencesPage;
+    const { preferencesPage, preferencesCredentialsPage, preferencesPluginsPage, preferencesAiPage } = this.pageManager;
     let aiUrlBackendResult: AiUrlBackendSettings | undefined;
     await preferencesPage.open();
     if (settings.validateSSL !== undefined) {
@@ -44,8 +44,8 @@ export class PreferencesFlow extends BaseFlow {
       }
     }
     if (settings.pluginSandboxEnabled !== undefined) {
-      await preferencesPage.openScriptingTab();
-      await preferencesPage.setTemplateTagSandbox(
+      await preferencesPluginsPage.openScriptingTab();
+      await preferencesPluginsPage.setTemplateTagSandbox(
         settings.pluginSandboxEnabled,
       );
     }
@@ -55,14 +55,14 @@ export class PreferencesFlow extends BaseFlow {
       );
     }
     if (settings.cloudCredentials !== undefined) {
-      await preferencesPage.openCredentialsTab();
+      await preferencesCredentialsPage.openCredentialsTab();
       for (const credential of settings.cloudCredentials) {
         if (credential.provider === "aws") {
-          await preferencesPage.createAwsCloudCredential(credential);
+          await preferencesCredentialsPage.createAwsCloudCredential(credential);
         } else if (credential.provider === "gcp") {
-          await preferencesPage.createGcpCloudCredential(credential);
+          await preferencesCredentialsPage.createGcpCloudCredential(credential);
         } else {
-          await preferencesPage.createHashiCorpCloudCredential(credential);
+          await preferencesCredentialsPage.createHashiCorpCloudCredential(credential);
         }
       }
     }
@@ -90,55 +90,55 @@ export class PreferencesFlow extends BaseFlow {
       }
     }
     if (settings.aiUrlBackend !== undefined) {
-      await preferencesPage.openAiSettingsTab();
+      await preferencesAiPage.openAiSettingsTab();
       if (settings.aiUrlBackend === null) {
         const fields =
-          await preferencesPage.getUrlBackendFormValues("LLM URL Active");
-        await preferencesPage.clickDeactivateAiBackend();
+          await preferencesAiPage.getUrlBackendFormValues("LLM URL Active");
+        await preferencesAiPage.clickDeactivateAiBackend();
         let isActive = true;
         await expect(async () => {
-          isActive = await preferencesPage.isAiBackendActive("LLM URL");
+          isActive = await preferencesAiPage.isAiBackendActive("LLM URL");
           expect(isActive).toBe(false);
         }).toPass({ timeout: DEFAULT_TIMEOUT });
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, isActive);
       } else {
         const { url, model, apiKey, temperature, topP, maxTokens } =
           settings.aiUrlBackend;
-        await preferencesPage.clickAiBackendNav("LLM URL");
-        await preferencesPage.setAiUrlBackendUrl(url);
+        await preferencesAiPage.clickAiBackendNav("LLM URL");
+        await preferencesAiPage.setAiUrlBackendUrl(url);
         if (apiKey !== undefined) {
-          await preferencesPage.setAiUrlBackendApiToken(apiKey);
+          await preferencesAiPage.setAiUrlBackendApiToken(apiKey);
         }
-        await preferencesPage.clickLoadAiModels();
-        await preferencesPage.selectAiModel(model);
+        await preferencesAiPage.clickLoadAiModels();
+        await preferencesAiPage.selectAiModel(model);
         if (
           temperature !== undefined ||
           topP !== undefined ||
           maxTokens !== undefined
         ) {
-          await preferencesPage.openAiAdvancedOptions();
+          await preferencesAiPage.openAiAdvancedOptions();
           if (temperature !== undefined) {
-            await preferencesPage.setAiAdvancedOptionValue(
+            await preferencesAiPage.setAiAdvancedOptionValue(
               "Temperature (0-2):",
               String(temperature),
             );
           }
           if (topP !== undefined) {
-            await preferencesPage.setAiAdvancedOptionValue(
+            await preferencesAiPage.setAiAdvancedOptionValue(
               "Top P (0-1):",
               String(topP),
             );
           }
           if (maxTokens !== undefined) {
-            await preferencesPage.setAiAdvancedOptionValue(
+            await preferencesAiPage.setAiAdvancedOptionValue(
               "Max Tokens (1-128000):",
               String(maxTokens),
             );
           }
         }
-        await preferencesPage.clickActivateAiBackend();
+        await preferencesAiPage.clickActivateAiBackend();
         const fields =
-          await preferencesPage.getUrlBackendFormValues("LLM URL Active");
+          await preferencesAiPage.getUrlBackendFormValues("LLM URL Active");
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, true);
       }
     }
@@ -171,15 +171,15 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async createPlugin(name: string): Promise<void> {
-    const preferencesPage = this.pageManager.preferencesPage;
+    const { preferencesPage, preferencesPluginsPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openPluginsTab();
-    await preferencesPage.openNewPlugin();
-    await preferencesPage.setNewPluginName(name);
-    await preferencesPage.clickGenerateNewPlugin();
-    const error = await preferencesPage.waitForNewPluginOutcome();
+    await preferencesPluginsPage.openPluginsTab();
+    await preferencesPluginsPage.openNewPlugin();
+    await preferencesPluginsPage.setNewPluginName(name);
+    await preferencesPluginsPage.clickGenerateNewPlugin();
+    const error = await preferencesPluginsPage.waitForNewPluginOutcome();
     if (error !== null) {
-      await preferencesPage.closeNewPluginModal();
+      await preferencesPluginsPage.closeNewPluginModal();
       await preferencesPage.close();
       throw new Error(error);
     }
@@ -195,10 +195,10 @@ export class PreferencesFlow extends BaseFlow {
     group: ScriptSandboxRuleGroup,
     enabled: boolean,
   ): Promise<void> {
-    const preferencesPage = this.pageManager.preferencesPage;
+    const { preferencesPage, preferencesPluginsPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openScriptingTab();
-    await preferencesPage.setScriptSandboxRule(group, enabled);
+    await preferencesPluginsPage.openScriptingTab();
+    await preferencesPluginsPage.setScriptSandboxRule(group, enabled);
     await preferencesPage.close();
   }
 
@@ -209,10 +209,10 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async addGitCredential(credential: GitCredential): Promise<void> {
-    const { preferencesPage } = this.pageManager;
+    const { preferencesPage, preferencesCredentialsPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openCredentialsTab();
-    await preferencesPage.addCustomCredential(credential);
+    await preferencesCredentialsPage.openCredentialsTab();
+    await preferencesCredentialsPage.addCustomCredential(credential);
     await preferencesPage.close();
   }
 
@@ -224,10 +224,10 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async getInstalledPlugins(): Promise<string[]> {
-    const { preferencesPage } = this.pageManager;
+    const { preferencesPage, preferencesPluginsPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openPluginsTab();
-    const names = await preferencesPage.getPluginNames();
+    await preferencesPluginsPage.openPluginsTab();
+    const names = await preferencesPluginsPage.getPluginNames();
     await preferencesPage.close();
     return names;
   }
@@ -240,9 +240,9 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async generateVaultKey(): Promise<string> {
-    const { preferencesPage } = this.pageManager;
+    const { preferencesPage, preferencesVaultPage } = this.pageManager;
     await preferencesPage.open();
-    const key = await preferencesPage.generateVaultKey();
+    const key = await preferencesVaultPage.generateVaultKey();
     await preferencesPage.close();
     return key;
   }
@@ -258,13 +258,13 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async enterVaultKey(key: string): Promise<string | null> {
-    const { preferencesPage } = this.pageManager;
+    const { preferencesPage, preferencesVaultPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openEnterVaultKeyModal();
-    await preferencesPage.fillVaultKeyInput(key);
-    await preferencesPage.clickUnlockVaultKey();
-    const error = await preferencesPage.waitForVaultKeyUnlockOutcome();
-    await preferencesPage.closeEnterVaultKeyModal();
+    await preferencesVaultPage.openEnterVaultKeyModal();
+    await preferencesVaultPage.fillVaultKeyInput(key);
+    await preferencesVaultPage.clickUnlockVaultKey();
+    const error = await preferencesVaultPage.waitForVaultKeyUnlockOutcome();
+    await preferencesVaultPage.closeEnterVaultKeyModal();
     await preferencesPage.close();
     return error;
   }
@@ -277,10 +277,10 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async resetVaultKey(): Promise<string> {
-    const { preferencesPage } = this.pageManager;
+    const { preferencesPage, preferencesVaultPage } = this.pageManager;
     await preferencesPage.open();
-    await preferencesPage.openEnterVaultKeyModal();
-    const key = await preferencesPage.resetVaultKeyFromModal();
+    await preferencesVaultPage.openEnterVaultKeyModal();
+    const key = await preferencesVaultPage.resetVaultKeyFromModal();
     await preferencesPage.close();
     return key;
   }

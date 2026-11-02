@@ -20,13 +20,13 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async commit(message: string): Promise<Commit> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.commit(message);
+    await gitCommitDialogPage.commit(message);
 
     await gitSyncPage.openHistory();
-    const latest = await gitSyncPage.getLatestCommit();
-    await gitSyncPage.closeHistory();
+    const latest = await gitHistoryDialogPage.getLatestCommit();
+    await gitHistoryDialogPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -42,13 +42,13 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async commitAndPush(message: string): Promise<Commit> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.commitAndPush(message);
+    await gitCommitDialogPage.commitAndPush(message);
 
     await gitSyncPage.openHistory();
-    const latest = await gitSyncPage.getLatestCommit();
-    await gitSyncPage.closeHistory();
+    const latest = await gitHistoryDialogPage.getLatestCommit();
+    await gitHistoryDialogPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -64,11 +64,11 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async getChanges(): Promise<{ staged: string[]; unstaged: string[] }> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    const staged = await gitSyncPage.getStagedChanges();
-    const unstaged = await gitSyncPage.getUnstagedChanges();
-    await gitSyncPage.closeCommitDialog();
+    const staged = await gitCommitDialogPage.getStagedChanges();
+    const unstaged = await gitCommitDialogPage.getUnstagedChanges();
+    await gitCommitDialogPage.closeCommitDialog();
     return { staged, unstaged };
   }
 
@@ -78,12 +78,12 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async stageChanges(fileNames: string[]): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     for (const fileName of fileNames) {
-      await gitSyncPage.stageChange(fileName);
+      await gitCommitDialogPage.stageChange(fileName);
     }
-    await gitSyncPage.closeCommitDialog();
+    await gitCommitDialogPage.closeCommitDialog();
   }
 
   /**
@@ -92,12 +92,12 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async unstageChanges(fileNames: string[]): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     for (const fileName of fileNames) {
-      await gitSyncPage.unstageChange(fileName);
+      await gitCommitDialogPage.unstageChange(fileName);
     }
-    await gitSyncPage.closeCommitDialog();
+    await gitCommitDialogPage.closeCommitDialog();
   }
 
   /**
@@ -107,17 +107,17 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async commitStaged(message: string): Promise<Commit> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.commitStaged(message);
-    await gitSyncPage.waitForNothingStaged();
-    if (await gitSyncPage.isCommitDialogOpen()) {
-      await gitSyncPage.closeCommitDialog();
+    await gitCommitDialogPage.commitStaged(message);
+    await gitCommitDialogPage.waitForNothingStaged();
+    if (await gitCommitDialogPage.isCommitDialogOpen()) {
+      await gitCommitDialogPage.closeCommitDialog();
     }
 
     await gitSyncPage.openHistory();
-    const latest = await gitSyncPage.getLatestCommit();
-    await gitSyncPage.closeHistory();
+    const latest = await gitHistoryDialogPage.getLatestCommit();
+    await gitHistoryDialogPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -132,9 +132,9 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async discardAllChanges(): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.discardAllChanges();
+    await gitCommitDialogPage.discardAllChanges();
   }
 
   /**
@@ -143,10 +143,10 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async createBranch(branch: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.createBranch(branch);
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.createBranch(branch);
+    await gitBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -155,11 +155,11 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async createBranchExpectingError(branch: string): Promise<string> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.submitNewBranch(branch);
-    const error = await gitSyncPage.getNewBranchError();
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.submitNewBranch(branch);
+    const error = await gitBranchesDialogPage.getNewBranchError();
+    await gitBranchesDialogPage.closeBranchesDialog();
     return error;
   }
 
@@ -169,11 +169,11 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async getBranches(): Promise<{ local: string[]; remote: string[] }> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    const local = await gitSyncPage.getLocalBranches();
-    const remote = await gitSyncPage.getRemoteBranches();
-    await gitSyncPage.closeBranchesDialog();
+    const local = await gitBranchesDialogPage.getLocalBranches();
+    const remote = await gitBranchesDialogPage.getRemoteBranches();
+    await gitBranchesDialogPage.closeBranchesDialog();
     return { local, remote };
   }
 
@@ -183,10 +183,10 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async checkoutRemoteBranch(branch: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.checkoutRemoteBranch(branch);
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.checkoutRemoteBranch(branch);
+    await gitBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -222,10 +222,10 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async mergeBranch(branch: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.mergeBranch(branch);
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.mergeBranch(branch);
+    await gitBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -237,11 +237,11 @@ export class GitSyncFlow extends BaseFlow {
     branch: string,
     version: "Current" | "Incoming",
   ): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.mergeBranch(branch);
-    await gitSyncPage.resolveMergeConflicts(version);
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.mergeBranch(branch);
+    await gitBranchesDialogPage.resolveMergeConflicts(version);
+    await gitBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -250,11 +250,11 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async deleteBranch(branch: string, switchToBranch = "master"): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitBranchesDialogPage } = this.pageManager;
     await gitSyncPage.openBranchesDialog();
-    await gitSyncPage.checkoutBranch(switchToBranch);
-    await gitSyncPage.deleteBranch(branch);
-    await gitSyncPage.closeBranchesDialog();
+    await gitBranchesDialogPage.checkoutBranch(switchToBranch);
+    await gitBranchesDialogPage.deleteBranch(branch);
+    await gitBranchesDialogPage.closeBranchesDialog();
   }
 
   /**
@@ -264,18 +264,18 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async commitStagedConfirmingUnknownFields(message: string): Promise<Commit> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.commitStaged(message);
-    await gitSyncPage.confirmUnknownFieldsCommit();
-    await gitSyncPage.waitForCommitToFinish();
-    if (await gitSyncPage.isCommitDialogOpen()) {
-      await gitSyncPage.closeCommitDialog();
+    await gitCommitDialogPage.commitStaged(message);
+    await gitCommitDialogPage.confirmUnknownFieldsCommit();
+    await gitCommitDialogPage.waitForCommitToFinish();
+    if (await gitCommitDialogPage.isCommitDialogOpen()) {
+      await gitCommitDialogPage.closeCommitDialog();
     }
 
     await gitSyncPage.openHistory();
-    const latest = await gitSyncPage.getLatestCommit();
-    await gitSyncPage.closeHistory();
+    const latest = await gitHistoryDialogPage.getLatestCommit();
+    await gitHistoryDialogPage.closeHistory();
 
     return this.assertCreated(
       latest
@@ -292,12 +292,12 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async discardChangeAfterReview(fileName: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
-    await gitSyncPage.openChangeDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.openDiscardConfirmation(fileName);
-    await gitSyncPage.confirmDiscard();
-    await gitSyncPage.closeCommitDialog();
+    await gitCommitDialogPage.openChangeDiff(GitChangeList.Unstaged, fileName);
+    await gitCommitDialogPage.openDiscardConfirmation(fileName);
+    await gitCommitDialogPage.confirmDiscard();
+    await gitCommitDialogPage.closeCommitDialog();
   }
 
   /**
@@ -306,12 +306,12 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async openVisualDiff(list: GitChangeList, fileName: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
-    if (!(await gitSyncPage.isCommitDialogOpen())) {
+    const { gitSyncPage, gitCommitDialogPage } = this.pageManager;
+    if (!(await gitCommitDialogPage.isCommitDialogOpen())) {
       await gitSyncPage.openCommitDialog();
     }
-    await gitSyncPage.openChangeDiff(list, fileName);
-    await gitSyncPage.switchDiffView(GitDiffView.Visual);
+    await gitCommitDialogPage.openChangeDiff(list, fileName);
+    await gitCommitDialogPage.switchDiffView(GitDiffView.Visual);
   }
 
   /**
@@ -319,9 +319,9 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async stageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitCommitDialogPage } = this.pageManager;
     await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.stageEntity(entityName, typeLabel);
+    await gitCommitDialogPage.stageEntity(entityName, typeLabel);
   }
 
   /**
@@ -329,9 +329,9 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async unstageEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitCommitDialogPage } = this.pageManager;
     await this.openVisualDiff(GitChangeList.Staged, fileName);
-    await gitSyncPage.unstageEntity(entityName, typeLabel);
+    await gitCommitDialogPage.unstageEntity(entityName, typeLabel);
   }
 
   /**
@@ -340,9 +340,9 @@ export class GitSyncFlow extends BaseFlow {
    */
   @step()
   async discardEntity(fileName: string, entityName: string, typeLabel?: string): Promise<void> {
-    const { gitSyncPage } = this.pageManager;
+    const { gitCommitDialogPage } = this.pageManager;
     await this.openVisualDiff(GitChangeList.Unstaged, fileName);
-    await gitSyncPage.startEntityDiscard(entityName, typeLabel);
-    await gitSyncPage.confirmEntityDiscard(entityName, typeLabel);
+    await gitCommitDialogPage.startEntityDiscard(entityName, typeLabel);
+    await gitCommitDialogPage.confirmEntityDiscard(entityName, typeLabel);
   }
 }
