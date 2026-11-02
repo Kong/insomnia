@@ -3,9 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import type { TestInfo } from '@playwright/test';
-
 import { UpgradePhase } from '@package/enums/upgrade-phase';
+import type { TestInfo } from '@playwright/test';
 
 const TEST_PACKAGE = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(TEST_PACKAGE, '..', '..');

@@ -3,14 +3,14 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
 
+import { FlowManager } from "@package/flows/flow-manager";
+import { SessionContext } from "@package/flows/session-context";
+import { PageManager } from "@package/pages/page-manager";
 import type {
   ElectronApplication,
   Page} from "@playwright/test";
 import { test as base } from "@playwright/test";
 
-import { FlowManager } from "@package/flows/flow-manager";
-import { SessionContext } from "@package/flows/session-context";
-import { PageManager } from "@package/pages/page-manager";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, MOCK_API_SERVER } from "./constants";
 import {
   collectHiddenWindowCoverage,
