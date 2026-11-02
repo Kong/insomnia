@@ -1,11 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { buildCollectionFile } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify pulling brings in a collection that was pushed to the remote by another client', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
