@@ -63,5 +63,5 @@ test("Verify cancelling a long-running pre-request script shows a cancellation m
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(cancelledMessageVisible).toBe(true);
-  expect(laterResponse.statusCode).toBe(200);
+  expect(laterResponse.statusBar.code).toBe(200);
 });
