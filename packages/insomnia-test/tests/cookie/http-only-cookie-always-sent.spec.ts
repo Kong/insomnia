@@ -46,15 +46,15 @@ test("Verify HttpOnly Cookie Flag Persists And Cookie Is Always Sent Over HTTP A
   const httpResponse = await httpRequestFlow.send(httpRequest);
   const httpsResponse = await httpRequestFlow.send(httpsRequest);
 
-  expect(httpResponse.statusCode).toBe(200);
-  const { cookies: httpCookies } = httpResponse.body as {
+  expect(httpResponse.statusBar.code).toBe(200);
+  const { cookies: httpCookies } = httpResponse.preview as {
     cookies: Record<string, string>;
   };
   expect(httpCookies).toMatchObject({
     [httpOnlyCookie.key]: httpOnlyCookie.value,
   });
-  expect(httpsResponse.statusCode).toBe(200);
-  const { cookies: httpsCookies } = httpsResponse.body as {
+  expect(httpsResponse.statusBar.code).toBe(200);
+  const { cookies: httpsCookies } = httpsResponse.preview as {
     cookies: Record<string, string>;
   };
   expect(httpsCookies).toMatchObject({
