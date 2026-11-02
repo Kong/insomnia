@@ -34,6 +34,6 @@ test("Verify Template Tag in Event Stream Request Header Is Resolved", async ({
   const responseView = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("X-Tag: YWJj");
 });

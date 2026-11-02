@@ -26,7 +26,7 @@ test('Verify Event Stream Request Sends the Basic Authentication Header Until Au
   const authenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`Authorization: Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`);
@@ -35,9 +35,9 @@ test('Verify Event Stream Request Sends the Basic Authentication Header Until Au
   const unauthenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('GET /sse-events/1');
-  expect(await unauthenticatedResponse.console?.()).not.toContain('Authorization:');
+  expect(await unauthenticatedResponse.console()).not.toContain('Authorization:');
 });

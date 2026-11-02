@@ -47,8 +47,8 @@ test("Verify GraphQL Schema Documentation Shows Field Descriptions", async ({
       }),
     ]),
   });
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: {
       characters: {
         results: expect.arrayContaining([
