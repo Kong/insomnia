@@ -1,5 +1,8 @@
 import { format } from 'date-fns';
-import { convertApiSpecSyntax, detectApiSpecSyntax } from 'insomnia/src/common/api-specs';
+import {
+  convertApiSpecSyntax,
+  detectApiSpecSyntax,
+} from 'insomnia/src/common/api-specs';
 import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
@@ -761,7 +764,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const activeProject = projectLoaderData?.activeProject;
   const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
-  const organizationName = organizations.find(org => org.id === organizationId)?.name || 'Organization';
+  const organizationName =
+    organizations.find(org => org.id === organizationId)?.name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
