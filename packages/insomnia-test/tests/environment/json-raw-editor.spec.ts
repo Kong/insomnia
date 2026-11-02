@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import type {
@@ -9,6 +7,7 @@ import {
   EnvironmentKvPairDataType,
 } from "@package/models/environment";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Environment Raw JSON Editor Reads Back And Persists Edits", async ({
   user,
