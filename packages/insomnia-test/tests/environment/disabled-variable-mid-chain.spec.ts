@@ -63,8 +63,8 @@ test("Verify Disabled Mid-Chain Variable Leaves Reference Unresolved", async ({
   } satisfies HttpRequest);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     args: { value: `{{${midVariable}}}` },
   });
 });
