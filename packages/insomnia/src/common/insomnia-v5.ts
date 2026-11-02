@@ -1089,9 +1089,23 @@ export async function getInsomniaV5DataExport({
       exportableResources.filter(models.webSocketPayload.isWebSocketPayload).map(payload => [payload.parentId, payload]),
     );
 
-    // When exporting a subset of requests, only keep the folders that contain at least one of them
+    // When exporting a subset of requests, only keep the folders that contain at least one of them.
+    // Selecting every request is not a subset, so all folders (including empty ones) are kept.
+    const selectedRequestIds = new Set(requestIds);
+    const isSubsetExport =
+      !!requestIds &&
+      requestIds.length > 0 &&
+      !exportableResources
+        .filter(
+          resource =>
+            models.request.isRequest(resource) ||
+            models.grpcRequest.isGrpcRequest(resource) ||
+            models.webSocketRequest.isWebSocketRequest(resource) ||
+            models.socketIORequest.isSocketIORequest(resource),
+        )
+        .every(resource => selectedRequestIds.has(resource._id));
     const requestGroupIdsToKeep = new Set<string>();
-    if (requestIds && requestIds.length > 0) {
+    if (requestIds && isSubsetExport) {
       const parentIdById = new Map(exportableResources.map(resource => [resource._id, resource.parentId]));
       for (const requestId of requestIds) {
         let parentId = parentIdById.get(requestId);
@@ -1125,7 +1139,7 @@ export async function getInsomniaV5DataExport({
             return true;
           }
           if (models.requestGroup.isRequestGroup(resource)) {
-            return requestGroupIdsToKeep.has(resource._id);
+            return !isSubsetExport || requestGroupIdsToKeep.has(resource._id);
           }
 
           return requestIds.includes(resource._id);
