@@ -212,7 +212,7 @@ export class RunnerPage extends BasePage {
       .first();
     if ((await card.count()) === 0) return undefined;
     return (
-      await card.locator("div.text-center.font-semibold").first().innerText()
+      await card.getByTestId("runner-result-status").innerText()
     ).trim();
   }
 
@@ -318,15 +318,11 @@ export class RunnerPage extends BasePage {
 
   private async parseResultRow(row: Locator): Promise<RunnerTestResult> {
     const status = (
-      await row.locator("div.text-center.font-semibold").first().innerText()
+      await row.getByTestId("runner-result-status").innerText()
     ).trim();
-    const detail = row.locator(".min-w-0.flex-1 > div");
-    const name = (
-      await detail.nth(0).locator("span").first().innerText()
-    ).trim();
-    const detailCount = await detail.count();
-    const meta =
-      detailCount > 1 ? (await detail.nth(1).innerText()).trim() : "";
+    const name = (await row.getByTestId("runner-result-name").innerText()).trim();
+    const stats = row.getByTestId("runner-result-stats");
+    const meta = (await stats.count()) > 0 ? (await stats.innerText()).trim() : "";
     const match = meta.match(/^(\d+)ms - (\d+) bytes$/);
     return {
       name,

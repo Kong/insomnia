@@ -48,7 +48,7 @@ export class EnvironmentPage extends BasePage {
   private readonly SIDEBAR = '[aria-label="Environments"]';
   private readonly PROJECT_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select a Project Environment"]';
-  // Renamed from "Select a Collection Environment" — INS-3528.
+  // Formerly "Select a Collection Environment".
   private readonly COLLECTION_ENVIRONMENT_TRIGGER =
     'button[aria-label="Select an API Collection Environment"]';
 
@@ -314,7 +314,7 @@ export class EnvironmentPage extends BasePage {
    */
   async isEnvironmentPrivate(name: string): Promise<boolean> {
     const row = this.page.locator(`${this.SIDEBAR} [role="row"][aria-label="${name}"]`);
-    return (await row.locator('[data-icon="lock"]').count()) > 0;
+    return (await row.getByTestId("environment-private-icon").count()) > 0;
   }
 
   /**
@@ -360,7 +360,7 @@ export class EnvironmentPage extends BasePage {
    * Right after a workspace-level operation (e.g. duplicating an
    * Environment), the row can briefly render with a provisional
    * `data-key` before the app's list swaps in the persisted document's
-   * real key — confirmed live via a polling probe. Waiting here for the
+   * real key. Waiting here for the
    * key to settle (unchanged across consecutive reads) avoids grabbing
    * the soon-to-be-stale key and losing the row mid-rename.
    */
@@ -406,7 +406,7 @@ export class EnvironmentPage extends BasePage {
       .locator(this.LISTBOX)
       .locator('[role="option"]')
       .last()
-      .locator(".editor__container")
+      .getByTestId("one-line-editor-container")
       .first();
   }
 

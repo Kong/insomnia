@@ -149,10 +149,7 @@ export class GraphQLRequestPage extends RequestPage {
     await expect(this.page.getByText(/Schema fetched/i)).toBeVisible({
       timeout: ACTION_TIMEOUT,
     });
-    const explorerButton = this.page
-      .locator("#graphql-explorer-container")
-      .getByRole("button")
-      .first();
+    const explorerButton = this.page.getByTestId("graphql-explorer-close");
     await expect(async () => {
       await this.page.getByRole("button", { name: /schema/i }).click();
       await this.page
@@ -161,62 +158,73 @@ export class GraphQLRequestPage extends RequestPage {
       await expect(explorerButton).toBeVisible({ timeout: 1000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
 
-    const backButton = this.page.locator(
-      ".graphql-explorer__header__back-btn",
-    );
+    const backButton = this.page.getByTestId("graphql-explorer-back");
     if (await backButton.count()) {
       await backButton.click();
     }
 
-    const schemaSection = this.page.locator(".graphql-explorer__schema");
+    const schemaSection = this.page.getByTestId("graphql-explorer-schema");
     const rootTypes = Object.fromEntries(
       (
         await schemaSection
-          .locator("li")
+          .getByTestId("graphql-explorer-root-type")
           .filter({ hasText: /\S/ })
           .evaluateAll((items) =>
             items.map((item) => [
-              item.querySelector(".success")?.textContent?.trim() ?? "",
-              item.querySelector("a")?.textContent?.trim() ?? "",
+              item
+                .querySelector('[data-testid="graphql-explorer-root-type-name"]')
+                ?.textContent?.trim() ?? "",
+              item
+                .querySelector('[data-testid="graphql-explorer-type-link"]')
+                ?.textContent?.trim() ?? "",
             ]),
           )
       ).filter(([key]) => key),
     );
 
-    await schemaSection.locator("a").first().click();
+    await schemaSection.getByTestId("graphql-explorer-type-link").first().click();
 
     const fields = await this.page
-      .locator("li")
-      .filter({ has: this.page.locator(".graphql-explorer__defs__description") })
+      .getByTestId("graphql-explorer-field")
+      .filter({ has: this.page.getByTestId("graphql-explorer-def-description") })
       .evaluateAll((items) =>
         items.map((item) => {
-          const name = item.querySelector("a.success")?.textContent?.trim() ?? "";
+          const name =
+            item
+              .querySelector('[data-testid="graphql-explorer-field-link"]')
+              ?.textContent?.trim() ?? "";
           const args = Array.from(
-            item.querySelectorAll(".graphql-explorer__defs__arg"),
+            item.querySelectorAll('[data-testid="graphql-explorer-def-arg"]'),
           ).map((arg) => ({
-            name: arg.querySelector(".info")?.textContent?.trim() ?? "",
-            type: arg.querySelector("a")?.textContent?.trim() ?? "",
+            name:
+              arg
+                .querySelector('[data-testid="graphql-explorer-arg-name"]')
+                ?.textContent?.trim() ?? "",
+            type:
+              arg
+                .querySelector('[data-testid="graphql-explorer-type-link"]')
+                ?.textContent?.trim() ?? "",
           }));
           const description =
             item
-              .querySelector(".graphql-explorer__defs__description")
+              .querySelector('[data-testid="graphql-explorer-def-description"]')
               ?.textContent?.trim() ?? "";
           const clone = item.cloneNode(true) as HTMLElement;
-          clone.querySelector("a.success")?.remove();
           clone
-            .querySelectorAll(".graphql-explorer__defs__arg")
+            .querySelector('[data-testid="graphql-explorer-field-link"]')
+            ?.remove();
+          clone
+            .querySelectorAll('[data-testid="graphql-explorer-def-arg"]')
             .forEach((el) => el.remove());
-          clone.querySelector(".graphql-explorer__defs__description")?.remove();
+          clone
+            .querySelector('[data-testid="graphql-explorer-def-description"]')
+            ?.remove();
           const typeText = (clone.textContent ?? "").replace(/^:/, "").trim();
           return { name, args, description, typeText };
         }),
       );
 
-    await this.page
-      .locator("#graphql-explorer-container")
-      .getByRole("button")
-      .first()
-      .click();
+    await this.page.getByTestId("graphql-explorer-close").click();
 
     return {
       queryType: rootTypes.query,

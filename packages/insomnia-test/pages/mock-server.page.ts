@@ -16,7 +16,6 @@ export class MockServerPage extends BasePage {
   private readonly REQUEST_PANE = '[data-testid="request-pane"]';
   private readonly RESPONSE_PANE = '[data-testid="response-pane"]';
   private readonly BODY_EDITOR = `${this.REQUEST_PANE} [data-testid="CodeEditor"] .CodeMirror`;
-  private readonly HISTORY_ROWS = `${this.RESPONSE_PANE} [role="tabpanel"] div:has(> div:text-is("Method")) > div`;
   private get keyValue(): KeyValueEditorComponent {
     return new KeyValueEditorComponent(this.page, this.page.locator("body"));
   }
@@ -43,7 +42,7 @@ export class MockServerPage extends BasePage {
     // The radio's <input> is covered by its own label content, so check() can
     // loop on "intercepts pointer events"; click the label card instead.
     if (!(await radio.isChecked())) {
-      await dialog.locator("label").filter({ has: this.page.getByRole("radio", radioName) }).click();
+      await dialog.getByTestId("mock-server-type-self-hosted").click();
     }
     await expect(radio).toBeChecked();
     await dialog
@@ -138,12 +137,11 @@ export class MockServerPage extends BasePage {
   async getOpenRoute(): Promise<{ method: string; path: string }> {
     const bar = this.page
       .locator(this.REQUEST_PANE)
-      .locator("div.items-center")
-      .first();
+      .getByTestId("mock-route-url-bar");
     await expect(bar).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     const [method, path] = await Promise.all([
-      bar.locator("span.font-medium").innerText(),
-      bar.locator("span.font-mono").innerText(),
+      bar.getByTestId("mock-route-method").innerText(),
+      bar.getByTestId("mock-route-path").innerText(),
     ]);
     return { method: method.trim(), path: path.trim() };
   }
@@ -329,14 +327,13 @@ export class MockServerPage extends BasePage {
   async getHistory(): Promise<MockRouteHistoryEntry[]> {
     await this.switchResponseTab("preview");
     await this.switchResponseTab("history");
-    const cells = this.page.locator(this.HISTORY_ROWS);
-    await expect(cells.first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    const texts = (await cells.allInnerTexts()).map((text) => text.trim());
-    const entries: MockRouteHistoryEntry[] = [];
-    for (let i = 5; i + 4 < texts.length; i += 5) {
-      entries.push({ method: texts[i], url: texts[i + 4] });
-    }
-    return entries;
+    const history = this.page.locator(this.RESPONSE_PANE);
+    const methods = history.getByTestId("mock-history-cell-method");
+    const paths = history.getByTestId("mock-history-cell-path");
+    await expect(methods.first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const methodTexts = (await methods.allInnerTexts()).map((text) => text.trim());
+    const pathTexts = (await paths.allInnerTexts()).map((text) => text.trim());
+    return methodTexts.map((method, i) => ({ method, url: pathTexts[i] }));
   }
 
   /**

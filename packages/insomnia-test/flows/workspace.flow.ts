@@ -21,7 +21,8 @@ import { Settings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { PageManager } from '../pages/page-manager';
-import type { TreeNode, UnitTestResultRow } from '../pages/workspace.page';
+import type { UnitTestResultRow } from '../pages/spec.page';
+import type { TreeNode } from '../pages/workspace.page';
 import { BaseFlow } from './base.flow';
 import type { FlowContext } from './flow-context';
 import type { PreferencesFlow } from './preferences.flow';
@@ -86,9 +87,10 @@ export class WorkspaceFlow extends BaseFlow {
    */
   async createProject(item: Project): Promise<Project> {
     const workspace = this.pageManager.workspacePage;
-    await workspace.clickNewProject();
+    const projectPage = this.pageManager.projectPage;
+    await projectPage.clickNewProject();
     await workspace.setNewItemName(item.name);
-    await workspace.setNewProjectType(item.type);
+    await projectPage.setNewProjectType(item.type);
     // Project creation also provisions the project's NeDB records before
     // the dialog closes, which has been observed to run past the default
     // UI-only timeout under CI load — give it the same extra room as a
@@ -108,10 +110,10 @@ export class WorkspaceFlow extends BaseFlow {
     if (item.folderPath === undefined) {
       throw new Error(`openLocalGitFolder(): Project "${item.name}" has no folderPath to open`);
     }
-    const { workspacePage, projectSettingsPage } = this.pageManager;
-    await workspacePage.clickNewProject();
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
     await workspacePage.setNewItemName(item.name);
-    await workspacePage.setNewProjectType(item.type);
+    await projectPage.setNewProjectType(item.type);
 
     await projectSettingsPage.selectGitOpenMode();
     await projectSettingsPage.chooseOpenFolderLocation(item.folderPath);
@@ -139,10 +141,10 @@ export class WorkspaceFlow extends BaseFlow {
     }
     const branch = repo?.branch ?? 'master';
 
-    const { workspacePage, projectSettingsPage } = this.pageManager;
-    await workspacePage.clickNewProject();
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
     await workspacePage.setNewItemName(item.name);
-    await workspacePage.setNewProjectType(item.type);
+    await projectPage.setNewProjectType(item.type);
 
     await projectSettingsPage.selectCredential(credentialName);
     await projectSettingsPage.setRepositoryUrl(uri);
@@ -616,7 +618,7 @@ export class WorkspaceFlow extends BaseFlow {
    * type, and OpenAPI version back, in addition to the plain
    * `getCollection()` fields — this is the read a spec-carrying
    * collection needs (what used to be a separate "Design Document" before
-   * INS-3528 unified the two workspace types). For the lint summary/codes,
+   * the two workspace types were unified). For the lint summary/codes,
    * call `getLintState()` separately — it polls for the lint pass to
    * settle, which not every caller needs.
    */
@@ -624,18 +626,19 @@ export class WorkspaceFlow extends BaseFlow {
   async getCollectionSpec(item: string | { name: string; id?: string }): Promise<Collection | undefined> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
 
     const node = await workspace.findItemNode(identity);
     if (!node) return undefined;
 
     await workspace.clickNode(node);
-    await workspace.navigateSpec(node._id);
+    await specPage.navigate(node._id);
 
     const collection = new Collection(identity.name);
     collection.id = node._id;
-    collection.specification = await workspace.getSpecification();
-    collection.rulesetType = await workspace.getRulesetType();
-    collection.version = await workspace.getOpenApiVersion();
+    collection.specification = await specPage.getSpecification();
+    collection.rulesetType = await specPage.getRulesetType();
+    collection.version = await specPage.getOpenApiVersion();
 
     return collection;
   }
@@ -650,10 +653,11 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async fillSpecification(item: Collection, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     const node = await workspace.resolveNode(item);
     await workspace.clickNode(node);
-    await workspace.navigateSpec();
-    await workspace.setSpecification(
+    await specPage.navigate();
+    await specPage.setSpecification(
       typeof spec === 'string'
         ? spec
         : JSON.stringify({
@@ -675,9 +679,10 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async createTestSuite(item: string | { name: string; id?: string }, name: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     await this.openTests(item);
-    await workspace.createTestSuite();
-    await workspace.renameTestSuite('New Suite', name);
+    await specPage.createTestSuite();
+    await specPage.renameTestSuite('New Suite', name);
   }
 
   /**
@@ -689,11 +694,12 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async createUnitTest(testSuite: TestSuite, testName: string): Promise<void> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     await this.openTests(testSuite.collection);
-    await workspace.selectTestSuite(testSuite.name);
+    await specPage.selectTestSuite(testSuite.name);
 
-    await workspace.createTest();
-    await workspace.renameUnitTest('Returns 200', testName);
+    await specPage.createTest();
+    await specPage.renameUnitTest('Returns 200', testName);
   }
 
   /**
@@ -703,7 +709,7 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async deleteTestSuite(item: string | { name: string; id?: string }, suiteName: string): Promise<void> {
     await this.openTests(item);
-    await this.pageManager.workspacePage.deleteTestSuite(suiteName);
+    await this.pageManager.specPage.deleteTestSuite(suiteName);
   }
 
   /**
@@ -720,26 +726,27 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async getLintState(minLintErrors = 0): Promise<NonNullable<Collection['lint']>> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
 
-    await workspace.expandLintPanel();
+    await specPage.expandLintPanel();
     await expect
       .poll(
         async () => {
-          const summary = await workspace.getLintSummary();
+          const summary = await specPage.getLintSummary();
           return summary === 'none' ? 0 : summary.errors;
         },
         { timeout: DEFAULT_TIMEOUT },
       )
       .toBeGreaterThanOrEqual(minLintErrors);
-    const summary = await workspace.getLintSummary();
+    const summary = await specPage.getLintSummary();
     const errors = summary === 'none' ? 0 : summary.errors;
     // The summary can update a beat before the panel's entry rows do, so
     // wait for the listed errors to catch up with the count it reports.
-    let entries = await workspace.getLintEntries();
+    let entries = await specPage.getLintEntries();
     await expect
       .poll(
         async () => {
-          entries = await workspace.getLintEntries();
+          entries = await specPage.getLintEntries();
           return entries.filter(entry => entry.severity === LintSeverity.Error).length;
         },
         { timeout: DEFAULT_TIMEOUT },
@@ -762,14 +769,15 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async getTestSuite(item: string | { name: string; id?: string }, testSuiteName: string): Promise<TestSuite> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     const node = await this.openTests(item);
-    await workspace.selectTestSuite(testSuiteName);
+    await specPage.selectTestSuite(testSuiteName);
 
     const collection = item instanceof Collection ? item : new Collection(typeof item === 'string' ? item : item.name);
     if (!collection.id && node) collection.id = node._id;
 
-    const name = await workspace.getSelectedTestSuiteName();
-    const tests = (await workspace.getUnitTestNames()).map(testName => new UnitTest(testName));
+    const name = await specPage.getSelectedTestSuiteName();
+    const tests = (await specPage.getUnitTestNames()).map(testName => new UnitTest(testName));
     return new TestSuite(name, tests, collection);
   }
 
@@ -780,7 +788,7 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async getTestSuiteNames(item: string | { name: string; id?: string }): Promise<string[]> {
     await this.openTests(item);
-    return this.pageManager.workspacePage.getTestSuiteNames();
+    return this.pageManager.specPage.getTestSuiteNames();
   }
 
   /**
@@ -792,11 +800,12 @@ export class WorkspaceFlow extends BaseFlow {
   async removeRuleset(item: string | { name: string; id?: string }): Promise<void> {
     const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
 
     const node = await workspace.findItemNode(identity);
     if (node) await workspace.clickNode(node);
-    await workspace.navigateSpec();
-    await workspace.removeRuleset();
+    await specPage.navigate();
+    await specPage.removeRuleset();
   }
 
   /**
@@ -806,13 +815,14 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async runAllTests(testSuite: TestSuite): Promise<UnitTestRunResult> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     await this.openTests(testSuite.collection);
-    await workspace.selectTestSuite(testSuite.name);
+    await specPage.selectTestSuite(testSuite.name);
 
-    await workspace.runAllTests();
+    await specPage.runAllTests();
     return {
-      summary: await workspace.getTestResultSummary(),
-      rows: await workspace.getTestResultRows(),
+      summary: await specPage.getTestResultSummary(),
+      rows: await specPage.getTestResultRows(),
     };
   }
 
@@ -829,21 +839,22 @@ export class WorkspaceFlow extends BaseFlow {
   @step()
   async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
     const workspace = this.pageManager.workspacePage;
-    const result = await workspace.uploadRuleset(filePath);
+    const specPage = this.pageManager.specPage;
+    const result = await specPage.uploadRuleset(filePath);
     if (result === 'invalid') {
       await workspace.closeDialog();
       return 'invalid';
     }
 
-    await workspace.expandLintPanel();
+    await specPage.expandLintPanel();
     if (expectCode) {
       await expect
-        .poll(() => workspace.getLintEntryCodes(), {
+        .poll(() => specPage.getLintEntryCodes(), {
           timeout: DEFAULT_TIMEOUT,
         })
         .toContain(expectCode);
     }
-    return workspace.getLintEntryCodes();
+    return specPage.getLintEntryCodes();
   }
 
   /**
@@ -854,10 +865,11 @@ export class WorkspaceFlow extends BaseFlow {
    */
   private async authorSpec(name: string, spec: NonNullable<Collection['spec']>): Promise<void> {
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
     const node = await workspace.requireItemNode({ name });
     await workspace.clickNode(node);
-    await workspace.navigateSpec();
-    await workspace.setSpecification(
+    await specPage.navigate();
+    await specPage.setSpecification(
       typeof spec === 'string'
         ? spec
         : JSON.stringify({
@@ -965,7 +977,7 @@ export class WorkspaceFlow extends BaseFlow {
 
   /**
    * Turns on Preferences -> General's "Show legacy unit tests" setting
-   * (default off since INS-3528), which gates whether the Tests tab
+   * (default off), which gates whether the Tests tab
    * renders at all on a Collection. A no-op after the first call.
    */
   private async ensureLegacyUnitTestsEnabled(): Promise<void> {
@@ -986,10 +998,11 @@ export class WorkspaceFlow extends BaseFlow {
 
     const identity = typeof item === 'string' ? { name: item } : item;
     const workspace = this.pageManager.workspacePage;
+    const specPage = this.pageManager.specPage;
 
     const node = await workspace.findItemNode(identity);
     if (node) await workspace.clickNode(node);
-    await workspace.openTestsTab();
+    await specPage.openTestsTab();
     return node;
   }
 
@@ -1036,10 +1049,10 @@ export class WorkspaceFlow extends BaseFlow {
     }
     const branch = repo?.branch ?? 'master';
 
-    const { workspacePage, projectSettingsPage } = this.pageManager;
-    await workspacePage.clickNewProject();
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
     await workspacePage.setNewItemName(item.name);
-    await workspacePage.setNewProjectType(item.type);
+    await projectPage.setNewProjectType(item.type);
 
     await projectSettingsPage.selectCredential(credentialName);
     await projectSettingsPage.setRepositoryUrl(uri);

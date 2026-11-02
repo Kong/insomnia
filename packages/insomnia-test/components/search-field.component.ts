@@ -27,8 +27,10 @@ export class SearchFieldComponent extends BaseComponent {
     return this.root.inputValue();
   }
 
-  /** The built-in clear (x) button that appears next to a non-empty field. */
+  /** The built-in clear (x) button that appears next to a non-empty sidebar filter field. */
   get clearButton(): Locator {
-    return this.root.locator("xpath=..").getByRole("button", { name: /clear/i });
+    return this.page
+      .getByTestId("sidebar-search-field")
+      .getByRole("button", { name: "Clear search" });
   }
 }

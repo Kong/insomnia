@@ -150,8 +150,7 @@ const cloudSyncProjects = [
     teamProjectId: PROJECT_ID,
     teams: CLOUD_SYNC_TEAMS,
   },
-  // A pre-existing INS-2026-style "ghost" backend project (case 5 in the
-  // Cloud Sync Cross-Workspace Commit Misalignment Fix test plan): its own
+  // A pre-existing "ghost" backend project: its own
   // `rootDocumentId` never matches the single `wrk_*` key inside its own
   // latest snapshot's `state[]` — the exact invariant violation the bug
   // produces — and it's never pulled locally, so it always renders as an
@@ -424,7 +423,7 @@ const CLOUD_SYNC_DEFAULT_BRANCHES = [{ name: "master" }, { name: "develop" }];
 // concurrently-running Electron instances (different Playwright workers, or
 // even sequential test runs reusing a worker) each see their own private
 // copy of "My Collection R1" and friends instead of racing to commit/push
-// against one shared branch. Confirmed live: without this, two concurrent
+// against one shared branch. Without this, two concurrent
 // `commitAndPush()`s on the same project produce a genuine "Remote history
 // conflict" — correct VCS behavior, but not what a same-fixture-per-test
 // spec expects.
@@ -443,7 +442,7 @@ function getCloudSyncState(sessionId: any) {
       // back-compat with callers of `/_admin/cloud-sync/new-commit` that
       // don't pass `projectId`.
       newCommitProjectId: "proj_5145140e072d4007a30bfa6630ddae71",
-      // Test-only concurrency knob (INS-2026): unlike the other mock servers'
+      // Test-only concurrency knob: unlike the other mock servers'
       // `x-reply-delay-ms` header, the app's Cloud Sync GraphQL calls run in
       // the Electron main process, not the renderer, so a spec has no way to
       // attach a custom header to them. Set via `POST
@@ -452,10 +451,10 @@ function getCloudSyncState(sessionId: any) {
       // own `sync.invoke` calls on the very same session, e.g. a fresh
       // workspace under a remote project pushes itself immediately too, so
       // an unscoped delay would stall that unrelated push as well, and did
-      // (confirmed live: a 6s delay ballooned "New Collection" to ~48s).
+      // (a 6s delay ballooned "New Collection" to ~48s).
       delayMs: 0,
       delayProjectId: null,
-      // Test-only request log (INS-2026): every Cloud Sync GraphQL request
+      // Test-only request log: every Cloud Sync GraphQL request
       // this session makes, in arrival order, tagged with the project id it
       // actually carried. A spec can diff this against which workspace it
       // *expected* to be talking to at that point in the flow — e.g. after
@@ -466,7 +465,7 @@ function getCloudSyncState(sessionId: any) {
       // singleton regression — more direct than inferring it from which
       // project's on-disk files ended up with new content.
       requestLog: [],
-      // Test-only failure knob (INS-2026 case 5): when true, the
+      // Test-only failure knob: when true, the
       // `projectArchive` mutation returns a GraphQL error instead of
       // succeeding, simulating a failed dashboard delete (e.g. offline or
       // revoked access) without an actual network fault. Set via `POST

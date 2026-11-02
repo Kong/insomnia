@@ -29,6 +29,70 @@ export class TreeComponent extends BaseComponent {
     return this.root.getByRole("row", { name });
   }
 
+  /**
+   * The row for `key` looked up inside the scroll container (the form
+   * `WorkspacePage` has always used), rather than inside the grid.
+   */
+  containerRow(key: string): Locator {
+    return this.scroller.locator(`div[role="row"][data-key="${key}"]`);
+  }
+
+  async clickByKey(key: string): Promise<void> {
+    const row = this.containerRow(key);
+    await row.scrollIntoViewIfNeeded();
+    await row.click();
+  }
+
+  /** Focuses the row (Playwright's `press` does) and sends `shortcut`. */
+  async pressOnRow(key: string, shortcut: string): Promise<void> {
+    const row = this.containerRow(key);
+    await row.scrollIntoViewIfNeeded();
+    await row.press(shortcut);
+  }
+
+  /** Expanded rows render a "Collapse {name}" toggle. */
+  async isExpandedByKey(key: string, name: string): Promise<boolean> {
+    return (
+      (await this.containerRow(key)
+        .getByRole("button", { name: `Collapse ${name}` })
+        .count()) > 0
+    );
+  }
+
+  async waitForExpanded(
+    key: string,
+    name: string,
+    expected: boolean,
+  ): Promise<void> {
+    await expect(async () => {
+      expect(await this.isExpandedByKey(key, name)).toBe(expected);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /** Right-arrow expands, then waits for the async toggle to settle. */
+  async expandByKey(key: string, name: string): Promise<void> {
+    await this.pressOnRow(key, "ArrowRight");
+    await this.waitForExpanded(key, name, true);
+  }
+
+  async collapseByKey(key: string, name: string): Promise<void> {
+    await this.pressOnRow(key, "ArrowLeft");
+    await this.waitForExpanded(key, name, false);
+  }
+
+  /** Waits for `aria-selected="true"` to hold across two consecutive reads. */
+  async waitForSelectedByKey(key: string): Promise<void> {
+    const row = this.containerRow(key);
+    let previous: string | null = null;
+    await expect(async () => {
+      const current = await row.getAttribute("aria-selected");
+      expect(current === "true").toBe(true);
+      const stable = current === previous;
+      previous = current;
+      expect(stable).toBe(true);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
   rowByKey(key: string): Locator {
     return this.root.locator(`div[role="row"][data-key="${key}"]`);
   }

@@ -1,28 +1,26 @@
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { ModalComponent } from "@package/components/modal.component";
-import { SearchFieldComponent } from "@package/components/search-field.component";
-import { TabBarComponent } from "@package/components/tab-bar.component";
-import { TableComponent } from "@package/components/table.component";
-import { TreeComponent } from "@package/components/tree.component";
-import type { ContextMenuItem } from "@package/enums/context-menu-items";
-import { HttpMethod } from "@package/enums/http-method";
-import { LintSeverity } from "@package/enums/lint-severity";
-import { ProjectType } from "@package/enums/project-types";
-import { RulesetType } from "@package/enums/ruleset-type";
-import type { SpecFormat } from "@package/enums/spec-format";
-import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { expect } from "@playwright/test";
+import type { Locator } from "playwright-core";
+
+import { DropdownComponent } from "../components/dropdown.component";
+import { SearchFieldComponent } from "../components/search-field.component";
+import { TabBarComponent } from "../components/tab-bar.component";
+import { TreeComponent } from "../components/tree.component";
+import type { ContextMenuItem } from "../enums/context-menu-items";
+import { HttpMethod } from "../enums/http-method";
+import { LintSeverity } from "../enums/lint-severity";
+import { ProjectType } from "../enums/project-types";
+import { RulesetType } from "../enums/ruleset-type";
+import type { SpecFormat } from "../enums/spec-format";
+import { TreeNodeType } from "../enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   LintEntry,
-  PathItem} from "@package/models/collection";
+  PathItem} from "../models/collection";
 import {
   Info,
   License,
   Specification,
-} from "@package/models/collection";
-import { expect } from "@playwright/test";
-import type { Locator } from "playwright-core";
-
+} from "../models/collection";
 import { BasePage } from "./base.page";
 
 const METHOD_LABELS: Record<string, HttpMethod> = {
@@ -99,10 +97,7 @@ export class SpecPage extends BasePage {
    * (default-named) test row to render.
    */
   async createTest(): Promise<void> {
-    const rows = new TableComponent(
-      this.page,
-      this.page.locator(this.UNIT_TESTS_LIST),
-    ).rows;
+    const rows = this.page.locator(this.UNIT_TESTS_LIST).getByRole("row");
     const before = await rows.count();
     await this.page.locator(this.NEW_TEST_BUTTON).click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
@@ -113,10 +108,7 @@ export class SpecPage extends BasePage {
    * navigates straight into it.
    */
   async createTestSuite(): Promise<void> {
-    const rows = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows;
+    const rows = this.page.locator(this.TEST_SUITES_LIST).getByRole("row");
     const before = await rows.count();
     await this.page.getByRole("button", { name: "New test suite" }).click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
@@ -127,17 +119,15 @@ export class SpecPage extends BasePage {
    * and deletes it via the "Delete suite" confirm modal.
    */
   async deleteTestSuite(suiteName: string): Promise<void> {
-    const row = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).row(suiteName);
-    const actions = row.getByLabel("Unit Test Actions");
-    await actions.click();
-    await new DropdownComponent(this.page, actions)
-      .item("Delete suite")
+    const row = this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row", { name: suiteName });
+    await row.getByLabel("Unit Test Actions").click();
+    await this.page
+      .getByRole("menuitemradio", { name: "Delete suite" })
       .click();
 
-    const dialog = new ModalComponent(this.page).root;
+    const dialog = this.page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Delete" }).click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     await expect(row).toBeHidden({ timeout: DEFAULT_TIMEOUT });
@@ -245,15 +235,12 @@ export class SpecPage extends BasePage {
    * all.
    */
   async getOpenApiVersion(): Promise<string> {
-    // The span is always rendered once the spec has content, but stays
-    // empty until the parsed spec's `openapi` field is known, so wait for
-    // text rather than for the element.
-    const label = this.page.getByTestId("spec-openapi-version");
-    try {
-      await expect(label).toHaveText(/OpenAPI \d/, { timeout: DEFAULT_TIMEOUT });
-    } catch {
-      return "";
-    }
+    const label = this.page
+      .locator(this.PANE_ONE)
+      .first()
+      .getByText(/OpenAPI \d/)
+      .first();
+    if ((await label.count()) === 0) return "";
     return (await label.innerText()).trim();
   }
 
@@ -382,22 +369,20 @@ export class SpecPage extends BasePage {
    * Reads every suite name currently listed in the Test Suites sidebar.
    */
   async getTestSuiteNames(): Promise<string[]> {
-    // Re-opening the Tests tab re-renders the list; wait for it to settle
-    // so a read taken mid-render doesn't return a stale or partial list.
-    return this.waitForStableValue(() =>
-      new TableComponent(
-        this.page,
-        this.page.locator(this.TEST_SUITES_LIST),
-      ).rows.allInnerTexts(),
-    );
+    return this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row")
+      .allInnerTexts();
   }
 
   /**
    * Reads every test name currently listed under the open suite.
    */
   async getUnitTestNames(): Promise<string[]> {
-    return new TableComponent(this.page, this.page.locator(this.UNIT_TESTS_LIST))
-      .rows.allInnerTexts();
+    return this.page
+      .locator(this.UNIT_TESTS_LIST)
+      .getByRole("row")
+      .allInnerTexts();
   }
 
   /**
@@ -466,7 +451,10 @@ export class SpecPage extends BasePage {
    */
   async removeRuleset(): Promise<void> {
     await this.page.locator(this.REMOVE_RULESET_BUTTON).click();
-    await new ModalComponent(this.page).clickButton("Remove");
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Remove", exact: true })
+      .click();
     await expect(this.page.getByText(this.DEFAULT_RULESET_LABEL)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -489,10 +477,9 @@ export class SpecPage extends BasePage {
       detailPane.locator("[data-editable]").filter({ hasText: newName }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     await expect(
-      new TableComponent(
-        this.page,
-        this.page.locator(this.TEST_SUITES_LIST),
-      ).row(newName),
+      this.page
+        .locator(this.TEST_SUITES_LIST)
+        .getByRole("row", { name: newName }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -533,9 +520,7 @@ export class SpecPage extends BasePage {
   async selectFormat(format: SpecFormat): Promise<void> {
     const formatButton = this.page.locator(this.FORMAT_BUTTON);
     await formatButton.click();
-    await new DropdownComponent(this.page, formatButton)
-      .item(format, false)
-      .click();
+    await this.page.getByRole("menuitemradio", { name: format }).click();
     await expect(formatButton).toHaveText(format, { timeout: DEFAULT_TIMEOUT });
   }
 
@@ -545,10 +530,9 @@ export class SpecPage extends BasePage {
    * become the selected row.
    */
   async selectTestSuite(suiteName: string): Promise<void> {
-    const row = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).row(suiteName);
+    const row = this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row", { name: suiteName });
     await row.click();
     await expect(row).toHaveAttribute("aria-selected", "true", {
       timeout: DEFAULT_TIMEOUT,
@@ -584,14 +568,15 @@ export class SpecPage extends BasePage {
   }
 
   /**
-   * Clicks "Upload custom ruleset" (the native file-open dialog must
-   * already be stubbed — see `FlowContext.stubFileChooser`) and waits for either outcome to settle: the
+   * Stubs the native file-open dialog to return `filePath`, then clicks
+   * "Upload custom ruleset" and waits for either outcome to settle: the
    * "View selected ruleset content" button (ruleset accepted) or the
    * "Invalid Spectral Ruleset" error dialog (ruleset rejected). Dismiss
    * the error dialog afterward via `closeDialog()` — it's the app's shared
    * error modal, so no dedicated close method lives here.
    */
-  async uploadRuleset(): Promise<"success" | "invalid"> {
+  async uploadRuleset(filePath: string): Promise<"success" | "invalid"> {
+    await this.stubFileChooser(filePath);
     await this.page.locator(this.UPLOAD_RULESET_BUTTON).click();
 
     const success = this.page.locator(this.VIEW_RULESET_BUTTON);

@@ -1,8 +1,7 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
+import { ProjectType } from "../enums/project-types";
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export const NEW_PROJECT_BUTTON = 'button[aria-label="Create new Project"]';
@@ -31,10 +30,9 @@ export class ProjectPage extends BasePage {
    */
   async clickNewProject(): Promise<void> {
     await this.page.locator(NEW_PROJECT_BUTTON).click();
-    await new ModalComponent(
-      this.page,
-      this.page.locator(this.NEW_PROJECT_DIALOG),
-    ).expectOpen();
+    await expect(this.page.locator(this.NEW_PROJECT_DIALOG)).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**

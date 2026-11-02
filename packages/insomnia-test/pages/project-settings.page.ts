@@ -262,10 +262,7 @@ export class ProjectSettingsPage extends BasePage {
   }
 
 
-  private readonly unknownFieldsWarning = this.dialog
-    .locator("div")
-    .filter({ has: this.page.getByRole("heading", { name: "Unknown Fields Detected" }) })
-    .last();
+  private readonly unknownFieldsWarning = this.dialog.getByTestId("project-settings-unknown-fields-warning");
 
   /**
    * Reads the file paths listed under the post-scan "Unknown Fields

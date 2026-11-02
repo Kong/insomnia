@@ -31,8 +31,8 @@ function parseByteSize(raw: string): number | undefined {
 
 export class ResponsePage extends BasePage {
   private readonly EVENT_PREVIEW_EDITOR = '[data-testid="response-pane"] #mcp-data-preview + .CodeMirror';
-  private readonly EVENT_ROWS = '[data-testid="response-pane"] [role="tabpanel"] table tbody tr';
-  private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"] .tag';
+  private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"]';
+  private readonly EVENT_ROWS = '[data-testid="response-pane"] [data-testid="event-row"]';
   private readonly NBSP = / /g;
   private readonly PANE = '[data-testid="response-pane"]';
 
@@ -83,7 +83,7 @@ export class ResponsePage extends BasePage {
    * Reads the response's size tag and converts it to bytes.
    */
   private async getBytesContent(): Promise<number | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).nth(2);
+    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-size-tag');
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseByteSize(raw);
@@ -104,7 +104,7 @@ export class ResponsePage extends BasePage {
    * milliseconds.
    */
   private async getElapsedTime(): Promise<number | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).nth(1);
+    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-time-tag');
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     return parseDurationMs(raw);
@@ -137,9 +137,9 @@ export class ResponsePage extends BasePage {
     const count = await rows.count();
     const events: StreamEvent[] = [];
     for (let i = 0; i < count; i++) {
-      const cells = rows.nth(i).locator('td');
-      const data = (await cells.nth(1).innerText()).trim();
-      const time = (await cells.nth(2).innerText()).trim();
+      const row = rows.nth(i);
+      const data = (await row.getByTestId('event-cell-data').innerText()).trim();
+      const time = (await row.getByTestId('event-cell-time').innerText()).trim();
       await rows.nth(i).dispatchEvent('click');
       events.push({ data, time, preview: await this.getEventPreview() });
     }
@@ -198,14 +198,11 @@ export class ResponsePage extends BasePage {
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
     if (!(await this.switchTab('headers'))) return undefined;
-    return this.page.locator(`${this.TABPANEL} table tbody tr`).evaluateAll(rows =>
-      rows.map(row => {
-        const cells = row.querySelectorAll('td');
-        return {
-          name: ((cells[0] as HTMLElement | undefined)?.innerText ?? '').trim(),
-          value: ((cells[1] as HTMLElement | undefined)?.innerText ?? '').trim(),
-        };
-      }),
+    return this.page.locator(`${this.TABPANEL} [data-testid="response-header-row"]`).evaluateAll(rows =>
+      rows.map(row => ({
+        name: (row.querySelector<HTMLElement>('[data-testid="response-header-name"]')?.innerText ?? '').trim(),
+        value: (row.querySelector<HTMLElement>('[data-testid="response-header-value"]')?.innerText ?? '').trim(),
+      })),
     );
   }
 
@@ -220,11 +217,10 @@ export class ResponsePage extends BasePage {
     const results: ResponseTestResult[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const status = ((await row.locator('span.mr-2.ml-2').textContent()) ?? '').trim();
-      const name = ((await row.locator('span.capitalize').textContent()) ?? '').trim();
-      const errorSpan = row.locator('span.capitalize + span.text-neutral-400');
-      const error =
-        (await errorSpan.count()) > 0 ? ((await errorSpan.textContent()) ?? '').trim() || undefined : undefined;
+      const status = ((await row.getByTestId('test-result-status').textContent()) ?? '').trim();
+      const name = ((await row.getByTestId('test-result-case').textContent()) ?? '').trim();
+      const errorText = ((await row.getByTestId('test-result-error').textContent()) ?? '').trim();
+      const error = errorText || undefined;
       results.push({ name, status, error });
     }
     return results;
@@ -256,7 +252,7 @@ export class ResponsePage extends BasePage {
    * status code and message.
    */
   private async getStatus(): Promise<{ code: number; message: string } | undefined> {
-    const tag = this.page.locator(this.HEADER_TAGS).nth(0);
+    const tag = this.page.locator(this.HEADER_TAGS).getByTestId('response-status-tag');
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);

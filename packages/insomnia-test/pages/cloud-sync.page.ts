@@ -17,7 +17,7 @@ export class CloudSyncPage extends BasePage {
     throw new Error("Method not implemented.");
   }
   // Cloud Sync's sync dropdown reuses the exact same testid/aria-label as
-  // Git Sync's (confirmed live: both `sync-dropdown.tsx` and
+  // Git Sync's (both `sync-dropdown.tsx` and
   // `git-sync-dropdown.tsx` render `data-testid="git-dropdown"`,
   // `aria-label="Git Sync"` — which one mounts depends on whether the
   // active workspace's project is Cloud-synced or has a git repo attached).
@@ -41,10 +41,10 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * A project dashboard's own grid card for `name` (a react-aria
-   * `GridList` row, confirmed live — the `GridListItem` renders no
+   * `GridList` row — the `GridListItem` renders no
    * `data-testid` of its own, only an accessible name from its
    * `textValue`). Scoped to the grid's own `data-testid="workspace-grid"`
-   * container — confirmed live: an unfetched fixture's sidebar
+   * container — an unfetched fixture's sidebar
    * "unsynced" tree row carries the exact same accessible name and role,
    * so an unscoped `getByRole("row", { name })` hits a strict-mode
    * violation once the sidebar tree is showing that row too.
@@ -145,7 +145,7 @@ export class CloudSyncPage extends BasePage {
    *
    * The click only submits an async fetcher action (rollback to the last
    * snapshot) — the local database revert lands some time after the click
-   * resolves. Confirmed live gotchas, both required to reliably observe
+   * resolves. Two gotchas, both required to reliably observe
    * the reverted state afterward:
    * - Reloading (or otherwise tearing down the renderer) before the
    *   rollback lands can abort it entirely, leaving the pre-discard value
@@ -463,11 +463,11 @@ export class CloudSyncPage extends BasePage {
     const names: string[] = [];
     for (let i = 0; i < count; i++) {
       names.push(
-        (await rows.nth(i).locator("span.truncate").first().innerText()).trim(),
+        (await rows.nth(i).getByTestId("merge-conflict-name").innerText()).trim(),
       );
       await rows
         .nth(i)
-        .locator("label", { hasText: version })
+        .getByTestId(`merge-conflict-choice-${version.toLowerCase()}`)
         .click();
     }
     await this.mergeConflictsDialog
@@ -553,10 +553,7 @@ export class CloudSyncPage extends BasePage {
    */
   async deleteWorkspacePermanently(): Promise<void> {
     await this.page
-      .locator("label")
-      .filter({
-        has: this.page.getByRole("heading", { name: "Delete Permanently" }),
-      })
+      .getByRole("radio", { name: "Delete Permanently" })
       .click();
     await this.page.getByRole("button", { name: "Delete Workspace" }).click();
   }
@@ -580,14 +577,14 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Whether `name`'s dashboard card renders a delete ("trash") button at
-   * all — confirmed live: it's conditionally rendered only for cards with
+   * all — it's conditionally rendered only for cards with
    * `scope === 'unsynced' && remoteId`, not merely hidden via CSS, so a
    * synced or local-only card has zero matching elements rather than one
    * with `opacity: 0`. An unsynced card's row itself can render a beat
    * after local ones (its remote-files query resolves asynchronously), so
    * this waits for the row to attach first rather than reading `count()`
    * immediately — a bare immediate read raced that query and produced a
-   * false negative on a genuinely-unsynced card, confirmed live.
+   * false negative on a genuinely-unsynced card.
    */
   async hasFileDeleteButton(name: string): Promise<boolean> {
     const card = this.fileCard(name);
@@ -599,7 +596,7 @@ export class CloudSyncPage extends BasePage {
 
   /**
    * Whether an unsynced card's delete button is currently visually
-   * revealed. Confirmed live: the button always exists in the DOM (see
+   * revealed. The button always exists in the DOM (see
    * `hasFileDeleteButton()`) but sits at `opacity: 0` until the card is
    * hovered or focused (Tailwind `group-hover`/`group-focus`), animated by
    * a `transition-all` — reading `getComputedStyle` once right after
@@ -608,7 +605,7 @@ export class CloudSyncPage extends BasePage {
    * button *reached* opacity 1, though — reading right after an action
    * that's expected to hide it again (moving hover elsewhere, blurring)
    * can still catch the outgoing transition's stale "1" before it's had
-   * time to animate back down, confirmed live. This polls until the
+   * time to animate back down. This polls until the
    * button has no running transition/animation left before taking a
    * single settled reading, rather than polling toward an assumed target
    * value.

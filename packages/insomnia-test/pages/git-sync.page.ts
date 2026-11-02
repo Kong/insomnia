@@ -387,7 +387,7 @@ export class GitSyncPage extends BasePage {
    */
   async openHistory(): Promise<void> {
     await this.openSyncMenu();
-    await this.syncMenu.getByText("History", { exact: true }).click();
+    await this.syncMenu.getByTestId("git-sync-menu-history").click();
     await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -516,7 +516,7 @@ export class GitSyncPage extends BasePage {
    * to appear. Requires `openBranchesDialog()` to have been called first.
    */
   async getNewBranchError(): Promise<string> {
-    const error = this.branchesDialog.locator("form p");
+    const error = this.branchesDialog.getByTestId("git-branch-create-error");
     await expect(error).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await error.innerText()).trim();
   }
@@ -639,14 +639,12 @@ export class GitSyncPage extends BasePage {
 
   private readonly entityCard = (entityName: string, typeLabel?: string) => {
     const card = this.commitDialog
-      .locator('div.border-l-2')
-      .filter({ has: this.page.locator('span.font-semibold').getByText(entityName, { exact: true }) });
+      .getByTestId('diff-entity-card')
+      .filter({ has: this.page.getByTestId('diff-entity-name').getByText(entityName, { exact: true }) });
     return typeLabel ? card.filter({ has: this.page.getByText(typeLabel, { exact: true }) }) : card;
   };
 
-  private readonly visualDiffNotice = this.commitDialog.getByText(
-    /Unable to parse this file for a visual diff|No requests, folders, environments or settings changed|This is not a valid Insomnia file/,
-  );
+  private readonly visualDiffNotice = this.commitDialog.getByTestId('visual-diff-notice');
 
   /**
    * Clicks a file's row in the open Commit modal to open its diff, and
@@ -695,15 +693,15 @@ export class GitSyncPage extends BasePage {
    */
   async getEntityCardNames(): Promise<string[]> {
     await this.commitDialog
-      .locator('div.border-l-2')
+      .getByTestId('diff-entity-card')
       .first()
       .or(this.visualDiffNotice)
       .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-    const cards = this.commitDialog.locator('div.border-l-2');
+    const cards = this.commitDialog.getByTestId('diff-entity-card');
     const count = await cards.count();
     const result: string[] = [];
     for (let i = 0; i < count; i++) {
-      result.push((await cards.nth(i).locator('span.font-semibold').first().innerText()).trim());
+      result.push((await cards.nth(i).getByTestId('diff-entity-name').first().innerText()).trim());
     }
     return result;
   }
@@ -744,10 +742,10 @@ export class GitSyncPage extends BasePage {
    * Only meaningful for cards with a badge and URL, e.g. a request's.
    */
   async getEntityCardHeader(entityName: string): Promise<{ badge: string; name: string; url: string; onOneLine: boolean }> {
-    const header = this.entityCard(entityName).locator('div.items-baseline').first();
-    const badge = header.locator('span').nth(0);
-    const name = header.locator('span.font-semibold');
-    const url = header.locator('span.font-mono');
+    const header = this.entityCard(entityName).getByTestId('diff-entity-header').first();
+    const badge = header.getByTestId('diff-entity-badge');
+    const name = header.getByTestId('diff-entity-name');
+    const url = header.getByTestId('diff-entity-detail');
     const boxes = [await badge.boundingBox(), await name.boundingBox(), await url.boundingBox()];
     const onOneLine = boxes.every(
       box => box !== null && box.y < boxes[1]!.y + boxes[1]!.height && box.y + box.height > boxes[1]!.y,
@@ -832,11 +830,10 @@ export class GitSyncPage extends BasePage {
   async stageEntitiesInQuickSuccession(entityNames: string[]): Promise<void> {
     await this.commitDialog.evaluate((root, names) => {
       for (const name of names) {
-        const card = [...root.querySelectorAll('div.border-l-2')].find(candidate =>
-          [...candidate.querySelectorAll('span.font-semibold')].some(span => span.textContent?.trim() === name),
+        const card = [...root.querySelectorAll('[data-testid="diff-entity-card"]')].find(candidate =>
+          [...candidate.querySelectorAll('[data-testid="diff-entity-name"]')].some(span => span.textContent?.trim() === name),
         );
-        const button = [...(card?.querySelectorAll('button') ?? [])].find(candidate => candidate.textContent?.trim() === 'Stage');
-        button?.click();
+        card?.querySelector<HTMLElement>('[data-testid="diff-entity-stage"]')?.click();
       }
     }, entityNames);
     await expect(this.entityCard(entityNames[0])).toBeHidden({ timeout: DEFAULT_TIMEOUT });
@@ -849,11 +846,11 @@ export class GitSyncPage extends BasePage {
    */
   async stageEntityThenFileInQuickSuccession(entityName: string): Promise<void> {
     await this.commitDialog.evaluate((root, name) => {
-      const card = [...root.querySelectorAll('div.border-l-2')].find(candidate =>
-        [...candidate.querySelectorAll('span.font-semibold')].some(span => span.textContent?.trim() === name),
+      const card = [...root.querySelectorAll('[data-testid="diff-entity-card"]')].find(candidate =>
+        [...candidate.querySelectorAll('[data-testid="diff-entity-name"]')].some(span => span.textContent?.trim() === name),
       );
-      const entityButton = [...(card?.querySelectorAll('button') ?? [])].find(candidate => candidate.textContent?.trim() === 'Stage');
-      const fileButton = [...root.querySelectorAll('button')].find(candidate => candidate.textContent?.trim() === 'Stage this file');
+      const entityButton = card?.querySelector<HTMLElement>('[data-testid="diff-entity-stage"]');
+      const fileButton = root.querySelector<HTMLElement>('[data-testid="stage-this-file"]');
       entityButton?.click();
       fileButton?.click();
     }, entityName);
@@ -918,7 +915,7 @@ export class GitSyncPage extends BasePage {
    * environments or settings changed…"). Waits for it to appear.
    */
   async getVisualDiffNotice(): Promise<string> {
-    const notice = this.visualDiffNotice.locator('xpath=..');
+    const notice = this.visualDiffNotice;
     await expect(notice).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await notice.innerText()).replaceAll('\n', ' ').trim();
   }

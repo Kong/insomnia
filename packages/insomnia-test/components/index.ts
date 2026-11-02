@@ -17,6 +17,7 @@ export * from "./request-url-bar.component";
 export * from "./response-viewer.component";
 export * from "./search-field.component";
 export * from "./select.component";
+export * from "./tab-bar.component";
 export * from "./table.component";
 export * from "./tabs.component";
 export * from "./tag.component";

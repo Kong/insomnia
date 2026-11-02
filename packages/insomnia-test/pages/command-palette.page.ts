@@ -6,7 +6,7 @@ import { BasePage } from "./base.page";
 export class CommandPalettePage extends BasePage {
   private readonly DIALOG = '[aria-label="Command palette dialog"]';
   // The results listbox is a Popover portaled outside the dialog's own DOM
-  // subtree (confirmed live), so it can't be scoped under DIALOG.
+  // subtree, so it can't be scoped under DIALOG.
   private readonly OPTION = '[role="listbox"] [role="option"]';
   private readonly TRIGGER_BUTTON = '[data-testid="quick-search"]';
 
@@ -25,7 +25,7 @@ export class CommandPalettePage extends BasePage {
   /**
    * Reads back the names of every currently listed result, across all
    * sections (Requests/API Collections/Environments/etc — the "Collections
-   * and documents" section was renamed "API Collections" by INS-3528).
+   * and documents" section was renamed "API Collections").
    */
   async getResultNames(): Promise<string[]> {
     return this.page.locator(this.OPTION).allInnerTexts();

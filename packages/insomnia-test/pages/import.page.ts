@@ -5,14 +5,14 @@ import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {
-  // Renamed from "Select Collection" — INS-3528.
+  // Formerly "Select Collection".
   private readonly COLLECTION_SELECT =
     '[role="dialog"] select[aria-label="Select API Collection"]';
   private readonly CURL_TEXTAREA = '[role="dialog"] textarea[name="curl"]';
   private readonly DIALOG = '[role="dialog"]';
   private readonly FILE_INPUT =
     '[role="dialog"] input[data-test-id="import-file-input"]';
-  private readonly HEADER = '[role="dialog"] .modal__header__children';
+  private readonly HEADER = '[role="dialog"] [data-testid="import-modal-header"]';
   private readonly MCP_URL_INPUT = '[role="dialog"] input[name="mcp"]';
   private readonly PROJECT_SELECT =
     '[role="dialog"] select[aria-label="Select Project"]';

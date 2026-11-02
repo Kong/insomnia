@@ -8,7 +8,7 @@ import { BasePage } from "./base.page";
 
 export class CertificatesPage extends BasePage {
   /**
-   * Confirmed live: the "Manage Certificates" overlay is actually two
+   * The "Manage Certificates" overlay is actually two
    * nested `role="dialog"` elements — an inner, named section holding
    * only the header/CA-cert-picker/buttons, and an outer, unnamed one
    * that also contains the (virtualized, non-descendant-queryable)
@@ -49,7 +49,7 @@ export class CertificatesPage extends BasePage {
   /**
    * Uploads a PEM file as the workspace's single CA Certificate via its
    * hidden native file input (not an Electron `dialog.showOpenDialog` —
-   * confirmed live this control is a plain `<input type="file">`, so no
+   * this control is a plain `<input type="file">`, so no
    * `stubFileChooser()` is needed here). Overwrites any CA certificate
    * already set.
    */
@@ -65,7 +65,7 @@ export class CertificatesPage extends BasePage {
   /**
    * Adds a client certificate via "Add client certificate" -> the
    * "Add Client Certificate" form's default "Certificate" tab (PEM cert +
-   * key files, not the "PFX or PKCS12" tab — unconfirmed live, not covered
+   * key files, not the "PFX or PKCS12" tab — not covered
    * here). Both file fields are plain native `<input type="file">`
    * elements, set directly via `setInputFiles()` with no dialog stubbing.
    */
@@ -108,16 +108,13 @@ export class CertificatesPage extends BasePage {
   }
 
   /**
-   * The CA Certificate's own row. Confirmed live: unlike the (host-keyed,
+   * The CA Certificate's own row. Unlike the (host-keyed,
    * possibly-multiple) Client Certificates list below it, the single CA
-   * Certificate is NOT a `role="row"` grid item — it's a plain `<div>`
-   * sibling immediately following the section's own description
-   * paragraph, so it's located structurally rather than by role.
+   * Certificate is NOT a `role="row"` grid item, so it is located by its
+   * test id.
    */
   private caCertificateRow(): Locator {
-    return this.dialog.locator(
-      'p:has-text("PEM format certificates") + div',
-    );
+    return this.dialog.getByTestId("ca-certificate-row");
   }
 
   /**

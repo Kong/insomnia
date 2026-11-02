@@ -43,19 +43,19 @@ export class TemplateTagPage extends BasePage {
   }
 
   /**
-   * Reads the `hash` tag's "Algorithm" argument (index 0).
+   * Reads the `hash` tag's "Algorithm" argument.
    */
   async getAlgorithm(): Promise<string> {
-    return this.getArgumentField(0).getByRole("combobox").inputValue();
+    return this.getArgumentField("algorithm").getByRole("combobox").inputValue();
   }
 
   /**
-   * Switches the `hash` tag's "Algorithm" argument (index 0).
+   * Switches the `hash` tag's "Algorithm" argument.
    */
   async setAlgorithm(algorithm: HashAlgorithm): Promise<void> {
-    const select = this.getArgumentField(0).getByRole("combobox");
+    const select = this.getArgumentField("algorithm").getByRole("combobox");
     await select.selectOption(algorithm);
-    // Confirmed live: reading .inputValue() immediately after
+    // Reading .inputValue() immediately after
     // selectOption() can momentarily still report the old value in this
     // Electron app, even though the underlying property/app state has
     // already updated — poll until it settles so callers never race it.
@@ -68,34 +68,34 @@ export class TemplateTagPage extends BasePage {
   }
 
   /**
-   * Reads the `hash` tag's "Digest Encoding" argument (index 1).
+   * Reads the `hash` tag's "Digest Encoding" argument.
    */
   async getDigestEncoding(): Promise<string> {
-    return this.getArgumentField(1).getByRole("combobox").inputValue();
+    return this.getArgumentField("digest-encoding").getByRole("combobox").inputValue();
   }
 
   /**
-   * Switches the `hash` tag's "Digest Encoding" argument (index 1).
+   * Switches the `hash` tag's "Digest Encoding" argument.
    */
   async setDigestEncoding(encoding: DigestEncoding): Promise<void> {
-    const select = this.getArgumentField(1).getByRole("combobox");
+    const select = this.getArgumentField("digest-encoding").getByRole("combobox");
     await select.selectOption(encoding);
     await expect(select).toHaveValue(encoding, { timeout: DEFAULT_TIMEOUT });
     await this.waitForPreviewSettled();
   }
 
   /**
-   * Reads the `hash` tag's "Input" argument (index 2) — the raw value to hash.
+   * Reads the `hash` tag's "Input" argument — the raw value to hash.
    */
   async getInput(): Promise<string> {
-    return this.getArgumentField(2).locator("input").inputValue();
+    return this.getArgumentField("input").getByRole("textbox").inputValue();
   }
 
   /**
-   * Sets the `hash` tag's "Input" argument (index 2) — the raw value to hash.
+   * Sets the `hash` tag's "Input" argument — the raw value to hash.
    */
   async setInput(value: string): Promise<void> {
-    const input = this.getArgumentField(2).locator("input");
+    const input = this.getArgumentField("input").getByRole("textbox");
     await input.fill(value);
     await expect(input).toHaveValue(value);
     await this.waitForPreviewSettled();
@@ -114,7 +114,7 @@ export class TemplateTagPage extends BasePage {
   /**
    * Polls the Live Preview until it reports the same non-"rendering..."
    * value across two consecutive reads. A single non-"rendering..." read
-   * isn't enough: confirmed live the app's own preview recompute (kicked
+   * isn't enough: the app's own preview recompute (kicked
    * off by an argument change) can itself lag behind the change by tens
    * of ms, so a poll that starts before the recompute has actually begun
    * observes last render's now-stale value and passes immediately. Worse,
@@ -147,7 +147,7 @@ export class TemplateTagPage extends BasePage {
    * select to a cloud credential already created via
    * `PreferencesFlow.addCloudCredentials()` — only credentials matching
    * this tag's own provider argument (e.g. `{% vault 'aws' %}` only lists
-   * AWS credentials) appear as options. Confirmed live: the Live Preview's
+   * AWS credentials) appear as options. The Live Preview's
    * re-fetch off the new selection lags behind `selectOption()` itself
    * resolving, and by an inconsistent amount and through more than one
    * transient shape (an empty value, or a fixed "Credential ID or
@@ -219,7 +219,7 @@ export class TemplateTagPage extends BasePage {
     return inputType;
   }
 
-  private getArgumentField(index: number): Locator {
-    return this.page.locator(`${this.MODAL} label[data-arg-index="${index}"]`);
+  private getArgumentField(arg: "algorithm" | "digest-encoding" | "input"): Locator {
+    return this.page.locator(this.MODAL).getByTestId(`tag-arg-${arg}`);
   }
 }

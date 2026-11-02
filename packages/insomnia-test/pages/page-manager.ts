@@ -20,10 +20,12 @@ import { KonnectPage } from "./konnect.page";
 import { McpClientPage } from "./mcp-client.page";
 import { MockServerPage } from "./mock-server.page";
 import { PreferencesPage } from "./preferences.page";
+import { ProjectPage } from "./project.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
 import { RunnerPage } from "./runner.page";
 import { SocketIORequestPage } from "./socket-io-request.page";
+import { SpecPage } from "./spec.page";
 import { TemplateTagPage } from "./template-tag.page";
 import { VariableSourcePage } from "./variable-source.page";
 import { WebSocketRequestPage } from "./web-socket-request.page";
@@ -271,6 +273,20 @@ export class PageManager {
       "webSocketRequest",
       () => new WebSocketRequestPage(this.page, this.insomnia),
     );
+  }
+
+  /**
+   * Lazily creates (and caches) the ProjectPage instance.
+   */
+  get projectPage(): ProjectPage {
+    return this.getOrCreate("project", () => new ProjectPage(this.page, this.insomnia));
+  }
+
+  /**
+   * Lazily creates (and caches) the SpecPage instance.
+   */
+  get specPage(): SpecPage {
+    return this.getOrCreate("spec", () => new SpecPage(this.page, this.insomnia));
   }
 
   /**

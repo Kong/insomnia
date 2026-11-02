@@ -11,7 +11,7 @@ import { BaseComponent } from "./base.component";
  */
 export class BreadcrumbComponent extends BaseComponent {
   constructor(page: Page) {
-    super(page, page.locator('[data-testid^="workspace-breadcrumb-level-"]').first().locator("xpath=ancestor::ol[1]"));
+    super(page, page.getByTestId("workspace-breadcrumbs"));
   }
 
   level(index: number): Locator {
