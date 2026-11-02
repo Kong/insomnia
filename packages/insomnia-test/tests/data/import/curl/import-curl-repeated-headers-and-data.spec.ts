@@ -44,8 +44,8 @@ test("Import HTTP Request by Curl Command With Repeated -H and -d Flags Merges H
 
   const expectedData = `${firstDataKey}=${firstDataValue}&${secondDataKey}=${secondDataValue}`;
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: expectedData,
     headers: expect.objectContaining({
       [headerName.toLowerCase()]: `${firstHeaderValue}, ${secondHeaderValue}`,
