@@ -1,8 +1,7 @@
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, setGitSyncFeatureFlag } from "@package/misc/fixtures";
 import { test } from "@package/misc/git-fixtures";
+import { expect } from "@playwright/test";
 
 test.beforeAll(async () => {
   await setGitSyncFeatureFlag(false);
