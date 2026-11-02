@@ -20,8 +20,8 @@ test(
     const dataPath = await appFlow.getDataPath();
     const pluginDir = path.join(dataPath, 'plugins', `insomnia-plugin-test`);
     fs.mkdirSync(pluginDir, { recursive: true });
-    fs.copyFileSync(path.join(__dirname, 'plugin-package.json'), path.join(pluginDir, 'package.json'));
-    fs.copyFileSync(path.join(__dirname, 'plugin-main.js'), path.join(pluginDir, 'main.js'));
+    fs.copyFileSync(path.join(import.meta.dirname, 'plugin-package.json'), path.join(pluginDir, 'package.json'));
+    fs.copyFileSync(path.join(import.meta.dirname, 'plugin-main.js'), path.join(pluginDir, 'main.js'));
     await preferencesPluginsPage.reloadPlugins();
 
     const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));

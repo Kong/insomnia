@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "../../../misc/fixtures";
 
-const LEGACY_DB_DIR = path.join(__dirname, "insomnia-legacy-db");
+const LEGACY_DB_DIR = path.join(import.meta.dirname, "insomnia-legacy-db");
 
 const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
