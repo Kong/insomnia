@@ -26,16 +26,16 @@ test("Verify restoring an earlier snapshot removes a request added and committed
   // The restore lands asynchronously and a reload before then aborts it, so
   // wait for the live sidebar to reflect it before reloading.
   await expect
-    .poll(() => httpRequestFlow.get(addedName, collection), {
+    .poll(() => httpRequestFlow.get(addedName), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toBeUndefined();
   await user.page.reload();
 
   await expect
-    .poll(() => httpRequestFlow.get(addedName, collection), {
+    .poll(() => httpRequestFlow.get(addedName), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toBeUndefined();
-  expect(await httpRequestFlow.get("New Request", collection)).toBeDefined();
+  expect(await httpRequestFlow.get("New Request")).toBeDefined();
 });
