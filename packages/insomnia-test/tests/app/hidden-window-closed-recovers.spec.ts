@@ -64,5 +64,5 @@ test("Verify closing the hidden script-execution window mid-timeout surfaces the
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(timeoutMessageVisible).toBe(true);
-  expect(laterResponse.statusCode).toBe(200);
+  expect(laterResponse.statusBar.code).toBe(200);
 });
