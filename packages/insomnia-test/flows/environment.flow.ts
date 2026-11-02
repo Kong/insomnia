@@ -52,7 +52,7 @@ export class EnvironmentFlow extends BaseFlow {
    */
   @step()
   async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
-    await this.pageManager.environmentPage.createSubEnvironment(
+    await this.addAndRenameSubEnvironment(
       environment.name,
       environment.isPrivate ?? false,
     );
@@ -191,10 +191,27 @@ export class EnvironmentFlow extends BaseFlow {
     await workspace.clickNode(node);
 
     await environmentPage.openCollectionEnvironmentManager();
-    await environmentPage.createSubEnvironment(environment.name, environment.isPrivate ?? false);
+    await this.addAndRenameSubEnvironment(environment.name, environment.isPrivate ?? false);
     const isPrivate = await environmentPage.isEnvironmentPrivate(environment.name);
     await environmentPage.closeCollectionEnvironmentManager();
     return { isPrivate };
+  }
+
+  /**
+   * Adds a shared or private sub-environment from the sidebar, waits for the
+   * new row to appear, then renames it from its auto-generated default name
+   * to `name`.
+   */
+  private async addAndRenameSubEnvironment(
+    name: string,
+    isPrivate: boolean,
+  ): Promise<void> {
+    const environmentPage = this.pageManager.environmentPage;
+    const countBefore = await environmentPage.getEnvironmentCount();
+    await environmentPage.clickAddSubEnvironment(isPrivate);
+    await environmentPage.waitForEnvironmentCount(countBefore + 1);
+    const defaultName = await environmentPage.getLastEnvironmentName();
+    await environmentPage.renameEnvironment(defaultName, name);
   }
 
   private async applyVariables(environment: Environment): Promise<Environment> {

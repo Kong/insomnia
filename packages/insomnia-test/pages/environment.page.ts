@@ -53,21 +53,13 @@ export class EnvironmentPage extends BasePage {
     'button[aria-label="Select an API Collection Environment"]';
 
   /**
-   * Creates a new shared or private sub-environment under the current
-   * page's own Base Environment via the sidebar's always-visible "Add Sub
-   * Environment"/"Add Private Sub Environment" button, then renames it
-   * from its auto-generated default name to the requested one. Waits for
-   * the sidebar row count to increase before assuming the new environment
-   * exists. Only ever nests directly under Base Environment — the app has
-   * no way to create a sub-environment nested under another sub-environment.
+   * Clicks the sidebar's always-visible "Add Sub Environment"/"Add Private
+   * Sub Environment" button, which nests a new sub-environment directly
+   * under the current page's own Base Environment (the app has no way to
+   * nest one under another sub-environment). Then waits for the button's
+   * tooltip to close.
    */
-  async createSubEnvironment(
-    name: string,
-    isPrivate = false,
-  ): Promise<void> {
-    const rows = this.page.locator(`${this.SIDEBAR} [role="row"]`);
-    const countBefore = await rows.count();
-
+  async clickAddSubEnvironment(isPrivate = false): Promise<void> {
     const button = isPrivate
       ? this.ADD_PRIVATE_SUB_ENVIRONMENT_BUTTON
       : this.ADD_SUB_ENVIRONMENT_BUTTON;
@@ -78,12 +70,36 @@ export class EnvironmentPage extends BasePage {
     await expect(this.page.locator('[role="tooltip"]')).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
+  }
 
-    await expect(rows).toHaveCount(countBefore + 1, {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    const currentName = (await rows.last().getAttribute("aria-label")) ?? "";
-    await this.renameEnvironment(currentName, name);
+  /**
+   * Counts the environment rows currently listed in the sidebar.
+   */
+  async getEnvironmentCount(): Promise<number> {
+    return this.page.locator(`${this.SIDEBAR} [role="row"]`).count();
+  }
+
+  /**
+   * Waits for the sidebar to list exactly `count` environment rows.
+   */
+  async waitForEnvironmentCount(count: number): Promise<void> {
+    await expect(this.page.locator(`${this.SIDEBAR} [role="row"]`)).toHaveCount(
+      count,
+      { timeout: DEFAULT_TIMEOUT },
+    );
+  }
+
+  /**
+   * Reads the name of the last environment row in the sidebar, i.e. the
+   * most recently added one.
+   */
+  async getLastEnvironmentName(): Promise<string> {
+    return (
+      (await this.page
+        .locator(`${this.SIDEBAR} [role="row"]`)
+        .last()
+        .getAttribute("aria-label")) ?? ""
+    );
   }
 
   /**
