@@ -41,6 +41,6 @@ test("Verify Overwriting A Mock Route With A Request Response", async ({
   await mockServerFlow.overwriteRouteFromResponse(server, route);
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusCode).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
-  expect(responseView.body).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
+  expect(responseView.statusBar.code).toBe(MOCK_BIN_SOURCE_RESPONSE.statusCode);
+  expect(responseView.preview).toEqual(MOCK_BIN_SOURCE_RESPONSE.body);
 });

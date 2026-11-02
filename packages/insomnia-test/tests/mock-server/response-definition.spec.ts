@@ -38,9 +38,9 @@ test("Verify Mock Route Response Definition Is Returned By Test", async ({
   });
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusCode).toBe(201);
-  expect(responseView.statusMessage).toBe(statusText);
-  expect(responseView.body).toEqual(body);
+  expect(responseView.statusBar.code).toBe(201);
+  expect(responseView.statusBar.message).toBe(statusText);
+  expect(responseView.preview).toEqual(body);
   expect(responseView.headers).toEqual(
     expect.arrayContaining([expect.objectContaining(header)]),
   );
