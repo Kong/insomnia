@@ -2,7 +2,6 @@ import type {
   AuthTypeOAuth1,
   AuthTypeOAuth2,
   Request as AppRequest,
-  RequestAuthentication,
   RequestBody as AppRequestBody,
   RequestBodyParameter,
   RequestHeader,
@@ -10,6 +9,10 @@ import type {
 } from "insomnia-data";
 
 import type { HttpMethod } from "../enums/http-method";
+import type { RequestAuthentication as BaseRequestAuthentication } from "./authentication";
+
+/** Base auth types plus OAuth 1.0, which only the HTTP Auth tab offers. */
+export type RequestAuthentication = BaseRequestAuthentication | AuthTypeOAuth1;
 
 export type HttpRequestBody = Pick<
   AppRequestBody,
@@ -57,7 +60,6 @@ export class HttpRequest implements HttpRequestInit {
 export type {
   AuthTypeOAuth1,
   AuthTypeOAuth2,
-  RequestAuthentication,
   RequestBodyParameter,
   RequestHeader,
   RequestParameter,

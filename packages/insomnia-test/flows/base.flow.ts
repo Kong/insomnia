@@ -2,9 +2,9 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { expect } from "@playwright/test";
-import type { RequestAuthentication } from "insomnia-data";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import type { RequestAuthentication } from "../models/authentication";
 import type { AuthTabComponent } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
 import type { FlowContext } from "./flow-context";
@@ -16,31 +16,39 @@ export abstract class BaseFlow {
   ) {}
 
   /**
-   * Applies `authentication` to a request pane's Auth tab. Only None,
-   * Basic, API Key, Bearer Token, OAuth 2.0 and the single-token type are
-   * wired up here.
+   * Applies `authentication` to a request pane's Auth tab. Only the types
+   * in `RequestAuthentication` are supported; anything else is a compile
+   * error, and a runtime error if one slips through a cast.
    */
   protected async applyAuthentication(
     auth: AuthTabComponent,
     authentication: RequestAuthentication,
   ): Promise<void> {
-    if (authentication.type === "none") {
-      await auth.setNoAuthentication();
-    }
-    if (authentication.type === "bearer") {
-      await auth.setBearerFields(authentication);
-    }
-    if (authentication.type === "basic") {
-      await auth.setBasicFields(authentication);
-    }
-    if (authentication.type === "apikey") {
-      await auth.setApiKeyFields(authentication);
-    }
-    if (authentication.type === "oauth2") {
-      await auth.setOAuth2Fields(authentication);
-    }
-    if (authentication.type === "singleToken") {
-      await auth.setSingleTokenFields(authentication);
+    switch (authentication.type) {
+      case "none": {
+        return auth.setNoAuthentication();
+      }
+      case "bearer": {
+        return auth.setBearerFields(authentication);
+      }
+      case "basic": {
+        return auth.setBasicFields(authentication);
+      }
+      case "apikey": {
+        return auth.setApiKeyFields(authentication);
+      }
+      case "oauth2": {
+        return auth.setOAuth2Fields(authentication);
+      }
+      case "singleToken": {
+        return auth.setSingleTokenFields(authentication);
+      }
+      default: {
+        const unsupported: never = authentication;
+        throw new Error(
+          `Unsupported authentication type: ${(unsupported as { type: string }).type}`,
+        );
+      }
     }
   }
 

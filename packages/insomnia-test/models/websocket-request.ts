@@ -1,11 +1,11 @@
 import type {
-  RequestAuthentication,
   RequestHeader,
   RequestParameter,
   WebSocketRequest as AppWebSocketRequest,
 } from "insomnia-data";
 
 import type { ContentType } from "../enums/content-type";
+import type { RequestAuthentication } from "./authentication";
 
 export interface WebSocketRequestBody {
   contentType: ContentType;

@@ -1,8 +1,9 @@
 import type {
-  RequestAuthentication,
   RequestHeader,
   SocketIORequest as AppSocketIORequest,
 } from "insomnia-data";
+
+import type { RequestAuthentication } from "./authentication";
 
 export interface SocketIOMessage {
   eventName: string;
