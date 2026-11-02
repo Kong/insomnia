@@ -4,11 +4,11 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { waitForExportedFile } from "../../misc/export-file";
-import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
-import { MockServer } from "../../models/mock-server";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { waitForExportedFile } from "@package/misc/export-file";
+import { MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
+import { MockServer } from "@package/models/mock-server";
+import { Project } from "@package/models/project";
 
 test("Verify Exported Mock Server Can Be Imported Into Another Project", async ({
   user,
