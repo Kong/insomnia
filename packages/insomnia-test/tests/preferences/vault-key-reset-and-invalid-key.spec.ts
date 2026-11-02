@@ -1,8 +1,7 @@
 import * as crypto from "node:crypto";
 
-import { expect } from "@playwright/test";
-
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 const testWithVaultSalt = test.extend({
   vaultSalt: async ({}, use) => {

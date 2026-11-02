@@ -1,12 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
 import { TreeNodeType } from '@package/enums/tree-node-types';
 import { HTTP_SERVER, test } from '@package/misc/fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test(
   'Verify dragging a request between a Cloud project and a Local project moves it in both directions',

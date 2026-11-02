@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
@@ -9,6 +7,7 @@ import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Folder } from "@package/models/folder";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify per-node-type Settings dialogs and inline rename via the sidebar", async ({
   user,
