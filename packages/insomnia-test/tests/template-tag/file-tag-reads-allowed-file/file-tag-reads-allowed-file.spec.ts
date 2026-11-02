@@ -9,7 +9,7 @@ import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
-const filePath = path.join(__dirname, "fixture.txt");
+const filePath = path.join(import.meta.dirname, "fixture.txt");
 
 test("Verify the file Tag Reads Contents from an Allowed Folder", async ({
   user,
@@ -17,7 +17,7 @@ test("Verify the file Tag Reads Contents from an Allowed Folder", async ({
   const { workspaceFlow, httpRequestFlow, preferencesFlow, templateTagFlow } =
     user.flowManager;
 
-  await preferencesFlow.set({ dataFolders: [__dirname] });
+  await preferencesFlow.set({ dataFolders: [import.meta.dirname] });
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
