@@ -29,7 +29,7 @@ test('Verify Event Stream Request Sends the OAuth 2.0 Header Until Authenticatio
   const authenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`Authorization: Bearer ${tokens.accessToken}`);
@@ -38,9 +38,9 @@ test('Verify Event Stream Request Sends the OAuth 2.0 Header Until Authenticatio
   const unauthenticatedResponse = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('GET /sse-events/1');
-  expect(await unauthenticatedResponse.console?.()).not.toContain('Authorization:');
+  expect(await unauthenticatedResponse.console()).not.toContain('Authorization:');
 });

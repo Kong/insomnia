@@ -39,7 +39,7 @@ test("Verify Create WebSocket Request", async ({ user }) => {
     ]),
   );
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
     .poll(
