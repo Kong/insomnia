@@ -50,5 +50,5 @@ test("Verify the hidden script window automatically restarts after an infinite-l
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(timeoutMessageVisible).toBe(true);
-  expect(laterResponse.statusCode).toBe(200);
+  expect(laterResponse.statusBar.code).toBe(200);
 });
