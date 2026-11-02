@@ -5,10 +5,10 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { DEFAULT_TIMEOUT } from "../../misc/fixtures";
-import { GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/fixtures";
+import { GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import { Project } from "@package/models/project";
 
 test(
   "Verify relocating a Git Sync project's repository to a new folder updates the displayed path",
