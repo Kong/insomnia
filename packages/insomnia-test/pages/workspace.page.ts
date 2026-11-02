@@ -115,10 +115,8 @@ export class Tree {
   /**
    * Rebuilds the parent/child hierarchy from a flat list of tree rows by
    * sorting them into visual order and linking each row to the row whose
-   * key is its `parentId`. A row whose parent is not in the list (e.g. a
-   * project, whose parent is the organization) becomes a root. Pinned
-   * requests are listed under the "Pinned" header row that precedes them,
-   * not under their real parent.
+   * key is its `parentId`. A row with no `parentId` (e.g. a project) or
+   * whose parent is not in the list becomes a root.
    */
   static fromRows(rows: TreeRow[]): Tree {
     const ordered = [...rows].sort((a, b) => a.index - b.index);
@@ -133,12 +131,8 @@ export class Tree {
     }
 
     const roots: TreeNode[] = [];
-    let pinnedHeaderKey: string | undefined;
     for (const row of ordered) {
-      if (row.nodeType === "pinnedHeader") pinnedHeaderKey = row.key;
-      const parentKey =
-        row.nodeType === "pinnedRequest" ? pinnedHeaderKey : row.parentId;
-      const parent = parentKey ? nodes.get(parentKey) : undefined;
+      const parent = row.parentId ? nodes.get(row.parentId) : undefined;
       (parent ? parent.children : roots).push(nodes.get(row.key)!);
     }
 
