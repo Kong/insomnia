@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "@package/misc/fixtures";
 import { McpClient } from "@package/models/mcp-client";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Disconnecting an MCP Client Closes the Connection and It Can Reconnect", async ({
   user,
