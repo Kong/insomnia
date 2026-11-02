@@ -213,12 +213,17 @@ export class Tree {
         name: /^Expand /,
       });
       try {
-        await stableRow.scrollIntoViewIfNeeded({ timeout: DEFAULT_TIMEOUT });
-        await expandButton.click({ timeout: DEFAULT_TIMEOUT });
+        // A click can be swallowed when the tree re-renders right after it
+        // (the row stays collapsed), so re-click until the toggle flips.
+        await expect(async () => {
+          if (!(await expandButton.isVisible())) return;
+          await stableRow.scrollIntoViewIfNeeded({ timeout: DEFAULT_TIMEOUT });
+          await expandButton.click({ timeout: DEFAULT_TIMEOUT });
+          await expect(expandButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+        }).toPass({ timeout: DEFAULT_TIMEOUT });
       } catch (error) {
         throw new Error(`Failed to expand tree row "${key}"`, { cause: error });
       }
-      await expect(expandButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     }
   }
 
