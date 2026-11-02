@@ -27,7 +27,7 @@ import { invariant } from '~/common/utils/invariant';
 import { version } from '../../../package.json';
 import { type AuthTypes, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { cannotAccessPathError, describeByteSize, hasAuthHeader } from '../../common/misc';
-import { parseHeaderStrings } from '../../network/parse-header-strings';
+import { getCookieHeaderValue, parseHeaderStrings } from '../../network/parse-header-strings';
 import { assertPathAllowed, insecureReadFile, isPathAllowed } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 export interface CurlRequestOptions {
@@ -124,6 +124,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
 
       invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await insecureReadFile(caCertficatePath));
+      const cookieHeaderValue = req.settingSendCookies ? getCookieHeaderValue(req.headers, authHeader) : undefined;
 
       const { curl, debugTimeline } = await createConfiguredCurlInstance({
         req: { ...req, url: finalUrl },
@@ -132,6 +133,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         certificates,
         socketPath,
         noDecompress,
+        cookieHeaderValue,
       });
       const { method, body } = req;
       // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
@@ -348,6 +350,7 @@ export const createConfiguredCurlInstance = async ({
   certificates,
   socketPath,
   noDecompress = false,
+  cookieHeaderValue,
 }: {
   req: RequestUsedHere;
   settings: SettingsUsedHere;
@@ -355,6 +358,7 @@ export const createConfiguredCurlInstance = async ({
   caCert: string | null;
   socketPath?: string;
   noDecompress?: boolean;
+  cookieHeaderValue?: string;
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
   const curl = new Curl();
@@ -489,6 +493,11 @@ export const createConfiguredCurlInstance = async ({
 
     for (const { name, value } of cookies) {
       curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
+    }
+    // libcurl appends this string to the Cookie header it builds from the engine, so the
+    // user-authored Cookie header ends up in the same header instead of a competing second one.
+    if (cookieHeaderValue) {
+      curl.setOpt(Curl.option.COOKIE, cookieHeaderValue);
     }
     // set-cookies from previous redirects
     if (cookieJar.cookies.length) {
