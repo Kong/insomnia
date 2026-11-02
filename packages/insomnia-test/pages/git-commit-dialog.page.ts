@@ -319,8 +319,8 @@ export class GitCommitDialogPage extends BasePage {
    * from the view switch's highlighted button.
    */
   async getDiffView(): Promise<GitDiffView> {
-    const visualClass = (await this.commitDialog.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('class')) ?? '';
-    return visualClass.includes('bg-(--hl-sm)') ? GitDiffView.Visual : GitDiffView.Text;
+    const selected = await this.commitDialog.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('data-selected');
+    return selected === 'true' ? GitDiffView.Visual : GitDiffView.Text;
   }
 
   /**

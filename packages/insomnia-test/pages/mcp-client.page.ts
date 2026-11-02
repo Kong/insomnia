@@ -223,12 +223,12 @@ export class McpClientPage extends RequestPage {
   }
 
   /**
-   * Reads, per row of one primitive kind in sidebar order, whether the row carries the selected-row highlight (the app sets no aria-selected on these rows).
+   * Reads, per row of one primitive kind in sidebar order, whether the row is selected, from its data-selected attribute.
    */
   async getPrimitiveSelection(type: McpPrimitiveType): Promise<boolean[]> {
     return this.page
       .locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`)
-      .evaluateAll(rows => rows.map(row => row.classList.contains('bg-(--hl-sm)')));
+      .evaluateAll(rows => rows.map(row => (row as HTMLElement).dataset.selected === 'true'));
   }
 
   /**
