@@ -24,7 +24,8 @@ test(
     await workspaceFlow.openSettings(project);
     const destinationDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-relocate-collision-'));
     fs.writeFileSync(path.join(destinationDir, 'existing-file.txt'), '');
-    await projectSettingsPage.relocateRepository(destinationDir);
+    await user.flowManager.context.stubFileChooser(destinationDir);
+    await projectSettingsPage.relocateRepository();
 
     await expect
       .poll(() => projectSettingsPage.getRelocationError(), {
