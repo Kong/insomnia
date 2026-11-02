@@ -1,6 +1,5 @@
-import { expect } from "@playwright/test";
-
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify logging out shows the Scratch Pad and other login entry points, and choosing Scratch Pad opens its workspace with no Document creation entry", async ({
   user,
