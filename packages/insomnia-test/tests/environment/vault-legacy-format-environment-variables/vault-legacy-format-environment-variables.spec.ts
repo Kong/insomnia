@@ -58,7 +58,7 @@ testWithVaultKey(
 
     await importFlow.importFile(
       project,
-      path.join(__dirname, "vault-legacy-formats.yaml"),
+      path.join(import.meta.dirname, "vault-legacy-formats.yaml"),
     );
     const collection = new Collection("Vault Legacy Format Collection");
     await environmentFlow.link(collection, secretEnvironment);
