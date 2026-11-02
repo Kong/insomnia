@@ -610,6 +610,7 @@ const CollectionGridListItem = (props: {
           <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none">
             {isRootTypeItem && !isEmpty && (
               <Icon
+                data-testid="capability-caret"
                 className="w-4 shrink-0"
                 icon={collapsedPrimitives.includes(item.type) ? 'caret-right' : 'caret-down'}
               />
@@ -653,16 +654,29 @@ const CollectionGridListItem = (props: {
         </div>
         {showError && error && (
           <div
+            data-testid="capability-error-panel"
             className="notice error no-pad mt-(--padding-sm) min-h-0 flex-1 overflow-hidden text-left text-(length:--font-size-sm)"
             style={{ maxHeight: getErrorPanelHeight(error), margin: '1em' }}
           >
-            <div className="h-full overflow-y-auto py-1 pr-(--padding-md) pl-4 select-none">
-              <p className="no-margin font-medium wrap-break-word">{error.title}</p>
+            <div
+              data-testid="capability-error-scroll"
+              className="h-full overflow-y-auto py-1 pr-(--padding-md) pl-4 select-none"
+            >
+              <p data-testid="capability-error-title" className="no-margin font-medium wrap-break-word">
+                {error.title}
+              </p>
               {error.entries && error.entries.length > 0 && (
                 <ul className="mt-1 flex flex-col gap-0.5 pl-4">
                   {error.entries.map(entry => (
-                    <li key={`${entry.label}::${entry.reason}`} className="list-disc wrap-break-word">
-                      <span className="text-sm font-medium">{entry.label}</span>: {entry.reason}
+                    <li
+                      key={`${entry.label}::${entry.reason}`}
+                      data-testid="capability-error-entry"
+                      className="list-disc wrap-break-word"
+                    >
+                      <span data-testid="capability-error-entry-label" className="text-sm font-medium">
+                        {entry.label}
+                      </span>
+                      : {entry.reason}
                     </li>
                   ))}
                 </ul>

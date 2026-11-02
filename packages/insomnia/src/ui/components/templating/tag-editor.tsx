@@ -572,7 +572,7 @@ export const TagEditor: FC<Props> = props => {
         return (
           <div key={uniqueKey} className="form-row">
             <div className={formControlClasses}>
-              <label data-arg-index={index}>
+              <label data-arg-index={index} data-testid={`tag-arg-${displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                 {fnOrString(displayName, activeTagData.args)}
                 {isVariable && <span className="faded space-left">(Variable)</span>}
                 {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}

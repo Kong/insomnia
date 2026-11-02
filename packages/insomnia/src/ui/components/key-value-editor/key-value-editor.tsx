@@ -461,6 +461,7 @@ export const KeyValueEditor: FC<Props> = ({
             if (isFile) {
               valueEditor = (
                 <FileInputButton
+                  data-testid="body-param-file"
                   showFileName
                   showFileIcon
                   disabled={pair.disabled || isDisabled}

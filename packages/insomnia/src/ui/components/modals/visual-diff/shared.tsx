@@ -146,6 +146,7 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
       {!staged && onDiscard && (
         <PromptButton
           className={CARD_ACTION_BUTTON_CLASS}
+          testId="diff-entity-discard"
           disabled={isDisabled}
           confirmMessage={discardConfirmMessage}
           loadingMessage="Discarding"
@@ -159,7 +160,12 @@ export const CardHeaderActions: FC<{ status: EntityChangeStatus } & EntityCardAc
         </PromptButton>
       )}
       {onStage && (
-        <Button isDisabled={isDisabled} onPress={onStage} className={CARD_ACTION_BUTTON_CLASS}>
+        <Button
+          isDisabled={isDisabled}
+          onPress={onStage}
+          className={CARD_ACTION_BUTTON_CLASS}
+          data-testid={staged ? 'diff-entity-unstage' : 'diff-entity-stage'}
+        >
           <Icon icon={isStaging ? 'spinner' : staged ? 'minus' : 'plus'} className={isStaging ? 'animate-spin' : ''} />
           {staged ? 'Unstage' : 'Stage'}
         </Button>
@@ -176,7 +182,10 @@ export const DiffCardShell: FC<{ status: EntityChangeStatus; children: ReactNode
         ? 'border-l-(--color-danger)'
         : 'border-l-(--color-notice)';
   return (
-    <div className={`flex flex-col gap-2 rounded-xs border border-solid border-(--hl-sm) border-l-2 bg-(--hl-xs) p-3 ${borderColor}`}>
+    <div
+      data-testid="diff-entity-card"
+      className={`flex flex-col gap-2 rounded-xs border border-solid border-(--hl-sm) border-l-2 bg-(--hl-xs) p-3 ${borderColor}`}
+    >
       {children}
     </div>
   );

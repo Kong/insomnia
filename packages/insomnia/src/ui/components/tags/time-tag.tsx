@@ -43,6 +43,7 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
   });
   return (
     <div
+      data-testid="response-time-tag"
       className={classnames(
         'tag',
         {

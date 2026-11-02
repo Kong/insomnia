@@ -150,6 +150,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         <div className="pad">
           <Dropdown
             aria-label="Select a target"
+            dataTestId="generate-code-target-dropdown"
             triggerButton={
               <Button className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)">
                 {target ? target.title : 'n/a'}
@@ -174,6 +175,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           &nbsp;&nbsp;
           <Dropdown
             aria-label="Select a client"
+            dataTestId="generate-code-client-dropdown"
             triggerButton={
               <Button className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)">
                 {client ? client.title : 'n/a'}

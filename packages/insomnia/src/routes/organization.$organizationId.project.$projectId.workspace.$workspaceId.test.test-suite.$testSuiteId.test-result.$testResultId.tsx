@@ -51,10 +51,11 @@ export const TestRunStatus = () => {
         {testResult.results.tests.map((test, i) => {
           const errorMessage = 'message' in test.err ? test.err.message : '';
           return (
-            <div key={test.id || i} className="flex flex-col">
+            <div key={test.id || i} data-testid="unit-test-result-row" className="flex flex-col">
               <div className="flex items-center gap-2 p-(--padding-sm)">
                 <div className="flex shrink-0">
                   <span
+                    data-testid="unit-test-result-status"
                     className={`flex w-20 shrink-0 rounded-xs border border-solid border-current ${
                       errorMessage ? 'text-(--color-danger)' : 'text-(--color-success)'
                     } items-center justify-center`}
@@ -62,14 +63,16 @@ export const TestRunStatus = () => {
                     {errorMessage ? 'Failed' : 'Passed'}
                   </span>
                 </div>
-                <div className="flex-1 truncate" title={test.title}>
+                <div data-testid="unit-test-result-name" className="flex-1 truncate" title={test.title}>
                   {test.title}
                 </div>
                 <div className="flex shrink-0">{test.duration} ms</div>
               </div>
               {errorMessage && (
                 <div className="w-full px-(--padding-sm) pb-(--padding-sm)">
-                  <code className="w-full">{errorMessage}</code>
+                  <code data-testid="unit-test-result-detail" className="w-full">
+                    {errorMessage}
+                  </code>
                 </div>
               )}
             </div>

@@ -72,15 +72,24 @@ export function buildHeaderLines(
 // size and family.
 export const EntityHeader: FC<{ current: EntityHeaderLine; previous?: EntityHeaderLine }> = ({ current, previous }) => (
   <div className="flex flex-1 flex-col gap-1 overflow-hidden">
-    <div className="flex items-baseline gap-2 overflow-hidden">
+    <div data-testid="diff-entity-header" className="flex items-baseline gap-2 overflow-hidden">
       {current.badge && (
-        <span className={`shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold ${current.badge.className}`}>
+        <span
+          data-testid="diff-entity-badge"
+          className={`shrink-0 rounded-xs px-1.5 py-0.5 text-xs font-bold ${current.badge.className}`}
+        >
           {current.badge.label}
         </span>
       )}
       {current.icon && <Icon icon={current.icon} className="shrink-0 self-center text-(--hl)" />}
-      <span className="shrink-0 font-semibold">{current.name}</span>
-      {current.detail !== undefined && <span className="truncate font-mono text-sm text-(--hl)">{current.detail}</span>}
+      <span data-testid="diff-entity-name" className="shrink-0 font-semibold">
+        {current.name}
+      </span>
+      {current.detail !== undefined && (
+        <span data-testid="diff-entity-detail" className="truncate font-mono text-sm text-(--hl)">
+          {current.detail}
+        </span>
+      )}
     </div>
     {previous && (
       <div className="flex items-baseline gap-2 overflow-hidden pl-2 opacity-60">

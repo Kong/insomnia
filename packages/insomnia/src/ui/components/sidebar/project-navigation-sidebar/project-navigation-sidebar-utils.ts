@@ -59,3 +59,28 @@ export const getSidebarGridListItemId = (item: FlatItem): string => {
     }
   }
 };
+
+// The id of the item this row is nested under, exposed as `data-parent-id` so tests can rebuild the tree.
+export const getSidebarItemParentId = (item: FlatItem): string | undefined => {
+  switch (item.kind) {
+    case 'project':
+    case 'workspace':
+    case 'collectionChild':
+    case 'pinnedRequest': {
+      return item.doc.parentId;
+    }
+    case 'unsyncedWorkspace':
+    case 'emptyProject': {
+      return item.project._id;
+    }
+    case 'emptyCollection': {
+      return item.workspace?._id;
+    }
+    case 'emptyFolder': {
+      return item.requestGroup?._id;
+    }
+    default: {
+      return undefined;
+    }
+  }
+};
