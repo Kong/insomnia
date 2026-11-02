@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "@package/misc/fixtures";
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import { McpClient } from "@package/models/mcp-client";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Environment Variable in MCP Client URL Is Resolved", async ({
   user,
