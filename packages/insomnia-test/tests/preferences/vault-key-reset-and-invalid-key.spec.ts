@@ -19,9 +19,9 @@ testWithVaultSalt(
       await preferencesFlow.enterVaultKey("invalidVaultKey");
     const resetKey = await preferencesFlow.resetVaultKey();
 
-    const { preferencesPage } = user.pageManager;
+    const { preferencesPage, preferencesVaultPage } = user.pageManager;
     await preferencesPage.open();
-    const displayedKey = await preferencesPage.getVaultKey();
+    const displayedKey = await preferencesVaultPage.getVaultKey();
     await preferencesPage.close();
 
     expect(invalidKeyError).toBe(
