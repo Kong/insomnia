@@ -3,12 +3,11 @@ import * as os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT } from '@package/misc/fixtures';
 import { GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test(
   "Verify relocating a Git Sync project's repository shows an error when the destination folder already exists",
