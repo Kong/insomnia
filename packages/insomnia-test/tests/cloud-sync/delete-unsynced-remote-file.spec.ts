@@ -5,8 +5,9 @@ import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
 import { HttpMethod } from "../../enums/http-method";
-import { getCloudSyncProjectInfo, HTTP_SERVER, resetCloudSyncState, setCloudSyncArchiveFailure, test } from "../../misc/fixtures";
+import { HTTP_SERVER, resetCloudSyncState, test } from "../../misc/fixtures";
 import { Collection } from "../../models/collection";
+import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "./support/cloud-sync-mock";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
@@ -17,7 +18,7 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
 }) => {
   const { workspaceFlow, httpRequestFlow, cloudSyncFlow, appFlow } =
     user.flowManager;
-  const { cloudSyncPage } = user.pageManager;
+  const { cloudSyncPage, cloudSyncFileDeletePage } = user.pageManager;
 
   const project = await workspaceFlow.getProject({
     name: "Personal Workspace",
@@ -25,12 +26,12 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   await cloudSyncFlow.openProjectDashboard(project!);
 
   const mcpClientInfoBefore = await getCloudSyncProjectInfo("My MCP Client");
-  await cloudSyncPage.openFileDeleteDialog("My MCP Client");
-  const deleteDialogText = await cloudSyncPage.getFileDeleteDialogText();
+  await cloudSyncFileDeletePage.openFileDeleteDialog("My MCP Client");
+  const deleteDialogText = await cloudSyncFileDeletePage.getFileDeleteDialogText();
   const logLines = await appFlow.captureMainProcessLog(async () => {
-    await cloudSyncPage.confirmFileDelete();
+    await cloudSyncFileDeletePage.confirmFileDelete();
     await expect
-      .poll(() => cloudSyncPage.isFileCardVisible("My MCP Client"))
+      .poll(() => cloudSyncFileDeletePage.isFileCardVisible("My MCP Client"))
       .toBe(false);
   });
   const mcpClientInfoAfter = await getCloudSyncProjectInfo("My MCP Client");
@@ -38,15 +39,15 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   const ghostInfoBefore = await getCloudSyncProjectInfo("Ghost Collection");
   await cloudSyncFlow.deleteUnsyncedFile("Ghost Collection");
   await expect
-    .poll(() => cloudSyncPage.isFileCardVisible("Ghost Collection"))
+    .poll(() => cloudSyncFileDeletePage.isFileCardVisible("Ghost Collection"))
     .toBe(false);
   const ghostInfoAfter = await getCloudSyncProjectInfo("Ghost Collection");
 
   await setCloudSyncArchiveFailure(true);
   await cloudSyncFlow.deleteUnsyncedFile("My Environment");
-  await cloudSyncPage.waitForFileDeleteFailureToast("My Environment");
+  await cloudSyncFileDeletePage.waitForFileDeleteFailureToast("My Environment");
   const environmentStillVisible =
-    await cloudSyncPage.isFileCardVisible("My Environment");
+    await cloudSyncFileDeletePage.isFileCardVisible("My Environment");
   const environmentInfoAfterFailure =
     await getCloudSyncProjectInfo("My Environment");
   await setCloudSyncArchiveFailure(false);

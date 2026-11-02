@@ -14,7 +14,7 @@ test("Verify discarding changes on one Cloud-synced workspace does not affect an
   const collectionX = await workspaceFlow.getCollection({
     name: "My Collection R1",
   });
-  const requestXBefore = await httpRequestFlow.get("New Request", collectionX);
+  const requestXBefore = await httpRequestFlow.get("New Request");
   const editedUrlX = faker.internet.url();
   await httpRequestPage.setUrl(editedUrlX);
 
@@ -27,7 +27,6 @@ test("Verify discarding changes on one Cloud-synced workspace does not affect an
 
   const requestXAfterDiscard = await httpRequestFlow.get(
     "New Request",
-    collectionX,
   );
 
   expect(clientYAfterDiscard?.url).toBe(clientYBefore?.url);
