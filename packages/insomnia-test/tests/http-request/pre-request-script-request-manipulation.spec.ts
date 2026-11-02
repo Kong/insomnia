@@ -41,8 +41,8 @@ test('Verify pre-request script manipulates request headers, query params and bo
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: rawContent,
     args: { added: addedParam, keepMe: updatedParam },
     headers: expect.objectContaining({
@@ -50,8 +50,8 @@ test('Verify pre-request script manipulates request headers, query params and bo
       'x-upsert': upsertedValue,
     }),
   });
-  expect((responseView.body as { args: Record<string, string>; headers: object }).args).not.toHaveProperty('removeMe');
-  expect((responseView.body as { args: Record<string, string>; headers: object }).headers).not.toHaveProperty('x-remove');
+  expect((responseView.preview as { args: Record<string, string>; headers: object }).args).not.toHaveProperty('removeMe');
+  expect((responseView.preview as { args: Record<string, string>; headers: object }).headers).not.toHaveProperty('x-remove');
 });
 
 test('Verify pre-request script sets bearer auth via insomnia.request.auth', async ({ user }) => {
@@ -78,8 +78,8 @@ test('Verify pre-request script sets bearer auth via insomnia.request.auth', asy
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       authorization: `${prefix} ${token}`,
     }),
@@ -111,8 +111,8 @@ test('Verify pre-request script sets basic auth via insomnia.request.auth', asyn
   const responseView = await httpRequestFlow.send(request);
 
   const expectedEncodedCredentials = Buffer.from(`${username}:${password}`, 'utf8').toString('base64');
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       authorization: `Basic ${expectedEncodedCredentials}`,
     }),
@@ -156,11 +156,11 @@ test('Verify pre-request script applies apikey, AWS v4, Hawk and OAuth 1.0 auth 
     responses[authName] = await httpRequestFlow.send(request);
   }
 
-  const headersOf = (name: string) => (responses[name].body as { headers: Record<string, string> }).headers;
+  const headersOf = (name: string) => (responses[name].preview as { headers: Record<string, string> }).headers;
   expect(headersOf('apiKeyHeader')).toMatchObject({
     [apiKeyName.toLowerCase()]: apiKeyValue,
   });
-  expect(responses.apiKeyQuery.body).toMatchObject({
+  expect(responses.apiKeyQuery.preview).toMatchObject({
     args: { [apiKeyName]: apiKeyValue },
   });
   expect(headersOf('awsV4').authorization).toContain(`AWS4-HMAC-SHA256 Credential=${accessKey}/`);
