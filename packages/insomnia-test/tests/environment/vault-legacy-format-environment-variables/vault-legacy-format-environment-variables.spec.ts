@@ -2,8 +2,6 @@ import * as crypto from "node:crypto";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
@@ -12,6 +10,7 @@ import {
   EnvironmentKvPairDataType,
 } from "@package/models/environment";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const testWithVaultKey = test.extend({
   vaultKey: async ({}, use) => {
