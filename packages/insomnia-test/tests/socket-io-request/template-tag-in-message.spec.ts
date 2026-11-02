@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Template Tag in Socket.IO Message Payload Is Resolved", async ({
   user,
