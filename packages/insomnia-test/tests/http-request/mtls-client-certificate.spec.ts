@@ -1,14 +1,13 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { certPath } from "@package/misc/certs";
 import { DEFAULT_TIMEOUT, HTTP_SERVER_MTLS, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const url = `${HTTP_SERVER_MTLS}/post`;
 
