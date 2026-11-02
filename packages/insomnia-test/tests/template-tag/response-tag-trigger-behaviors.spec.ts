@@ -54,10 +54,10 @@ test("Verify the response Tag's Trigger Behavior Controls When its Dependency Re
   const always = await httpRequestFlow.send(alwaysRequest);
 
   await expect(neverFailure).rejects.toThrow(/No responses for request/);
-  expect(noHistory.statusCode).toBe(200);
-  expect(noHistory.body).toMatchObject({ data: marker });
-  expect(whenExpired.statusCode).toBe(200);
-  expect(whenExpired.body).toMatchObject({ data: marker });
-  expect(always.statusCode).toBe(200);
-  expect(always.body).toMatchObject({ data: marker });
+  expect(noHistory.statusBar.code).toBe(200);
+  expect(noHistory.preview).toMatchObject({ data: marker });
+  expect(whenExpired.statusBar.code).toBe(200);
+  expect(whenExpired.preview).toMatchObject({ data: marker });
+  expect(always.statusBar.code).toBe(200);
+  expect(always.preview).toMatchObject({ data: marker });
 });
