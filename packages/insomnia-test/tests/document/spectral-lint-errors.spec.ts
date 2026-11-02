@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { LintSeverity } from "../../enums/lint-severity";
-import { ProjectType } from "../../enums/project-types";
-import { test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { LintSeverity } from "@package/enums/lint-severity";
+import { ProjectType } from "@package/enums/project-types";
+import { test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   user,

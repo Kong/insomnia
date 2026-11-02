@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { ProjectType } from "../../enums/project-types";
-import { MOCK_BIN_SERVER, test } from "../../misc/fixtures";
-import { MockServer } from "../../models/mock-server";
-import { Project } from "../../models/project";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
+import { MockServer } from "@package/models/mock-server";
+import { Project } from "@package/models/project";
 
 test("Verify Mock Route History Logs Each Tested Request", async ({ user }) => {
   const { mockServerFlow, workspaceFlow } = user.flowManager;
