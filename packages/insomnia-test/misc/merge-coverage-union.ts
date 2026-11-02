@@ -59,6 +59,13 @@ function findShardReports(dir: string) {
     .map((entry) => path.join(dir, entry.name));
 
   const reportPaths: string[] = [];
+  // actions/download-artifact skips the per-artifact subfolder when the
+  // pattern matches exactly one artifact (single-shard run), so the report
+  // sits directly in `dir`.
+  const singleShardCandidate = path.join(dir, "v8-report.json");
+  if (fs.existsSync(singleShardCandidate)) {
+    reportPaths.push(singleShardCandidate);
+  }
   for (const shardDir of shardDirs) {
     // Each shard's whole `coverage/` dir (raw/ plus the sibling v8-report.json
     // — see .github/workflows/insomnia-test.yml's "Upload coverage (raw)"

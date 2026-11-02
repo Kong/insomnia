@@ -230,61 +230,14 @@ jobs:
         working-directory: packages/insomnia-test
         run: npx playwright install ffmpeg
 
-      - name: Download previous Playwright last run state
-        if: ${{ github.run_attempt > 1 }}
-        continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: playwright-last-run-shard-${{ matrix.shardIndex }}-attempt-*
-          path: .playwright-last-run-history
-
       - name: Run Playwright tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
-          PLAYWRIGHT_JUNIT_OUTPUT_FILE: test-results.xml
           COVERAGE: 'true'
         run: |
-          LAST_FAILED_ARGS=()
-
-          if [ "${GITHUB_RUN_ATTEMPT:-1}" -gt 1 ]; then
-            # Latest earlier attempt's .last-run.json for this shard, if any.
-            PREVIOUS_FILE="$(
-              find ../../.playwright-last-run-history -type f -name '.last-run.json' 2>/dev/null \
-                | sed -E 's/.*attempt-([0-9]+).*/\1 &/' \
-                | sort -k1,1nr | head -n1 | cut -d' ' -f2-
-            )"
-            if [ -n "$PREVIOUS_FILE" ] && node -e "const d=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); process.exit(Array.isArray(d.failedTests) && d.failedTests.length ? 0 : 1)" "$PREVIOUS_FILE"; then
-              echo "Rerun attempt detected. Running only last failed tests for shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}."
-              mkdir -p test-results
-              cp "$PREVIOUS_FILE" test-results/.last-run.json
-              LAST_FAILED_ARGS+=(--last-failed)
-            else
-              echo "::notice::No failed tests recorded for shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}. Running full shard."
-            fi
-          fi
-
-          xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob,junit --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} "${LAST_FAILED_ARGS[@]}"
-
-      - name: Upload Playwright last run state
-        if: ${{ always() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: playwright-last-run-shard-${{ matrix.shardIndex }}-attempt-${{ github.run_attempt }}
-          path: packages/insomnia-test/test-results/.last-run.json
-          include-hidden-files: true
-          retention-days: 7
-          if-no-files-found: warn
-
-      - name: Upload junit results
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: junit-results-${{ github.run_number }}-shard-${{ matrix.shardIndex }}
-          path: packages/insomnia-test/test-results.xml
-          retention-days: 7
-          if-no-files-found: ignore
+          xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
       # Two paths here (not just coverage/raw/) because v8-report.json (see
       # misc/coverage.ts) must live as a sibling of raw/, not inside it — the
