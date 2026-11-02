@@ -89,7 +89,7 @@ export class KonnectPage extends BasePage {
   /**
    * Clicks "Connect & Sync" in the open Kong Konnect settings modal,
    * validating the entered PAT and triggering an initial sync on success,
-   * then waits for the modal to close — confirmed live: validating the PAT
+   * then waits for the modal to close — validating the PAT
    * and fetching the Konnect organization id both happen asynchronously
    * before the modal closes itself, so a caller reading `isSettingsModalOpen()`
    * immediately after this click would still see it open.

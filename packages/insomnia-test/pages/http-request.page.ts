@@ -106,8 +106,7 @@ export class HttpRequestPage extends RequestPage {
   private async getBodyFileName(): Promise<string | undefined> {
     const panel = this.page.locator(this.TABPANEL);
     const text = await panel
-      .locator("code")
-      .first()
+      .getByTestId("body-file-name")
       .innerText()
       .catch(() => "");
     return text || undefined;
@@ -121,7 +120,7 @@ export class HttpRequestPage extends RequestPage {
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
       const name = await this.keyValue.nameEditor(row).getValue();
-      const fileButton = row.locator("button:has(i.fa-file-o)");
+      const fileButton = row.getByTestId("body-param-file");
       if ((await fileButton.count()) > 0) {
         const fileName =
           (await fileButton.getAttribute("title").catch(() => "")) ||

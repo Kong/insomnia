@@ -134,7 +134,7 @@ export class McpClientPage extends RequestPage {
    * The error panel embedded in a capability item's row.
    */
   private getCapabilityErrorPanel(type: McpCapabilityType): Locator {
-    return this.getCapabilityItem(type).locator('.notice.error');
+    return this.getCapabilityItem(type).getByTestId('capability-error-panel');
   }
 
   /**
@@ -177,7 +177,7 @@ export class McpClientPage extends RequestPage {
    */
   async isCapabilityErrorScrollable(type: McpCapabilityType): Promise<boolean> {
     return this.getCapabilityErrorPanel(type)
-      .locator('.overflow-y-auto')
+      .getByTestId('capability-error-scroll')
       .evaluate(el => el.scrollHeight > el.clientHeight);
   }
 
@@ -187,10 +187,10 @@ export class McpClientPage extends RequestPage {
   async getCapabilityError(type: McpCapabilityType): Promise<McpCapabilityError> {
     const panel = this.getCapabilityErrorPanel(type);
     await expect(panel).toBeVisible({ timeout: ACTION_TIMEOUT });
-    const title = (await panel.locator('p').first().innerText()).trim();
-    const entries = await panel.locator('li').evaluateAll(items =>
+    const title = (await panel.getByTestId('capability-error-title').innerText()).trim();
+    const entries = await panel.getByTestId('capability-error-entry').evaluateAll(items =>
       items.map(item => {
-        const label = item.querySelector('span')?.textContent ?? '';
+        const label = item.querySelector('[data-testid="capability-error-entry-label"]')?.textContent ?? '';
         const text = item.textContent ?? '';
         return {
           label: label.trim(),
@@ -246,7 +246,7 @@ export class McpClientPage extends RequestPage {
    * (e.g. a whole-response failure) have none.
    */
   async hasCaret(type: McpCapabilityType): Promise<boolean> {
-    return (await this.getCapabilityItem(type).locator('svg.w-4[data-icon^="caret"]').count()) > 0;
+    return (await this.getCapabilityItem(type).getByTestId('capability-caret').count()) > 0;
   }
 
   /**

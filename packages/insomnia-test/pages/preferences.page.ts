@@ -97,9 +97,7 @@ export class PreferencesPage extends BasePage {
    * clickable target.
    */
   async setValidateSSL(enabled: boolean): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Validate certificates$/,
-    });
+    const label = this.dialog.getByTestId("setting-validateSSL");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -116,9 +114,7 @@ export class PreferencesPage extends BasePage {
    * actual clickable target. Same shape as setValidateSSL() above.
    */
   async setSidebarFocusForCollections(enabled: boolean): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Sidebar focus for collections$/,
-    });
+    const label = this.dialog.getByTestId("setting-sidebarFocusForCollections");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -134,9 +130,7 @@ export class PreferencesPage extends BasePage {
    * checkbox is currently checked.
    */
   async isSidebarFocusForCollectionsEnabled(): Promise<boolean> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Sidebar focus for collections$/,
-    });
+    const label = this.dialog.getByTestId("setting-sidebarFocusForCollections");
     return label.locator('input[type="checkbox"]').isChecked();
   }
 
@@ -145,12 +139,10 @@ export class PreferencesPage extends BasePage {
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target. Same shape as setValidateSSL() above. Gates
    * the Tests tab (`WorkspacePage.openTestsTab()`) on an API Collection —
-   * INS-3528 hides the legacy unit-test viewer by default.
+   * The legacy unit-test viewer is hidden by default.
    */
   async setShowLegacyUnitTests(enabled: boolean): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Show legacy unit tests$/,
-    });
+    const label = this.dialog.getByTestId("setting-enableLegacyUnitTests");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -166,9 +158,7 @@ export class PreferencesPage extends BasePage {
    * currently checked.
    */
   async isShowLegacyUnitTestsEnabled(): Promise<boolean> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Show legacy unit tests$/,
-    });
+    const label = this.dialog.getByTestId("setting-enableLegacyUnitTests");
     return label.locator('input[type="checkbox"]').isChecked();
   }
 
@@ -238,7 +228,9 @@ export class PreferencesPage extends BasePage {
     await this.dialog
       .getByRole("button", { name: "Create Git Credential" })
       .click();
-    await this.page.getByText("Access Token", { exact: true }).click();
+    await this.page
+      .getByRole("menuitem", { name: "Access Token", exact: true })
+      .click();
     await this.page.getByLabel("Author Email").fill(credential.authorEmail);
     await this.page.getByLabel("Author Name").fill(credential.authorName);
     await this.page.getByLabel("Username").fill(credential.username);
@@ -376,7 +368,7 @@ export class PreferencesPage extends BasePage {
   /**
    * Fills the "New Plugin" modal's name field — just the suffix that
    * follows the fixed `insomnia-plugin-` prefix shown beside the input
-   * (confirmed live: the input itself only holds the suffix).
+   * (the input itself only holds the suffix).
    */
   async setNewPluginName(name: string): Promise<void> {
     await this.page.getByTestId("plugin-name-input").fill(name);
@@ -423,7 +415,7 @@ export class PreferencesPage extends BasePage {
   /**
    * Waits for a just-clicked "Generate" to resolve to its final outcome —
    * either the modal closing on its own (name accepted) or the error field
-   * settling on a specific message (name rejected). Confirmed live: reading
+   * settling on a specific message (name rejected). Reading
    * the error field immediately after clicking can still show the
    * pre-submit static format hint (`"Plugin name must be of format
    * my-plugin-name"`), so this polls past that hint rather than racing it.
@@ -444,7 +436,7 @@ export class PreferencesPage extends BasePage {
 
   /**
    * Closes the "New Plugin" modal via Escape, without closing Preferences
-   * itself — confirmed live: unlike every other modal in this app, its own
+   * itself — unlike every other modal in this app, its own
    * close button carries no accessible name ("Modal Close Button" only
    * matches the underlying Preferences dialog's), so a role-based click
    * would hit the wrong element. A no-op if the modal already closed on
@@ -461,7 +453,7 @@ export class PreferencesPage extends BasePage {
   /**
    * Reads the full `insomnia-plugin-*` names currently listed on the
    * Plugins tab, which must already be open (see `openPluginsTab()`).
-   * Confirmed live: each row's `data-testid` is the plugin name itself,
+   * Each row's `data-testid` is the plugin name itself,
    * but the row's own text content runs the name straight into its
    * permissions/version text with no separator, so the name is parsed
    * back out of the `data-testid` attribute instead of the rendered text.
@@ -513,7 +505,7 @@ export class PreferencesPage extends BasePage {
 
   /**
    * Reads the app's bundled (built-in, non-user-installed) plugins via
-   * the plugin bridge — confirmed live to return
+   * the plugin bridge, which returns
    * `@kong/insomnia-plugin-external-vault` and `@kong/insomnia-plugin-ai`
    * for this project's fixture, distinct from `getPluginNames()`'s list
    * (which only reflects user-installed plugins shown on the Plugins
@@ -521,7 +513,7 @@ export class PreferencesPage extends BasePage {
    *
    * Each entry's `permissions`/`permissionWarnings`/`permissionsDeclared`
    * fields are purely descriptive metadata read back from the plugin's
-   * own manifest — confirmed live that they have no effect on what the
+   * own manifest — they have no effect on what the
    * plugin can actually do at runtime (an undeclared native module
    * require still succeeds, and `permissionWarnings` never populates
    * regardless of what's declared), so don't test them as an enforced
@@ -535,7 +527,7 @@ export class PreferencesPage extends BasePage {
 
   /**
    * Runs a plugin-provided request action by its declared `label` through
-   * the plugin bridge — confirmed live: `executeAction()` requires a
+   * the plugin bridge — `executeAction()` requires a
    * `type: "request"` field merged into the action object returned by
    * `getRequestActions()`, which doesn't carry one itself. Rejects with the
    * action's own thrown/rejected error, if any.
@@ -561,7 +553,7 @@ export class PreferencesPage extends BasePage {
   /**
    * A custom-styled switch (Scripting tab, Settings.pluginSandboxEnabled)
    * whose native input ignores direct clicks — the wrapping label is the
-   * actual clickable target. Confirmed live: reading the input's checked
+   * actual clickable target. Reading the input's checked
    * state immediately after the click can still report the pre-click
    * value, so this polls until it settles (same race as
    * `TemplateTagPage.setAlgorithm()`).
@@ -579,13 +571,12 @@ export class PreferencesPage extends BasePage {
   }
 
   /**
-   * Toggles the Scripting tab's per-rule-group sandbox switch beside a
-   * given `<h4>` heading (e.g. "Scopes", "Prototype Mutation") — confirmed
-   * live selector shape: `div:has(> h4:text-is(...))` scoped to that
-   * heading's own row so same-named substrings in sibling headings (e.g.
-   * "Node.js Internals" vs. "Global & Node.js Internals") never collide.
-   * The row's switch is itself a label-wraps-checkbox control, same
-   * clickable-target quirk as `setTemplateTagSandbox()`.
+   * Toggles the Scripting tab's per-rule-group sandbox switch for a given
+   * group (e.g. "Scopes", "Prototype Mutation"), located by the
+   * `script-sandbox-group-<slug>` test id so same-named substrings in
+   * sibling groups (e.g. "Node.js Internals" vs. "Global & Node.js
+   * Internals") never collide. The switch is itself a label-wraps-checkbox
+   * control, same clickable-target quirk as `setTemplateTagSandbox()`.
    */
   async setScriptSandboxRule(
     group: ScriptSandboxRuleGroup,
@@ -615,23 +606,15 @@ export class PreferencesPage extends BasePage {
   }
 
   private getScriptSandboxRuleLabel(group: ScriptSandboxRuleGroup) {
-    return this.dialog
-      .locator("div")
-      .filter({
-        has: this.page.getByRole("heading", {
-          name: group,
-          level: 4,
-          exact: true,
-        }),
-      })
-      .last()
-      .locator("label[data-react-aria-pressable]");
+    return this.dialog.getByTestId(
+      `script-sandbox-group-${group.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`,
+    );
   }
 
   /**
    * Switches the open Preferences dialog to the "AI Settings" tab. Only
    * rendered once the bundled AI plugin is present and the user is logged
-   * in — confirmed live to always be true for this project's fixture.
+   * in — always true for this project's fixture.
    */
   async openAiSettingsTab(): Promise<void> {
     await this.dialog.getByRole("tab", { name: "AI Settings" }).click();
@@ -695,7 +678,7 @@ export class PreferencesPage extends BasePage {
 
   /**
    * Ensures the "Model" `<select>` is on screen, clicking whichever button
-   * currently fetches it. Confirmed live: an already-active backend that
+   * currently fetches it. An already-active backend that
    * hasn't had "Load Models" clicked in this render pass shows a plain
    * "Active model: <name>" text row with a "Change" button instead of the
    * `<select>` — both trigger the same re-fetch, so either one converges
@@ -732,7 +715,7 @@ export class PreferencesPage extends BasePage {
   /**
    * Clicks "Advanced Options" on the AI Settings tab's expanded backend
    * panel to reveal the Temperature/Top P/Max Tokens fields — a no-op if
-   * they're already visible. Confirmed live: the Preferences modal isn't
+   * they're already visible. The Preferences modal isn't
    * remounted on every open/close (local component state, including this
    * toggle, survives), so an unconditional click can collapse an
    * already-open panel instead of opening it.
@@ -750,7 +733,7 @@ export class PreferencesPage extends BasePage {
    * Expands the "url" backend's panel and reads back every one of its form
    * fields, including Advanced Options — the shape shown is specific to
    * the "url" backend (other backends render different fields). Must be
-   * called with `openAiSettingsTab()` already open. Confirmed live: on a
+   * called with `openAiSettingsTab()` already open. On a
    * fresh mount (e.g. right after reopening Preferences), the panel's own
    * hydration from the app's async-loaded backend config can still be
    * mid-flight the instant this reads — for an already-configured backend
@@ -810,9 +793,7 @@ export class PreferencesPage extends BasePage {
    * with `openProxyTab()` already open.
    */
   async setProxyEnabled(enabled: boolean): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Enable proxy$/,
-    });
+    const label = this.dialog.getByTestId("setting-proxyEnabled");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -860,9 +841,7 @@ export class PreferencesPage extends BasePage {
   async setHideSecretValuesInPreviewAndConsole(
     enabled: boolean,
   ): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Hide Confidential values in Preview\/Console$/,
-    });
+    const label = this.dialog.getByTestId("setting-hideSecretValuesInPreviewAndConsole");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -884,9 +863,7 @@ export class PreferencesPage extends BasePage {
    * actual clickable target, same quirk as `setValidateSSL()`.
    */
   async setFilterResponsesByEnvironment(enabled: boolean): Promise<void> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Filter responses by environment$/,
-    });
+    const label = this.dialog.getByTestId("setting-filterResponsesByEnv");
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();
@@ -902,9 +879,7 @@ export class PreferencesPage extends BasePage {
    * checkbox is currently checked.
    */
   async isFilterResponsesByEnvironmentEnabled(): Promise<boolean> {
-    const label = this.dialog.locator("label", {
-      hasText: /^Filter responses by environment$/,
-    });
+    const label = this.dialog.getByTestId("setting-filterResponsesByEnv");
     return label.locator('input[type="checkbox"]').isChecked();
   }
 
@@ -991,7 +966,7 @@ export class PreferencesPage extends BasePage {
     return (
       (await this.page
         .getByTestId("input-vault-key-modal")
-        .locator("p.notice.error")
+        .getByTestId("input-vault-key-error")
         .textContent()) ?? ""
     ).trim();
   }
@@ -1019,16 +994,15 @@ export class PreferencesPage extends BasePage {
   /**
    * Closes the input-vault-key-modal via its own "X" close button, without
    * closing Preferences itself. A no-op if the modal already closed on its
-   * own (e.g. after a successful `clickUnlockVaultKey()`). Confirmed live:
-   * unlike most dialogs in this app, this one has no `isDismissable`
-   * overlay behavior — Escape does nothing — and its close button carries
-   * no accessible name, so it's targeted structurally as the modal's first
-   * button (rendered in its title row, ahead of Unlock/Reset Vault Key/OK).
+   * own (e.g. after a successful `clickUnlockVaultKey()`).
+   * Unlike most dialogs in this app, this one has no `isDismissable`
+   * overlay behavior — Escape does nothing — so it is closed through its
+   * "Close" button (rendered in its title row).
    */
   async closeEnterVaultKeyModal(): Promise<void> {
     const modal = this.page.getByTestId("input-vault-key-modal");
     if (!(await this.isEnterVaultKeyModalOpen())) return;
-    await modal.getByRole("button").first().click();
+    await modal.getByRole("button", { name: "Close" }).click();
     await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -1060,10 +1034,7 @@ export class PreferencesPage extends BasePage {
    */
   async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
     const smartCommitsSwitch = this.dialog
-      .locator("div")
-      .filter({ has: this.page.getByText("Smart Commits", { exact: true }) })
-      .filter({ has: this.page.getByRole("switch") })
-      .last()
+      .getByTestId("toggle-smart-commits")
       .getByRole("switch");
     if ((await smartCommitsSwitch.isChecked()) !== enabled) {
       await smartCommitsSwitch.click({ force: true });

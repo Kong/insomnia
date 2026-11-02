@@ -349,8 +349,8 @@ export const test = base.extend<Fixtures>({
   },
 });
 
-// The installed app defaults Settings.sidebarFocusForCollections to true
-// (added by INS-2912), which auto-narrows the sidebar to a collection's own
+// The installed app defaults Settings.sidebarFocusForCollections to true,
+// which auto-narrows the sidebar to a collection's own
 // contents once it's focused — hiding sibling nodes and breaking
 // WorkspaceFlow's tree-scan-based lookups (getCollection() etc.) the moment
 // a test creates more than one sibling collection. Defaulting it off here

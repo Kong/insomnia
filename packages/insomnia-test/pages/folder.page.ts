@@ -5,7 +5,7 @@ import { AuthTabComponent } from "./auth-tab.page";
 import { ScriptTabComponent } from "./script-tab.page";
 import { TabPanelPage } from "./tab-panel.page";
 
-const FOLDER_PANE = 'div:has(> [aria-label="Request pane tabs"])';
+const FOLDER_PANE = '[data-testid="folder-pane"]';
 
 /**
  * A Collection folder's own editor tab (Auth/Headers/Scripts/Environment/

@@ -102,9 +102,10 @@ export abstract class RequestPage extends TabPanelPage {
    * to BasePage's hasFocus() to check whether the URL bar is focused.
    */
   get urlBarContainer(): Locator {
-    return this.page.locator(
-      `${this.PANE} .editor__container:has(#${this.urlBarId})`,
-    );
+    return this.page
+      .locator(this.PANE)
+      .getByTestId("one-line-editor-container")
+      .filter({ has: this.page.locator(`#${this.urlBarId}`) });
   }
 
   /**
@@ -217,7 +218,7 @@ export abstract class RequestPage extends TabPanelPage {
     const panel = this.page.locator(this.TABPANEL);
     await panel.getByRole("button", { name: "Add", exact: true }).click();
     const rows = panel.locator('[role="listbox"] [role="option"]');
-    return rows.last().locator(".editor__container").first();
+    return rows.last().getByTestId("one-line-editor-container").first();
   }
 
   /**

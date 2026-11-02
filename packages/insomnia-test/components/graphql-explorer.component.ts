@@ -41,7 +41,19 @@ export class GraphQLExplorerComponent extends BaseComponent {
 
   /** Type/field link in the explorer by visible text. */
   link(text: string | RegExp): Locator {
-    return this.root.locator(".graphql-explorer a, .graphql-explorer button").filter({ hasText: text });
+    return this.root
+      .getByTestId("graphql-explorer")
+      .locator(
+        [
+          "graphql-explorer-type-link",
+          "graphql-explorer-field-link",
+          "graphql-explorer-back",
+          "graphql-explorer-close",
+        ]
+          .map((id) => `[data-testid="${id}"]`)
+          .join(", "),
+      )
+      .filter({ hasText: text });
   }
 
   async navigateTo(text: string | RegExp): Promise<void> {

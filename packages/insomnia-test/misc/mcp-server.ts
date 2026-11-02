@@ -141,7 +141,7 @@ app.get('/mcp', (_req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Scriptable list-response server (INS-3647).
+// Scriptable list-response server.
 //
 // Every test talks to its own `/mcp-list/<key>` endpoint and scripts what the
 // list requests answer through `PUT /mcp-list/<key>/config`, so malformed

@@ -53,7 +53,7 @@ export class ExportPage extends BasePage {
    */
   async selectFormat(format: ExportFormat): Promise<void> {
     await this.selectExportTypeDialog
-      .locator("select")
+      .getByTestId("select-modal-select")
       .selectOption({ label: format });
   }
 
@@ -87,7 +87,7 @@ export class ExportPage extends BasePage {
     if (!(await this.selectSpecFormatDialog.isVisible())) return;
 
     await this.selectSpecFormatDialog
-      .locator("select")
+      .getByTestId("select-modal-select")
       .selectOption({ label: format });
     await this.selectSpecFormatDialog
       .getByRole("button", { name: "Done" })

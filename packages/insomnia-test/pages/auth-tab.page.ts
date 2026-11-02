@@ -157,7 +157,9 @@ export class AuthTabComponent extends TabPanelPage {
     const button = panel.getByRole("button", { name: "Advanced Options" });
     if ((await button.count()) === 0) return;
     await button.click();
-    await expect(panel.locator("#Scope + .CodeMirror")).toBeVisible({
+    await expect(
+      panel.getByTestId("auth-field-Scope").locator(".CodeMirror"),
+    ).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -298,9 +300,7 @@ export class AuthTabComponent extends TabPanelPage {
     const edits: AuthFieldEdit[] = [];
     for (const { field, label, value } of fields) {
       if (value === undefined) continue;
-      const editor = this.page.locator(
-        `${this.TABPANEL} #${label.replace(/ /g, "-")} + .CodeMirror`,
-      );
+      const editor = this.authFieldEditor(label);
       await expect(editor).toBeVisible({ timeout: DEFAULT_TIMEOUT });
       const edit: AuthFieldEdit = {
         field,
@@ -535,9 +535,7 @@ export class AuthTabComponent extends TabPanelPage {
    * "consumer-key"-id textarea CodeMirror replaces).
    */
   private oAuth1FieldEditor(label: string): Locator {
-    return this.page.locator(
-      `${this.TABPANEL} #${label.replace(/ /g, "-")} + .CodeMirror`,
-    );
+    return this.authFieldEditor(label);
   }
 
   /**
@@ -548,19 +546,26 @@ export class AuthTabComponent extends TabPanelPage {
    * the currently selected grant type or accordion state.
    */
   private oauth2FieldEditor(label: string): Locator {
-    return this.page.locator(
-      `${this.TABPANEL} #${label.replace(/ /g, "-")} + .CodeMirror`,
-    );
+    return this.authFieldEditor(label);
+  }
+
+  /**
+   * Builds the locator for the CodeMirror editor inside an Auth form row,
+   * given the row's visible label (e.g. "Client ID" -> the row with
+   * `data-testid="auth-field-Client-ID"`).
+   */
+  private authFieldEditor(label: string): Locator {
+    return this.page
+      .locator(this.TABPANEL)
+      .getByTestId(`auth-field-${label.replace(/ /g, "-")}`)
+      .locator(".CodeMirror");
   }
 
   /**
    * Builds the locator for one of the read-only Refresh/Identity/Access
-   * Token inputs. These are plain `<input>` elements with no `id` of
-   * their own — only their wrapping `<label>` carries a (dangling)
-   * `for="Access-Token"`-style attribute — so they must be reached via
-   * that label's child input, not a `#Access-Token` id selector.
+   * Token inputs (`data-testid="auth-field-Access-Token"` and so on).
    */
   private oauth2TokenInput(id: string): Locator {
-    return this.page.locator(`${this.TABPANEL} label[for="${id}"] input`);
+    return this.page.locator(this.TABPANEL).getByTestId(`auth-field-${id}`);
   }
 }
