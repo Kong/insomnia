@@ -106,8 +106,12 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       );
       const message = (
         <>
-          <span className="capitalize">{result.testCase}</span>
-          <span className="text-neutral-400">{result.errorMessage ? ' | ' + result.errorMessage : ''}</span>
+          <span data-testid="test-result-case" className="capitalize">
+            {result.testCase}
+          </span>
+          <span data-testid="test-result-error" className="text-neutral-400">
+            {result.errorMessage ? ' | ' + result.errorMessage : ''}
+          </span>
         </>
       );
       const testCategory =
