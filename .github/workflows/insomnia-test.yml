@@ -153,8 +153,10 @@ jobs:
       - id: matrix
         working-directory: packages/insomnia-test
         run: |
-          count=$(npx playwright test --list 2>&1 | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+')
+          list_output=$(npx playwright test --list 2>&1) || true
+          count=$(echo "$list_output" | grep -oE '^Total: [0-9]+' | grep -oE '[0-9]+' || true)
           if [ -z "$count" ] || [ "$count" -lt 1 ]; then
+            echo "$list_output"
             echo "ERROR: could not determine test count"; exit 1
           fi
           total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
