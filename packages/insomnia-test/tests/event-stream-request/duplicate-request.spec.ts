@@ -37,6 +37,6 @@ test("Verify Duplicated Event Stream Request Keeps Url, Method and Headers", asy
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.method).toBe(request.method);
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`X-Custom: ${headerValue}`);
 });
