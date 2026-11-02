@@ -24,6 +24,6 @@ test("Verify Testing A Default Mock Route Returns 200 With No Body", async ({
   });
   const responseView = await mockServerFlow.test(route);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toBeUndefined();
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toBeUndefined();
 });
