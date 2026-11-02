@@ -32,14 +32,14 @@ test('Verify GraphQL Request Sends the Basic Authentication Header Until Authent
   await graphqlRequestFlow.setAuthentication(request, { type: 'none' });
   const unauthenticatedResponse = await graphqlRequestFlow.send(request);
 
-  expect(authenticatedResponse.statusCode).toBe(200);
-  expect(authenticatedResponse.body).toMatchObject({
+  expect(authenticatedResponse.statusBar.code).toBe(200);
+  expect(authenticatedResponse.preview).toMatchObject({
     headers: expect.objectContaining({
       authorization: `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`,
     }),
   });
-  expect(unauthenticatedResponse.statusCode).toBe(200);
-  expect((unauthenticatedResponse.body as { headers: Record<string, string> }).headers).not.toHaveProperty(
+  expect(unauthenticatedResponse.statusBar.code).toBe(200);
+  expect((unauthenticatedResponse.preview as { headers: Record<string, string> }).headers).not.toHaveProperty(
     'authorization',
   );
 });
