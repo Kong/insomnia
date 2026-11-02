@@ -40,8 +40,8 @@ test("Import HTTP Request by Curl Command", async ({ user }) => {
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(201);
-  expect(responseView.statusMessage).toBe("Created");
+  expect(responseView.statusBar.code).toBe(201);
+  expect(responseView.statusBar.message).toBe("Created");
   expect(responseView.headers).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
