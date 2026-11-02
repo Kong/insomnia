@@ -51,6 +51,6 @@ test("Verify Cancelling an In-Flight HTTP Request Shows a Cancellation Message a
   const laterResponse = await httpRequestFlow.send(laterRequest);
 
   expect(requestStateAfterCancel).toBe(RequestState.Idle);
-  expect(cancelledResponse.statusCode).toBeUndefined();
-  expect(laterResponse.statusCode).toBe(200);
+  expect(cancelledResponse.statusBar.code).toBeUndefined();
+  expect(laterResponse.statusBar.code).toBe(200);
 });

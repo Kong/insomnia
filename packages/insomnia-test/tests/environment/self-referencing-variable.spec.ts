@@ -45,8 +45,8 @@ test("Verify Self-Referencing Variable Resolves To Literal Unresolved Text", asy
   } satisfies HttpRequest);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     args: { value: `{{${selfVariable}}}` },
   });
 });
