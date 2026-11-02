@@ -193,11 +193,18 @@ export class Tree {
    * sibling Project rows (`proj_`-keyed) are never auto-expanded, since
    * those can hold unrelated, pre-existing content outside the current
    * test's scope. Capped to guard against an unexpected toggle that
+<<<<<<< Updated upstream
    * doesn't actually collapse on click.
+=======
+   * doesn't actually collapse on click. Only toggles containing a chevron
+   * icon count: Environment/MCP rows also render an icon-less, no-op
+   * "Expand {name}" button that never expands.
+   * @param grid - The navigation tree grid to search for collapsed rows
+>>>>>>> Stashed changes
    */
   private static async expandAllCollapsed(grid: Locator): Promise<void> {
     const collapsedWorkspaceRows = grid.locator(
-      'div[role="row"][data-key^="wrk_"]:has(button[aria-label^="Expand "])',
+      'div[role="row"][data-key^="wrk_"]:has(button[aria-label^="Expand "] svg)',
     );
     const alreadyClicked = new Set<string>();
     for (let clicks = 0; clicks < 50; clicks++) {
