@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -99,5 +100,33 @@ tags:
           description: OK`;
     const result = await lintSpecification({ specContent: badSpec });
     expect(result.isValid).toBe(false);
+  });
+
+  // Exercises type arrays with null, const, examples arrays, $ref siblings, contentMediaType, mutualTLS,
+  // webhooks and license identifier.
+  it('should lint a valid OpenAPI 3.1 spec without any results', async () => {
+    const specContent = fs.readFileSync(path.join(__dirname, 'fixtures/openapi-3.1-valid.yaml'), 'utf8');
+    const result = await lintSpecification({ specContent });
+    expect(result.results).toEqual([]);
+    expect(result.isValid).toBe(true);
+  });
+
+  // Exercises $self, query, additionalOperations, in: querystring, itemSchema, tag parent/kind,
+  // xml.nodeType, discriminator.defaultMapping, oauth2MetadataUrl, device flow and deprecated schemes.
+  it('should lint a valid OpenAPI 3.2 spec without any results', async () => {
+    const specContent = fs.readFileSync(path.join(__dirname, 'fixtures/openapi-3.2-valid.yaml'), 'utf8');
+    const result = await lintSpecification({ specContent });
+    expect(result.results).toEqual([]);
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should still report structural errors on an OpenAPI 3.2 spec', async () => {
+    const specContent = fs
+      .readFileSync(path.join(__dirname, 'fixtures/openapi-3.2-valid.yaml'), 'utf8')
+      .replace('  version: 1.0.0\n', '')
+      .replace('    query:\n', '    query:\n      notAnOperationField: true\n');
+    const result = await lintSpecification({ specContent });
+    expect(result.isValid).toBe(false);
+    expect(result.results?.map(r => r.path.join('.'))).toEqual(['info', 'paths./pets.query']);
   });
 });
