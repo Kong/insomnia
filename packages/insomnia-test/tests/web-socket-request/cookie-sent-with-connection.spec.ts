@@ -34,6 +34,6 @@ test("Verify Linked Cookie Is Sent With WebSocket Connection", async ({
   const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`cookie: ${cookieKey}=${cookieValue}`);
 });

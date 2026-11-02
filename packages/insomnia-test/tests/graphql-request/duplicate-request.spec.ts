@@ -41,7 +41,7 @@ test("Verify Duplicated GraphQL Request Keeps Url, Body and Headers", async ({
   expect(duplicated).toBeTruthy();
   expect(duplicated!.url).toBe(request.url);
   expect(duplicated!.body!.text).toBe(request.body!.text);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({ "x-custom": headerValue }),
   });
 });
