@@ -76,8 +76,14 @@ export const createFieldEncryptionHooks = (
   };
 
   const beforeDeserialization = (line: string) => {
+    let doc;
     try {
-      const doc = JSON.parse(line);
+      doc = JSON.parse(line);
+    } catch {
+      // A genuinely corrupt line is not ours to handle: NeDB's own corrupt-line handling applies, exactly as without encryption
+      return line;
+    }
+    try {
       const type = getDocType(doc);
       if (type === undefined) {
         return line;

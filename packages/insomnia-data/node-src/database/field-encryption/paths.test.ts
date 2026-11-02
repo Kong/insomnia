@@ -73,4 +73,28 @@ describe('forEachEncryptedLeaf()', () => {
   it('does not follow inherited properties', () => {
     expect(collect({}, ['toString', 'constructor.name'])).toEqual([]);
   });
+
+  it('goes through arrays of arrays with [][]', () => {
+    expect(collect({ x: [['a', 'b'], ['c']] }, ['x[][]'])).toEqual([
+      { path: 'x[0][0]', value: 'a' },
+      { path: 'x[0][1]', value: 'b' },
+      { path: 'x[1][0]', value: 'c' },
+    ]);
+    expect(collect({ x: [[{ s: '1' }], [{ s: '2' }, {}]] }, ['x[][].s'])).toEqual([
+      { path: 'x[0][0].s', value: '1' },
+      { path: 'x[1][0].s', value: '2' },
+    ]);
+  });
+
+  it('skips elements that are not arrays where [][] expects one', () => {
+    expect(collect({ x: [['a'], 'b', null, { y: 1 }, 5] }, ['x[][]'])).toEqual([{ path: 'x[0][0]', value: 'a' }]);
+  });
+
+  it('lets the visitor replace values inside nested arrays', () => {
+    const doc = { x: [['a'], ['b']] };
+    forEachEncryptedLeaf(doc, ['x[][]'], ({ container, key }) => {
+      container[key] = 'replaced';
+    });
+    expect(doc).toEqual({ x: [['replaced'], ['replaced']] });
+  });
 });

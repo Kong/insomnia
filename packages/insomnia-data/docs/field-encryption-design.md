@@ -14,19 +14,23 @@ An audit of all 40+ data models identified 12+ models containing sensitive field
 
 | Model                                           | Sensitive Field Paths                                                                                                                           | Nesting Depth |
 | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Request                                         | `authentication.password`, `.token`, `.clientSecret`, `.accessToken`, `.refreshToken`, `.secretAccessKey`, `.sessionToken`, `.privateKey`, etc. | 2             |
+| Request                                         | `authentication.*`: `password`, `token`, `value`, `key`, `clientSecret`, `accessToken`, `refreshToken`, `secretAccessKey`, `sessionToken`, `accessKeyId`, `privateKey`, `consumerSecret`, `tokenSecret` (see the field list below) | 2             |
 | ClientCertificate                               | `passphrase`, `cert`, `key`, `pfx`                                                                                                              | 1             |
-| GitCredentials                                  | `credentials.token`, `credentials.password`, `refreshToken`                                                                                     | 1–2           |
-| CloudCredential                                 | `credentials.accessKeyId`, `.secretAccessKey`, `.sessionToken`, `.client_secret`, etc.                                                          | 2             |
+| GitCredentials                                  | `token`, `refreshToken` (legacy top-level), `credentials.token`, `credentials.refreshToken`, `credentials.password`                            | 1–2           |
+| CloudCredential                                 | `credentials.accessKeyId`, `.secretAccessKey`, `.sessionToken`, `.client_secret`, `.secret_id`, `.access_token`, `.accessToken`                 | 2             |
 | OAuth2Token                                     | `accessToken`, `refreshToken`, `identityToken`                                                                                                  | 1             |
 | CookieJar                                       | `cookies[].value`                                                                                                                               | 2             |
 | GrpcRequest                                     | `reflectionApi.apiKey`                                                                                                                          | 2             |
-| WebSocketRequest / SocketIORequest / McpRequest | Same authentication fields as Request                                                                                                           | 2             |
+| RequestGroup (folder) / WebSocketRequest / SocketIORequest / McpRequest | Same authentication fields as Request. They share the `AuthenticationSchema`, so the same marks cover them                                     | 2             |
 | RequestVersion                                  | `compressedRequest` — gzip + base64 snapshot of the full request (including `authentication`), written on every send of a changed request      | 1             |
 
 **Characteristics:** Sensitive fields are mostly `string` types, often nested inside `authentication` objects or array elements.
 
+**Authentication field list:** The 13 authentication types share one schema, and the encrypted names are the union over all of them: `password` (Basic, Digest, NTLM, OAuth2), `token` (Bearer, SingleToken), `value` (API Key), `key` (Hawk), `clientSecret`, `accessToken`, `refreshToken` (OAuth2), `consumerSecret`, `tokenSecret`, `privateKey` (OAuth1 and ASAP), `secretAccessKey`, `sessionToken` and `accessKeyId` (AWS IAM). Identifier-like and short-lived values are not encrypted: `clientId`, `tokenKey`, Hawk `id`, ASAP `keyId`, OAuth2 `code` and `state`, OAuth1 `verifier`. Because names are merged across the union (4.4), API Key auth's `key` (a header name) is encrypted as well.
+
 **Sensitive data inside opaque values:** A field that embeds sensitive data in an encoded form is encrypted as a whole string. RequestVersion's `compressedRequest` is a gzip + base64 copy of the entire request, so encrypting only the Request's `authentication.*` fields would leave the same secrets readable in `insomnia.RequestVersion.db`.
+
+**Out of scope — legacy Git repository credentials:** `GitRepository.credentials` (`username` with `password` or `token`) is a deprecated field that a startup migration moves to GitCredentials and sets to `null`. It is not encrypted; values that are still present before the migration has run stay plaintext.
 
 **Out of scope — confidential environment variables:** Environment variables can be flagged as confidential (`kvPairData[].isConfidential`, serialized as `confidentialKeys` in v5 export and Git Sync YAML). This flag is a display-masking policy (preview, timeline, generated code) and does not change how values are stored. This design does **not** encrypt confidential variables; their values remain plaintext in the local database. Environment variables of type `SECRET` are already encrypted by the Vault.
 
@@ -126,7 +130,7 @@ A local AES-256 key auto-generated on first launch of the Insomnia App (regardle
 ### 4.2 Encryption Algorithm & Key
 
 - **Algorithm:** AES-256-GCM (random 12-byte IV, 128-bit authentication tag)
-- **Implementation:** synchronous `node:crypto` in the main process — `crypto.createCipheriv` / `createDecipheriv` with `aes-256-gcm`. The `KeyObject` is created once when the key is loaded and reused for every value. Not WebCrypto (`crypto.subtle`): it is async-only, and NeDB's startup rewrite awaits the hook one document at a time, so its per-call overhead is paid once per document (measured ~6× slower over 20k values)
+- **Implementation:** synchronous `node:crypto` in the main process — `crypto.createCipheriv` / `createDecipheriv` with `aes-256-gcm`. The `KeyObject` is created once when the key is loaded and reused for every value; the hook factory rejects a key that is not a 256-bit secret `KeyObject`. Not WebCrypto (`crypto.subtle`): it is async-only, and NeDB's startup rewrite awaits the hook one document at a time, so its per-call overhead is paid once per document (measured ~6× slower over 20k values)
 - **Key:** Locally generated AES-256 key — auto-generated on first launch of the Insomnia App, regardless of login state
 - **Key generation:** On first launch, if no local encryption key exists, generate a new AES-256 key with `crypto.generateKeySync('aes', { length: 256 })`. It is serialized as JWK (`keyObject.export({ format: 'jwk' })`) for protection with safeStorage and for export (5.3)
 - **Key local protection:** Encrypted with Electron's asynchronous `safeStorage` API before storing locally (see 4.2.1)
@@ -185,8 +189,14 @@ type initOptions = DataStoreOptions & { dbPath?: string; fieldEncryptionKey?: Fi
 
 init: async ({ dbPath, fieldEncryptionKey, ...config }: initOptions = {}, forceReset = false) => {
   // { afterSerialization, beforeDeserialization, testSerializationHooks: false }
+  // The failure report is owned by this database instance (4.3.1); the path lookup is the derived path table (4.4)
   const encryptionHooks =
-    fieldEncryptionKey && !config.inMemoryOnly ? createFieldEncryptionHooks(fieldEncryptionKey) : {};
+    fieldEncryptionKey && !config.inMemoryOnly
+      ? createFieldEncryptionHooks(fieldEncryptionKey, {
+          getEncryptedFieldPaths: models.getEncryptedFieldPathsForType,
+          failureReport,
+        })
+      : {};
   const defaultConfig: NeDB.DataStoreOptions = {
     autoload: true,
     corruptAlertThreshold: 0.9,
@@ -220,7 +230,11 @@ init: async (config: DataStoreOptions = {}, forceReset = false) => {
 - **beforeDeserialization(line):** Called after reading from disk. Parses the JSON line → looks up the encrypted field paths for the doc's `type` (see 4.4) → decrypts the values on those paths that count as ciphertext (4.2) → re-stringifies. Values on other paths are never touched. Never throws (see 4.3.1)
 - **`testSerializationHooks: false`:** NeDB's self-test feeds random non-JSON strings through the hooks, which JSON-parsing hooks cannot handle
 - **Persistent instances only:** `inMemoryOnly` instances never write to disk, so they get no hooks and require no key
-- **Shared hook factory:** `createFieldEncryptionHooks()` lives in `insomnia-data` (Node side) so inso CLI's `ne-db-adapter.ts`, which constructs `NeDB` directly, reuses the same implementation
+- **Shared hook factory:** `createFieldEncryptionHooks()` lives in `insomnia-data` (Node side, `node-src/database/field-encryption/`) so inso CLI's `ne-db-adapter.ts`, which constructs `NeDB` directly, reuses the same implementation. Its signature is `createFieldEncryptionHooks(key, { getEncryptedFieldPaths, failureReport })`:
+  - `key` is a Node `KeyObject` (`FieldEncryptionKey`). The factory rejects anything that is not a 256-bit secret key when it is called.
+  - `getEncryptedFieldPaths(type)` returns the encrypted paths of a document type (4.4). It is injected, so the hooks have no dependency on the model definitions and can be tested with any path table.
+  - `failureReport` is created by the caller with `createFieldDecryptionFailureReport()`, so each database instance owns its report.
+  - The result can be spread straight into the NeDB options.
 - **Key normally available in the app:** The local key is generated on first launch and present on every later launch. The only exception is a safeStorage failure (4.2.1), handled by degraded mode below
 - **Degraded mode (no usable key):** The main database is initialized without `fieldEncryptionKey`, so no hooks are attached. `enc:insomnia:v1:` values are ordinary strings to NeDB, so they load and save verbatim — no data loss — but are non-functional until the key can be decrypted again (the decryption failure dialog in 5.2 is shown). Sensitive values written during a degraded session stay plaintext; the next healthy launch encrypts them automatically, because every load rewrites each datastore through the hooks (section 6). Migration therefore never happens in a degraded session
 
@@ -230,17 +244,18 @@ init: async (config: DataStoreOptions = {}, forceReset = false) => {
 
 **`beforeDeserialization` never throws:**
 
-- The whole hook is wrapped in `try/catch`; any failure returns a line NeDB can still load.
+- The hook never throws: a line that cannot be parsed is returned unchanged, and any failure after parsing (below) also returns the original line, so NeDB can still load it.
 - **Per-field decrypt failure** (wrong key, or GCM authentication failure of a value that counts as ciphertext, e.g. tampered): keep the original `enc:insomnia:v1:` value verbatim and continue with the remaining fields. The document loads; only that field is non-functional.
-- **Record every failure** as `{ type, _id, path }` in an in-memory failure report owned by the database instance. After init, the main process exposes the report to the renderer, which shows the decryption failure dialog (5.2) when it is non-empty.
-- **Line the hook cannot parse** (genuinely corrupt JSON): return the line unchanged, so NeDB's existing corrupt-line handling applies exactly as it does today. Encryption must not change which lines count as corrupt.
+- **Record every failure** as `{ type, _id, path }` in an in-memory failure report owned by the database instance. `path` is the concrete path inside the document (`authentication.password`, `cookies[1].value`), so the user can tell which array element is affected; the report is de-duplicated by `{ type, _id, path }`. After init, the main process exposes the report to the renderer, which shows the decryption failure dialog (5.2) when it is non-empty.
+- **Line the hook cannot parse** (genuinely corrupt JSON): return the line unchanged and silently, so NeDB's existing corrupt-line handling applies exactly as it does today. Encryption must not change which lines count as corrupt, and must not add log noise for lines that were already corrupt.
+- **Any other failure after parsing** (e.g. the path lookup itself throws, which is a bug in our code): return the original line, so the document still loads, and log the error with `console.error`. The log never contains the line, which may hold secrets. Nothing is added to the failure report, because no specific field is known to have failed. The same bug would make `afterSerialization` throw (fail closed, below), so it cannot stay hidden.
 - **Lookalike values:** a string that starts with `enc:insomnia:v1:` but does not count as ciphertext (4.2) — on a non-encrypted path, or malformed — is plaintext: no decryption attempt, no report, value unchanged. This prevents false decryption failure dialogs for user data that happens to contain the prefix. A ciphertext that was truncated below the well-formed length is consequently treated the same way: kept verbatim (and written back unchanged, since it starts with the prefix) but not listed in the dialog.
 
 **`afterSerialization` never writes plaintext for an encrypted field:**
 
 - **Values already starting with `enc:insomnia:v1:` are written unchanged**, never encrypted again. This keeps values that failed decryption byte-identical across rewrites, so they remain recoverable once the correct key is available.
   - **Accepted trade-off:** The check is by prefix only. A plaintext value in an encrypted field that itself starts with `enc:insomnia:v1:` (realistically only a deliberately crafted value) is therefore written unencrypted. Avoiding this would require tracking exactly which values failed decryption; the cost is not justified for that case.
-- **If encryption itself fails, the hook throws instead of falling back to plaintext.**
+- **If encryption itself fails, the hook throws instead of falling back to plaintext.** The error names the document type and the path, never the value, and carries the original error as its `cause`. The write hook does not guard against a line that is not JSON (NeDB always produces valid JSON), so such a line throws too.
   - **Why throw:** With the key already in memory and `node:crypto`, encryption does not fail in normal operation. A failure means a bug in our code (e.g. a wrong path walk, or a non-string value passed to the cipher). With a plaintext fallback, that bug would be invisible: data still round-trips, tests still pass, and sensitive fields silently stay plaintext — the original security finding would remain while appearing fixed. Throwing makes such a bug fail loudly in development and tests (fail closed).
   - **Cost if it ever happens on a user's machine:** NeDB builds all lines before touching the file, so nothing partial is written. During an insert/update, the operation rejects; NeDB has already applied the change in memory, so it is lost on restart. During the startup rewrite, that datastore's load fails and its `.db` file is left untouched (see "Load failures" below).
   - **Not in conflict with degraded mode (4.3):** Degraded mode also writes plaintext, but it is an explicit state entered after detecting that the key is unavailable, and the user is told. A per-field plaintext fallback would happen silently.
@@ -268,7 +283,11 @@ import { z } from 'zod/v4';
 // published insomnia.schema JSON, and globalRegistry metadata would leak into it.
 export const encryptedFieldRegistry = z.registry<{ encrypted: true }>();
 
-export const encrypted = <T extends z.ZodType>(schema: T): T => schema.register(encryptedFieldRegistry, { encrypted: true });
+// Returns the same schema, so inferred types are unchanged
+export const encrypted = <T extends z.ZodType>(schema: T): T => {
+  encryptedFieldRegistry.add(schema as z.ZodType, { encrypted: true });
+  return schema;
+};
 ```
 
 ```typescript
@@ -285,19 +304,27 @@ export const CookieSchema = z.object({
 });
 ```
 
-**Path derivation** (`getEncryptedFieldPaths(schema)`) runs once per model `schema` and produces a `Record<AllTypes, string[]>` used by both `afterSerialization` and `beforeDeserialization`:
+`encrypted()` must be applied **last, to the finished string**. The mark belongs to that one schema node. Wrappers added afterwards (`.optional()`, `.nullable()`, `.default()`, ...) keep the node inside them, so the mark survives. Zod methods that change the string itself (`.min()`, `.trim()`, `.regex()`, `.check()`, ...) create a copy of the node that is not marked, so `encrypted(z.string()).min(1)` silently stays plaintext and cannot be detected from the schema. Write `encrypted(z.string().min(1)).optional()` instead. (`.describe()` and `.meta()` also copy the node, but the copy points back at the original and keeps the mark.) A path that is missing from the snapshot test below is the first sign of this mistake.
+
+**Path derivation** (`getEncryptedFieldPaths(schema)`, in `encrypted-field.ts`) walks one model `schema` and returns its sorted, de-duplicated paths. `getEncryptedFieldPathsByType()` (`src/models/encrypted-field-paths.ts`, exported through `models`) calls it for every model once, on first use, and returns a `Record<AllTypes, string[]>` that has an entry for every type (an empty list when the type has no encrypted fields). `getEncryptedFieldPathsForType(type)` is the lookup that both `afterSerialization` and `beforeDeserialization` use; it returns an empty list for unknown types. The walk follows these rules:
 
 - `ZodObject` → recurse into each key (`authentication.password`)
-- `ZodArray` → `[]` segment: `cookies[].value` means encrypt the `value` field for every element in the array
-- `ZodOptional` / `ZodNullable` / `ZodDefault` / `ZodPipe` → unwrap; a field is encrypted if the inner schema or any wrapper layer is registered
+- `ZodArray` → `[]` segment: `cookies[].value` means encrypt the `value` field for every element in the array. An array of arrays repeats it (`a[][]`)
+- `ZodOptional` / `ZodNullable` / `ZodDefault` / `ZodPrefault` / `ZodNonOptional` / `ZodReadonly` / `ZodCatch` / `ZodSuccess` → unwrap; a field is encrypted if the inner schema or any wrapper layer is registered
+- `ZodPipe` → follow the side that is not a transform (`z.preprocess(fn, schema)` is pipe(transform, schema), `schema.transform(fn)` is pipe(schema, transform))
 - `ZodUnion` / `ZodDiscriminatedUnion` → union of the paths of all options. E.g. Request `authentication` is a discriminated union of 13 auth types, so `authentication.password` is collected once from Basic, Digest, NTLM and OAuth2
-- Only `string` leaves may be marked, since the encrypted value format is a string; derivation throws otherwise
+- `ZodIntersection` → both sides; `ZodLazy` → the resolved schema, and a lazy schema already being expanded is not expanded again, so recursive schemas such as `JsonSchema` terminate
+- Only `string` leaves may be marked, since the encrypted value format is a string; derivation throws otherwise, and also when an object, array or other container is marked
+- A marked field inside a container that has no path syntax (`record`, `map`, `set`, `tuple`, or the `catchall` of an object) makes derivation throw, since the field could not be located
+- A Zod schema type the walk has not been taught about makes derivation throw instead of being skipped, because a marked field inside it would silently stay plaintext
+
+**Zod upgrades:** The walk reads each node's `_zod.def`, which is tied to the Zod version, and new node kinds appear over time. It is therefore an exhaustive `switch` over `z.core.$ZodTypes`: a Zod upgrade that adds a node kind, or renames a field the walk reads, fails `npm run type-check` and points at `encrypted-field.ts`, where the new kind has to be classified (wrapper, container, leaf). A kind that exists only at runtime throws at derivation. The file's header comment explains the walk in detail.
 
 **Trade-off:** Union paths are merged by field name, not by discriminator. A name that is a secret in one variant but not in another (Hawk `key` is a secret; API Key auth's `key` is the header name) is encrypted in both. This over-encrypts a harmless value in exchange for a simple path syntax with no discriminator-aware rules.
 
-**Models not yet on Zod:** ClientCertificate, CloudCredential, OAuth2Token, GitCredentials and RequestVersion are still plain interfaces. Phase 10 (section 7) migrates them to Zod schemas following the existing `createModelSchema` pattern so all models use one mechanism. Until a model is migrated, it may export a literal `encryptedFields: string[]`, which is merged into the same map and removed once the model is migrated.
+**Models not yet on Zod:** ClientCertificate, CloudCredential, OAuth2Token, GitCredentials and RequestVersion are still plain interfaces. Phase 10 (section 7) migrates them to Zod schemas following the existing `createModelSchema` pattern so all models use one mechanism. Until a model is migrated, it exports a literal `encryptedFields: string[]`, which is merged into the same map and removed once the model is migrated. A model must not have both a `schema` and `encryptedFields`, and a test checks that the first segment of every literal path is a field of the model's `init()` result, to catch typos while the arrays are hand-maintained.
 
-A snapshot unit test of the derived map makes every change to the set of encrypted fields visible in code review.
+A snapshot unit test of the derived map (every type, including those with no encrypted fields) makes every change to the set of encrypted fields visible in code review, and a new model type appears in it as well. A further test runs every model's real paths through the hooks (encrypt, decrypt, wrong key, tampered and lookalike values), so a path that matches nothing is caught.
 
 ### 4.5 Impact on Existing Features
 
@@ -424,11 +451,11 @@ Phases define commit boundaries on the feature branch, ordered so that each phas
 
 | Phase   | Content | Notes |
 | ------- | ------- | ----- |
-| Phase 1 | **Encryption core** (`insomnia-data`, Node side): value encrypt/decrypt with `node:crypto`; value format and "counts as ciphertext" check (4.2); path walking; `createFieldEncryptionHooks()` implementing all rules in 4.3 and 4.3.1 | Pure functions, no Electron dependency. All 4.3.1 test cases live here |
-| Phase 2 | **Encrypted field definitions** (4.4): `encrypted()` registry, `getEncryptedFieldPaths()`, mark fields in models already on Zod; temporary `encryptedFields` arrays for the 5 models still on interfaces | Snapshot test of the derived path map |
-| Phase 3 | **Database integration** (4.3): `fieldEncryptionKey` init option, hooks attached per instance, skipped for `inMemoryOnly`; `init()` awaits every datastore's `autoloadPromise` and rejects on failure (4.3.1) | Tests against real NeDB in a temp directory: mixed plaintext/ciphertext reads, document count unchanged after rewrite, corrupt-line handling unchanged |
+| Phase 1 | **Encryption core** (`insomnia-data`, Node side): value encrypt/decrypt with `node:crypto`; value format and "counts as ciphertext" check (4.2); path walking; `createFieldEncryptionHooks()` implementing all rules in 4.3 and 4.3.1 | Pure functions, no Electron dependency. The 4.3.1 test cases live here, run against a test path table; Phase 2 repeats them against the real model paths |
+| Phase 2 | **Encrypted field definitions** (4.4): `encrypted()` registry, `getEncryptedFieldPaths()`, mark fields in models already on Zod; temporary `encryptedFields` arrays for the 5 models still on interfaces | Snapshot test of the derived path map; `getEncryptedFieldPathsByType()` / `getEncryptedFieldPathsForType()` |
+| Phase 3 | **Database integration** (4.3): `fieldEncryptionKey` init option, hooks attached per instance, skipped for `inMemoryOnly`; `init()` awaits every datastore's `autoloadPromise` and rejects on failure (4.3.1); when a key is given, `init()` also builds the path table up front, so a broken schema fails `init()` instead of the first hook call | Tests against real NeDB in a temp directory: mixed plaintext/ciphertext reads, document count unchanged after rewrite, corrupt-line handling unchanged |
 | Phase 4 | **Key lifecycle** (4.2.1, 6.3): `ElectronStorage.setItemDurable` / `getItemStrict`; async safeStorage wrapper (retry with backoff, `shouldReEncrypt` write-back); key persisted and verified before first use; degraded mode; wired into `database.main.ts` | From this phase on, encryption is active in the app |
-| Phase 5 | **User-facing error handling**: failure report exposed to the renderer via IPC; decryption failure dialog (5.2); startup error when a datastore fails to load (4.3.1) | |
+| Phase 5 | **User-facing error handling**: failure report exposed to the renderer via IPC; decryption failure dialog (5.2); startup error when a datastore fails to load (4.3.1) | A `.db` file can hold several lines per document, and deleted documents leave old lines until the next rewrite, so the report is reconciled after load: entries of documents that no longer exist in memory are dropped |
 | Phase 6 | **Migration verification** (section 6): end-to-end test on the plaintext `insomnia-legacy-db` smoke-test fixture — first launch encrypts all sensitive fields, data intact, interruption safe | Migration itself needs no code beyond Phases 3–4 |
 | Phase 7 | **Benchmark harness + baseline measurement** ([field-encryption-performance.md](./field-encryption-performance.md) section 6) | "No encryption" = `init()` without `fieldEncryptionKey` |
 | Phase 8 | **inso CLI** `--encryption-key` / `INSOMNIA_ENCRYPTION_KEY` (5.3), reusing `createFieldEncryptionHooks()` in `ne-db-adapter.ts` | |
