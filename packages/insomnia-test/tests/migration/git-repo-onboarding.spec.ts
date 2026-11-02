@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT, test } from "../../misc/fixtures";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT, test } from "@package/misc/fixtures";
 
 const testWithPendingGitMigration = test.extend({
   dataPath: async ({ dataPath }, use) => {

@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../../../enums/http-method";
-import { ProjectType } from "../../../../enums/project-types";
-import { HTTP_SERVER, test } from "../../../../misc/fixtures";
-import { EnvironmentKvPairDataType } from "../../../../models/environment";
-import { Project } from "../../../../models/project";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { HTTP_SERVER, test } from "@package/misc/fixtures";
+import { EnvironmentKvPairDataType } from "@package/models/environment";
+import { Project } from "@package/models/project";
 
 test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
   // This test's later cookie-persistence check (CookieFlow.link ->
