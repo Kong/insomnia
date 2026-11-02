@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
@@ -8,6 +6,7 @@ import { Collection } from "@package/models/collection";
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import { Folder } from "@package/models/folder";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const sharedVariable = faker.string.alpha(8);
 const subOnlyVariable = faker.string.alpha(9);
