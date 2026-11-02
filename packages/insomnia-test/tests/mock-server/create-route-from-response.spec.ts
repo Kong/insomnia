@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { MOCK_BIN_SERVER, MOCK_BIN_SOURCE_RESPONSE, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { MockServer } from "@package/models/mock-server";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Creating A Mock Route From A Request Response", async ({
   user,

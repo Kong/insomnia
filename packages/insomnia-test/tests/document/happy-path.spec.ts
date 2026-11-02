@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "@package/misc/fixtures";
@@ -13,6 +11,7 @@ import {
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import { Project } from "@package/models/project";
 import type { SocketIORequest } from "@package/models/socket-io-request";
+import { expect } from "@playwright/test";
 
 const socketIoUrl = SOCKET_SERVER;
 
