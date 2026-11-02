@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContentType } from "@package/enums/content-type";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
@@ -9,6 +7,7 @@ import { Collection } from "@package/models/collection";
 import { EnvironmentKvPairDataType } from "@package/models/environment";
 import type { HttpRequest } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const url = `${HTTP_SERVER}/post`;
 
