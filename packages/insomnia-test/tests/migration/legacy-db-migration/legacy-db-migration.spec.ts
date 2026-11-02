@@ -44,6 +44,6 @@ testWithLegacyDatabase(
     expect(request?.url).toBe("https://httpbin.org/status/200");
     expect(designDocument).toBeTruthy();
     expect(designDocumentRequest).toBeTruthy();
-    expect(designDocumentResponse.statusCode).toBe(200);
+    expect(designDocumentResponse.statusBar.code).toBe(200);
   },
 );

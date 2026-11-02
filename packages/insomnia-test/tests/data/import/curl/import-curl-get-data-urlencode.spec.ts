@@ -39,5 +39,5 @@ test("Import HTTP Request by Curl Command With -G and --data-urlencode Converts 
   const responseView = await httpRequestFlow.send(request);
 
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
 });
