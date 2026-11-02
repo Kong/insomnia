@@ -57,7 +57,7 @@ test("Import OpenAPI Spec by Url", async ({ user }, testInfo) => {
 
   await environmentFlow.link(collection!, environment);
 
-  const request = await httpRequestFlow.get("Find pet by ID", collection);
+  const request = await httpRequestFlow.get("Find pet by ID");
 
   const cookieList = await cookieFlow.link(request!, [
     {
