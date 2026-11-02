@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContentType } from "@package/enums/content-type";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { HTTP_SERVER_HTTPS, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const query = "{ characters { results { name } } }";
 const body = { mimeType: ContentType.JSON, text: JSON.stringify({ query }) };
