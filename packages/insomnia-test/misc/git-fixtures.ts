@@ -1,6 +1,6 @@
 import * as crypto from "node:crypto";
 
-import type { GitCredential } from "../models/git-credential";
+import type { GitCredential } from "@package/models/git-credential";
 import { GIT_SERVER as GIT_SERVER_URL,test as base } from "./fixtures";
 
 // The most recently created repo (set by the `gitRepo` fixture), used as
