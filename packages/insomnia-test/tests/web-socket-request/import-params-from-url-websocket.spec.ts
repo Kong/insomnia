@@ -43,10 +43,10 @@ test("Verify Import from URL Moves Query String Into Params and Preserves It on 
     ]),
   );
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("101 Switching Protocols");
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(
       `Preparing request to ${baseUrl}?${paramName1}=${paramValue1}&${paramName2}=${paramValue2}`,
     );
