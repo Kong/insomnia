@@ -11,7 +11,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -23,7 +23,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   );
 
   const requestPath = `/${faker.word.sample()}`;
-  await workspacePage.setSpecification(
+  await specPage.setSpecification(
     JSON.stringify({
       openapi: "3.0.0",
       info: { title: faker.commerce.productName(), version: "1.0.0" },
@@ -34,7 +34,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   );
   const baseline = await workspaceFlow.getLintState();
 
-  await workspacePage.setSpecification(
+  await specPage.setSpecification(
     JSON.stringify({
       openapi: "3.0.0",
       info: { version: "1.0.0" },
@@ -57,7 +57,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference In A YAML Spec",
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -69,7 +69,7 @@ test("Verify Spectral Lint Errors Surface With A Line Reference In A YAML Spec",
   );
 
   const requestPath = `/${faker.word.sample()}`;
-  await workspacePage.setSpecification(
+  await specPage.setSpecification(
     `openapi: 3.0.0
 info:
   title: ${faker.commerce.productName()}
@@ -84,7 +84,7 @@ paths:
   );
   const baseline = await workspaceFlow.getLintState();
 
-  await workspacePage.setSpecification(
+  await specPage.setSpecification(
     `openapi: 3.0.0
 info:
   version: 1.0.0
