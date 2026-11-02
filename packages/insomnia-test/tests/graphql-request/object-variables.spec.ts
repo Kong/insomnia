@@ -37,8 +37,8 @@ test("Verify GraphQL Request With Object Variables", async ({ user }) => {
   });
   const responseView = await graphqlRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: {
       characters: {
         results: [{ name: "Summer Smith", status: "Dead" }],
