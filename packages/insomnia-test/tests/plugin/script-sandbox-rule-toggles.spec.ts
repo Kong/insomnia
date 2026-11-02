@@ -1,7 +1,6 @@
-import { expect } from "@playwright/test";
-
 import { ScriptSandboxRuleGroup } from "@package/enums/script-sandbox-rule-group";
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify Scripting tab rule-group sandbox toggles persist across reopening Preferences", async ({
   user,

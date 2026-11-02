@@ -2,12 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContentType } from "@package/enums/content-type";
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 const wsdl = fs.readFileSync(path.join(import.meta.dirname, "calculator.wsdl"), "utf8");
 const soapBody = fs.readFileSync(path.join(import.meta.dirname, "soap-body.xml"), "utf8");
