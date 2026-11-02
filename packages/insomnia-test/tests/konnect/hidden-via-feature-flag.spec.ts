@@ -1,6 +1,5 @@
-import { expect } from "@playwright/test";
-
 import { setKonnectEntitlement, test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test.afterEach(async () => {
   await setKonnectEntitlement(false);

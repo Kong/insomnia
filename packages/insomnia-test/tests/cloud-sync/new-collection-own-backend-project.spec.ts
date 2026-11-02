@@ -2,12 +2,11 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { SyncStatus } from "@package/enums/sync-status";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
+import { expect } from "@playwright/test";
 
 test("Verify a new collection commits and pushes under its own backend project", async ({
   user,
