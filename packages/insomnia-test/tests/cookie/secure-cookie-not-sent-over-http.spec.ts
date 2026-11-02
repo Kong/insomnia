@@ -46,8 +46,8 @@ test("Verify Secure Cookie Is Sent Over HTTPS But Not Over Plain HTTP", async ({
   await cookieFlow.link(httpRequest, [secureCookie]);
 
   const httpsResponse = await httpRequestFlow.send(httpsRequest);
-  expect(httpsResponse.statusCode).toBe(200);
-  const { cookies: httpsCookies } = httpsResponse.body as {
+  expect(httpsResponse.statusBar.code).toBe(200);
+  const { cookies: httpsCookies } = httpsResponse.preview as {
     cookies: Record<string, string>;
   };
   expect(httpsCookies).toMatchObject({
@@ -55,7 +55,7 @@ test("Verify Secure Cookie Is Sent Over HTTPS But Not Over Plain HTTP", async ({
   });
 
   const httpResponse = await httpRequestFlow.send(httpRequest);
-  const { cookies: httpCookies } = httpResponse.body as {
+  const { cookies: httpCookies } = httpResponse.preview as {
     cookies: Record<string, string>;
   };
   expect(httpCookies).not.toHaveProperty(secureCookie.key);

@@ -59,6 +59,6 @@ test("Verify Sub Environment Variable Overrides Base Environment", async ({
     url: `${HTTP_SERVER}/post?value={{${sharedVariable}}}`,
   } satisfies HttpRequest);
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ args: { value: subValue } });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ args: { value: subValue } });
 });

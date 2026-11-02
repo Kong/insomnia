@@ -65,12 +65,12 @@ test("Verify a folder environment overrides sub and base environments for its re
   const responseInFolder = await httpRequestFlow.send(requestInFolder);
   const responseOutsideFolder = await httpRequestFlow.send(requestOutsideFolder);
 
-  expect(responseInFolder.statusCode).toBe(200);
-  expect(responseInFolder.body).toMatchObject({
+  expect(responseInFolder.statusBar.code).toBe(200);
+  expect(responseInFolder.preview).toMatchObject({
     args: { shared: folderShared, subOnly: subSubOnly },
   });
-  expect(responseOutsideFolder.statusCode).toBe(200);
-  expect(responseOutsideFolder.body).toMatchObject({
+  expect(responseOutsideFolder.statusBar.code).toBe(200);
+  expect(responseOutsideFolder.preview).toMatchObject({
     args: { shared: subShared, subOnly: subSubOnly },
   });
 });
