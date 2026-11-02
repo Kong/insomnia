@@ -32,7 +32,7 @@ test("Verify HTTP request succeeds against a local IPv6 address", async ({
   });
   const responseView = await httpRequestFlow.send(request!);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.statusMessage).toBe("OK");
-  expect(responseView.body).toMatchObject({ data: bodyText });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.statusBar.message).toBe("OK");
+  expect(responseView.preview).toMatchObject({ data: bodyText });
 });

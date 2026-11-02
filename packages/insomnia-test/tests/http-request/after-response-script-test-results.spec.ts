@@ -54,7 +54,7 @@ test('Verify insomnia.test/insomnia.expect report PASS/FAIL results, including a
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   await expect
     .poll(() => responseView.tests?.(), { timeout: DEFAULT_TIMEOUT })
     .toEqual(
