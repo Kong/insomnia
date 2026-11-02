@@ -1,12 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { McpPrimitiveType } from '@package/enums/mcp-capability';
 import { ProjectType } from '@package/enums/project-types';
 import { test } from "@package/misc/fixtures";
 import { scriptMcpListServer } from '@package/misc/mcp-list-server';
 import { McpClient } from '@package/models/mcp-client';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify a JSON-RPC Error Whose Message Is a JSON String Is Shown Readably', async ({ user }) => {
   const { mcpClientFlow, workspaceFlow } = user.flowManager;

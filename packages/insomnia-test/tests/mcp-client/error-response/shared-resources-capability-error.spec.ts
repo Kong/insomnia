@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { McpPrimitiveType } from '@package/enums/mcp-capability';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { scriptMcpListServer } from '@package/misc/mcp-list-server';
 import { McpClient } from '@package/models/mcp-client';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { wholeFailureTitle } from './helpers';
 
 test('Verify Resources and Resource Templates Errors Share One Capability Item Panel', async ({ user }) => {

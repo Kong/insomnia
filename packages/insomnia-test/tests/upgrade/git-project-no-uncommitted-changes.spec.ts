@@ -1,5 +1,3 @@
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
 import { UpgradePhase } from '@package/enums/upgrade-phase';
@@ -9,6 +7,7 @@ import type { UpgradeFixtures } from '@package/misc/upgrade-fixture';
 import { upgradeFixtures, upgradePhase } from '@package/misc/upgrade-fixture';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 const projectName = 'upgrade-git-project';
 const collectionName = 'upgrade-collection';

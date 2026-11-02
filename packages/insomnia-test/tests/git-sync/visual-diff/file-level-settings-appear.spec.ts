@@ -3,12 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { planFileLevelSettings } from './helpers';
 
 test('Verify file-level settings appear in the Visual view and can be staged, unstaged and discarded on their own', async ({ user }) => {

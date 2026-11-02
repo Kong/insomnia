@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
 import { UNDISCARDABLE_WARNING_TEXT } from '@package/tests/git-sync/undiscardable-change/helpers';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify a real edit mixed with an unknown field shows only the unknown fields UI, and discarding shows no undiscardable warning and brings the unknown fields warning back', async ({

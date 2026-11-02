@@ -3,8 +3,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ContentType } from '@package/enums/content-type';
 import { GitChangeList } from '@package/enums/git-change-list';
 import { HttpMethod } from '@package/enums/http-method';
@@ -15,6 +13,7 @@ import { Collection } from '@package/models/collection';
 import { Folder } from '@package/models/folder';
 import { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify a modified request card shows its old and new header values and each edited section, a folder card shows its script, and changed fields no tab covers appear in a Settings tab', async ({ user }) => {
   const { folderFlow, gitSyncFlow, httpRequestFlow, preferencesFlow, workspaceFlow } = user.flowManager;

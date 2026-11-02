@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { buildReorderedCollectionFile } from './helpers';
 
 test('Verify a real edit mixed with a reorder is not flagged until the real edit is discarded', async ({ user }) => {

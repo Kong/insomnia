@@ -3,8 +3,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { GitDiffView } from '@package/enums/git-diff-view';
 import { HttpMethod } from '@package/enums/http-method';
@@ -15,6 +13,7 @@ import { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
 import { buildReorderedCollectionFile } from '@package/tests/git-sync/undiscardable-change/helpers';
 import { buildCollectionFileWithUnknownField } from '@package/tests/git-sync/unknown-fields/helpers';
+import { expect } from "@playwright/test";
 
 test('Verify a file whose committed version is not in the format Insomnia writes shows a warning above its cards, and a file with unrecognized fields shows only the unrecognized-fields warning', async ({ user }) => {
   const { gitSyncFlow, httpRequestFlow, preferencesFlow, workspaceFlow } = user.flowManager;

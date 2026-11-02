@@ -4,13 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
 import { UNDISCARDABLE_WARNING_TEXT } from '@package/tests/git-sync/undiscardable-change/helpers';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify committing a staged file with unknown fields asks for confirmation, only commits after Continue and leaves a clean tree and a clone without the unknown field', async ({

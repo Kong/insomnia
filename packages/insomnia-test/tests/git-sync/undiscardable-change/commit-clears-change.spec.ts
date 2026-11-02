@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
 import { buildReorderedCollectionFile } from "./helpers";
 
 test("Verify committing a hand-reordered file once leaves the working tree clean", async ({

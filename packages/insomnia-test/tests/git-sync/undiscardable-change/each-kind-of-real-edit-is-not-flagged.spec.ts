@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from "@package/enums/git-change-list";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
@@ -8,6 +6,8 @@ import { HTTP_SERVER } from "@package/misc/constants";
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
 import { buildReorderedCollectionFile } from "./helpers";
 
 test("Verify each kind of real edit on a reordered file is not flagged as only reformatting", async ({

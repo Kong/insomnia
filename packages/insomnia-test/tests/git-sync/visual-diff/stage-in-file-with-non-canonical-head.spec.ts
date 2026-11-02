@@ -4,8 +4,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
 import { HTTP_SERVER } from '@package/misc/fixtures';
@@ -13,6 +11,7 @@ import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/
 import { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
 import { buildReorderedCollectionFile } from '@package/tests/git-sync/undiscardable-change/helpers';
+import { expect } from "@playwright/test";
 
 test('Verify staging one request in a file whose HEAD is not canonical only stages that request', async ({ user }) => {
   test.fail(true, "INS-4078");

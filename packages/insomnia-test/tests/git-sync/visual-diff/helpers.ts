@@ -1,10 +1,10 @@
 
 import { faker } from '@faker-js/faker';
-
 import type { GitEntityTypeFiles, GitEntityTypeNames } from '@package/models/git-entity-type-files';
 import type { GitFileLevelSettings } from '@package/models/git-file-level-settings';
 import type { GitLongValues } from '@package/models/git-long-values';
 import type { GitMovedRequest } from '@package/models/git-moved-request';
+
 import { COLLECTION_TEMPLATE } from './entity-type-collection-template';
 
 const FILE_TIMES = { created: 1000, modified: 1000 };

@@ -1,11 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { DEFAULT_TIMEOUT, HTTP_SERVER, test, WS_SERVER } from "@package/misc/fixtures";
 import { Collection } from '@package/models/collection';
 import { EnvironmentKvPairDataType } from '@package/models/environment';
 import { Folder } from '@package/models/folder';
+import { expect } from "@playwright/test";
 
 test('Verify a Cloud Sync collection committed with every document type shows no unknown fields or unsupported warnings when each document is edited and committed again', async ({
   user,

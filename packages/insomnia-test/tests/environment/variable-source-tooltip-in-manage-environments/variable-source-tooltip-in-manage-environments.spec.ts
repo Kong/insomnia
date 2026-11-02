@@ -1,11 +1,10 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify the Variable Source Tooltip in the Manage Environments Modal Is Interactive and Its Open Action Selects the Source Environment Every Time", async ({
   user,

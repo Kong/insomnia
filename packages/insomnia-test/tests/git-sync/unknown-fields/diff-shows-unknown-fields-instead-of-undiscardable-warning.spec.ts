@@ -4,12 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify cloning lists the file with unknown fields and the Commit Changes diff shows the unknown fields banner and highlight instead of the undiscardable warning', async ({

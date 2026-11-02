@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField, type ExtraUnknownField } from './helpers';
 
 test('Verify unknown fields nested deep in request settings, folder request meta, environment meta and the file root are listed on Create Project, show the banner and highlights, and ask for confirmation on commit', async ({

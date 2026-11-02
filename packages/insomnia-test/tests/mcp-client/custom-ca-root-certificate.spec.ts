@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { certPath } from "@package/misc/certs";
 import { MCP_SERVER_CUSTOM_CA_HTTPS, test } from "@package/misc/fixtures";
 import { McpClient } from "@package/models/mcp-client";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Custom CA Certificate Toggle Controls Trust For MCP Client Over TLS", async ({
   user,

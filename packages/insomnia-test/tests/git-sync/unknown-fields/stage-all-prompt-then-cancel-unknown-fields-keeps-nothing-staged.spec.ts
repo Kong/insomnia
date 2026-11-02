@@ -4,12 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
 import { UNDISCARDABLE_WARNING_TEXT } from '@package/tests/git-sync/undiscardable-change/helpers';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify cancelling the unknown fields confirmation after accepting the stage all prompt leaves nothing staged and creates no commit', async ({

@@ -1,6 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ContentType } from '@package/enums/content-type';
 import { GitChangeList } from '@package/enums/git-change-list';
 import { GitDiffView } from '@package/enums/git-diff-view';
@@ -17,6 +15,7 @@ import { MockServer } from '@package/models/mock-server';
 import { Project } from '@package/models/project';
 import { SocketIORequest } from '@package/models/socket-io-request';
 import { WebSocketRequest } from '@package/models/websocket-request';
+import { expect } from "@playwright/test";
 
 test('Verify the diff pane defaults to Text and every new entity card shows its badge, URL on one line and each populated section as its own tab', async ({ user }) => {
   const { gitSyncFlow, httpRequestFlow, mcpClientFlow, mockServerFlow, preferencesFlow, socketIoRequestFlow, webSocketRequestFlow, workspaceFlow } = user.flowManager;

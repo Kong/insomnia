@@ -1,6 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import {
@@ -8,6 +6,7 @@ import {
   EnvironmentKvPairDataType,
 } from "@package/models/environment";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Variables on the Project Environment Page Are Attributed to the Project Environment and Opening Their Source From the Manage Environments Modal Closes It", async ({
   user,

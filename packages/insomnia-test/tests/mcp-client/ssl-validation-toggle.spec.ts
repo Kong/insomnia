@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { MCP_SERVER_HTTPS, test } from "@package/misc/fixtures";
 import { McpClient } from "@package/models/mcp-client";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Disabling SSL Certificate Validation Lets MCP Client Connect To A Self-Signed Server", async ({
   user,

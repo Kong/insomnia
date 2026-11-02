@@ -1,5 +1,4 @@
 import { faker } from "@faker-js/faker";
-
 import type { CloudSyncPage } from "@package/pages/cloud-sync.page";
 import type { CloudSyncCommitDialogPage } from "@package/pages/cloud-sync-commit-dialog.page";
 

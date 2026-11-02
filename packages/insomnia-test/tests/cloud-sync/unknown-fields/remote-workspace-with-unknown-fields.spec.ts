@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
 import { seedCloudSyncProject } from "@package/tests/cloud-sync/support/cloud-sync-mock";
+import { expect } from "@playwright/test";
+
 import { buildCloudSyncDocs } from './helpers';
 
 test('Verify a Cloud Sync workspace whose remote version has unknown fields shows the warning, highlight and commit confirmation', async ({

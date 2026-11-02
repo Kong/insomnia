@@ -1,6 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
@@ -8,6 +6,8 @@ import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
 import { seedCloudSyncProject } from '@package/tests/cloud-sync/support/cloud-sync-mock';
 import { buildCloudSyncDocs } from '@package/tests/cloud-sync/unknown-fields/helpers';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify Cloud Sync and Git Sync unknown fields warnings stay independent in one session', async ({ user }) => {

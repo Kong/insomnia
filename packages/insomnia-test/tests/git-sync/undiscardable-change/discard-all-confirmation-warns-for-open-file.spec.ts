@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { buildReorderedCollectionFile, UNDISCARDABLE_WARNING_TEXT } from './helpers';
 
 test('Verify the Discard all confirmation warns when the open file is an undiscardable change', async ({ user }) => {

@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Folder } from "@package/models/folder";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Deleting a Request, Folder and Collection With Open Tabs via the Delete Shortcut and Context Menu Closes the Dialog Without a Resource-Not-Found Toast", async ({
   user,

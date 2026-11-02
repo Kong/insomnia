@@ -4,11 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT, getServerCommits, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify Commit and push on a staged file with unknown fields asks for confirmation, pushes nothing on Cancel and pushes a commit without the unknown field after Continue', async ({

@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { DEFAULT_TIMEOUT, MCP_SERVER, test } from "@package/misc/fixtures";
 import { McpClient } from '@package/models/mcp-client';
+import { expect } from "@playwright/test";
+
 import { commitEachChange, NO_ROW_WARNINGS, readRowWarnings } from './helpers';
 
 test('Verify a Cloud Sync MCP client committed and then edited shows no unknown fields or unsupported warnings and commits without confirmation', async ({

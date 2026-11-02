@@ -1,6 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { GitChangeList } from '@package/enums/git-change-list';
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
@@ -10,6 +8,7 @@ import { Collection } from '@package/models/collection';
 import { Folder } from '@package/models/folder';
 import { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
 
 test('Verify staging and discarding a folder does not touch the requests inside it, and discarding a new folder warns that its contents go too', async ({ user }) => {
   const { folderFlow, gitSyncFlow, httpRequestFlow, preferencesFlow, workspaceFlow } = user.flowManager;
