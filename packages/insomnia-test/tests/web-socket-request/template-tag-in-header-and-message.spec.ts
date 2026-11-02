@@ -35,7 +35,7 @@ test("Verify Template Tags in WebSocket Header and Message Are Resolved", async 
   const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("x-tag: YWJj");
   await expect
     .poll(
