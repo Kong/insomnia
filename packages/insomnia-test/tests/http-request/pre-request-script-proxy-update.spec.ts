@@ -49,11 +49,11 @@ test("Verify pre-request script reads the configured proxy and overrides it via 
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBeUndefined();
+  expect(responseView.statusBar.code).toBeUndefined();
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("localhost:1111");
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("Trying 127.0.0.1:8888");
 });

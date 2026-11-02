@@ -49,12 +49,12 @@ test("Verify Resource Owner Password Credentials grant fetches tokens with no po
   ).json();
 
   const responseView = await httpRequestFlow.send(request);
-  const body = responseView.body as { authorization?: string };
+  const body = responseView.preview as { authorization?: string };
 
   expect(tokens.accessToken).not.toBe("");
   expect(tokens.refreshToken).not.toBe("");
   expect(windowsAfterFetch).toBe(windowsBeforeFetch);
   expect(lastTokenRequest.grantType).toBe("password");
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });
