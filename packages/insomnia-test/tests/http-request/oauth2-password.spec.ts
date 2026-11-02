@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_PASSWORD, OAUTH2_SERVER, OAUTH2_USERNAME, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { AuthTypeOAuth2 } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Resource Owner Password Credentials grant fetches tokens with no popup and authorizes the sent request", async ({
   user,
