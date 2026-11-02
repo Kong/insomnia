@@ -28,25 +28,25 @@ test("Verify creating a branch with an invalid or already-used name is rejected 
   user,
 }) => {
   const { cloudSyncFlow } = user.flowManager;
-  const { cloudSyncPage } = user.pageManager;
+  const { cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
 
   await cloudSyncFlow.fetch("My Collection R1");
   await cloudSyncPage.openBranchesDialog();
   for (const { name, error } of INVALID_NAMES) {
-    await cloudSyncPage.createBranch(name);
-    await cloudSyncPage.waitForBranchCreationError(error);
+    await cloudSyncBranchesDialogPage.createBranch(name);
+    await cloudSyncBranchesDialogPage.waitForBranchCreationError(error);
   }
 
   const existingBranch = faker.git.branch();
-  await cloudSyncPage.createBranch(existingBranch);
+  await cloudSyncBranchesDialogPage.createBranch(existingBranch);
   await expect
-    .poll(() => cloudSyncPage.isLocalBranchListed(existingBranch))
+    .poll(() => cloudSyncBranchesDialogPage.isLocalBranchListed(existingBranch))
     .toBe(true);
-  await cloudSyncPage.createBranch(existingBranch);
-  await cloudSyncPage.waitForBranchCreationError(
+  await cloudSyncBranchesDialogPage.createBranch(existingBranch);
+  await cloudSyncBranchesDialogPage.waitForBranchCreationError(
     `Branch already exists by name ${existingBranch}`,
   );
   for (const { name } of INVALID_NAMES) {
-    await cloudSyncPage.waitForLocalBranchRemoved(name);
+    await cloudSyncBranchesDialogPage.waitForLocalBranchRemoved(name);
   }
 });
