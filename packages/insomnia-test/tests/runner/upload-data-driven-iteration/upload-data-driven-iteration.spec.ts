@@ -10,7 +10,7 @@ import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
-const dataFilePath = path.join(__dirname, "runner-data.json");
+const dataFilePath = path.join(import.meta.dirname, "runner-data.json");
 const expectedGreetings = ["hello", "bonjour", "hola"];
 
 test("Verify Uploaded Data File Drives Runner Iterations", async ({ user }) => {
