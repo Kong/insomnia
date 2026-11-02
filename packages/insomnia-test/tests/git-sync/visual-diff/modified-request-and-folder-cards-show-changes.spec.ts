@@ -33,7 +33,7 @@ test('Verify a modified request card shows its old and new header values and eac
   await gitSyncFlow.commit(faker.string.alphanumeric(10));
 
   await httpRequestFlow.get(request);
-  await httpRequestPage.setBody({ mimeType: ContentType.JSON, text: '{"edited":true}' });
+  await httpRequestPage.setBody({ mimeType: ContentType.JSON, text: '{"edited":true}' }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
   await httpRequestPage.setMethod(HttpMethod.Post);
   await httpRequestPage.setUrl(newUrl);
   await httpRequestPage.setParams([{ name: 'page', value: '2' }]);

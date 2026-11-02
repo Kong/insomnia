@@ -20,7 +20,7 @@ test('Verify a body type edit on a reordered file is not flagged as only reforma
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
   await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
   await httpRequestFlow.get(requestName);
-  await httpRequestPage.setBody({ mimeType: ContentType.JSON });
+  await httpRequestPage.setBody({ mimeType: ContentType.JSON }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
   await expect
     .poll(async () => (await gitSyncFlow.getChanges()).unstaged, {
       timeout: DEFAULT_TIMEOUT,
