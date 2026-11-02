@@ -5,12 +5,12 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { ProjectType } from "../../enums/project-types";
-import { ResponseExportOption } from "../../enums/response-export-option";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, LONG_TIMEOUT, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { ResponseExportOption } from "@package/enums/response-export-option";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, LONG_TIMEOUT, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 const LARGE_RESPONSE_BYTES = 5 * 1024 * 1024;
 
