@@ -19,7 +19,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success" data-testid="graphql-explorer-root-type-name-query">
+        <span className="success" data-testid="graphql-explorer-root-type-name">
           query
         </span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
@@ -36,7 +36,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success" data-testid="graphql-explorer-root-type-name-mutation">
+        <span className="success" data-testid="graphql-explorer-root-type-name">
           mutation
         </span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
@@ -53,7 +53,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success" data-testid="graphql-explorer-root-type-name-subscription">
+        <span className="success" data-testid="graphql-explorer-root-type-name">
           subscription
         </span>:{' '}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
@@ -67,9 +67,9 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
         <p>A GraphQL schema provides a root type for each kind of operation.</p>
         <h2 className="graphql-explorer__subheading">Root Types</h2>
         <ul className="graphql-explorer__defs">
-          <li data-testid="graphql-explorer-root-type-query">{this.renderQueryType()}</li>
-          <li data-testid="graphql-explorer-root-type-mutation">{this.renderMutationType()}</li>
-          <li data-testid="graphql-explorer-root-type-subscription">{this.renderSubscriptionType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderQueryType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderMutationType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderSubscriptionType()}</li>
         </ul>
       </div>
     );
