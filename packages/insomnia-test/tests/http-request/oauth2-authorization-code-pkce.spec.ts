@@ -1,12 +1,11 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { AuthTypeOAuth2 } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 for (const pkceMethod of ["S256", "plain"] as const) {
   test(`Verify Authorization Code grant with PKCE (${pkceMethod}) is verified server-side and authorizes the sent request`, async ({
