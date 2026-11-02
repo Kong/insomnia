@@ -4,9 +4,9 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../../enums/project-types";
-import { test } from "../../../misc/fixtures";
-import { Project } from "../../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { test } from "@package/misc/fixtures";
+import { Project } from "@package/models/project";
 
 const UNIT_TEST_FIXTURE = fs.readFileSync(
   path.join(import.meta.dirname, "unit-test.yaml"),
