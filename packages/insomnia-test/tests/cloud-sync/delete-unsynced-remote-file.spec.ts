@@ -4,9 +4,9 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { HTTP_SERVER, resetCloudSyncState, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
+import { HttpMethod } from "@package/enums/http-method";
+import { HTTP_SERVER, resetCloudSyncState, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
 import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "./support/cloud-sync-mock";
 
 test.afterAll(async () => {
