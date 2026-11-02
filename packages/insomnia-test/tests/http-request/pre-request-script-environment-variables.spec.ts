@@ -61,8 +61,8 @@ test("Verify pre-request script overrides base environment values through the en
   });
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     json: {
       fallbackToBase: fallbackValue,
       scriptValue: envScriptValue,

@@ -66,8 +66,8 @@ test("Verify query params from the URL, template tags, and the Parameters tab ar
   ]);
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     args: {
       key: ["fromUrl", fromUrlValue, fromEditorValue, "/"],
       space: spaceValue,
