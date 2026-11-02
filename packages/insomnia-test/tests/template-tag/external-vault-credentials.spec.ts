@@ -1,10 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
-import {
-  AWSCredentialType,
-  HashiCorpCredentialType,
-  HashiCorpVaultAuthMethod,
-} from "insomnia-data";
+import type { AWSCredentialType, HashiCorpCredentialType, HashiCorpVaultAuthMethod } from "insomnia-data";
 
 import { ContentType } from "../../enums/content-type";
 import { HttpMethod } from "../../enums/http-method";
@@ -39,7 +35,7 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
         provider: "aws",
         name: awsCredentialName,
         credentials: {
-          type: AWSCredentialType.file,
+          type: "file" as AWSCredentialType.file,
           section: faker.string.alphanumeric(8),
           region: faker.string.alphanumeric(8),
         },
@@ -53,8 +49,8 @@ test("Verify AWS/GCP/HashiCorp Cloud Credentials Resolve via the Vault Template 
         provider: "hashicorp",
         name: hashicorpCredentialName,
         credentials: {
-          type: HashiCorpCredentialType.onPrem,
-          authMethod: HashiCorpVaultAuthMethod.appRole,
+          type: "onPrem" as HashiCorpCredentialType.onPrem,
+          authMethod: "appRole" as HashiCorpVaultAuthMethod.appRole,
           serverAddress: "http://127.0.0.1",
           role_id: faker.string.alphanumeric(8),
           secret_id: faker.string.alphanumeric(8),
