@@ -1,6 +1,5 @@
-import { expect } from "@playwright/test";
-
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify the app's bundled plugins are reported by the plugin bridge and stay off the user-installed Plugins list", async ({
   user,
