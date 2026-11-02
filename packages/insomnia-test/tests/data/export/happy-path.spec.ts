@@ -3,8 +3,6 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ExportFormat } from "@package/enums/export-format";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
@@ -13,6 +11,7 @@ import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { HttpRequest } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify exporting a Collection via its context menu (HAR and Insomnia v5) and a Project via Preferences -> Data each write the expected files", async ({
   user,

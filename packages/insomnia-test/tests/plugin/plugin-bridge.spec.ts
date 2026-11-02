@@ -2,14 +2,13 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { HttpRequest } from "@package/models/http-request";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify the plugin bridge executes request actions, surfaces thrown errors, and handles concurrent calls without cross-talk", async ({
   user,
