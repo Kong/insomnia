@@ -9,7 +9,7 @@ import { test } from "../../../misc/fixtures";
 import { Project } from "../../../models/project";
 
 const UNIT_TEST_FIXTURE = fs.readFileSync(
-  path.join(__dirname, "unit-test.yaml"),
+  path.join(import.meta.dirname, "unit-test.yaml"),
   "utf8",
 );
 
