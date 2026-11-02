@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, test } from "../../../misc/fixtures";
-import { Collection, Info, Specification } from '../../../models/collection';
+import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { Collection, Info, Specification } from '@package/models/collection';
 import { commitEachChange, NO_ROW_WARNINGS, readRowWarnings } from './helpers';
 
 const buildSpec = () =>

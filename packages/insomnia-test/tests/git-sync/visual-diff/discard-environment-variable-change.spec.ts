@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
-import { Collection } from '../../../models/collection';
-import { ENVIRONMENT_TYPE, EnvironmentKvPairDataType } from '../../../models/environment';
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import { Collection } from '@package/models/collection';
+import { ENVIRONMENT_TYPE, EnvironmentKvPairDataType } from '@package/models/environment';
+import { Project } from '@package/models/project';
 
 test('Verify discarding an environment card reverts its variable changes and leaves other environments alone', async ({ user }) => {
   const { cookieFlow, environmentFlow, gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;

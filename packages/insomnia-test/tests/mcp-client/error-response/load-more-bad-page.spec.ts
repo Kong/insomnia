@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { McpListAction, McpPrimitiveType } from '../../../enums/mcp-capability';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, test } from "../../../misc/fixtures";
-import { scriptMcpListServer } from '../../../misc/mcp-list-server';
-import { McpClient } from '../../../models/mcp-client';
-import { Project } from '../../../models/project';
+import { McpListAction, McpPrimitiveType } from '@package/enums/mcp-capability';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { scriptMcpListServer } from '@package/misc/mcp-list-server';
+import { McpClient } from '@package/models/mcp-client';
+import { Project } from '@package/models/project';
 
 const loadMoreVariants = [
   {

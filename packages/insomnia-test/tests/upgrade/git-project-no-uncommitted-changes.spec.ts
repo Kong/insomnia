@@ -1,14 +1,14 @@
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from '../../enums/http-method';
-import { ProjectType } from '../../enums/project-types';
-import { UpgradePhase } from '../../enums/upgrade-phase';
-import { HTTP_SERVER } from '../../misc/fixtures';
-import { GIT_CREDENTIAL, test } from "../../misc/git-fixtures";
-import type { UpgradeFixtures } from '../../misc/upgrade-fixture';
-import { upgradeFixtures, upgradePhase } from '../../misc/upgrade-fixture';
-import { Collection } from '../../models/collection';
-import { Project } from '../../models/project';
+import { HttpMethod } from '@package/enums/http-method';
+import { ProjectType } from '@package/enums/project-types';
+import { UpgradePhase } from '@package/enums/upgrade-phase';
+import { HTTP_SERVER } from '@package/misc/fixtures';
+import { GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import type { UpgradeFixtures } from '@package/misc/upgrade-fixture';
+import { upgradeFixtures, upgradePhase } from '@package/misc/upgrade-fixture';
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 
 const projectName = 'upgrade-git-project';
 const collectionName = 'upgrade-collection';

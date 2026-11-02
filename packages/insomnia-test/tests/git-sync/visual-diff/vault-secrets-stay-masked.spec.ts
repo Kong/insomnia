@@ -5,10 +5,10 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 
 test('Verify vault-backed secrets are listed by name and never shown in the clear in an environment card', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;

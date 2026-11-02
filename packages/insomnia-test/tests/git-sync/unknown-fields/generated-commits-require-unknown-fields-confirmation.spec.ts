@@ -6,10 +6,10 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ProjectType } from '../../../enums/project-types';
-import { MOCK_LLM_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { ProjectType } from '@package/enums/project-types';
+import { MOCK_LLM_SERVER } from '@package/misc/fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 import { buildCollectionFileWithUnknownField } from './helpers';
 
 test('Verify committing AI generated commits that include a file with unknown fields asks for confirmation, commits nothing on Cancel and commits without the unknown field after Continue', async ({

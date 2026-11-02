@@ -1,13 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from "../../../enums/git-change-list";
-import { HttpMethod } from "../../../enums/http-method";
-import { ProjectType } from "../../../enums/project-types";
-import { HTTP_SERVER } from "../../../misc/constants";
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Collection } from "../../../models/collection";
-import { Project } from "../../../models/project";
+import { GitChangeList } from "@package/enums/git-change-list";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { HTTP_SERVER } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 import { buildReorderedCollectionFile } from "./helpers";
 
 test("Verify each kind of real edit on a reordered file is not flagged as only reformatting", async ({

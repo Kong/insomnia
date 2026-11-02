@@ -1,22 +1,22 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ContentType } from '../../../enums/content-type';
-import { GitChangeList } from '../../../enums/git-change-list';
-import { GitDiffView } from '../../../enums/git-diff-view';
-import { HttpMethod } from '../../../enums/http-method';
-import { MockBodyType } from '../../../enums/mock-body-type';
-import { ProjectType } from '../../../enums/project-types';
-import { MCP_SERVER } from '../../../misc/constants';
-import { HTTP_SERVER, MOCK_BIN_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, WS_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
-import { Collection } from '../../../models/collection';
-import { HttpRequest } from '../../../models/http-request';
-import { McpClient } from '../../../models/mcp-client';
-import { MockServer } from '../../../models/mock-server';
-import { Project } from '../../../models/project';
-import { SocketIORequest } from '../../../models/socket-io-request';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import { ContentType } from '@package/enums/content-type';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { GitDiffView } from '@package/enums/git-diff-view';
+import { HttpMethod } from '@package/enums/http-method';
+import { MockBodyType } from '@package/enums/mock-body-type';
+import { ProjectType } from '@package/enums/project-types';
+import { MCP_SERVER } from '@package/misc/constants';
+import { HTTP_SERVER, MOCK_BIN_SERVER, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, WS_SERVER } from '@package/misc/fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import { Collection } from '@package/models/collection';
+import { HttpRequest } from '@package/models/http-request';
+import { McpClient } from '@package/models/mcp-client';
+import { MockServer } from '@package/models/mock-server';
+import { Project } from '@package/models/project';
+import { SocketIORequest } from '@package/models/socket-io-request';
+import { WebSocketRequest } from '@package/models/websocket-request';
 
 test('Verify the diff pane defaults to Text and every new entity card shows its badge, URL on one line and each populated section as its own tab', async ({ user }) => {
   const { gitSyncFlow, httpRequestFlow, mcpClientFlow, mockServerFlow, preferencesFlow, socketIoRequestFlow, webSocketRequestFlow, workspaceFlow } = user.flowManager;

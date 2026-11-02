@@ -6,10 +6,10 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 import { planEntityTypeFiles } from './helpers';
 
 test('Verify every entity type renders its own card and supports stage, unstage and discard, and partially staging a new mock file keeps its Mock Server URL in the staged content', async ({ user }) => {

@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 import { buildReorderedCollectionFile } from './helpers';
 
 test('Verify confirming discard on a hand-reordered file brings the same change straight back', async ({ user }) => {

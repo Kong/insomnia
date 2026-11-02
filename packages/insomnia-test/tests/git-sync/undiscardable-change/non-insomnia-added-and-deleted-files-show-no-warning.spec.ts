@@ -5,11 +5,11 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Collection } from '../../../models/collection';
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 
 test('Verify a modified non-Insomnia file and an added or deleted file show no undiscardable warning or unknown fields UI, and commit without confirmation', async ({
   user,

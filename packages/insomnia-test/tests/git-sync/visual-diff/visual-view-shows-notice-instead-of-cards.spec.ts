@@ -5,11 +5,11 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { GitDiffView } from '../../../enums/git-diff-view';
-import { ProjectType } from '../../../enums/project-types';
-import { buildCollectionFile, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { GitDiffView } from '@package/enums/git-diff-view';
+import { ProjectType } from '@package/enums/project-types';
+import { buildCollectionFile, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 
 test('Verify the Visual view shows a notice instead of cards for a conflicted file, a file that does not match the Insomnia file format and non-Insomnia files', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;

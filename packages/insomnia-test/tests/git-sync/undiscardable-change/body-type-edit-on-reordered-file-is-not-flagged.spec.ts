@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { ContentType } from '../../../enums/content-type';
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Collection } from '../../../models/collection';
-import { Project } from '../../../models/project';
+import { ContentType } from '@package/enums/content-type';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 import { buildReorderedCollectionFile } from './helpers';
 
 test('Verify a body type edit on a reordered file is not flagged as only reformatting', async ({ user }) => {

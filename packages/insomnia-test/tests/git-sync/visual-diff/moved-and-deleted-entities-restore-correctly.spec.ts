@@ -6,10 +6,10 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { ProjectType } from '../../../enums/project-types';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "../../../misc/git-fixtures";
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
 import { buildSeedCollectionFile, buildSeedFolder, buildSeedRequest, planMovedRequest, planSeedId, planSeedWorkspace } from './helpers';
 
 test('Verify moved requests are never duplicated by stage, unstage or discard, discarding a new folder a request moved into brings the request back to its place, and a deleted folder is restored without its contents', async ({ user }) => {

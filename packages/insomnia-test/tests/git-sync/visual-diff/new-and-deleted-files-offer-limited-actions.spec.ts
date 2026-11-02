@@ -1,14 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { GitChangeList } from '../../../enums/git-change-list';
-import { HttpMethod } from '../../../enums/http-method';
-import { ProjectType } from '../../../enums/project-types';
-import { HTTP_SERVER } from '../../../misc/fixtures';
-import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "../../../misc/git-fixtures";
-import { Collection } from '../../../models/collection';
-import { HttpRequest } from '../../../models/http-request';
-import { Project } from '../../../models/project';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { HttpMethod } from '@package/enums/http-method';
+import { ProjectType } from '@package/enums/project-types';
+import { HTTP_SERVER } from '@package/misc/fixtures';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import { Collection } from '@package/models/collection';
+import { HttpRequest } from '@package/models/http-request';
+import { Project } from '@package/models/project';
 
 const BASE_ENVIRONMENT = 'Base Environment';
 const DEFAULT_JAR = 'Default Jar';

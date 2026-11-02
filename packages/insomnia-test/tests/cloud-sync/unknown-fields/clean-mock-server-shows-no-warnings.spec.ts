@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from '../../../enums/http-method';
-import { DEFAULT_TIMEOUT, MOCK_BIN_SERVER, test } from "../../../misc/fixtures";
-import { MockServer } from '../../../models/mock-server';
+import { HttpMethod } from '@package/enums/http-method';
+import { DEFAULT_TIMEOUT, MOCK_BIN_SERVER, test } from "@package/misc/fixtures";
+import { MockServer } from '@package/models/mock-server';
 import { commitEachChange, NO_ROW_WARNINGS, readRowWarnings } from './helpers';
 
 test('Verify a Cloud Sync mock server with routes committed and then edited shows no unknown fields or unsupported warnings and commits without confirmation', async ({

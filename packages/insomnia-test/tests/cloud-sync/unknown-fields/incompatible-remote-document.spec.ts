@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, test } from "../../../misc/fixtures";
-import { seedCloudSyncProject } from "../support/cloud-sync-mock";
+import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
+import { seedCloudSyncProject } from "@package/tests/cloud-sync/support/cloud-sync-mock";
 import { buildCloudSyncDocs } from './helpers';
 
 test('Verify a Cloud Sync document whose remote version is incompatible shows the error icon and banner and can still be committed', async ({ user }) => {

@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { McpPrimitiveType } from '../../../enums/mcp-capability';
-import { ProjectType } from '../../../enums/project-types';
-import { test } from "../../../misc/fixtures";
-import { scriptMcpListServer } from '../../../misc/mcp-list-server';
-import { McpClient } from '../../../models/mcp-client';
-import { Project } from '../../../models/project';
+import { McpPrimitiveType } from '@package/enums/mcp-capability';
+import { ProjectType } from '@package/enums/project-types';
+import { test } from "@package/misc/fixtures";
+import { scriptMcpListServer } from '@package/misc/mcp-list-server';
+import { McpClient } from '@package/models/mcp-client';
+import { Project } from '@package/models/project';
 import { validTool } from './helpers';
 
 test('Verify the Error Panel of a Partially Invalid List Follows Expand and Collapse', async ({ user }) => {
