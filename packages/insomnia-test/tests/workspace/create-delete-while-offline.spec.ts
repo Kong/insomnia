@@ -41,9 +41,9 @@ test("Verify collection/request create and delete persist correctly while offlin
   await user.page.reload({ waitUntil: "networkidle" });
 
   const gotCollectionA = await workspaceFlow.getCollection(collectionA.name);
-  const gotRequestA = await httpRequestFlow.get(requestA.name, collectionA);
+  const gotRequestA = await httpRequestFlow.get(requestA.name);
   const gotCollectionB = await workspaceFlow.getCollection(collectionB.name);
-  const gotRequestB = await httpRequestFlow.get(requestB.name, collectionB);
+  const gotRequestB = await httpRequestFlow.get(requestB.name);
 
   expect(gotCollectionA).toBeDefined();
   expect(gotRequestA).toBeUndefined();

@@ -13,7 +13,7 @@ test("Verify sidebar reorder behaves unchanged and persists across views when sw
   user,
 }) => {
   const { workspaceFlow, folderFlow, httpRequestFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -63,7 +63,7 @@ test("Verify sidebar reorder behaves unchanged and persists across views when sw
   );
 
   await workspacePage.clickNode(collectionNode);
-  await workspacePage.navigateSpec();
+  await specPage.navigate();
   await httpRequestFlow.get(folderChild.name);
   const treeAfterViewSwitch = await workspacePage.getTree();
   const collectionChildrenAfterViewSwitch = treeAfterViewSwitch
