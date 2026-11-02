@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import type { TestInfo } from '@playwright/test';
 
-import { UpgradePhase } from '../enums/upgrade-phase';
+import { UpgradePhase } from '@package/enums/upgrade-phase';
 
 const TEST_PACKAGE = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(TEST_PACKAGE, '..', '..');

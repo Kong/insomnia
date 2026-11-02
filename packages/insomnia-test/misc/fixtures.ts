@@ -8,9 +8,9 @@ import type {
   Page} from "@playwright/test";
 import { test as base } from "@playwright/test";
 
-import { FlowManager } from "../flows/flow-manager";
-import { SessionContext } from "../flows/session-context";
-import { PageManager } from "../pages/page-manager";
+import { FlowManager } from "@package/flows/flow-manager";
+import { SessionContext } from "@package/flows/session-context";
+import { PageManager } from "@package/pages/page-manager";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, MOCK_API_SERVER } from "./constants";
 import {
   collectHiddenWindowCoverage,
