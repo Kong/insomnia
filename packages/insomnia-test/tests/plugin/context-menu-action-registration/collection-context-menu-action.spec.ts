@@ -14,7 +14,7 @@ test(
   async ({ user }) => {
 
     const { appFlow, workspaceFlow } = user.flowManager;
-    const { preferencesPage, workspacePage } = user.pageManager;
+    const { preferencesPage, workspacePage, preferencesPluginsPage } = user.pageManager;
 
     const actionLabel = 'Show Collection Info';
     const dataPath = await appFlow.getDataPath();
@@ -22,7 +22,7 @@ test(
     fs.mkdirSync(pluginDir, { recursive: true });
     fs.copyFileSync(path.join(__dirname, 'plugin-package.json'), path.join(pluginDir, 'package.json'));
     fs.copyFileSync(path.join(__dirname, 'plugin-main.js'), path.join(pluginDir, 'main.js'));
-    await preferencesPage.reloadPlugins();
+    await preferencesPluginsPage.reloadPlugins();
 
     const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
     const collection = await workspaceFlow.createCollection(project, new Collection(faker.string.alphanumeric(10)));
