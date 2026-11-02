@@ -18,7 +18,7 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
   await httpRequestPage.setBody({
     mimeType: ContentType.Plain,
     text: faker.lorem.slug(),
-  });
+  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
   await cloudSyncFlow.discardAllChanges();
   await user.page.reload();
   await httpRequestFlow.get("New Request");
@@ -30,7 +30,7 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
   await httpRequestPage.setBody({
     mimeType: ContentType.Plain,
     text: faker.lorem.slug(),
-  });
+  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
   await cloudSyncFlow.commitAndPush("New Request", faker.lorem.sentence());
   const isCommitDisabled = await cloudSyncPage.isCommitDisabled();
 

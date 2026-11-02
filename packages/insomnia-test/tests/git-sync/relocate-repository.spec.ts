@@ -25,7 +25,8 @@ test(
     const destinationDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "insomnia-relocate-dest-"),
     );
-    await projectSettingsPage.relocateRepository(destinationDir);
+    await user.flowManager.context.stubFileChooser(destinationDir);
+    await projectSettingsPage.relocateRepository();
 
     await expect
       .poll(() => projectSettingsPage.getRepositoryPath(), {
