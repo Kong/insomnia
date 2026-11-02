@@ -3,12 +3,12 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
-import { useRootLoaderData } from '~/root';
 import { useTrialCheckLoaderFetcher } from '~/routes/trial.check';
 import { useTrialStartActionFetcher } from '~/routes/trial.start';
 import { Icon } from '~/ui/components/icon';
 import { TrialConfirmationModal } from '~/ui/components/modals/trial-confirmation-modal';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export interface UpgradeModalOptions extends Partial<any> {
   featureName: string;

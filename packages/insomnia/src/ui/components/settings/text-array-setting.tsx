@@ -3,7 +3,7 @@ import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
 import { invariant } from '~/common/utils/invariant';
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';

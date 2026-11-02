@@ -3,8 +3,8 @@ import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';

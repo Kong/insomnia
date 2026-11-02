@@ -2,8 +2,8 @@ import { type PersonalPlanType } from 'insomnia-api';
 import { models } from 'insomnia-data';
 import { useParams } from 'react-router';
 
-import { useRootLoaderData } from '~/root';
 import { useCurrentPlan, useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const usePlanData = () => {
   let isOwner = false;

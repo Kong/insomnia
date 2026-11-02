@@ -4,8 +4,8 @@ import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
 import { useParams } from 'react-router';
 
-import { useRootLoaderData } from '~/root';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { ProjectCreateForm } from '../project/project-create-form';
 

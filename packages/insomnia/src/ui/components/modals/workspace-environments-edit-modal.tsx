@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType, models } from 'insomnia-data';
-import React, { Fragment, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -48,9 +48,14 @@ export const WorkspaceEnvironmentsEditModal = ({
   // (e.g. the environment is deleted between hover and Open) and an unknown id
   // would leave the modal with no editor and no selection.
   initialEnvironmentId,
+  // Bumped by every "open variable source" request. The modal stays mounted while
+  // open, so a request for the same environment must apply again instead of being
+  // treated as an unchanged prop.
+  selectionRequestId = 0,
 }: {
   onClose: () => void;
   initialEnvironmentId?: string;
+  selectionRequestId?: number;
 }) => {
   const { organizationId, projectId, workspaceId } = useParams<{
     organizationId: string;
@@ -79,6 +84,11 @@ export const WorkspaceEnvironmentsEditModal = ({
       ? initialEnvironmentId
       : activeEnvironment._id;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(preselectedEnvironmentId);
+  useEffect(() => {
+    if (initialEnvironmentId) {
+      setSelectedEnvironmentId(preselectedEnvironmentId);
+    }
+  }, [initialEnvironmentId, preselectedEnvironmentId, selectionRequestId]);
   const isUsingInsomniaCloudSync = Boolean(
     models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
   );

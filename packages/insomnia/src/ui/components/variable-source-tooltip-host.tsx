@@ -52,6 +52,12 @@ export const VariableSourceTooltipHost = () => {
         <div
           ref={overlayRef}
           {...overlayProps}
+          // The bubble is portalled to <body>, outside the modal's subtree, so an open
+          // react-aria modal marks it inert (ariaHideOutside) and it stops receiving
+          // hover/focus/click while staying visible. Top-layer elements are exempt from
+          // inert and from interact-outside handling; react-aria recommends this marker
+          // for overlays rendered outside its modal tree: INS-4113.
+          data-react-aria-top-layer="true"
           data-testid="variable-source-tooltip"
           className="tooltip__bubble theme--tooltip tooltip__bubble--visible tooltip__bubble--wide p-2 text-left text-xs whitespace-pre-wrap! text-(--color-font)"
           onMouseEnter={() => setPointerInBubble(true)}

@@ -2155,8 +2155,7 @@
               "type": "object",
               "properties": {
                 "id": {
-                  "type": "string",
-                  "pattern": "^mcp-req.*"
+                  "type": "string"
                 },
                 "created": {
                   "type": "number"
@@ -2482,8 +2481,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^greq.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"
@@ -2602,8 +2600,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^req.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"
@@ -4644,8 +4641,7 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string",
-                    "pattern": "^fld.*"
+                    "type": "string"
                   },
                   "created": {
                     "type": "number"

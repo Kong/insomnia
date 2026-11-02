@@ -17,12 +17,12 @@ import { useParams, useSearchParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
 import { debounce } from '~/common/misc';
-import { useRootLoaderData } from '~/root';
 import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';

@@ -120,9 +120,7 @@ const {
 export const GRPCRequestSchema = z.object({
   url: grpcRequestUrlShape,
   name: grpcRequestNameShape,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('greq'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   body: grpcRequestBodyShape.optional(),
   metadata: grpcRequestMetadataShape.optional(),
   ...restGrpcRequestSchemaShape,
@@ -194,9 +192,7 @@ const {
 } = requestGroup.baseRequestGroupSchema.shape;
 export const RequestGroupSchema = z.object({
   name: requestGroupNameShape,
-  meta: MetaGroupSchema.extend({
-    id: z.string().startsWith('fld'),
-  }).optional(),
+  meta: MetaGroupSchema.optional(),
   children: z.array(z.any()).optional(),
   scripts: z
     .object({
@@ -221,9 +217,7 @@ const {
 export const RequestSchema = z.object({
   url: requestUrlShape,
   name: requestNameShape,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('req'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   ...restRequestSchemaShape,
   scripts: z
     .object({
@@ -345,9 +339,7 @@ export const McpRequestSchema = z.object({
   transportType: mcpRequestTransportType,
   headers: mcpRequestHeaders,
   authentication: mcpRequestAuthentication,
-  meta: MetaSchema.extend({
-    id: z.string().startsWith('mcp-req'),
-  }).optional(),
+  meta: MetaSchema.optional(),
   ...restMcpRequestShape,
 });
 

@@ -623,6 +623,58 @@ describe('_repairDatabase()', async () => {
       }),
     );
   });
+
+  it('clears stale workspace sync flags for non-remote projects only', async () => {
+    const localProject = await services.project.create({ name: 'local', remoteId: null });
+    const localWorkspace = await services.workspace.create({ name: 'local-ws', parentId: localProject._id });
+    const localMeta = await services.workspaceMeta.create({
+      parentId: localWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    const gitProject = await services.project.create({
+      name: 'git',
+      remoteId: null,
+      gitRepositoryId: 'git_test',
+    });
+    const gitWorkspace = await services.workspace.create({ name: 'git-ws', parentId: gitProject._id });
+    const gitMeta = await services.workspaceMeta.create({
+      parentId: gitWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    const cloudProject = await services.project.create({ name: 'cloud', remoteId: 'proj_remote' });
+    const cloudWorkspace = await services.workspace.create({ name: 'cloud-ws', parentId: cloudProject._id });
+    const cloudMeta = await services.workspaceMeta.create({
+      parentId: cloudWorkspace._id,
+      hasUncommittedChanges: true,
+      hasUnpushedChanges: true,
+    });
+
+    await repairDatabase();
+
+    for (const [workspace, meta] of [
+      [localWorkspace, localMeta],
+      [gitWorkspace, gitMeta],
+    ] as const) {
+      expect(await services.workspaceMeta.getByParentId(workspace._id)).toEqual(
+        expect.objectContaining({
+          hasUncommittedChanges: false,
+          hasUnpushedChanges: false,
+          modified: meta.modified,
+        }),
+      );
+    }
+    expect(await services.workspaceMeta.getByParentId(cloudWorkspace._id)).toEqual(
+      expect.objectContaining({
+        hasUncommittedChanges: true,
+        hasUnpushedChanges: true,
+        modified: cloudMeta.modified,
+      }),
+    );
+  });
 });
 
 describe('duplicate()', () => {

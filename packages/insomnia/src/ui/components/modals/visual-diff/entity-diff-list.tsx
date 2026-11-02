@@ -101,7 +101,9 @@ export const EntityDiffList: FC<Props> = ({
   const baseEnvironmentId = useMemo(() => getBaseEnvironmentId(after), [after]);
   const stagePartialContentFetcher = useGitProjectStagePartialContentActionFetcher();
   const discardPartialContentFetcher = useGitProjectDiscardPartialContentActionFetcher();
-  const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(null);
+  const [pending, setPending] = useState<{ entityId: string; action: NonNullable<EntityCardPendingAction> } | null>(
+    null,
+  );
 
   const stageErrors = stagePartialContentFetcher.state === 'idle' ? stagePartialContentFetcher.data?.errors : undefined;
   useEffect(() => {
@@ -116,7 +118,8 @@ export const EntityDiffList: FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageErrors]);
 
-  const discardErrors = discardPartialContentFetcher.state === 'idle' ? discardPartialContentFetcher.data?.errors : undefined;
+  const discardErrors =
+    discardPartialContentFetcher.state === 'idle' ? discardPartialContentFetcher.data?.errors : undefined;
   useEffect(() => {
     if (discardErrors?.length) {
       showToast({ status: 'error', title: 'Failed to discard changes', description: discardErrors.join('\n') });
@@ -184,7 +187,7 @@ export const EntityDiffList: FC<Props> = ({
   if (formatIssue === 'invalid') {
     return (
       <TextViewHint
-        message="This file doesn't match the Insomnia file format, so the Visual view can't show it."
+        message="This is not a valid Insomnia file, so the Visual view cannot show it."
         onShowTextView={onShowTextView}
       />
     );
