@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect } from "@playwright/test";
 
-import { test } from "../../misc/fixtures";
+import { test } from "@package/misc/fixtures";
 
 test("Verify Main Process Backs Up NeDB Files On Launch", async ({
   user,
