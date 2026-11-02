@@ -1,10 +1,9 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { GRPC_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Committing a gRPC Client Streaming Call With No Messages Sent", async ({
   user,
