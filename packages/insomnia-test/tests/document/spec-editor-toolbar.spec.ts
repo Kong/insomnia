@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { SpecFormat } from "../../enums/spec-format";
-import { test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { SpecFormat } from "@package/enums/spec-format";
+import { test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Toggle", async ({
   user,
