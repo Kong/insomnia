@@ -15,10 +15,10 @@ test.afterAll(async () => {
 test(
   "Verify selecting the Git project type shows the disabled-feature banner, hides the setup form, and disables Scan for files when Git Sync is disabled by org feature flag",
   async ({ user }) => {
-    const { workspacePage, projectSettingsPage } = user.pageManager;
+    const { workspacePage, projectSettingsPage, projectPage } = user.pageManager;
 
-    await workspacePage.clickNewProject();
-    await workspacePage.clickProjectTypeTile(ProjectType.Git);
+    await projectPage.clickNewProject();
+    await projectPage.clickProjectTypeTile(ProjectType.Git);
 
     let bannerText: string | undefined;
     await expect
