@@ -60,15 +60,14 @@ test("Verify Create HTTP Request", async ({ user }) => {
     afterResponseScript,
   });
   const responseView = await httpRequestFlow.send(request!);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.statusMessage).toBe("OK");
+  expect(responseView.statusBar.text).toBe("200 OK");
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("log: pre-request script");
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("log: after-response script");
-  expect(responseView.body).toMatchObject({
+  expect(responseView.preview).toMatchObject({
     data: "Test",
     args: { [paramName]: paramValue },
     headers: expect.objectContaining({
@@ -86,6 +85,6 @@ test("Verify Create HTTP Request", async ({ user }) => {
   expect(duplicated!.method).toBe(request!.method);
 
   const duplicatedResponse = await httpRequestFlow.send(duplicated!);
-  expect(duplicatedResponse.statusCode).toBe(200);
-  expect(duplicatedResponse.body).toMatchObject({ data: "Test" });
+  expect(duplicatedResponse.statusBar.code).toBe(200);
+  expect(duplicatedResponse.preview).toMatchObject({ data: "Test" });
 });
