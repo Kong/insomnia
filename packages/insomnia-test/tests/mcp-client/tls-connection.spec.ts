@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { certPath } from "../../misc/certs";
-import { MCP_SERVER_HTTPS, test } from "../../misc/fixtures";
-import { McpClient } from "../../models/mcp-client";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { certPath } from "@package/misc/certs";
+import { MCP_SERVER_HTTPS, test } from "@package/misc/fixtures";
+import { McpClient } from "@package/models/mcp-client";
+import { Project } from "@package/models/project";
 
 test("Verify MCP Client Over a TLS Connection", async ({ user }) => {
   const { certificatesFlow, mcpClientFlow, workspaceFlow } = user.flowManager;
