@@ -13,7 +13,7 @@ import { Project } from "../../models/project";
 
 const url = `${HTTP_SERVER}/post`;
 const uploadFilePath = path.join(
-  __dirname,
+  import.meta.dirname,
   "..",
   "..",
   "misc",
