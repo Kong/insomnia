@@ -1,8 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { CollaboratorRole } from "@package/enums/collaborator-role";
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify inviting collaborators by email and org member and changing a member's role", async ({
   user,
