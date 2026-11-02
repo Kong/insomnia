@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from '../../enums/http-method';
-import { ProjectType } from '../../enums/project-types';
-import { TreeNodeType } from '../../enums/tree-node-types';
-import { HTTP_SERVER } from '../../misc/fixtures';
-import { GIT_CREDENTIAL, test } from '../../misc/git-fixtures';
-import { Collection } from '../../models/collection';
-import { Project } from '../../models/project';
+import { HttpMethod } from '@package/enums/http-method';
+import { ProjectType } from '@package/enums/project-types';
+import { TreeNodeType } from '@package/enums/tree-node-types';
+import { HTTP_SERVER } from '@package/misc/fixtures';
+import { GIT_CREDENTIAL, test } from '@package/misc/git-fixtures';
+import { Collection } from '@package/models/collection';
+import { Project } from '@package/models/project';
 
 test(
   'Verify dragging a request between a Cloud project and a Git project moves it in both directions',
