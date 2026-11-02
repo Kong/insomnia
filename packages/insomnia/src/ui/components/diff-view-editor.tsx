@@ -5,6 +5,9 @@ import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { monaco } from './monaco.client';
 
+// Applied by the editor decoration, which cannot carry a data-testid, so tests select lines by this class.
+export const UNKNOWN_FIELD_LINE_CLASS = 'unknown-field-line-bg';
+
 export interface DiffEditorHighlight {
   startLine: number;
   endLine: number;
@@ -129,7 +132,7 @@ export const DiffEditor = ({
       diffEditor.getOriginalEditor().createDecorationsCollection(
         originalHighlights.flatMap(({ startLine, endLine, message }) => {
           const common = {
-            className: 'unknown-field-line-bg',
+            className: UNKNOWN_FIELD_LINE_CLASS,
             isWholeLine: true,
             showIfCollapsed: false,
           };

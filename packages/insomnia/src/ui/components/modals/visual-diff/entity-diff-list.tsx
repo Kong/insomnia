@@ -50,7 +50,7 @@ type FormatIssue = Awaited<ReturnType<typeof window.main.git.fileFormatIssueLoad
 
 // Shown instead of cards when there are none to show; the Text view still has the full diff.
 const TextViewHint: FC<{ message: string; onShowTextView: () => void }> = ({ message, onShowTextView }) => (
-  <div className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
+  <div data-testid="visual-diff-notice" className="flex h-full flex-1 items-center justify-center p-4 text-center text-(--hl)">
     <span>
       {message}{' '}
       <Button onPress={onShowTextView} className="cursor-pointer text-(--color-font) underline hover:brightness-125">

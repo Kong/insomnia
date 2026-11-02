@@ -147,6 +147,7 @@ export const AISettings = () => {
             </div>
             <span className="group relative inline-flex h-6 w-11">
               <Switch
+                data-testid="toggle-smart-commits"
                 isSelected={aiFeatures.aiCommitMessages && isCommitMessagesEnabledByOrg}
                 onChange={enabled => toggleAIFeature('aiCommitMessages', enabled)}
                 isDisabled={isCommitMessagesFeatureDisabled}

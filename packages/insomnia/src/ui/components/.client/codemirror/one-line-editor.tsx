@@ -648,7 +648,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             }
           }}
         >
-          <div ref={editorContainerRef} className="editor__container input editor--single-line">
+          <div
+            ref={editorContainerRef}
+            className="editor__container input editor--single-line"
+            data-testid="one-line-editor-container"
+          >
             <textarea
               id={id}
               ref={textAreaRef}

@@ -13,6 +13,7 @@ export const SidebarSearchField = ({
 }) => (
   <SearchField
     aria-label="Projects filter"
+    data-testid="sidebar-search-field"
     className="group relative flex-1"
     value={value}
     isDisabled={isDisabled}

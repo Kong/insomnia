@@ -184,6 +184,7 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
           >
             {renderTabIcon(tab.type, tab.id)}
             <span
+              data-testid="tab-title"
               className={classNames('mx-[8px] overflow-hidden text-nowrap text-ellipsis', {
                 italic: tab.temporary,
               })}

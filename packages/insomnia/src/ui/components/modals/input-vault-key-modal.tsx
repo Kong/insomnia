@@ -89,6 +89,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                 </Heading>
                 {allowClose && (
                   <Button
+                    aria-label="Close"
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
                   >
@@ -108,7 +109,11 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                       aria-label="Vault Key Input"
                     />
                   </div>
-                  {error && <p className="notice error margin-top-sm no-margin-bottom">{error}</p>}
+                  {error && (
+                    <p className="notice error margin-top-sm no-margin-bottom" data-testid="input-vault-key-error">
+                      {error}
+                    </p>
+                  )}
                   <div className="mt-2 flex items-center justify-between">
                     <div>
                       <span className="faint text-sm">Forget Vault Key?</span>

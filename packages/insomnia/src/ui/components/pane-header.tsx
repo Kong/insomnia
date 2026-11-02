@@ -23,7 +23,10 @@ export const PaneHeader = ({ breadcrumbs, rightSlot, className = '' }: PaneHeade
       className={`flex h-(--line-height-sm) shrink-0 items-center gap-2 border-b border-solid border-(--hl-md) px-(--padding-sm) ${className}`}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <Breadcrumbs className="m-0 flex min-w-0 list-none items-center gap-1 text-sm font-bold">
+        <Breadcrumbs
+          data-testid="workspace-breadcrumbs"
+          className="m-0 flex min-w-0 list-none items-center gap-1 text-sm font-bold"
+        >
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;
             return (

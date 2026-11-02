@@ -19,7 +19,9 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">query</span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+        <span className="success" data-testid="graphql-explorer-root-type-name">
+          query
+        </span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
   }
@@ -34,7 +36,9 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">mutation</span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+        <span className="success" data-testid="graphql-explorer-root-type-name">
+          mutation
+        </span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
   }
@@ -49,7 +53,9 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">subscription</span>:{' '}
+        <span className="success" data-testid="graphql-explorer-root-type-name">
+          subscription
+        </span>:{' '}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
@@ -57,13 +63,13 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
   render() {
     return (
-      <div className="graphql-explorer__schema">
+      <div className="graphql-explorer__schema" data-testid="graphql-explorer-schema">
         <p>A GraphQL schema provides a root type for each kind of operation.</p>
         <h2 className="graphql-explorer__subheading">Root Types</h2>
         <ul className="graphql-explorer__defs">
-          <li>{this.renderQueryType()}</li>
-          <li>{this.renderMutationType()}</li>
-          <li>{this.renderSubscriptionType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderQueryType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderMutationType()}</li>
+          <li data-testid="graphql-explorer-root-type">{this.renderSubscriptionType()}</li>
         </ul>
       </div>
     );
