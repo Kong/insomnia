@@ -12,7 +12,7 @@ import { ProjectType } from "../enums/project-types";
 import { RulesetType } from "../enums/ruleset-type";
 import type { SpecFormat } from "../enums/spec-format";
 import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
 import type {
   LintEntry,
   PathItem} from "../models/collection";
@@ -1301,7 +1301,7 @@ export class WorkspacePage extends BasePage {
   private async poll<T>(
     fn: () => Promise<T | undefined>,
     timeout = 2000,
-    interval = 200,
+    interval = POLL_INTERVAL,
   ): Promise<T | undefined> {
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {

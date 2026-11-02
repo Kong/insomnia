@@ -1,8 +1,7 @@
 import * as fs from "node:fs";
 
-import { ACTION_TIMEOUT } from "./constants";
+import { ACTION_TIMEOUT, POLL_INTERVAL } from "./constants";
 
-const POLL_INTERVAL_MS = 200;
 const STABLE_CHECKS_REQUIRED = 3;
 
 /**
@@ -32,7 +31,7 @@ export async function waitForExportedFile(
         lastSize = size;
       }
     }
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
   }
 
   throw new Error(`Exported file never stabilized within ${timeout}ms: ${filePath}`);

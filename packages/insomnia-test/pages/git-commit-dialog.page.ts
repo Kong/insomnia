@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 
 import { GitChangeList } from "../enums/git-change-list";
 import { GitDiffView } from "../enums/git-diff-view";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**
@@ -714,7 +714,7 @@ export class GitCommitDialogPage extends BasePage {
         previous = count;
         const hasWaitedEnough = step > 0 || count > 0 || Date.now() > deadlineForFirstHighlight;
         expect(stableReads >= 2 && hasWaitedEnough).toBe(true);
-      }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [200] });
+      }).toPass({ timeout: DEFAULT_TIMEOUT, intervals: [POLL_INTERVAL] });
       total += count;
 
       const text = (await viewLines.allInnerTexts()).join('\n');

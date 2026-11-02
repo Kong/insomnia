@@ -1,9 +1,7 @@
-import * as fs from "node:fs";
-import path from "node:path";
-
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { readNedbLines } from "../misc/nedb";
 import type { RequestAuthentication } from "../models/authentication";
 import type { AuthTabComponent } from "../pages/auth-tab.page";
 import type { PageManager } from "../pages/page-manager";
@@ -137,15 +135,10 @@ export abstract class BaseFlow {
     parentId: string,
   ): Promise<string> {
     const dataPath = await this.flowManager.getDataPath();
-    const dbPath = path.join(dataPath, dbFile);
 
     let id: string | undefined;
     await expect(async () => {
-      for (const line of fs
-        .readFileSync(dbPath, "utf8")
-        .split("\n")
-        .filter(Boolean)) {
-        const doc = JSON.parse(line);
+      for (const doc of readNedbLines(dataPath, dbFile)) {
         if (doc.parentId === parentId) id = doc._id;
       }
       expect(id).toBeDefined();
@@ -159,14 +152,9 @@ export abstract class BaseFlow {
    */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
     const dataPath = await this.flowManager.getDataPath();
-    const dbPath = path.join(dataPath, dbFile);
 
     let latest: any;
-    for (const line of fs
-      .readFileSync(dbPath, "utf8")
-      .split("\n")
-      .filter(Boolean)) {
-      const doc = JSON.parse(line);
+    for (const doc of readNedbLines(dataPath, dbFile)) {
       if (doc._id === id) latest = doc;
     }
     return latest;

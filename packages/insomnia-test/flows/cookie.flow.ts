@@ -1,9 +1,7 @@
-import * as fs from "node:fs";
-import path from "node:path";
-
 import { expect } from "@playwright/test";
 
 import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { latestLiveDocs, readNedbLines } from "../misc/nedb";
 import type { Collection } from "../models/collection";
 import type { Cookie } from "../models/cookie";
 import type { EventStreamRequest } from "../models/event-stream-request";
@@ -79,20 +77,11 @@ export class CookieFlow extends BaseFlow {
     cookies: Cookie[],
   ): Promise<void> {
     const dataPath = await this.flowManager.getDataPath();
-    const dbPath = path.join(dataPath, "insomnia.CookieJar.db");
 
     const isPersisted = (): boolean => {
-      const latestById = new Map<string, any>();
-      for (const line of fs
-        .readFileSync(dbPath, "utf8")
-        .split("\n")
-        .filter(Boolean)) {
-        const doc = JSON.parse(line);
-        latestById.set(doc._id, doc);
-      }
-      const persisted = [...latestById.values()]
-        .filter((doc) => !doc.$$deleted)
-        .flatMap((doc) => doc.cookies ?? []);
+      const persisted = latestLiveDocs(
+        readNedbLines(dataPath, "insomnia.CookieJar.db"),
+      ).flatMap((doc) => doc.cookies ?? []);
 
       return cookies.every((cookie) =>
         persisted.some(
