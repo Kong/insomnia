@@ -3,9 +3,9 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../../../../enums/project-types";
-import { test } from "../../../../../misc/fixtures";
-import { Project } from "../../../../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { test } from "@package/misc/fixtures";
+import { Project } from "@package/models/project";
 
 test("Import OpenAPI Spec by File", async ({ user }) => {
   const { importFlow, workspaceFlow } = user.flowManager;
