@@ -26,7 +26,7 @@ for (const { version, chosenIndex } of [
     await httpRequestPage.setBody({
       mimeType: ContentType.Plain,
       text: branchBody,
-    });
+    }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
     await cloudSyncFlow.commit("New Request", faker.lorem.sentence());
 
     await cloudSyncPage.openBranchesDialog();
@@ -38,7 +38,7 @@ for (const { version, chosenIndex } of [
     await httpRequestPage.setBody({
       mimeType: ContentType.Plain,
       text: currentBody,
-    });
+    }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
     await cloudSyncFlow.commit("New Request", faker.lorem.sentence());
 
     const conflicts = await cloudSyncFlow.mergeBranchResolvingConflicts(
