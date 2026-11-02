@@ -31,8 +31,8 @@ test("Import Generates Content-Type Header From Postman File", async ({
   } satisfies HttpRequest;
   const responseView = await httpRequestFlow.send(request);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(
         "application/x-www-form-urlencoded",

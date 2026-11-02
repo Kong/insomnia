@@ -39,8 +39,8 @@ test("Import HTTP Request by Curl Command With Basic Auth (-u) Sends Authorizati
 
   const expectedAuthorization = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       authorization: expectedAuthorization,
     }),

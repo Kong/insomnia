@@ -50,8 +50,8 @@ test("Import HTTP Request by Curl Command With Line Continuation and Escaped Cha
   expect(await httpRequestFlow.get(url)).toMatchObject(request);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: body,
     json: { title, note, userId: 1 },
     headers: expect.objectContaining({
