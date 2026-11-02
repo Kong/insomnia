@@ -30,14 +30,14 @@ test('Verify GraphQL Request Sends the API Key Header Until Authentication Is Se
   await graphqlRequestFlow.setAuthentication(request, { type: 'none' });
   const unauthenticatedResponse = await graphqlRequestFlow.send(request);
 
-  expect(authenticatedResponse.statusCode).toBe(200);
-  expect(authenticatedResponse.body).toMatchObject({
+  expect(authenticatedResponse.statusBar.code).toBe(200);
+  expect(authenticatedResponse.preview).toMatchObject({
     headers: expect.objectContaining({
       [apiKeyName.toLowerCase()]: apiKeyValue,
     }),
   });
-  expect(unauthenticatedResponse.statusCode).toBe(200);
-  expect((unauthenticatedResponse.body as { headers: Record<string, string> }).headers).not.toHaveProperty(
+  expect(unauthenticatedResponse.statusBar.code).toBe(200);
+  expect((unauthenticatedResponse.preview as { headers: Record<string, string> }).headers).not.toHaveProperty(
     apiKeyName.toLowerCase(),
   );
 });
