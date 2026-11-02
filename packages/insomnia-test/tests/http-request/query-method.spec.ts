@@ -37,6 +37,6 @@ test("Verify sending a QUERY request with a body", async ({ user }) => {
     method: HttpMethod.Query,
     body: { mimeType: ContentType.JSON, text: body },
   } satisfies HttpRequest);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ data: body });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ data: body });
 });

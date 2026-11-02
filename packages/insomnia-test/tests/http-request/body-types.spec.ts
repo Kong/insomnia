@@ -50,7 +50,7 @@ test("Send HTTP Request with x-www-form-urlencoded Body", async ({ user }) => {
 
   const persisted = await httpRequestFlow.create(collection, request);
   const responseView = await httpRequestFlow.send(request);
-  const raw = (responseView.body as { data: string }).data;
+  const raw = (responseView.preview as { data: string }).data;
 
   expect(persisted.body?.mimeType).toBe(ContentType.Form);
   expect(persisted.body?.params).toMatchObject([
@@ -58,12 +58,12 @@ test("Send HTTP Request with x-www-form-urlencoded Body", async ({ user }) => {
     { name: "userId", value: userId },
     { name: "excluded", disabled: true },
   ]);
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(Object.fromEntries(new URLSearchParams(raw))).toEqual({
     title,
     userId,
   });
-  expect(responseView.body).toMatchObject({
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.Form),
     }),
@@ -94,8 +94,8 @@ test("Send HTTP Request with JSON Body", async ({ user }) => {
   const responseView = await httpRequestFlow.send(request);
 
   expect(persisted).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     json: payload,
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.JSON),
@@ -128,8 +128,8 @@ test("Send HTTP Request with XML Body", async ({ user }) => {
   const responseView = await httpRequestFlow.send(request);
 
   expect(persisted).toMatchObject(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: xml,
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.XML),
@@ -164,8 +164,8 @@ test("Send HTTP Request with No Body explicitly selected", async ({ user }) => {
     url: request.url,
     body: undefined,
   });
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({
     data: "",
     json: null,
   });
@@ -204,7 +204,7 @@ test("Send HTTP Request with multipart/form-data Body including a file field", a
   await httpRequestFlow.create(collection, request);
   const persisted = await httpRequestFlow.get(request.name);
   const responseView = await httpRequestFlow.send(request);
-  const raw = (responseView.body as { data: string }).data;
+  const raw = (responseView.preview as { data: string }).data;
 
   expect(persisted?.body?.mimeType).toBe(ContentType.Multipart);
   expect(persisted?.body?.params?.[0]).toMatchObject({
@@ -213,12 +213,12 @@ test("Send HTTP Request with multipart/form-data Body including a file field", a
   });
   expect(persisted?.body?.params?.[1]?.name).toBe("upload");
   expect(persisted?.body?.params?.[1]?.fileName).toContain("upload-sample.txt");
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(raw).toContain('name="title"');
   expect(raw).toContain(title);
   expect(raw).toContain('name="upload"; filename="upload-sample.txt"');
   expect(raw).toContain("insomnia-e2e-upload-fixture");
-  expect(responseView.body).toMatchObject({
+  expect(responseView.preview).toMatchObject({
     headers: expect.objectContaining({
       "content-type": expect.stringContaining(ContentType.Multipart),
     }),

@@ -53,6 +53,6 @@ test("Verify Circular Variable Reference Resolves To Literal Unresolved Text", a
   } satisfies HttpRequest);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ args: { value: `{{${variableA}}}` } });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ args: { value: `{{${variableA}}}` } });
 });
