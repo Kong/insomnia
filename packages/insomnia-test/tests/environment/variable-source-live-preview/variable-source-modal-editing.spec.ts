@@ -19,7 +19,7 @@ test("Verify the tag modal's source follows the edited template and hides for no
   );
   await importFlow.importFile(
     project,
-    path.join(__dirname, "environment-cascade-collection.yaml"),
+    path.join(import.meta.dirname, "environment-cascade-collection.yaml"),
   );
   const collection = new Collection("Environment Cascade");
   await environmentFlow.activate(collection, "Base Environment");
