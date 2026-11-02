@@ -1,14 +1,14 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { test } from "../../misc/fixtures";
+import { ProjectType } from "@package/enums/project-types";
+import { test } from "@package/misc/fixtures";
 import type {
-  EnvironmentKvPairData} from "../../models/environment";
+  EnvironmentKvPairData} from "@package/models/environment";
 import {
   EnvironmentKvPairDataType,
-} from "../../models/environment";
-import { Project } from "../../models/project";
+} from "@package/models/environment";
+import { Project } from "@package/models/project";
 
 test("Verify Disabling A Row In The Table Editor Is Reflected On Read-Back", async ({
   user,
