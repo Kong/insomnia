@@ -31,7 +31,7 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   await httpRequestPage.setBody({
     mimeType: ContentType.XML,
     text: soapBody,
-  });
+  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
 
   const responseView = await httpRequestFlow.send(request!);
   expect(responseView.statusBar.code).toBe(200);
