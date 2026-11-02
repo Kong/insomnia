@@ -12,13 +12,13 @@ for (const { version, chosenIndex } of [
     user,
   }) => {
     const { workspaceFlow, httpRequestFlow, cloudSyncFlow } = user.flowManager;
-    const { httpRequestPage, cloudSyncPage } = user.pageManager;
+    const { httpRequestPage, cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
 
     await cloudSyncFlow.fetch("My Collection R1");
     const collection = await workspaceFlow.getCollection({
       name: "My Collection R1",
     });
-    await httpRequestFlow.get("New Request", collection);
+    await httpRequestFlow.get("New Request");
 
     const branch = faker.git.branch();
     const branchBody = faker.lorem.slug();
@@ -30,10 +30,10 @@ for (const { version, chosenIndex } of [
     await cloudSyncFlow.commit("New Request", faker.lorem.sentence());
 
     await cloudSyncPage.openBranchesDialog();
-    await cloudSyncPage.checkoutLocalBranch("master");
-    await cloudSyncPage.closeBranchesDialog();
+    await cloudSyncBranchesDialogPage.checkoutLocalBranch("master");
+    await cloudSyncBranchesDialogPage.closeBranchesDialog();
     await user.page.reload();
-    await httpRequestFlow.get("New Request", collection);
+    await httpRequestFlow.get("New Request");
     const currentBody = faker.lorem.slug();
     await httpRequestPage.setBody({
       mimeType: ContentType.Plain,
@@ -46,7 +46,7 @@ for (const { version, chosenIndex } of [
       version,
     );
     await user.page.reload();
-    await httpRequestFlow.get("New Request", collection);
+    await httpRequestFlow.get("New Request");
     const bodies = [currentBody, branchBody];
 
     expect(conflicts).toEqual(["New Request"]);

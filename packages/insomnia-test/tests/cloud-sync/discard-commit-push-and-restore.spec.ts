@@ -14,14 +14,14 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
   const collection = await workspaceFlow.getCollection({
     name: "My Collection R1",
   });
-  await httpRequestFlow.get("New Request", collection);
+  await httpRequestFlow.get("New Request");
   await httpRequestPage.setBody({
     mimeType: ContentType.Plain,
     text: faker.lorem.slug(),
   });
   await cloudSyncFlow.discardAllChanges();
   await user.page.reload();
-  await httpRequestFlow.get("New Request", collection);
+  await httpRequestFlow.get("New Request");
 
   await expect
     .poll(() => httpRequestPage.getBody(), { timeout: DEFAULT_TIMEOUT })
@@ -36,7 +36,7 @@ test("Verify discarding changes, committing and pushing, and restoring an earlie
 
   await cloudSyncFlow.restoreSnapshot("Initial Snapshot");
   await user.page.reload();
-  await httpRequestFlow.get("New Request", collection);
+  await httpRequestFlow.get("New Request");
   const bodyAfterRestore = await httpRequestPage.getBody();
 
   expect(isCommitDisabled).toBe(true);
