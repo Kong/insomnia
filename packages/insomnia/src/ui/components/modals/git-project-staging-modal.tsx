@@ -1894,6 +1894,7 @@ const OriginalGitProjectStagingModal: FC<
                         <span className="font-light">{previewDiffItem.filepath}</span>
                         {showManualCommitForm && (
                           <BasicButton
+                            data-testid={previewDiffItem.staged ? 'unstage-this-file' : 'stage-this-file'}
                             onPress={() => {
                               previewDiffItem.staged
                                 ? unstageChanges([previewDiffItem.filepath])
