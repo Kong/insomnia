@@ -696,11 +696,9 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
-   * Like `findItemNode()`, but for nodes that are expected to exist: waits
-   * up to `DEFAULT_TIMEOUT` (a loaded CI runner can take well over the 2s
-   * `findItemNode()` budget to render a new node) and throws naming the
-   * node instead of returning `undefined`. Use `findItemNode()` to assert
-   * a node is absent.
+   * Like `findItemNode()`, but for nodes that are expected to exist: throws
+   * naming the node instead of returning `undefined`. Use `findItemNode()`
+   * to assert a node is absent.
    * @throws If no matching node appears within `DEFAULT_TIMEOUT`
    */
   async requireItemNode(
@@ -708,10 +706,7 @@ export class WorkspacePage extends BasePage {
     type?: TreeNodeType,
     parent?: TreeNode,
   ): Promise<TreeNode> {
-    const node = await this.poll(
-      () => this.findItemNode(item, type, parent),
-      DEFAULT_TIMEOUT,
-    );
+    const node = await this.findItemNode(item, type, parent);
     if (!node) {
       throw new Error(
         `Tree node not found within ${DEFAULT_TIMEOUT}ms: ${JSON.stringify({ ...item, type, parent: parent?.name })}`,
@@ -735,7 +730,7 @@ export class WorkspacePage extends BasePage {
         .find(
           (n) => n.name === name && (type === undefined || n.type === type),
         );
-    });
+    }, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -751,7 +746,7 @@ export class WorkspacePage extends BasePage {
       return tree
         .flatten()
         .find((n) => n._id === id && (type === undefined || n.type === type));
-    });
+    }, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -782,7 +777,7 @@ export class WorkspacePage extends BasePage {
         return undefined;
       };
       return walk(root.children);
-    });
+    }, DEFAULT_TIMEOUT);
   }
 
   /**
@@ -989,9 +984,7 @@ export class WorkspacePage extends BasePage {
     parent: TreeNode | { name: string; id?: string },
   ): Promise<TreeNode> {
     if ("_id" in parent) return parent as TreeNode;
-    // findItemNode() only polls for 2s, which a slow sidebar re-render (e.g. after a Git Sync
-    // commit) can exceed — give the parent node a full DEFAULT_TIMEOUT to show up.
-    const node = await this.poll(() => this.findItemNode(parent), DEFAULT_TIMEOUT);
+    const node = await this.findItemNode(parent);
     if (!node) {
       throw new Error(`resolveNode(): no tree node found for ${JSON.stringify(parent)}`);
     }
