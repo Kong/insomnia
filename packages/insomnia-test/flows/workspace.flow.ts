@@ -85,6 +85,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Creates a new top-level Project through the create-project dialog.
    */
+  @step()
   async createProject(item: Project): Promise<Project> {
     const workspace = this.pageManager.workspacePage;
     const projectPage = this.pageManager.projectPage;
@@ -165,6 +166,7 @@ export class WorkspaceFlow extends BaseFlow {
    * it into the spec editor right after creation and returns the fuller
    * `getCollectionSpec()` read instead of the plain `getCollection()` one.
    */
+  @step()
   async createCollection(parent: Project, item: Collection, fileName?: string): Promise<Collection> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -189,6 +191,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Creates an McpClient under `parent`.
    */
+  @step()
   async createMcpClient(parent: Project, item: McpClient): Promise<McpClient> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
@@ -202,6 +205,7 @@ export class WorkspaceFlow extends BaseFlow {
   /**
    * Creates an Environment under `parent`.
    */
+  @step()
   async createEnvironment(parent: Project, item: Pick<Environment, 'name'>): Promise<Environment> {
     const workspace = this.pageManager.workspacePage;
     const node = await workspace.resolveNode(parent);
