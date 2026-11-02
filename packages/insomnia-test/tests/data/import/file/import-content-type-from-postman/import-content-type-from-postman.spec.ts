@@ -19,7 +19,7 @@ test("Import Generates Content-Type Header From Postman File", async ({
   );
 
   const filePath = path.join(
-    __dirname,
+    import.meta.dirname,
     "import-content-type-from-postman.json",
   );
   await importFlow.importFile(project, filePath);

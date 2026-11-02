@@ -17,7 +17,7 @@ import { Project } from "../../../../models/project";
 const url = `${HTTP_SERVER}/post`;
 const title = faker.string.alphanumeric(8);
 const fixtureFilePath = path.join(
-  __dirname,
+  import.meta.dirname,
   "..",
   "..",
   "..",
