@@ -51,6 +51,6 @@ test("Verify A Response Tag Chain Resolves Through Multiple Requests", async ({
 
   const responseView = await httpRequestFlow.send(third);
 
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ data: "first and second and third" });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ data: "first and second and third" });
 });
