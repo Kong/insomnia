@@ -1,9 +1,8 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { expect } from "@playwright/test";
-
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT, test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 const testWithPendingGitMigration = test.extend({
   dataPath: async ({ dataPath }, use) => {
