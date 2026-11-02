@@ -9,8 +9,8 @@ import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
-const VALID_RULESET = path.join(__dirname, "custom.spectral.yaml");
-const INVALID_RULESET = path.join(__dirname, "invalid.spectral.yaml");
+const VALID_RULESET = path.join(import.meta.dirname, "custom.spectral.yaml");
+const INVALID_RULESET = path.join(import.meta.dirname, "invalid.spectral.yaml");
 
 test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invalid Ruleset", async ({
   user,
