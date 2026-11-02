@@ -37,9 +37,9 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     url,
   });
   const responseBeforeCert = await httpRequestFlow.send(requestBeforeCert);
-  expect(responseBeforeCert.statusCode).toBeUndefined();
+  expect(responseBeforeCert.statusBar.code).toBeUndefined();
   await expect
-    .poll(() => responseBeforeCert.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseBeforeCert.console(), { timeout: DEFAULT_TIMEOUT })
     .toMatch(/certificate required/i);
 
   await certificatesFlow.addClientCertificate(collection, {
@@ -54,8 +54,8 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     url,
   });
   const responseWithCert = await httpRequestFlow.send(requestWithCert);
-  expect(responseWithCert.statusCode).toBe(200);
-  expect(responseWithCert.body).toMatchObject({
+  expect(responseWithCert.statusBar.code).toBe(200);
+  expect(responseWithCert.preview).toMatchObject({
     headers: expect.objectContaining({ host: "localhost:4063" }),
   });
 
@@ -71,8 +71,8 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     url,
   });
   const responseAfterDisable = await httpRequestFlow.send(requestAfterDisable);
-  expect(responseAfterDisable.statusCode).toBeUndefined();
+  expect(responseAfterDisable.statusBar.code).toBeUndefined();
   await expect
-    .poll(() => responseAfterDisable.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseAfterDisable.console(), { timeout: DEFAULT_TIMEOUT })
     .toMatch(/certificate required/i);
 });
