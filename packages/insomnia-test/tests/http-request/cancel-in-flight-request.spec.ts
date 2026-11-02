@@ -1,12 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { HttpMethod } from "../../enums/http-method";
-import { ProjectType } from "../../enums/project-types";
-import { RequestState } from "../../enums/request-state";
-import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Project } from "../../models/project";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { RequestState } from "@package/enums/request-state";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
 
 test("Verify Cancelling an In-Flight HTTP Request Shows a Cancellation Message and a Later Request Still Succeeds", async ({
   user,
