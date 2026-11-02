@@ -9,8 +9,8 @@ import { test } from "../../../misc/fixtures";
 import { Collection } from "../../../models/collection";
 import { Project } from "../../../models/project";
 
-const VALID_RULESET = path.join(__dirname, "custom.spectral.yaml");
-const INVALID_RULESET = path.join(__dirname, "invalid.spectral.yaml");
+const VALID_RULESET = path.join(import.meta.dirname, "custom.spectral.yaml");
+const INVALID_RULESET = path.join(import.meta.dirname, "invalid.spectral.yaml");
 
 // Rules from Spectral's built-in `oas` ruleset that a minimal OpenAPI spec
 // (no servers / contact / descriptions / operationId / tags) always trips.
