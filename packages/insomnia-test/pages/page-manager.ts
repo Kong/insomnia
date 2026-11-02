@@ -42,6 +42,94 @@ import { VariableSourcePage } from "./variable-source.page";
 import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
+const pageRegistry = {
+  certificatesPage: (page: Page, insomnia?: ElectronApplication): CertificatesPage =>
+    new CertificatesPage(page),
+  cloudSyncPage: (page: Page, insomnia?: ElectronApplication): CloudSyncPage =>
+    new CloudSyncPage(page),
+  commandPalettePage: (page: Page, insomnia?: ElectronApplication): CommandPalettePage =>
+    new CommandPalettePage(page),
+  cookiePage: (page: Page, insomnia?: ElectronApplication): CookiePage =>
+    new CookiePage(page, insomnia),
+  environmentPage: (page: Page, insomnia?: ElectronApplication): EnvironmentPage =>
+    new EnvironmentPage(page, insomnia),
+  eventStreamRequestPage: (page: Page, insomnia?: ElectronApplication): EventStreamRequestPage =>
+    new EventStreamRequestPage(page, insomnia),
+  exportPage: (page: Page, insomnia?: ElectronApplication): ExportPage =>
+    new ExportPage(page, insomnia),
+  folderPage: (page: Page, insomnia?: ElectronApplication): FolderPage =>
+    new FolderPage(page, insomnia),
+  gitSyncPage: (page: Page, insomnia?: ElectronApplication): GitSyncPage =>
+    new GitSyncPage(page, insomnia),
+  gitCommitDialogPage: (page: Page, insomnia?: ElectronApplication): GitCommitDialogPage =>
+    new GitCommitDialogPage(page, insomnia),
+  gitBranchesDialogPage: (page: Page, insomnia?: ElectronApplication): GitBranchesDialogPage =>
+    new GitBranchesDialogPage(page, insomnia),
+  gitHistoryDialogPage: (page: Page, insomnia?: ElectronApplication): GitHistoryDialogPage =>
+    new GitHistoryDialogPage(page, insomnia),
+  graphqlRequestPage: (page: Page, insomnia?: ElectronApplication): GraphQLRequestPage =>
+    new GraphQLRequestPage(page, insomnia),
+  grpcRequestPage: (page: Page, insomnia?: ElectronApplication): GrpcRequestPage =>
+    new GrpcRequestPage(page, insomnia),
+  httpRequestPage: (page: Page, insomnia?: ElectronApplication): HttpRequestPage =>
+    new HttpRequestPage(page, insomnia),
+  importPage: (page: Page, insomnia?: ElectronApplication): ImportPage =>
+    new ImportPage(page),
+  invitePage: (page: Page, insomnia?: ElectronApplication): InvitePage =>
+    new InvitePage(page),
+  konnectPage: (page: Page, insomnia?: ElectronApplication): KonnectPage =>
+    new KonnectPage(page),
+  mcpClientPage: (page: Page, insomnia?: ElectronApplication): McpClientPage =>
+    new McpClientPage(page, insomnia),
+  mockServerPage: (page: Page, insomnia?: ElectronApplication): MockServerPage =>
+    new MockServerPage(page, insomnia),
+  preferencesPage: (page: Page, insomnia?: ElectronApplication): PreferencesPage =>
+    new PreferencesPage(page),
+  projectSettingsPage: (page: Page, insomnia?: ElectronApplication): ProjectSettingsPage =>
+    new ProjectSettingsPage(page, insomnia),
+  responsePage: (page: Page, insomnia?: ElectronApplication): ResponsePage =>
+    new ResponsePage(page, insomnia),
+  runnerPage: (page: Page, insomnia?: ElectronApplication): RunnerPage =>
+    new RunnerPage(page, insomnia),
+  socketIoRequestPage: (page: Page, insomnia?: ElectronApplication): SocketIORequestPage =>
+    new SocketIORequestPage(page, insomnia),
+  templateTagPage: (page: Page, insomnia?: ElectronApplication): TemplateTagPage =>
+    new TemplateTagPage(page, insomnia),
+  variableSourcePage: (page: Page, insomnia?: ElectronApplication): VariableSourcePage =>
+    new VariableSourcePage(page, insomnia),
+  webSocketRequestPage: (page: Page, insomnia?: ElectronApplication): WebSocketRequestPage =>
+    new WebSocketRequestPage(page, insomnia),
+  preferencesCredentialsPage: (page: Page, insomnia?: ElectronApplication): PreferencesCredentialsPage =>
+    new PreferencesCredentialsPage(page, insomnia),
+  preferencesPluginsPage: (page: Page, insomnia?: ElectronApplication): PreferencesPluginsPage =>
+    new PreferencesPluginsPage(page, insomnia),
+  preferencesAiPage: (page: Page, insomnia?: ElectronApplication): PreferencesAiPage =>
+    new PreferencesAiPage(page, insomnia),
+  preferencesVaultPage: (page: Page, insomnia?: ElectronApplication): PreferencesVaultPage =>
+    new PreferencesVaultPage(page, insomnia),
+  cloudSyncCommitDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncCommitDialogPage =>
+    new CloudSyncCommitDialogPage(page, insomnia),
+  cloudSyncHistoryDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncHistoryDialogPage =>
+    new CloudSyncHistoryDialogPage(page, insomnia),
+  cloudSyncBranchesDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncBranchesDialogPage =>
+    new CloudSyncBranchesDialogPage(page, insomnia),
+  cloudSyncFileDeletePage: (page: Page, insomnia?: ElectronApplication): CloudSyncFileDeletePage =>
+    new CloudSyncFileDeletePage(page, insomnia),
+  projectPage: (page: Page, insomnia?: ElectronApplication): ProjectPage =>
+    new ProjectPage(page, insomnia),
+  specPage: (page: Page, insomnia?: ElectronApplication): SpecPage =>
+    new SpecPage(page, insomnia),
+  workspacePage: (page: Page, insomnia?: ElectronApplication): WorkspacePage =>
+    new WorkspacePage(page, insomnia),
+} satisfies Record<string, (page: Page, insomnia?: ElectronApplication) => BasePage>;
+
+type PageName = Extract<keyof typeof pageRegistry, string>;
+
+type Pages = { [K in keyof typeof pageRegistry]: ReturnType<(typeof pageRegistry)[K]> };
+
+// Typed by the `PageManager` interface merged below; the getters themselves
+// are installed from `pageRegistry` in the static block.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class PageManager {
   private readonly instances = new Map<string, unknown>();
 
@@ -63,329 +151,23 @@ export class PageManager {
     }
   }
 
-  /**
-   * Lazily creates (and caches) the CertificatesPage instance.
-   */
-  get certificatesPage(): CertificatesPage {
-    return this.getOrCreate("certificates", () => new CertificatesPage(this.page));
+  private getOrCreate(name: PageName): unknown {
+    if (!this.instances.has(name)) {
+      this.instances.set(name, pageRegistry[name](this.page, this.insomnia));
+    }
+    return this.instances.get(name);
   }
 
-  /**
-   * Lazily creates (and caches) the CloudSyncPage instance.
-   */
-  get cloudSyncPage(): CloudSyncPage {
-    return this.getOrCreate("cloudSync", () => new CloudSyncPage(this.page));
-  }
-
-  /**
-   * Lazily creates (and caches) the CommandPalettePage instance.
-   */
-  get commandPalettePage(): CommandPalettePage {
-    return this.getOrCreate(
-      "commandPalette",
-      () => new CommandPalettePage(this.page),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the CookiePage instance.
-   */
-  get cookiePage(): CookiePage {
-    return this.getOrCreate("cookie", () => new CookiePage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the EnvironmentPage instance.
-   */
-  get environmentPage(): EnvironmentPage {
-    return this.getOrCreate(
-      "environment",
-      () => new EnvironmentPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the EventStreamRequestPage instance.
-   */
-  get eventStreamRequestPage(): EventStreamRequestPage {
-    return this.getOrCreate(
-      "eventStreamRequest",
-      () => new EventStreamRequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the ExportPage instance.
-   */
-  get exportPage(): ExportPage {
-    return this.getOrCreate(
-      "export",
-      () => new ExportPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the FolderPage instance.
-   */
-  get folderPage(): FolderPage {
-    return this.getOrCreate("folder", () => new FolderPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the GitSyncPage instance.
-   */
-  get gitSyncPage(): GitSyncPage {
-    return this.getOrCreate(
-      "gitSync",
-      () => new GitSyncPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the GitCommitDialogPage instance.
-   */
-  get gitCommitDialogPage(): GitCommitDialogPage {
-    return this.getOrCreate("gitCommitDialog", () => new GitCommitDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the GitBranchesDialogPage instance.
-   */
-  get gitBranchesDialogPage(): GitBranchesDialogPage {
-    return this.getOrCreate("gitBranchesDialog", () => new GitBranchesDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the GitHistoryDialogPage instance.
-   */
-  get gitHistoryDialogPage(): GitHistoryDialogPage {
-    return this.getOrCreate("gitHistoryDialog", () => new GitHistoryDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the GraphQLRequestPage instance.
-   */
-  get graphqlRequestPage(): GraphQLRequestPage {
-    return this.getOrCreate(
-      "graphqlRequest",
-      () => new GraphQLRequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the GrpcRequestPage instance.
-   */
-  get grpcRequestPage(): GrpcRequestPage {
-    return this.getOrCreate(
-      "grpcRequest",
-      () => new GrpcRequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the HttpRequestPage instance.
-   */
-  get httpRequestPage(): HttpRequestPage {
-    return this.getOrCreate(
-      "httpRequest",
-      () => new HttpRequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the ImportPage instance.
-   */
-  get importPage(): ImportPage {
-    return this.getOrCreate("import", () => new ImportPage(this.page));
-  }
-
-  /**
-   * Lazily creates (and caches) the InvitePage instance.
-   */
-  get invitePage(): InvitePage {
-    return this.getOrCreate("invite", () => new InvitePage(this.page));
-  }
-
-  /**
-   * Lazily creates (and caches) the KonnectPage instance.
-   */
-  get konnectPage(): KonnectPage {
-    return this.getOrCreate("konnect", () => new KonnectPage(this.page));
-  }
-
-  /**
-   * Lazily creates (and caches) the McpClientPage instance.
-   */
-  get mcpClientPage(): McpClientPage {
-    return this.getOrCreate("mcpClient", () => new McpClientPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the MockServerPage instance.
-   */
-  get mockServerPage(): MockServerPage {
-    return this.getOrCreate(
-      "mockServer",
-      () => new MockServerPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the PreferencesPage instance.
-   */
-  get preferencesPage(): PreferencesPage {
-    return this.getOrCreate(
-      "preferences",
-      () => new PreferencesPage(this.page),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the ProjectSettingsPage instance.
-   */
-  get projectSettingsPage(): ProjectSettingsPage {
-    return this.getOrCreate(
-      "projectSettings",
-      () => new ProjectSettingsPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the ResponsePage instance.
-   */
-  get responsePage(): ResponsePage {
-    return this.getOrCreate("response", () => new ResponsePage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the RunnerPage instance.
-   */
-  get runnerPage(): RunnerPage {
-    return this.getOrCreate(
-      "runner",
-      () => new RunnerPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the SocketIORequestPage instance.
-   */
-  get socketIoRequestPage(): SocketIORequestPage {
-    return this.getOrCreate(
-      "socketIoRequest",
-      () => new SocketIORequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the TemplateTagPage instance.
-   */
-  get templateTagPage(): TemplateTagPage {
-    return this.getOrCreate(
-      "templateTag",
-      () => new TemplateTagPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the VariableSourcePage instance.
-   */
-  get variableSourcePage(): VariableSourcePage {
-    return this.getOrCreate(
-      "variableSource",
-      () => new VariableSourcePage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the WebSocketRequestPage instance.
-   */
-  get webSocketRequestPage(): WebSocketRequestPage {
-    return this.getOrCreate(
-      "webSocketRequest",
-      () => new WebSocketRequestPage(this.page, this.insomnia),
-    );
-  }
-
-  /**
-   * Lazily creates (and caches) the PreferencesCredentialsPage instance.
-   */
-  get preferencesCredentialsPage(): PreferencesCredentialsPage {
-    return this.getOrCreate("preferencesCredentials", () => new PreferencesCredentialsPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the PreferencesPluginsPage instance.
-   */
-  get preferencesPluginsPage(): PreferencesPluginsPage {
-    return this.getOrCreate("preferencesPlugins", () => new PreferencesPluginsPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the PreferencesAiPage instance.
-   */
-  get preferencesAiPage(): PreferencesAiPage {
-    return this.getOrCreate("preferencesAi", () => new PreferencesAiPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the PreferencesVaultPage instance.
-   */
-  get preferencesVaultPage(): PreferencesVaultPage {
-    return this.getOrCreate("preferencesVault", () => new PreferencesVaultPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the CloudSyncCommitDialogPage instance.
-   */
-  get cloudSyncCommitDialogPage(): CloudSyncCommitDialogPage {
-    return this.getOrCreate("cloudSyncCommitDialog", () => new CloudSyncCommitDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the CloudSyncHistoryDialogPage instance.
-   */
-  get cloudSyncHistoryDialogPage(): CloudSyncHistoryDialogPage {
-    return this.getOrCreate("cloudSyncHistoryDialog", () => new CloudSyncHistoryDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the CloudSyncBranchesDialogPage instance.
-   */
-  get cloudSyncBranchesDialogPage(): CloudSyncBranchesDialogPage {
-    return this.getOrCreate("cloudSyncBranchesDialog", () => new CloudSyncBranchesDialogPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the CloudSyncFileDeletePage instance.
-   */
-  get cloudSyncFileDeletePage(): CloudSyncFileDeletePage {
-    return this.getOrCreate("cloudSyncFileDelete", () => new CloudSyncFileDeletePage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the ProjectPage instance.
-   */
-  get projectPage(): ProjectPage {
-    return this.getOrCreate("project", () => new ProjectPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the SpecPage instance.
-   */
-  get specPage(): SpecPage {
-    return this.getOrCreate("spec", () => new SpecPage(this.page, this.insomnia));
-  }
-
-  /**
-   * Lazily creates (and caches) the WorkspacePage instance.
-   */
-  get workspacePage(): WorkspacePage {
-    return this.getOrCreate("workspace", () => new WorkspacePage(this.page, this.insomnia));
-  }
-
-  private getOrCreate<T extends object>(key: string, factory: () => T): T {
-    if (!this.instances.has(key)) this.instances.set(key, factory());
-    return this.instances.get(key) as T;
+  static {
+    for (const name of Object.keys(pageRegistry) as PageName[]) {
+      Object.defineProperty(this.prototype, name, {
+        get(this: PageManager) {
+          return this.getOrCreate(name);
+        },
+      });
+    }
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface PageManager extends Pages {}
