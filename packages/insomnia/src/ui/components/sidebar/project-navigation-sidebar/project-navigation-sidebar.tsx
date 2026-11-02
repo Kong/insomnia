@@ -53,7 +53,7 @@ import {
   KonnectSyncResultPanel,
   useKonnectSyncBar,
 } from './konnect-sync-bar';
-import { getSidebarGridListItemId, getSidebarItemParentId } from './project-navigation-sidebar-utils';
+import { getSidebarGridListItemId, getSidebarItemParentId, getSidebarPinnedHeaderId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
@@ -322,7 +322,7 @@ const ProjectNavigationSidebarInner = (
               items.push({
                 kind: 'pinnedHeader',
                 hidden: false,
-                doc: { _id: `${workspaceId}-pinned-header`, name: 'Pinned' },
+                doc: { _id: getSidebarPinnedHeaderId(workspaceId), name: 'Pinned' },
               });
             }
 
@@ -679,7 +679,7 @@ const ProjectNavigationSidebarInner = (
     return notHidden.filter(
       item =>
         ('workspace' in item && (item as { workspace?: { _id: string } }).workspace?._id === focusedWorkspaceId) ||
-        (item.kind === 'pinnedHeader' && item.doc._id === `${focusedWorkspaceId}-pinned-header`),
+        (item.kind === 'pinnedHeader' && item.doc._id === getSidebarPinnedHeaderId(focusedWorkspaceId)),
     );
   }, [flatItems, focusedWorkspaceId]);
   const focusedWorkspaceItem = useMemo(
