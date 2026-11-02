@@ -1,9 +1,10 @@
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { ImportSource } from "../enums/import-sources";
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
-import type { CurlCommand } from "../models/curl-command";
-import type { Project } from "../models/project";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { ImportSource } from "@package/enums/import-sources";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
+import type { CurlCommand } from "@package/models/curl-command";
+import type { Project } from "@package/models/project";
+
 import { BaseFlow } from "./base.flow";
 
 export class ImportFlow extends BaseFlow {

@@ -1,12 +1,12 @@
+import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import type { HttpMethod } from "@package/enums/http-method";
+import type { MockBodyType } from "@package/enums/mock-body-type";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { MockRouteHistoryEntry } from "@package/models/mock-route";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type { RequestHeader } from "insomnia-data";
 
-import { KeyValueEditorComponent } from "../components/key-value-editor.component";
-import type { HttpMethod } from "../enums/http-method";
-import type { MockBodyType } from "../enums/mock-body-type";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { MockRouteHistoryEntry } from "../models/mock-route";
 import { BasePage } from "./base.page";
 
 type RequestTab = "content-type" | "headers" | "status";

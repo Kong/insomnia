@@ -1,8 +1,8 @@
+import type { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import type { ProjectType } from "../enums/project-types";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export class ProjectSettingsPage extends BasePage {

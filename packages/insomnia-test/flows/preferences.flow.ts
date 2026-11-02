@@ -1,12 +1,12 @@
+import type { ScriptSandboxRuleGroup } from "@package/enums/script-sandbox-rule-group";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { step } from "@package/misc/step";
+import type { GitCredential } from "@package/models/git-credential";
+import type { AiUrlBackendSettings} from "@package/models/settings";
+import { Settings } from "@package/models/settings";
+import type { LlmUrlBackendFormFields } from "@package/pages/preferences-ai.page";
 import { expect } from "@playwright/test";
 
-import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { step } from "../misc/step";
-import type { GitCredential } from "../models/git-credential";
-import type { AiUrlBackendSettings} from "../models/settings";
-import { Settings } from "../models/settings";
-import type { LlmUrlBackendFormFields } from "../pages/preferences-ai.page";
 import { BaseFlow } from "./base.flow";
 
 export class PreferencesFlow extends BaseFlow {

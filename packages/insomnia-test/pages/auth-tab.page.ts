@@ -1,3 +1,6 @@
+import { ToggleButtonComponent } from "@package/components/toggle.component";
+import { AuthType } from "@package/enums/auth-type";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
@@ -10,9 +13,6 @@ import type {
 } from "insomnia-data";
 import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
-import { ToggleButtonComponent } from "../components/toggle.component";
-import { AuthType } from "../enums/auth-type";
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { TabPanelPage } from "./tab-panel.page";
 
 type OAuth1TextField = keyof Omit<

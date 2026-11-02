@@ -1,18 +1,19 @@
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
 import {
   Environment,
   ENVIRONMENT_TYPE,
-} from "../models/environment";
-import type { EventStreamRequest } from "../models/event-stream-request";
-import type { GraphQLRequest } from "../models/graphql-request";
-import type { GrpcRequest } from "../models/grpc-request";
-import type { HttpRequest } from "../models/http-request";
-import type { McpClient } from "../models/mcp-client";
-import type { Project } from "../models/project";
-import type { SocketIORequest } from "../models/socket-io-request";
-import type { WebSocketRequest } from "../models/websocket-request";
-import type { PageManager } from "../pages/page-manager";
+} from "@package/models/environment";
+import type { EventStreamRequest } from "@package/models/event-stream-request";
+import type { GraphQLRequest } from "@package/models/graphql-request";
+import type { GrpcRequest } from "@package/models/grpc-request";
+import type { HttpRequest } from "@package/models/http-request";
+import type { McpClient } from "@package/models/mcp-client";
+import type { Project } from "@package/models/project";
+import type { SocketIORequest } from "@package/models/socket-io-request";
+import type { WebSocketRequest } from "@package/models/websocket-request";
+import type { PageManager } from "@package/pages/page-manager";
+
 import { BaseFlow } from "./base.flow";
 import type { FlowContext } from "./flow-context";
 import type { WorkspaceFlow } from "./workspace.flow";

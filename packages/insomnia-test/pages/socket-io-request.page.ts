@@ -1,7 +1,7 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { RequestHeader,SocketIOMessage } from "@package/models/socket-io-request";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { RequestHeader,SocketIOMessage } from "../models/socket-io-request";
 import { RequestPage } from "./request.page";
 
 export class SocketIORequestPage extends RequestPage {

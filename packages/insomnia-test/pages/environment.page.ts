@@ -1,15 +1,15 @@
 import { isDeepStrictEqual } from "node:util";
 
+import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type {
+  EnvironmentKvPairData} from "@package/models/environment";
+import {
+  EnvironmentKvPairDataType,
+} from "@package/models/environment";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { KeyValueEditorComponent } from "../components/key-value-editor.component";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type {
-  EnvironmentKvPairData} from "../models/environment";
-import {
-  EnvironmentKvPairDataType,
-} from "../models/environment";
 import { BasePage } from "./base.page";
 
 const TYPE_LABELS: Record<EnvironmentKvPairDataType, string> = {

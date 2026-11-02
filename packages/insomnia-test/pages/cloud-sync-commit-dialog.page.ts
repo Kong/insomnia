@@ -1,7 +1,7 @@
+import { TooltipComponent } from "@package/components/tooltip.component";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { TooltipComponent } from "../components/tooltip.component";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**

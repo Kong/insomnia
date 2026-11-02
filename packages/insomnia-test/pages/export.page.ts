@@ -1,9 +1,9 @@
+import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format";
+import type { ExportFormat } from "@package/enums/export-format";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { throwOnDialog } from "@package/misc/decorators";
 import { expect } from "@playwright/test";
 
-import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
-import type { ExportFormat } from "../enums/export-format";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { throwOnDialog } from "../misc/decorators";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {

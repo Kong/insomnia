@@ -1,8 +1,8 @@
+import type { CollaboratorRole } from "@package/enums/collaborator-role";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import type { CollaboratorRole } from "../enums/collaborator-role";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /** A single row read back from the "Invitation list". */

@@ -1,11 +1,11 @@
-import { expect } from "@playwright/test";
-
-import { ContentType } from "../enums/content-type";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { ContentType } from "@package/enums/content-type";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   WebSocketRequest,
   WebSocketRequestBody,
-} from "../models/websocket-request";
+} from "@package/models/websocket-request";
+import { expect } from "@playwright/test";
+
 import { RequestPage } from "./request.page";
 
 export class WebSocketRequestPage extends RequestPage {

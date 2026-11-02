@@ -1,8 +1,9 @@
-import { TreeNodeType } from "../enums/tree-node-types";
-import { step } from "../misc/step";
-import type { HttpRequest } from "../models/http-request";
-import type { ResponseView } from "../models/response";
-import type { TemplateTag, TemplateTagName } from "../models/template-tag";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { step } from "@package/misc/step";
+import type { HttpRequest } from "@package/models/http-request";
+import type { ResponseView } from "@package/models/response";
+import type { TemplateTag, TemplateTagName } from "@package/models/template-tag";
+
 import { BaseFlow } from "./base.flow";
 
 export class TemplateTagFlow extends BaseFlow {

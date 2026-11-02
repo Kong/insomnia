@@ -1,4 +1,5 @@
-import type { PageManager } from "../pages/page-manager";
+import type { PageManager } from "@package/pages/page-manager";
+
 import { AppFlow } from "./app.flow";
 import { CertificatesFlow } from "./certificates.flow";
 import { CloudSyncFlow } from "./cloud-sync.flow";

@@ -1,9 +1,9 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { throwOnDialog } from "@package/misc/decorators";
+import type { GrpcRequestHeader } from "@package/models/grpc-request";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { throwOnDialog } from "../misc/decorators";
-import type { GrpcRequestHeader } from "../models/grpc-request";
 import { RequestPage } from "./request.page";
 
 const MESSAGE_TAB_KEY = "method-type";

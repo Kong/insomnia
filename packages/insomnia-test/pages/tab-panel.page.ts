@@ -1,8 +1,8 @@
+import { TabsComponent } from "@package/components/tabs.component";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { type ElectronApplication, expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
-import { TabsComponent } from "../components/tabs.component";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 /**

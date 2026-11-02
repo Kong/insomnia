@@ -1,6 +1,7 @@
-import { DeleteMode } from "../enums/delete-mode";
-import { step } from "../misc/step";
-import type { Project } from "../models/project";
+import { DeleteMode } from "@package/enums/delete-mode";
+import { step } from "@package/misc/step";
+import type { Project } from "@package/models/project";
+
 import { BaseFlow } from "./base.flow";
 
 export class CloudSyncFlow extends BaseFlow {

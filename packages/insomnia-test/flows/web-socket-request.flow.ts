@@ -1,18 +1,19 @@
 
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { step } from "../misc/step";
-import type { RequestAuthentication } from "../models/authentication";
-import type { Collection } from "../models/collection";
-import type { Folder } from "../models/folder";
-import type { ResponseView } from "../models/response";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { step } from "@package/misc/step";
+import type { RequestAuthentication } from "@package/models/authentication";
+import type { Collection } from "@package/models/collection";
+import type { Folder } from "@package/models/folder";
+import type { ResponseView } from "@package/models/response";
 import type {
-  WebSocketRequestBody} from "../models/websocket-request";
+  WebSocketRequestBody} from "@package/models/websocket-request";
 import {
   WebSocketRequest
-} from "../models/websocket-request";
-import type { WebSocketRequestPage } from "../pages/web-socket-request.page";
+} from "@package/models/websocket-request";
+import type { WebSocketRequestPage } from "@package/pages/web-socket-request.page";
+
 import { BaseFlow } from "./base.flow";
 
 export class WebSocketRequestFlow extends BaseFlow {

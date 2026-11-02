@@ -1,10 +1,10 @@
+import { ResponseViewerComponent } from '@package/components/response-viewer.component';
+import { RequestState } from '@package/enums/request-state';
+import type { ResponseExportOption } from '@package/enums/response-export-option';
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
+import type { ResponseHeader, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
 import { expect, type Locator } from '@playwright/test';
 
-import { ResponseViewerComponent } from '../components/response-viewer.component';
-import { RequestState } from '../enums/request-state';
-import type { ResponseExportOption } from '../enums/response-export-option';
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
-import type { ResponseHeader, ResponseTestResult, ResponseView, StreamEvent } from '../models/response';
 import { BasePage } from './base.page';
 
 export type ResponseTab = 'preview' | 'headers' | 'cookies' | 'test-results' | 'mock-response' | 'timeline' | 'events';

@@ -1,3 +1,9 @@
+import { DropdownComponent } from "@package/components/dropdown.component";
+import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import { SelectComponent } from "@package/components/select.component";
+import type { HttpMethod } from "@package/enums/http-method";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { throwOnDialog } from "@package/misc/decorators";
 import type { ElectronApplication, Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
@@ -6,12 +12,6 @@ import type {
 } from "insomnia-data";
 import type { Page } from "playwright-core";
 
-import { DropdownComponent } from "../components/dropdown.component";
-import { KeyValueEditorComponent } from "../components/key-value-editor.component";
-import { SelectComponent } from "../components/select.component";
-import type { HttpMethod } from "../enums/http-method";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { throwOnDialog } from "../misc/decorators";
 import { AuthTabComponent } from "./auth-tab.page";
 import { ScriptTabComponent } from "./script-tab.page";
 import { TabPanelPage } from "./tab-panel.page";

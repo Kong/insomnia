@@ -1,7 +1,7 @@
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export type VariableSourceScope = "page" | "modal";

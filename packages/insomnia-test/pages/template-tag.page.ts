@@ -1,8 +1,8 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { DigestEncoding, HashAlgorithm } from "@package/models/template-tag";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { DigestEncoding, HashAlgorithm } from "../models/template-tag";
 import { BasePage } from "./base.page";
 
 export class TemplateTagPage extends BasePage {

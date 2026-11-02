@@ -1,7 +1,7 @@
+import type { ScriptSandboxRuleGroup } from "@package/enums/script-sandbox-rule-group";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import type { ScriptSandboxRuleGroup } from "../enums/script-sandbox-rule-group";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { PreferencesTabPage } from "./preferences-tab.page";
 
 export interface PluginBridgeMethodMetrics {

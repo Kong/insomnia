@@ -1,10 +1,11 @@
-import { ContextMenuItem } from "../enums/context-menu-items";
-import { TreeNodeType } from "../enums/tree-node-types";
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
-import type { Folder } from "../models/folder";
-import { GrpcRequest } from "../models/grpc-request";
-import type { GrpcRequestPage } from "../pages/grpc-request.page";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
+import type { Folder } from "@package/models/folder";
+import { GrpcRequest } from "@package/models/grpc-request";
+import type { GrpcRequestPage } from "@package/pages/grpc-request.page";
+
 import { BaseFlow } from "./base.flow";
 
 export interface GrpcResponse {

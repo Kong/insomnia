@@ -1,6 +1,6 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { PreferencesTabPage } from "./preferences-tab.page";
 
 export interface LlmUrlBackendFormFields {

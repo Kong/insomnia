@@ -1,6 +1,6 @@
+import { ScriptTab } from "@package/enums/script-tab";
 import { expect, type Locator } from "@playwright/test";
 
-import { ScriptTab } from "../enums/script-tab";
 import { TabPanelPage } from "./tab-panel.page";
 
 export interface RequestScripts {

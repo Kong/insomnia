@@ -1,8 +1,8 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Cookie } from "@package/models/cookie";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { Cookie } from "../models/cookie";
 import { BasePage } from "./base.page";
 
 function parseCookieLine(line: string): Cookie {

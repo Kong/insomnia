@@ -1,9 +1,9 @@
+import { EnabledLabelToggleComponent } from "@package/components/toggle.component";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { ClientCertificate } from "@package/models/client-certificate";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { EnabledLabelToggleComponent } from "../components/toggle.component";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { ClientCertificate } from "../models/client-certificate";
 import { BasePage } from "./base.page";
 
 export class CertificatesPage extends BasePage {

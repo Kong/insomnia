@@ -1,7 +1,7 @@
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../enums/project-types";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
 export const NEW_PROJECT_BUTTON = 'button[aria-label="Create new Project"]';

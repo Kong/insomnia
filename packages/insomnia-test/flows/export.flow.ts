@@ -1,9 +1,10 @@
-import type { ApiSpecExportFormat } from "../enums/api-spec-export-format";
-import { ContextMenuItem } from "../enums/context-menu-items";
-import type { ExportFormat } from "../enums/export-format";
-import { step } from "../misc/step";
-import type { Collection } from "../models/collection";
-import type { Project } from "../models/project";
+import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format";
+import { ContextMenuItem } from "@package/enums/context-menu-items";
+import type { ExportFormat } from "@package/enums/export-format";
+import { step } from "@package/misc/step";
+import type { Collection } from "@package/models/collection";
+import type { Project } from "@package/models/project";
+
 import { BaseFlow } from "./base.flow";
 
 export class ExportFlow extends BaseFlow {

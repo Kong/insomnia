@@ -1,9 +1,9 @@
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { RequestAuthentication } from "@package/models/authentication";
+import type { AuthTabComponent } from "@package/pages/auth-tab.page";
+import type { PageManager } from "@package/pages/page-manager";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT } from "../misc/constants";
-import type { RequestAuthentication } from "../models/authentication";
-import type { AuthTabComponent } from "../pages/auth-tab.page";
-import type { PageManager } from "../pages/page-manager";
 import type { FlowContext } from "./flow-context";
 
 export abstract class BaseFlow {

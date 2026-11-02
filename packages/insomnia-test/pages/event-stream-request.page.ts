@@ -1,12 +1,12 @@
-import { expect } from "@playwright/test";
-
-import { ContentType } from "../enums/content-type";
-import { DEFAULT_TIMEOUT } from "../misc/constants";
+import { ContentType } from "@package/enums/content-type";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   EventStreamMethod,
   EventStreamRequest,
   EventStreamRequestBody,
-} from "../models/event-stream-request";
+} from "@package/models/event-stream-request";
+import { expect } from "@playwright/test";
+
 import { RequestPage } from "./request.page";
 
 export class EventStreamRequestPage extends RequestPage {
