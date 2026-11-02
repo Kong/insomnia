@@ -44,7 +44,7 @@ test("Verify Environment Variable in WebSocket Request URL Is Resolved", async (
   const responseView = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain(`Preparing request to ${WS_SERVER}`);
   await expect
     .poll(
