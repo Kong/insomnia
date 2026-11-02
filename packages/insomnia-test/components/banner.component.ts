@@ -20,6 +20,6 @@ export class BannerComponent extends BaseComponent {
   }
 
   get title(): Locator {
-    return this.root.getByTestId("banner-title");
+    return this.root.locator(".font-semibold").first();
   }
 }

@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from "node:util";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { KeyValueEditorComponent } from "../components/key-value-editor.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type {
   EnvironmentKvPairData} from "../models/environment";
@@ -37,7 +38,9 @@ export class EnvironmentPage extends BasePage {
     '[data-editable="true"][aria-label="Environment name"]';
   private readonly LISTBOX =
     '#pane-one [role="listbox"][aria-label="Environment Key Value Pair"]';
-  private readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
+  private get keyValue(): KeyValueEditorComponent {
+    return new KeyValueEditorComponent(this.page, this.page.locator("#pane-one"));
+  }
   private readonly RAW_EDIT_BUTTON = '#pane-one button[aria-label="Raw Edit"]';
   private readonly TABLE_EDIT_BUTTON =
     '#pane-one button[aria-label="Table Edit"]';
@@ -169,12 +172,8 @@ export class EnvironmentPage extends BasePage {
     const variables: EnvironmentKvPairData[] = [];
     for (let i = 0; i < count; i++) {
       const row = rows.nth(i);
-      const name = await this.readCodeMirror(
-        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-      );
-      const value = await this.readCodeMirror(
-        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-      );
+      const name = await this.keyValue.nameEditor(row).getValue();
+      const value = await this.keyValue.valueEditor(row).getValue();
       const type = await this.getType(row);
       const enabled =
         (await row.getByRole("button", { name: "Enable Row" }).count()) === 0;
@@ -427,15 +426,9 @@ export class EnvironmentPage extends BasePage {
         .last()
         .getAttribute("data-key");
       const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-      await this.setCodeMirrorValue(
-        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-        variable.name,
-      );
+      await this.keyValue.nameEditor(row).setValue(variable.name);
       await this.waitForVariablePersisted(variable, { checkValue: false });
-      await this.setCodeMirrorValue(
-        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-        variable.value,
-      );
+      await this.keyValue.valueEditor(row).setValue(variable.value);
       await this.waitForVariablePersisted(variable);
       if (variable.type) {
         await this.setType(row, variable.type);
@@ -639,14 +632,8 @@ export class EnvironmentPage extends BasePage {
       .last()
       .getAttribute("data-key");
     const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-    await this.setCodeMirrorValue(
-      row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-      variable.name,
-    );
-    await this.setCodeMirrorValue(
-      row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-      variable.value,
-    );
+    await this.keyValue.nameEditor(row).setValue(variable.name);
+    await this.keyValue.valueEditor(row).setValue(variable.value);
     await this.collectionEnvironmentDialog
       .getByRole("button", { name: "Close", exact: true })
       .click();

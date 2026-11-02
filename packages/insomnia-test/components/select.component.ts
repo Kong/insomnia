@@ -1,7 +1,7 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BaseComponent } from "./base.component";
 
 /**
@@ -17,10 +17,8 @@ export class SelectComponent extends BaseComponent {
     return new SelectComponent(page, page.getByRole("button", { name: label }));
   }
 
-  // Scoped to the Select popover: pages such as the multipart body editor also
-  // render their own listbox ("Key-value pairs"), which would trip strict mode.
   get listbox(): Locator {
-    return this.page.locator('[data-trigger="Select"]').getByRole("listbox");
+    return this.page.getByRole("listbox");
   }
 
   option(keyOrName: string | RegExp): Locator {

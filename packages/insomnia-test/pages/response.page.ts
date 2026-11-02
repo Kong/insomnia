@@ -1,5 +1,6 @@
 import { expect, type Locator } from '@playwright/test';
 
+import { ResponseViewerComponent } from '../components/response-viewer.component';
 import { RequestState } from '../enums/request-state';
 import type { ResponseExportOption } from '../enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '../misc/constants';
@@ -34,6 +35,10 @@ export class ResponsePage extends BasePage {
   private readonly HEADER_TAGS = '[data-testid="response-pane"] [aria-live="polite"] .tag';
   private readonly NBSP = / /g;
   private readonly PANE = '[data-testid="response-pane"]';
+
+  private get viewer(): ResponseViewerComponent {
+    return new ResponseViewerComponent(this.page);
+  }
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
 
   private get cancelRequestButton(): Locator {
@@ -181,7 +186,7 @@ export class ResponsePage extends BasePage {
    * and message.
    */
   async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
-    const tag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
+    const tag = this.viewer.statusTag;
     if ((await tag.count()) === 0) return undefined;
     const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
     const [code, ...rest] = raw.split(/\s+/);
@@ -298,7 +303,7 @@ export class ResponsePage extends BasePage {
    * instead (gRPC business failures), throws using its text.
    */
   async navigateGrpc(): Promise<void> {
-    const statusTag = this.page.locator(`${this.PANE} [data-testid="response-status-tag"]`);
+    const statusTag = this.viewer.statusTag;
     const dialog = this.page.getByRole('dialog').first();
     await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     if (await dialog.isVisible()) {
@@ -341,7 +346,7 @@ export class ResponsePage extends BasePage {
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {
-    const tabLocator = this.page.locator(`${this.PANE} [data-key="${tab}"][role="tab"]`);
+    const tabLocator = this.viewer.tabs.tab(tab);
     if ((await tabLocator.count()) === 0) return false;
     await tabLocator.click();
     return true;

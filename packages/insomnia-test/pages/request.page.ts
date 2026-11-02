@@ -6,6 +6,9 @@ import type {
 } from "insomnia-data";
 import type { Page } from "playwright-core";
 
+import { DropdownComponent } from "../components/dropdown.component";
+import { KeyValueEditorComponent } from "../components/key-value-editor.component";
+import { SelectComponent } from "../components/select.component";
 import type { HttpMethod } from "../enums/http-method";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { throwOnDialog } from "../misc/decorators";
@@ -29,7 +32,14 @@ export interface RequestBody {
 export abstract class RequestPage extends TabPanelPage {
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
-  protected readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
+  /** The key/value row editor in the active tab panel (params, headers, body params…). */
+  protected get keyValue(): KeyValueEditorComponent {
+    return new KeyValueEditorComponent(
+      this.page,
+      this.page.locator(this.TABPANEL),
+      this.hasTrailingBlankRow,
+    );
+  }
   protected get sendButtonLocator(): Locator {
     return this.page
       .locator(this.PANE)
@@ -165,13 +175,9 @@ export abstract class RequestPage extends TabPanelPage {
   protected async getContentTypeBody(
     noBodyValue: string,
   ): Promise<RequestBody | undefined> {
-    await this.page
-      .locator(`${this.PANE} [data-key="content-type"][role="tab"]`)
-      .click();
+    await this.switchTab("content-type");
     const panel = this.page.locator(this.TABPANEL);
-    const raw = await panel
-      .locator('[data-testid="hidden-select-container"] select')
-      .inputValue();
+    const raw = await new SelectComponent(this.page, panel).nativeValue(panel);
     if (!raw || raw === noBodyValue) return undefined;
     const editor = panel.locator(".CodeMirror").first();
     if ((await editor.count()) === 0) return undefined;
@@ -305,29 +311,8 @@ export abstract class RequestPage extends TabPanelPage {
    * toggle button are treated as always enabled.
    */
   protected async readKeyValuePairs(tab: string): Promise<KeyValuePair[]> {
-    await this.page
-      .locator(`${this.PANE} [data-key="${tab}"][role="tab"]`)
-      .click();
-    const panel = this.page.locator(this.TABPANEL);
-    const rows = panel.locator('[role="listbox"] [role="option"]');
-    const count = await rows.count();
-    const pairs: KeyValuePair[] = [];
-    for (let i = 0; i < count; i++) {
-      const row = rows.nth(i);
-      const name = await this.readCodeMirror(
-        row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-      );
-      const value = await this.readCodeMirror(
-        row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-      );
-      const toggle = row.locator("button[aria-pressed]");
-      const enabled =
-        (await toggle.count()) === 0
-          ? true
-          : (await toggle.getAttribute("aria-pressed")) === "true";
-      if (name || value) pairs.push({ name, value, disabled: !enabled });
-    }
-    return pairs;
+    await this.switchTab(tab);
+    return this.keyValue.read();
   }
 
   /**
@@ -337,16 +322,13 @@ export abstract class RequestPage extends TabPanelPage {
   protected async selectBodyType(contentType: string): Promise<void> {
     await this.switchTab("content-type");
     const panel = this.page.locator(this.TABPANEL);
-    const select = panel.locator(
-      '[data-testid="hidden-select-container"] select',
+    const select = new SelectComponent(
+      this.page,
+      panel.locator('button[aria-label="Change Body Type"]'),
     );
     await expect(async () => {
-      const button = panel.locator('button[aria-label="Change Body Type"]');
-      await button.click();
-      await this.page
-        .locator(`[role="option"][data-key="${contentType}"]`)
-        .dispatchEvent("click");
-      await expect(select).toHaveValue(contentType, { timeout: 1000 });
+      await select.select(contentType);
+      expect(await select.nativeValue(panel)).toBe(contentType);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -392,31 +374,22 @@ export abstract class RequestPage extends TabPanelPage {
   ): Promise<void> {
     await this.switchTab(tab);
     const panel = this.page.locator(this.TABPANEL);
-    const deleteAllBtn = panel.getByRole("button", { name: "Delete all" });
-    if (await deleteAllBtn.isEnabled()) {
-      await deleteAllBtn.click();
-    }
-    const options = panel.locator('[role="listbox"] [role="option"]');
+    await this.keyValue.deleteAll();
+    const options = this.keyValue.rows;
     for (const [index, pair] of pairs.entries()) {
       // Without a trailing blank row the only blank row is the initial one
       // shown while the list is empty; later rows must be added explicitly.
       if (!this.hasTrailingBlankRow && index > 0) {
-        await panel.getByRole("button", { name: "Add", exact: true }).click();
+        await this.keyValue.addButton.click();
       }
       // Locate the row by its fixed position: once it is persisted a new
       // trailing blank row is appended, so `.last()` would no longer be it.
       const rowIndex = (await options.count()) - 1;
       const row = options.nth(rowIndex);
       const setName = () =>
-        this.setCodeMirrorValue(
-          row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror"),
-          pair.name,
-        );
+        this.keyValue.nameEditor(row).setValue(pair.name);
       const setValue = () =>
-        this.setCodeMirrorValue(
-          row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror"),
-          pair.value,
-        );
+        this.keyValue.valueEditor(row).setValue(pair.value);
       await setName();
       await this.waitForPairPersisted(pair, {
         checkValue: false,
@@ -501,14 +474,8 @@ export abstract class RequestPage extends TabPanelPage {
           // The editor can already show the right text while the saved row
           // list lacks it; re-setting identical text fires no save, so
           // detour through a different value to force a fresh save.
-          const nameEditor = row
-            .locator(this.ONE_LINE_EDITOR)
-            .nth(0)
-            .locator(".CodeMirror");
-          const valueEditor = row
-            .locator(this.ONE_LINE_EDITOR)
-            .nth(1)
-            .locator(".CodeMirror");
+          const nameEditor = this.keyValue.nameEditor(row).codeMirror;
+          const valueEditor = this.keyValue.valueEditor(row).codeMirror;
           // Each step of the detour must land on disk before the next one:
           // firing the detour value and its restore back-to-back lets the
           // editor's late re-render swallow the restore, stranding the row
@@ -595,10 +562,10 @@ export abstract class RequestPage extends TabPanelPage {
    * then waits for the method button to reflect the new selection.
    */
   async setMethod(method: HttpMethod): Promise<void> {
-    await this.page.locator(this.METHOD_BUTTON).click();
-    await this.page
-      .getByRole("menuitem", { name: method, exact: true })
-      .click();
+    await new DropdownComponent(
+      this.page,
+      this.page.locator(this.METHOD_BUTTON),
+    ).select(method);
     await expect(this.page.locator(this.METHOD_BUTTON)).toHaveText(method);
   }
 

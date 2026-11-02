@@ -20,10 +20,7 @@ export class BodyEditorComponent extends BaseComponent {
   }
 
   get codeEditor(): CodeEditorComponent {
-    return new CodeEditorComponent(
-      this.page,
-      this.root.getByTestId(/^(CodeEditor|OneLineEditor)$/).first(),
-    );
+    return new CodeEditorComponent(this.page, this.root.locator(".CodeMirror").first().locator("xpath=.."));
   }
 
   get formEditor(): KeyValueEditorComponent {

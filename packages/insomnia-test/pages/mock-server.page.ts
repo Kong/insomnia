@@ -2,6 +2,7 @@ import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type { RequestHeader } from "insomnia-data";
 
+import { KeyValueEditorComponent } from "../components/key-value-editor.component";
 import type { HttpMethod } from "../enums/http-method";
 import type { MockBodyType } from "../enums/mock-body-type";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
@@ -16,7 +17,9 @@ export class MockServerPage extends BasePage {
   private readonly RESPONSE_PANE = '[data-testid="response-pane"]';
   private readonly BODY_EDITOR = `${this.REQUEST_PANE} [data-testid="CodeEditor"] .CodeMirror`;
   private readonly HISTORY_ROWS = `${this.RESPONSE_PANE} [role="tabpanel"] div:has(> div:text-is("Method")) > div`;
-  private readonly ONE_LINE_EDITOR = '[data-testid="OneLineEditor"]';
+  private get keyValue(): KeyValueEditorComponent {
+    return new KeyValueEditorComponent(this.page, this.page.locator("body"));
+  }
   private readonly ROUTE_ROW = '[aria-label="Mock Routes"] [role="row"]';
 
   /**
@@ -264,8 +267,8 @@ export class MockServerPage extends BasePage {
         .last()
         .getAttribute("data-key");
       const row = listbox.locator(`[role="option"][data-key="${key}"]`);
-      const name = row.locator(this.ONE_LINE_EDITOR).nth(0).locator(".CodeMirror");
-      const value = row.locator(this.ONE_LINE_EDITOR).nth(1).locator(".CodeMirror");
+      const name = this.keyValue.nameEditor(row).codeMirror;
+      const value = this.keyValue.valueEditor(row).codeMirror;
       await this.setCodeMirrorValue(name, header.name);
       await this.waitForRowPersisted(
         ["insomnia.MockRoute.db"],

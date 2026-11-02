@@ -1,6 +1,8 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "playwright-core";
 
+import { DropdownComponent } from "../components/dropdown.component";
+import { SearchFieldComponent } from "../components/search-field.component";
 import type { ContextMenuItem } from "../enums/context-menu-items";
 import { HttpMethod } from "../enums/http-method";
 import { LintSeverity } from "../enums/lint-severity";
@@ -193,14 +195,7 @@ export class Tree {
    * sibling Project rows (`proj_`-keyed) are never auto-expanded, since
    * those can hold unrelated, pre-existing content outside the current
    * test's scope. Capped to guard against an unexpected toggle that
-<<<<<<< Updated upstream
    * doesn't actually collapse on click.
-=======
-   * doesn't actually collapse on click. Only toggles containing a chevron
-   * icon count: Environment/MCP rows also render an icon-less, no-op
-   * "Expand {name}" button that never expands.
-   * @param grid - The navigation tree grid to search for collapsed rows
->>>>>>> Stashed changes
    */
   private static async expandAllCollapsed(grid: Locator): Promise<void> {
     const collapsedWorkspaceRows = grid.locator(
@@ -402,10 +397,10 @@ export class WorkspacePage extends BasePage {
    * surface.
    */
   getContextMenuItem(item: ContextMenuItem): Locator {
-    const menu = this.page.getByRole("menu");
-    return menu
-      .getByRole("menuitem", { name: item, exact: true })
-      .or(menu.getByRole("menuitemradio", { name: item, exact: true }));
+    // The context menu is portalled to the body, so any root works.
+    return new DropdownComponent(this.page, this.page.locator("body")).item(
+      item,
+    );
   }
 
   /**
@@ -1048,9 +1043,9 @@ export class WorkspacePage extends BasePage {
    */
   async clearSidebarFilter(): Promise<void> {
     await this.page.locator('[aria-label="Clear search"]').click();
-    await expect(
-      this.page.getByRole("searchbox", { name: "Projects filter" }),
-    ).toHaveValue("", { timeout: DEFAULT_TIMEOUT });
+    await expect(this.sidebarFilter.root).toHaveValue("", {
+      timeout: DEFAULT_TIMEOUT,
+    });
     await this.waitForTreeSettled();
   }
 
@@ -1070,14 +1065,16 @@ export class WorkspacePage extends BasePage {
     );
   }
 
+  private get sidebarFilter(): SearchFieldComponent {
+    return SearchFieldComponent.byLabel(this.page, "Projects filter");
+  }
+
   /**
    * Types into the sidebar's "Projects filter" search box, narrowing the
    * project/workspace/collection-child tree down to matching nodes.
    */
   async filterSidebar(text: string): Promise<void> {
-    await this.page
-      .getByRole("searchbox", { name: "Projects filter" })
-      .fill(text);
+    await this.sidebarFilter.search(text);
     await this.waitForTreeSettled();
   }
 

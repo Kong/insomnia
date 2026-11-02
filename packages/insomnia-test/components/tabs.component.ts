@@ -1,13 +1,13 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BaseComponent } from "./base.component";
 
 /**
  * A react-aria `Tabs` widget (`basic-components/tabs.tsx`, request/response
  * pane tabs). `root` is the container that holds both the tab list and the
- * `tabpanel`s, e.g. a request pane.
+ * `tabpanel`s, e.g. a request pane. Replaces `TabPanelPage`'s tab logic.
  */
 export class TabsComponent extends BaseComponent {
   /** A tab by its `data-key`. */

@@ -1,8 +1,7 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Locator } from "@playwright/test";
-import { expect } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
+import { SelectComponent } from "./select.component";
 
 /**
  * The environment picker (`environment-picker.tsx`) in the workspace header.
@@ -21,37 +20,15 @@ export class EnvironmentPickerComponent extends BaseComponent {
     return this.root.getByRole("button", { name: label });
   }
 
-  /**
-   * The picker's popover `ListBox`, located by its label. The pickers are
-   * `DialogTrigger`/`Popover` widgets, not react-aria `Select`s.
-   */
-  listbox(kind: "collection" | "project" = "collection"): Locator {
-    const label =
-      kind === "project"
-        ? EnvironmentPickerComponent.PROJECT
-        : EnvironmentPickerComponent.COLLECTION;
-    return this.page.getByRole("listbox", { name: label });
+  select(kind: "collection" | "project" = "collection"): SelectComponent {
+    return new SelectComponent(this.page, this.trigger(kind));
   }
 
-  async open(kind: "collection" | "project" = "collection"): Promise<void> {
-    const listbox = this.listbox(kind);
-    await expect(async () => {
-      if (!(await listbox.isVisible())) await this.trigger(kind).click();
-      await expect(listbox).toBeVisible({ timeout: 2000 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /** Opens the picker and picks the option whose label matches `name`. */
   async choose(
     name: string | RegExp,
     kind: "collection" | "project" = "collection",
   ): Promise<void> {
-    await this.open(kind);
-    const listbox = this.listbox(kind);
-    await listbox
-      .getByRole("option", typeof name === "string" ? { name, exact: true } : { name })
-      .dispatchEvent("click");
-    await expect(listbox).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.select(kind).select(name);
   }
 
   async current(kind: "collection" | "project" = "collection"): Promise<string> {
@@ -60,19 +37,19 @@ export class EnvironmentPickerComponent extends BaseComponent {
 
   /** Opens "Manage API collection environments". */
   async manage(): Promise<void> {
-    await this.open("collection");
+    await this.select("collection").open();
     await this.page
       .getByRole("button", { name: "Manage API collection environments" })
       .click();
   }
 
   async editProjectEnvironment(name: string): Promise<void> {
-    await this.open("project");
+    await this.select("project").open();
     await this.page.getByRole("button", { name: `Edit ${name}` }).click();
   }
 
   async addProjectEnvironment(): Promise<void> {
-    await this.open("project");
+    await this.select("project").open();
     await this.page
       .getByRole("button", { name: "Add Project Environment" })
       .click();

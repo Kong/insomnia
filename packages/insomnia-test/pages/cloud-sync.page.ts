@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 
+import { ToastComponent } from "../components/toast.component";
+import { TooltipComponent } from "../components/tooltip.component";
 import { SyncStatus } from "../enums/sync-status";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
@@ -700,9 +702,7 @@ export class CloudSyncPage extends BasePage {
    * fail.
    */
   async waitForFileDeleteFailureToast(name: string): Promise<void> {
-    await expect(
-      this.page.getByText(`Failed to delete ${name}`),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await new ToastComponent(this.page).waitForToast(`Failed to delete ${name}`);
   }
 
   private readonly unknownFieldsConfirmDialog = this.page
@@ -785,15 +785,7 @@ export class CloudSyncPage extends BasePage {
 
   private async readRowIconTooltip(name: string, iconLabel: string): Promise<string> {
     const icon = this.commitDialog.getByRole("row", { name }).getByLabel(iconLabel);
-    if (!(await icon.isVisible())) {
-      return "";
-    }
-    await icon.hover();
-    const tooltip = this.page.getByRole("tooltip");
-    await expect(tooltip).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    const text = (await tooltip.innerText()).trim();
-    await this.page.mouse.move(0, 0);
-    return text;
+    return new TooltipComponent(this.page, icon).read();
   }
 
   /**

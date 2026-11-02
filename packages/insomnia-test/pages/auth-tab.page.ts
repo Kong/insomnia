@@ -10,6 +10,7 @@ import type {
 } from "insomnia-data";
 import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
+import { ToggleButtonComponent } from "../components/toggle.component";
 import { AuthType } from "../enums/auth-type";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "../misc/constants";
 import { TabPanelPage } from "./tab-panel.page";
@@ -455,29 +456,12 @@ export class AuthTabComponent extends TabPanelPage {
     await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
   }
 
-  /**
-   * Reads a toggle button's on/off state from its inner icon's
-   * `data-testid` ("toggle-is-on" vs "toggle-is-off").
-   */
-  private async isToggleOn(id: string): Promise<boolean> {
-    return (
-      (await this.fieldByLabel(id)
-        .getByTestId("toggle-is-on")
-        .count()) > 0
-    );
+  private toggle(id: string): ToggleButtonComponent {
+    return new ToggleButtonComponent(this.page, this.fieldByLabel(id));
   }
 
-  /**
-   * Clicks a toggle button only if its current on/off state doesn't
-   * already match `enabled`.
-   */
   private async setToggle(id: string, enabled: boolean): Promise<void> {
-    if ((await this.isToggleOn(id)) !== enabled) {
-      await this.fieldByLabel(id).click();
-      await expect(async () => {
-        expect(await this.isToggleOn(id)).toBe(enabled);
-      }).toPass({ timeout: DEFAULT_TIMEOUT });
-    }
+    await this.toggle(id).set(enabled);
   }
 
   /**

@@ -1,7 +1,7 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { waitForRendererIdle, waitForStableValue } from "@package/misc/wait";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 
 /**
  * Root of the component layer (flow → page → component). A component wraps
@@ -30,15 +30,39 @@ export abstract class BaseComponent {
     await expect(this.root).toBeHidden({ timeout });
   }
 
+  /**
+   * Waits for the renderer's own event loop to drain everything already
+   * queued (microtasks, then one macrotask turn). See `BasePage` for the
+   * rationale; duplicated here so components don't depend on a page.
+   */
   protected async waitForRendererIdle(): Promise<void> {
-    await waitForRendererIdle(this.page);
+    await this.page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => setTimeout(resolve, 0), 0);
+        }),
+    );
   }
 
+  /**
+   * Polls `read` until it returns the same value (compared by JSON) on
+   * `stableReads` consecutive reads.
+   */
   protected async waitForStableValue<T>(
     read: () => Promise<T>,
-    stableReads?: number,
-    timeout?: number,
+    stableReads = 3,
+    timeout = DEFAULT_TIMEOUT,
   ): Promise<T> {
-    return waitForStableValue(read, stableReads, timeout);
+    let previous = "";
+    let streak = 0;
+    let value!: T;
+    await expect(async () => {
+      value = await read();
+      const serialized = JSON.stringify(value);
+      streak = serialized === previous ? streak + 1 : 1;
+      previous = serialized;
+      expect(streak).toBeGreaterThanOrEqual(stableReads);
+    }).toPass({ timeout, intervals: [100] });
+    return value;
   }
 }

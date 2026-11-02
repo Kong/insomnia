@@ -1,7 +1,7 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BaseComponent } from "./base.component";
 
 /**
@@ -11,7 +11,7 @@ import { BaseComponent } from "./base.component";
  */
 export class BreadcrumbComponent extends BaseComponent {
   constructor(page: Page) {
-    super(page, page.getByTestId("workspace-breadcrumbs"));
+    super(page, page.locator('[data-testid^="workspace-breadcrumb-level-"]').first().locator("xpath=ancestor::ol[1]"));
   }
 
   level(index: number): Locator {
