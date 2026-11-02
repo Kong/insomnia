@@ -83,8 +83,8 @@ testWithVaultKey(
     });
     const responseView = await httpRequestFlow.send(request!);
 
-    expect(responseView.statusCode).toBe(200);
-    expect((responseView.body as { data: string }).data).toBe(
+    expect(responseView.statusBar.code).toBe(200);
+    expect((responseView.preview as { data: string }).data).toBe(
       `${secretValueFoo}\n${secretValueHello}`,
     );
   },
