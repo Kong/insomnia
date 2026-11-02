@@ -23,7 +23,7 @@ test('Verify WebSocket Connection Sends the API Key Header Until Authentication 
   const authenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`${apiKeyName}: ${apiKeyValue}`);
@@ -33,9 +33,9 @@ test('Verify WebSocket Connection Sends the API Key Header Until Authentication 
   const unauthenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('host:');
-  expect(await unauthenticatedResponse.console?.()).not.toContain(apiKeyName);
+  expect(await unauthenticatedResponse.console()).not.toContain(apiKeyName);
 });

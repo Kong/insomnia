@@ -29,7 +29,7 @@ test("Verify Event Stream Request Over a TLS Connection", async ({ user }) => {
   const responseView = await eventStreamRequestFlow.send(request);
 
   await expect
-    .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
     .toContain("TLSv1.3");
   await expect
     .poll(

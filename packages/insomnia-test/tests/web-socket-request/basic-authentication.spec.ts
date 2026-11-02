@@ -25,7 +25,7 @@ test('Verify WebSocket Connection Sends the Basic Authentication Header Until Au
   const authenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => authenticatedResponse.console?.(), {
+    .poll(() => authenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain(`authorization: Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`);
@@ -35,9 +35,9 @@ test('Verify WebSocket Connection Sends the Basic Authentication Header Until Au
   const unauthenticatedResponse = await webSocketRequestFlow.disconnect(request);
 
   await expect
-    .poll(() => unauthenticatedResponse.console?.(), {
+    .poll(() => unauthenticatedResponse.console(), {
       timeout: DEFAULT_TIMEOUT,
     })
     .toContain('host:');
-  expect(await unauthenticatedResponse.console?.()).not.toContain('authorization:');
+  expect(await unauthenticatedResponse.console()).not.toContain('authorization:');
 });
