@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
+import { dereference, validate } from '@scalar/openapi-parser';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
@@ -502,7 +502,15 @@ export const convert: Converter = async rawData => {
   } // Await here so we catch any exceptions
 
   try {
-    api = await SwaggerParser.validate(api);
+    const { valid, errors } = await validate(api);
+    if (!valid) {
+      throw errors;
+    }
+    const { schema, errors: dereferenceErrors } = await dereference(api);
+    if (dereferenceErrors?.length) {
+      throw dereferenceErrors;
+    }
+    api = schema as unknown as OpenAPIV2.Document;
   } catch (err) {
     // We already know it's a Swagger doc so we will try to import it anyway instead
     // of bailing out here.
