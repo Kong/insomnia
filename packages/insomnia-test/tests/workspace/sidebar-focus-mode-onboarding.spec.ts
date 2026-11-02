@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection, Info, Specification } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify the sidebar focus mode onboarding popover shows once and stays dismissed after a reload, and narrows/un-narrows the sidebar for a spec-carrying API Collection", async ({
   user,

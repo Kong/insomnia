@@ -1,6 +1,5 @@
-import { expect } from "@playwright/test";
-
 import { test } from "@package/misc/fixtures";
+import { expect } from "@playwright/test";
 
 test("Verify Main Process Survives An Async EPIPE Error On stdout", async ({
   user,
