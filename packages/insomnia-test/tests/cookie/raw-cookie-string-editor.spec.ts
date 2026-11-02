@@ -41,7 +41,7 @@ test("Verify Editing A Cookie Via The Raw Tab Updates Its Fields And Is Sent", a
   await cookiePage.close();
 
   const responseView = await httpRequestFlow.send(request);
-  const { cookies: sentCookies } = responseView.body as {
+  const { cookies: sentCookies } = responseView.preview as {
     cookies: Record<string, string>;
   };
 

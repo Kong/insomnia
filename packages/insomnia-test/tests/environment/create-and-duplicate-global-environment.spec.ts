@@ -55,6 +55,6 @@ test("Verify creating and duplicating a global environment", async ({
 
   expect(duplicatedEnvironment.id).not.toBe(environment.id);
   expect(duplicatedEnvironment.name).toBe(duplicatedName);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ args: { value: variableValue } });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ args: { value: variableValue } });
 });
