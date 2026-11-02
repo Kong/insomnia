@@ -1,6 +1,7 @@
 import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
+import { findDocs } from "../misc/db";
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
 import { CloudSyncPage } from "./cloud-sync.page";
@@ -137,6 +138,11 @@ export class PageManager {
     private page: Page,
     private insomnia?: ElectronApplication,
   ) {}
+
+  /** Queries the app's database through the current window. See `findDocs`. */
+  findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
+    return findDocs(this.page, dbFile, query);
+  }
 
   /**
    * Rewires every already-created Page instance (and future ones) onto a

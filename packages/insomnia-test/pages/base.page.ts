@@ -4,7 +4,7 @@ import type { Page } from "playwright-core";
 
 import { CodeEditorComponent } from "../components/code-editor.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
-import { latestLiveDocs, readNedbLines } from "../misc/nedb";
+import { findDocs } from "../misc/db";
 import { waitForRendererIdle, waitForStableValue } from "../misc/wait";
 
 export abstract class BasePage {
@@ -74,23 +74,20 @@ export abstract class BasePage {
   }
 
   /**
-   * Reads the app's on-disk NeDB file `dbFile`, keeping only each
-   * document's latest revision and dropping deleted ones.
+   * Reads every live document of the model stored in `dbFile` from the
+   * app's database.
    */
   protected async readPersistedDocs(dbFile: string): Promise<any[]> {
-    const dataPath = await this.insomnia!.evaluate(({ app }) =>
-      app.getPath("userData"),
-    );
-    return latestLiveDocs(readNedbLines(dataPath, dbFile));
+    return findDocs(this.page, dbFile);
   }
 
   /**
-   * Polls the app's on-disk NeDB files until any live document in one of
+   * Polls the app's database until any live document in one of
    * `dbFiles` satisfies `predicate`. Use in place of a fixed sleep after
    * an edit the app saves through a debounce: the UI already shows the
    * new value, but a caller that navigates away or unmounts the editor
    * before the debounce fires can silently lose the write, and only the
-   * on-disk store the app itself reads from shows it has landed.
+   * app's database shows it has landed.
    */
   protected async waitForPersisted(
     dbFiles: string[],
@@ -107,7 +104,7 @@ export abstract class BasePage {
   }
 
   /**
-   * Polls the on-disk NeDB files until any live document in one of
+   * Polls the app's database until any live document in one of
    * `dbFiles` holds `expected` at the value `read` extracts from it — the
    * single-field form of `waitForPersisted()`. Use after an edit the app
    * autosaves through a debounce (a script, an auth field, docs, a spec).
@@ -121,7 +118,7 @@ export abstract class BasePage {
   }
 
   /**
-   * Polls the on-disk NeDB files until any live document in one of
+   * Polls the app's database until any live document in one of
    * `dbFiles` lists a row named `name` in one of the arrays `rowsOf`
    * returns — confirming a name/value row's debounced save has landed
    * (and the row has settled onto its persisted key) before the next edit
