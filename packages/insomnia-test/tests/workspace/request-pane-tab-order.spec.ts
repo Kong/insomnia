@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify a freshly created request focuses the URL bar and Tab/arrow-key order flows through Send, its dropdown, and the request tabs", async ({
   user,

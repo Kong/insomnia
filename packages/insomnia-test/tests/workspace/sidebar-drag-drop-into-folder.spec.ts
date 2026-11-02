@@ -1,6 +1,4 @@
 import { faker } from '@faker-js/faker';
-import { expect } from "@playwright/test";
-
 import { HttpMethod } from '@package/enums/http-method';
 import { ProjectType } from '@package/enums/project-types';
 import { TreeNodeType } from '@package/enums/tree-node-types';
@@ -9,6 +7,7 @@ import { Collection } from '@package/models/collection';
 import { Folder } from '@package/models/folder';
 import { Project } from '@package/models/project';
 import type { TreeNode } from '@package/pages/workspace.page';
+import { expect } from "@playwright/test";
 
 const WINDOW_WIDTH = 1512;
 const WINDOW_HEIGHT = 859;
