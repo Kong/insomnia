@@ -14,27 +14,27 @@ import { BaseFlow } from "./base.flow";
 export class AppFlow extends BaseFlow {
   /**
    * Closes the current Electron app and relaunches a fresh one against
-   * the same `dataPath`/env (`FlowManager.launchConfig`) — for proving
+   * the same `dataPath`/env (`SessionContext.launchConfig`) — for proving
    * state survives an app restart, not just a page reload. Rewires
-   * `flowManager`/`pageManager` onto the new app in place, so the same
+   * `context`/`pageManager` onto the new app in place, so the same
    * `user.flowManager`/`user.pageManager` instances keep working.
    */
   @step()
   async restart(): Promise<Page> {
-    const config = this.flowManager.launchConfig;
+    const config = this.context.launchConfig;
     if (!config) {
       throw new Error(
-        "AppFlow.restart() requires the FlowManager to have been constructed with a launchConfig — see misc/fixtures.ts's `user` fixture",
+        "AppFlow.restart() requires the SessionContext to have been constructed with a launchConfig — see misc/fixtures.ts's `user` fixture",
       );
     }
 
     await collectWindowCoverage(
-      await this.flowManager.electronApp!.firstWindow({
+      await this.context.electronApp!.firstWindow({
         timeout: DEFAULT_TIMEOUT,
       }),
     );
-    await collectHiddenWindowCoverage(this.flowManager.electronApp!);
-    await this.flowManager.electronApp!.close();
+    await collectHiddenWindowCoverage(this.context.electronApp!);
+    await this.context.electronApp!.close();
     const app = await launchInsomniaElectron(config);
     trackHiddenWindowCoverage(app);
 
@@ -49,7 +49,7 @@ export class AppFlow extends BaseFlow {
       mainWindow?.maximize();
     });
 
-    this.flowManager.setElectronApp(app);
+    this.context.setElectronApp(app);
     this.pageManager.setWindow(win, app);
     await this.pageManager.workspacePage.navigate();
 
@@ -65,14 +65,14 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async emitStdoutEpipeError(): Promise<void> {
-    await this.flowManager.electronApp!.evaluate(() => {
+    await this.context.electronApp!.evaluate(() => {
       process.nextTick(() => {
         const err: NodeJS.ErrnoException = new Error("write EPIPE");
         err.code = "EPIPE";
         process.stdout.emit("error", err);
       });
     });
-    await this.flowManager.electronApp!.evaluate(
+    await this.context.electronApp!.evaluate(
       () => new Promise<void>((resolve) => setImmediate(resolve)),
     );
   }
@@ -84,7 +84,7 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async getStdoutListenerCount(event: string): Promise<number> {
-    return this.flowManager.electronApp!.evaluate(
+    return this.context.electronApp!.evaluate(
       (_electron, evt) => process.stdout.listenerCount(evt),
       event,
     );
@@ -97,7 +97,7 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async isAlive(): Promise<boolean> {
-    return this.flowManager.electronApp!.evaluate(() => true);
+    return this.context.electronApp!.evaluate(() => true);
   }
 
   /**
@@ -106,7 +106,7 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async getDataPath(): Promise<string> {
-    return this.flowManager.electronApp!.evaluate(({ app }) =>
+    return this.context.electronApp!.evaluate(({ app }) =>
       app.getPath("userData"),
     );
   }
@@ -120,7 +120,7 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async simulateMainWindowFocusChange(): Promise<void> {
-    await this.flowManager.electronApp!.evaluate(({ BrowserWindow }) => {
+    await this.context.electronApp!.evaluate(({ BrowserWindow }) => {
       for (const win of BrowserWindow.getAllWindows()) {
         win.webContents.send("mainWindowFocusChange", true);
       }
@@ -137,7 +137,7 @@ export class AppFlow extends BaseFlow {
   @step()
   async captureMainProcessLog(action: () => Promise<void>): Promise<string[]> {
     const lines: string[] = [];
-    const proc = this.flowManager.electronApp!.process();
+    const proc = this.context.electronApp!.process();
     const onData = (chunk: Buffer) => {
       lines.push(...chunk.toString().split("\n").filter(Boolean));
     };
@@ -163,7 +163,7 @@ export class AppFlow extends BaseFlow {
    */
   @step()
   async closeHiddenScriptWindow(): Promise<void> {
-    for (const win of await this.flowManager.electronApp!.windows()) {
+    for (const win of await this.context.electronApp!.windows()) {
       if ((await win.title().catch(() => "")) === "Hidden Browser Window") {
         await win.close();
         return;

@@ -21,11 +21,11 @@ const BASE_ENVIRONMENT_NAME = "Base Environment";
 
 export class EnvironmentFlow extends BaseFlow {
   constructor(
-    flowManager: FlowContext,
+    context: FlowContext,
     pageManager: PageManager,
     private readonly workspaceFlow: WorkspaceFlow,
   ) {
-    super(flowManager, pageManager);
+    super(context, pageManager);
   }
 
   /**

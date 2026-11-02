@@ -9,7 +9,7 @@ import type { FlowContext } from "./flow-context";
 
 export abstract class BaseFlow {
   constructor(
-    protected readonly flowManager: FlowContext,
+    protected readonly context: FlowContext,
     protected readonly pageManager: PageManager,
   ) {}
 
@@ -134,7 +134,7 @@ export abstract class BaseFlow {
     dbFile: string,
     parentId: string,
   ): Promise<string> {
-    const dataPath = await this.flowManager.getDataPath();
+    const dataPath = await this.context.getDataPath();
 
     let id: string | undefined;
     await expect(async () => {
@@ -151,7 +151,7 @@ export abstract class BaseFlow {
    * currently-persisted document, keeping only its latest revision.
    */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
-    const dataPath = await this.flowManager.getDataPath();
+    const dataPath = await this.context.getDataPath();
 
     let latest: any;
     for (const doc of readNedbLines(dataPath, dbFile)) {
