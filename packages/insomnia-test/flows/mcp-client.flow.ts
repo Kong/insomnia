@@ -15,11 +15,11 @@ import type { WorkspaceFlow } from "./workspace.flow";
 
 export class McpClientFlow extends BaseFlow {
   constructor(
-    flowManager: FlowContext,
+    context: FlowContext,
     pageManager: PageManager,
     private readonly workspaceFlow: WorkspaceFlow,
   ) {
-    super(flowManager, pageManager);
+    super(context, pageManager);
   }
 
   /**

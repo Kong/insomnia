@@ -9,6 +9,7 @@ import type {
 import { test as base } from "@playwright/test";
 
 import { FlowManager } from "../flows/flow-manager";
+import { SessionContext } from "../flows/session-context";
 import { PageManager } from "../pages/page-manager";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, MOCK_API_SERVER } from "./constants";
 import {
@@ -316,12 +317,13 @@ export const test = base.extend<Fixtures>({
     testInfo,
   ) => {
     const pageManager = new PageManager(window, insomnia);
-    const flowManager = new FlowManager(pageManager, insomnia, gitCloneUrl, {
+    const context = new SessionContext(insomnia, {
       dataPath,
       skipOnboarding,
       vaultKey,
       vaultSalt,
     });
+    const flowManager = new FlowManager(pageManager, context, gitCloneUrl);
     await pageManager.workspacePage.navigate();
     await disableFocusModeDefault(flowManager);
     await use({ page: window, pageManager, flowManager });
@@ -329,7 +331,7 @@ export const test = base.extend<Fixtures>({
     // A test that called AppFlow.restart() leaves the relaunched app
     // behind — the `insomnia`/`window` fixtures only know the original
     // handles. Collect its coverage and close it here, before they tear down.
-    const currentApp = flowManager.electronApp;
+    const currentApp = context.electronApp;
     if (currentApp && currentApp !== insomnia) {
       const currentWindow = await currentApp
         .firstWindow({ timeout: DEFAULT_TIMEOUT })

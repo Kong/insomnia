@@ -76,7 +76,7 @@ export class CookieFlow extends BaseFlow {
     item: CookieTarget,
     cookies: Cookie[],
   ): Promise<void> {
-    const dataPath = await this.flowManager.getDataPath();
+    const dataPath = await this.context.getDataPath();
 
     const isPersisted = (): boolean => {
       const persisted = latestLiveDocs(

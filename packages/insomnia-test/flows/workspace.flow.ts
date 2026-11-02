@@ -73,13 +73,13 @@ export interface UnitTestRunResult {
 
 export class WorkspaceFlow extends BaseFlow {
   constructor(
-    flowManager: FlowContext,
+    context: FlowContext,
     pageManager: PageManager,
     private readonly preferencesFlow: PreferencesFlow,
     private readonly requestFlows: RequestFlows,
     private readonly gitRepoUrl?: string,
   ) {
-    super(flowManager, pageManager);
+    super(context, pageManager);
   }
 
   /**

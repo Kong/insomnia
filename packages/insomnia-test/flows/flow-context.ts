@@ -13,10 +13,9 @@ export interface AppLaunchConfig {
 }
 
 /**
- * The session-level state every flow shares. `FlowManager` implements it;
- * flows depend on this interface instead of `FlowManager` itself so that
- * the manager (which imports every flow) doesn't form an import cycle with
- * `BaseFlow`.
+ * The session-level state every flow shares. `SessionContext` implements
+ * it and `FlowManager` hands it to each flow it creates, so flows never
+ * depend on the manager (which imports every flow).
  */
 export interface FlowContext {
   /** The underlying ElectronApplication handle, if one was passed in. */
