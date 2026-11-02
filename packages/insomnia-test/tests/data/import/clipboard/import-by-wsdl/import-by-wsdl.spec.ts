@@ -9,8 +9,8 @@ import { ProjectType } from "../../../../../enums/project-types";
 import { test } from "../../../../../misc/fixtures";
 import { Project } from "../../../../../models/project";
 
-const wsdl = fs.readFileSync(path.join(__dirname, "calculator.wsdl"), "utf8");
-const soapBody = fs.readFileSync(path.join(__dirname, "soap-body.xml"), "utf8");
+const wsdl = fs.readFileSync(path.join(import.meta.dirname, "calculator.wsdl"), "utf8");
+const soapBody = fs.readFileSync(path.join(import.meta.dirname, "soap-body.xml"), "utf8");
 
 test("Import WSDL by Clipboard", async ({ user }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
