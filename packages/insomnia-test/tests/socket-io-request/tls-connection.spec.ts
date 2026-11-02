@@ -1,11 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { expect } from "@playwright/test";
-
 import { ProjectType } from "@package/enums/project-types";
 import { certPath } from "@package/misc/certs";
 import { DEFAULT_TIMEOUT, SOCKET_SERVER_WSS, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
 
 test("Verify Socket.IO Request Over a TLS Connection", async ({ user }) => {
   const { certificatesFlow, socketIoRequestFlow, workspaceFlow } =
