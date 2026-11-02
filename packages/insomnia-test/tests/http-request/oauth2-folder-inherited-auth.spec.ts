@@ -1,13 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { AuthType } from "../../enums/auth-type";
-import { HttpMethod } from "../../enums/http-method";
-import { ProjectType } from "../../enums/project-types";
-import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { Folder } from "../../models/folder";
-import { Project } from "../../models/project";
+import { AuthType } from "@package/enums/auth-type";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, OAUTH2_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Folder } from "@package/models/folder";
+import { Project } from "@package/models/project";
 
 test("Verify a request set to Inherit from parent picks up its folder's OAuth 2.0 authentication", async ({
   user,
