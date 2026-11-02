@@ -74,8 +74,13 @@ export class HttpRequestPage extends RequestPage {
    * filling in the type-specific content — form/multipart parameters, a
    * file path, or raw text typed into the code editor. Does nothing when
    * no mime type is given, and skips content entirely for `NoBody`.
+   * `stubFileChooser` is called with a file path right before its native
+   * file picker opens, so the caller can stub the dialog to return it.
    */
-  async setBody(body: HttpRequestBody): Promise<void> {
+  async setBody(
+    body: HttpRequestBody,
+    stubFileChooser: (filePath: string) => Promise<void>,
+  ): Promise<void> {
     if (body.mimeType == null) return;
     await this.selectBodyType(body.mimeType);
 
@@ -85,21 +90,24 @@ export class HttpRequestPage extends RequestPage {
       body.mimeType === ContentType.Multipart ||
       body.mimeType === ContentType.Form
     ) {
-      await this.setBodyParams(body.params ?? []);
+      await this.setBodyParams(body.params ?? [], stubFileChooser);
       return;
     }
 
     if (body.mimeType === ContentType.File) {
-      if (body.fileName) await this.chooseBodyFile(body.fileName);
+      if (body.fileName) await this.chooseBodyFile(body.fileName, stubFileChooser);
       return;
     }
 
     await this.typeBody(body.text ?? "");
   }
 
-  private async chooseBodyFile(filePath: string): Promise<void> {
+  private async chooseBodyFile(
+    filePath: string,
+    stubFileChooser: (filePath: string) => Promise<void>,
+  ): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
-    await this.stubFileChooser(filePath);
+    await stubFileChooser(filePath);
     await new FileInputComponent(this.page, panel).choose();
   }
 
@@ -139,7 +147,10 @@ export class HttpRequestPage extends RequestPage {
     return params;
   }
 
-  private async setBodyParams(params: RequestBodyParameter[]): Promise<void> {
+  private async setBodyParams(
+    params: RequestBodyParameter[],
+    stubFileChooser: (filePath: string) => Promise<void>,
+  ): Promise<void> {
     const panel = this.page.locator(this.TABPANEL);
     const deleteAllBtn = panel.getByRole("button", { name: "Delete all" });
     if (await deleteAllBtn.isEnabled()) {
@@ -177,7 +188,7 @@ export class HttpRequestPage extends RequestPage {
         );
         await expect(fileModeOption).toBeVisible({ timeout: DEFAULT_TIMEOUT });
         await fileModeOption.click();
-        await this.stubFileChooser(param.fileName);
+        await stubFileChooser(param.fileName);
         await new FileInputComponent(this.page, row).choose();
       } else {
         await setValue();

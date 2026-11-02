@@ -3,14 +3,11 @@ import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { findDocs } from "@package/misc/db";
 import { waitForRendererIdle, waitForStableValue } from "@package/misc/wait";
 import type { Locator } from "@playwright/test";
-import { type ElectronApplication,expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
 export abstract class BasePage {
-  constructor(
-    protected page: Page,
-    protected insomnia?: ElectronApplication,
-  ) {}
+  constructor(protected page: Page) {}
 
   /**
    * Navigates to this page and waits until it is confirmed ready for
@@ -20,12 +17,11 @@ export abstract class BasePage {
   abstract navigate(): Promise<void>;
 
   /**
-   * Rewires this Page instance onto a fresh window/ElectronApplication —
-   * called by `PageManager.setWindow()` after `AppFlow.restart()`.
+   * Rewires this Page instance onto a fresh window — called by
+   * `PageManager.setWindow()` after `AppFlow.restart()`.
    */
-  setContext(page: Page, insomnia?: ElectronApplication): void {
+  setContext(page: Page): void {
     this.page = page;
-    this.insomnia = insomnia;
   }
 
   /**
@@ -151,43 +147,6 @@ export abstract class BasePage {
     timeout?: number,
   ): Promise<T> {
     return waitForStableValue(read, stableReads, timeout);
-  }
-
-  /**
-   * Stubs Electron's native file-picker dialog so a "Choose File" button
-   * can be automated without an OS-level file chooser.
-   */
-  protected async stubFileChooser(filePath: string): Promise<void> {
-    if (!this.insomnia) {
-      throw new Error(
-        "ElectronApplication not available — pass `insomnia` through PageManager to stub the file chooser",
-      );
-    }
-    await this.insomnia.evaluate(({ dialog }, fp) => {
-      dialog.showOpenDialog = (async () => ({
-        canceled: false,
-        filePaths: [fp],
-      })) as typeof dialog.showOpenDialog;
-    }, filePath);
-  }
-
-  /**
-   * Stubs Electron's native file-save dialog so an export action that
-   * writes a single file can be automated without an OS-level save
-   * prompt.
-   */
-  protected async stubSaveDialog(filePath: string): Promise<void> {
-    if (!this.insomnia) {
-      throw new Error(
-        "ElectronApplication not available — pass `insomnia` through PageManager to stub the save dialog",
-      );
-    }
-    await this.insomnia.evaluate(({ dialog }, fp) => {
-      dialog.showSaveDialog = (async () => ({
-        canceled: false,
-        filePath: fp,
-      })) as typeof dialog.showSaveDialog;
-    }, filePath);
   }
 
   /**

@@ -568,15 +568,14 @@ export class SpecPage extends BasePage {
   }
 
   /**
-   * Stubs the native file-open dialog to return `filePath`, then clicks
-   * "Upload custom ruleset" and waits for either outcome to settle: the
+   * Clicks "Upload custom ruleset" (the native file-open dialog must
+   * already be stubbed — see `FlowContext.stubFileChooser`) and waits for either outcome to settle: the
    * "View selected ruleset content" button (ruleset accepted) or the
    * "Invalid Spectral Ruleset" error dialog (ruleset rejected). Dismiss
    * the error dialog afterward via `closeDialog()` — it's the app's shared
    * error modal, so no dedicated close method lives here.
    */
-  async uploadRuleset(filePath: string): Promise<"success" | "invalid"> {
-    await this.stubFileChooser(filePath);
+  async uploadRuleset(): Promise<"success" | "invalid"> {
     await this.page.locator(this.UPLOAD_RULESET_BUTTON).click();
 
     const success = this.page.locator(this.VIEW_RULESET_BUTTON);

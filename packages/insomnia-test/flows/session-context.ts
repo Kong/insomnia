@@ -42,4 +42,46 @@ export class SessionContext implements FlowContext {
   async getDataPath(): Promise<string> {
     return this.insomnia!.evaluate(({ app }) => app.getPath("userData"));
   }
+
+  /**
+   * Stubs Electron's native file-picker dialog so a "Choose File" button
+   * can be automated without an OS-level file chooser.
+   */
+  async stubFileChooser(filePath: string): Promise<void> {
+    await this.requireElectronApp("stub the file chooser").evaluate(
+      ({ dialog }, fp) => {
+        dialog.showOpenDialog = (async () => ({
+          canceled: false,
+          filePaths: [fp],
+        })) as typeof dialog.showOpenDialog;
+      },
+      filePath,
+    );
+  }
+
+  /**
+   * Stubs Electron's native file-save dialog so an export action that
+   * writes a single file can be automated without an OS-level save
+   * prompt.
+   */
+  async stubSaveDialog(filePath: string): Promise<void> {
+    await this.requireElectronApp("stub the save dialog").evaluate(
+      ({ dialog }, fp) => {
+        dialog.showSaveDialog = (async () => ({
+          canceled: false,
+          filePath: fp,
+        })) as typeof dialog.showSaveDialog;
+      },
+      filePath,
+    );
+  }
+
+  private requireElectronApp(action: string): ElectronApplication {
+    if (!this.insomnia) {
+      throw new Error(
+        `ElectronApplication not available — pass \`insomnia\` to SessionContext to ${action}`,
+      );
+    }
+    return this.insomnia;
+  }
 }

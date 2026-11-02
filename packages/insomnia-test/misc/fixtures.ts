@@ -316,7 +316,7 @@ export const test = base.extend<Fixtures>({
     use,
     testInfo,
   ) => {
-    const pageManager = new PageManager(window, insomnia);
+    const pageManager = new PageManager(window);
     const context = new SessionContext(insomnia, {
       dataPath,
       skipOnboarding,

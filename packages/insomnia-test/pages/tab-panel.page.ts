@@ -1,6 +1,6 @@
 import { TabsComponent } from "@package/components/tabs.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import { type ElectronApplication, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
 import { BasePage } from "./base.page";
@@ -19,9 +19,8 @@ export abstract class TabPanelPage extends BasePage {
   constructor(
     page: Page,
     protected readonly PANE: string,
-    insomnia?: ElectronApplication,
   ) {
-    super(page, insomnia);
+    super(page);
   }
 
   /**

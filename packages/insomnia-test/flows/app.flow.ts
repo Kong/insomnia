@@ -50,7 +50,7 @@ export class AppFlow extends BaseFlow {
     });
 
     this.context.setElectronApp(app);
-    this.pageManager.setWindow(win, app);
+    this.pageManager.setWindow(win);
     await this.pageManager.workspacePage.navigate();
 
     return win;

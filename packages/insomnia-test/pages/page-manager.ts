@@ -1,5 +1,4 @@
 import { findDocs } from "@package/misc/db";
-import type { ElectronApplication } from "@playwright/test";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
@@ -44,85 +43,85 @@ import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
 const pageRegistry = {
-  certificatesPage: (page: Page, insomnia?: ElectronApplication): CertificatesPage =>
+  certificatesPage: (page: Page): CertificatesPage =>
     new CertificatesPage(page),
-  cloudSyncPage: (page: Page, insomnia?: ElectronApplication): CloudSyncPage =>
+  cloudSyncPage: (page: Page): CloudSyncPage =>
     new CloudSyncPage(page),
-  commandPalettePage: (page: Page, insomnia?: ElectronApplication): CommandPalettePage =>
+  commandPalettePage: (page: Page): CommandPalettePage =>
     new CommandPalettePage(page),
-  cookiePage: (page: Page, insomnia?: ElectronApplication): CookiePage =>
-    new CookiePage(page, insomnia),
-  environmentPage: (page: Page, insomnia?: ElectronApplication): EnvironmentPage =>
-    new EnvironmentPage(page, insomnia),
-  eventStreamRequestPage: (page: Page, insomnia?: ElectronApplication): EventStreamRequestPage =>
-    new EventStreamRequestPage(page, insomnia),
-  exportPage: (page: Page, insomnia?: ElectronApplication): ExportPage =>
-    new ExportPage(page, insomnia),
-  folderPage: (page: Page, insomnia?: ElectronApplication): FolderPage =>
-    new FolderPage(page, insomnia),
-  gitSyncPage: (page: Page, insomnia?: ElectronApplication): GitSyncPage =>
-    new GitSyncPage(page, insomnia),
-  gitCommitDialogPage: (page: Page, insomnia?: ElectronApplication): GitCommitDialogPage =>
-    new GitCommitDialogPage(page, insomnia),
-  gitBranchesDialogPage: (page: Page, insomnia?: ElectronApplication): GitBranchesDialogPage =>
-    new GitBranchesDialogPage(page, insomnia),
-  gitHistoryDialogPage: (page: Page, insomnia?: ElectronApplication): GitHistoryDialogPage =>
-    new GitHistoryDialogPage(page, insomnia),
-  graphqlRequestPage: (page: Page, insomnia?: ElectronApplication): GraphQLRequestPage =>
-    new GraphQLRequestPage(page, insomnia),
-  grpcRequestPage: (page: Page, insomnia?: ElectronApplication): GrpcRequestPage =>
-    new GrpcRequestPage(page, insomnia),
-  httpRequestPage: (page: Page, insomnia?: ElectronApplication): HttpRequestPage =>
-    new HttpRequestPage(page, insomnia),
-  importPage: (page: Page, insomnia?: ElectronApplication): ImportPage =>
+  cookiePage: (page: Page): CookiePage =>
+    new CookiePage(page),
+  environmentPage: (page: Page): EnvironmentPage =>
+    new EnvironmentPage(page),
+  eventStreamRequestPage: (page: Page): EventStreamRequestPage =>
+    new EventStreamRequestPage(page),
+  exportPage: (page: Page): ExportPage =>
+    new ExportPage(page),
+  folderPage: (page: Page): FolderPage =>
+    new FolderPage(page),
+  gitSyncPage: (page: Page): GitSyncPage =>
+    new GitSyncPage(page),
+  gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
+    new GitCommitDialogPage(page),
+  gitBranchesDialogPage: (page: Page): GitBranchesDialogPage =>
+    new GitBranchesDialogPage(page),
+  gitHistoryDialogPage: (page: Page): GitHistoryDialogPage =>
+    new GitHistoryDialogPage(page),
+  graphqlRequestPage: (page: Page): GraphQLRequestPage =>
+    new GraphQLRequestPage(page),
+  grpcRequestPage: (page: Page): GrpcRequestPage =>
+    new GrpcRequestPage(page),
+  httpRequestPage: (page: Page): HttpRequestPage =>
+    new HttpRequestPage(page),
+  importPage: (page: Page): ImportPage =>
     new ImportPage(page),
-  invitePage: (page: Page, insomnia?: ElectronApplication): InvitePage =>
+  invitePage: (page: Page): InvitePage =>
     new InvitePage(page),
-  konnectPage: (page: Page, insomnia?: ElectronApplication): KonnectPage =>
+  konnectPage: (page: Page): KonnectPage =>
     new KonnectPage(page),
-  mcpClientPage: (page: Page, insomnia?: ElectronApplication): McpClientPage =>
-    new McpClientPage(page, insomnia),
-  mockServerPage: (page: Page, insomnia?: ElectronApplication): MockServerPage =>
-    new MockServerPage(page, insomnia),
-  preferencesPage: (page: Page, insomnia?: ElectronApplication): PreferencesPage =>
+  mcpClientPage: (page: Page): McpClientPage =>
+    new McpClientPage(page),
+  mockServerPage: (page: Page): MockServerPage =>
+    new MockServerPage(page),
+  preferencesPage: (page: Page): PreferencesPage =>
     new PreferencesPage(page),
-  projectSettingsPage: (page: Page, insomnia?: ElectronApplication): ProjectSettingsPage =>
-    new ProjectSettingsPage(page, insomnia),
-  responsePage: (page: Page, insomnia?: ElectronApplication): ResponsePage =>
-    new ResponsePage(page, insomnia),
-  runnerPage: (page: Page, insomnia?: ElectronApplication): RunnerPage =>
-    new RunnerPage(page, insomnia),
-  socketIoRequestPage: (page: Page, insomnia?: ElectronApplication): SocketIORequestPage =>
-    new SocketIORequestPage(page, insomnia),
-  templateTagPage: (page: Page, insomnia?: ElectronApplication): TemplateTagPage =>
-    new TemplateTagPage(page, insomnia),
-  variableSourcePage: (page: Page, insomnia?: ElectronApplication): VariableSourcePage =>
-    new VariableSourcePage(page, insomnia),
-  webSocketRequestPage: (page: Page, insomnia?: ElectronApplication): WebSocketRequestPage =>
-    new WebSocketRequestPage(page, insomnia),
-  preferencesCredentialsPage: (page: Page, insomnia?: ElectronApplication): PreferencesCredentialsPage =>
-    new PreferencesCredentialsPage(page, insomnia),
-  preferencesPluginsPage: (page: Page, insomnia?: ElectronApplication): PreferencesPluginsPage =>
-    new PreferencesPluginsPage(page, insomnia),
-  preferencesAiPage: (page: Page, insomnia?: ElectronApplication): PreferencesAiPage =>
-    new PreferencesAiPage(page, insomnia),
-  preferencesVaultPage: (page: Page, insomnia?: ElectronApplication): PreferencesVaultPage =>
-    new PreferencesVaultPage(page, insomnia),
-  cloudSyncCommitDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncCommitDialogPage =>
-    new CloudSyncCommitDialogPage(page, insomnia),
-  cloudSyncHistoryDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncHistoryDialogPage =>
-    new CloudSyncHistoryDialogPage(page, insomnia),
-  cloudSyncBranchesDialogPage: (page: Page, insomnia?: ElectronApplication): CloudSyncBranchesDialogPage =>
-    new CloudSyncBranchesDialogPage(page, insomnia),
-  cloudSyncFileDeletePage: (page: Page, insomnia?: ElectronApplication): CloudSyncFileDeletePage =>
-    new CloudSyncFileDeletePage(page, insomnia),
-  projectPage: (page: Page, insomnia?: ElectronApplication): ProjectPage =>
-    new ProjectPage(page, insomnia),
-  specPage: (page: Page, insomnia?: ElectronApplication): SpecPage =>
-    new SpecPage(page, insomnia),
-  workspacePage: (page: Page, insomnia?: ElectronApplication): WorkspacePage =>
-    new WorkspacePage(page, insomnia),
-} satisfies Record<string, (page: Page, insomnia?: ElectronApplication) => BasePage>;
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
+  responsePage: (page: Page): ResponsePage =>
+    new ResponsePage(page),
+  runnerPage: (page: Page): RunnerPage =>
+    new RunnerPage(page),
+  socketIoRequestPage: (page: Page): SocketIORequestPage =>
+    new SocketIORequestPage(page),
+  templateTagPage: (page: Page): TemplateTagPage =>
+    new TemplateTagPage(page),
+  variableSourcePage: (page: Page): VariableSourcePage =>
+    new VariableSourcePage(page),
+  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
+    new WebSocketRequestPage(page),
+  preferencesCredentialsPage: (page: Page): PreferencesCredentialsPage =>
+    new PreferencesCredentialsPage(page),
+  preferencesPluginsPage: (page: Page): PreferencesPluginsPage =>
+    new PreferencesPluginsPage(page),
+  preferencesAiPage: (page: Page): PreferencesAiPage =>
+    new PreferencesAiPage(page),
+  preferencesVaultPage: (page: Page): PreferencesVaultPage =>
+    new PreferencesVaultPage(page),
+  cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
+    new CloudSyncCommitDialogPage(page),
+  cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
+    new CloudSyncHistoryDialogPage(page),
+  cloudSyncBranchesDialogPage: (page: Page): CloudSyncBranchesDialogPage =>
+    new CloudSyncBranchesDialogPage(page),
+  cloudSyncFileDeletePage: (page: Page): CloudSyncFileDeletePage =>
+    new CloudSyncFileDeletePage(page),
+  projectPage: (page: Page): ProjectPage =>
+    new ProjectPage(page),
+  specPage: (page: Page): SpecPage =>
+    new SpecPage(page),
+  workspacePage: (page: Page): WorkspacePage =>
+    new WorkspacePage(page),
+} satisfies Record<string, (page: Page) => BasePage>;
 
 type PageName = Extract<keyof typeof pageRegistry, string>;
 
@@ -134,10 +133,7 @@ type Pages = { [K in keyof typeof pageRegistry]: ReturnType<(typeof pageRegistry
 export class PageManager {
   private readonly instances = new Map<string, unknown>();
 
-  constructor(
-    private page: Page,
-    private insomnia?: ElectronApplication,
-  ) {}
+  constructor(private page: Page) {}
 
   /** Queries the app's database through the current window. See `findDocs`. */
   findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
@@ -146,20 +142,19 @@ export class PageManager {
 
   /**
    * Rewires every already-created Page instance (and future ones) onto a
-   * fresh window/ElectronApplication — called by `AppFlow.restart()`
+   * fresh window — called by `AppFlow.restart()`
    * once the relaunched app's first window is ready.
    */
-  setWindow(page: Page, insomnia?: ElectronApplication): void {
+  setWindow(page: Page): void {
     this.page = page;
-    this.insomnia = insomnia;
     for (const instance of this.instances.values()) {
-      (instance as BasePage).setContext(page, insomnia);
+      (instance as BasePage).setContext(page);
     }
   }
 
   private getOrCreate(name: PageName): unknown {
     if (!this.instances.has(name)) {
-      this.instances.set(name, pageRegistry[name](this.page, this.insomnia));
+      this.instances.set(name, pageRegistry[name](this.page));
     }
     return this.instances.get(name);
   }

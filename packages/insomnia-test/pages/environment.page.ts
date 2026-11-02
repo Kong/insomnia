@@ -252,11 +252,11 @@ export class EnvironmentPage extends BasePage {
 
   /**
    * Creates a Project Environment from the project picker's "Add Project
-   * Environment" button, then returns to the collection the picker belongs
-   * to. Creating navigates into the new environment's own page and does
-   * not link it to the collection.
+   * Environment" button. Creating navigates into the new environment's own
+   * page and does not link it to the collection, so the caller is
+   * responsible for navigating back.
    */
-  async addProjectEnvironment(name: string, collectionName: string): Promise<void> {
+  async addProjectEnvironment(name: string): Promise<void> {
     await this.openEnvironmentPicker("project");
     await this.page.getByLabel("Add Project Environment").click();
     await this.page.getByPlaceholder("Enter a name for your Environment").fill(name);
@@ -265,7 +265,6 @@ export class EnvironmentPage extends BasePage {
       .getByRole("dialog", { name: "Create or update dialog" })
       .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
     await this.page.keyboard.press("Escape");
-    await this.page.getByRole("row", { name: collectionName }).first().click();
   }
 
   /**

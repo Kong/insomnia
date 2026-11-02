@@ -114,20 +114,4 @@ export class ExportPage extends BasePage {
       await completeDialog.getByRole("button", { name: "Ok" }).click();
     }
   }
-
-  /**
-   * Stubs the native save-file dialog so a single-file (Collection)
-   * export writes to `filePath` instead of prompting.
-   */
-  async stubSaveFileLocation(filePath: string): Promise<void> {
-    await this.stubSaveDialog(filePath);
-  }
-
-  /**
-   * Stubs the native folder-picker dialog so a multi-file (Project/
-   * all-data) export writes into `directoryPath` instead of prompting.
-   */
-  async stubSaveDirectoryLocation(directoryPath: string): Promise<void> {
-    await this.stubFileChooser(directoryPath);
-  }
 }
