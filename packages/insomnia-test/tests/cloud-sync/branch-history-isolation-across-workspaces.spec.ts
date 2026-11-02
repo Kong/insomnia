@@ -8,13 +8,13 @@ test("Verify branch, commit, merge, and restore actions on one Cloud-synced work
 }) => {
   const { workspaceFlow, httpRequestFlow, mcpClientFlow, cloudSyncFlow } =
     user.flowManager;
-  const { httpRequestPage, mcpClientPage, cloudSyncPage } = user.pageManager;
+  const { httpRequestPage, mcpClientPage, cloudSyncPage, cloudSyncBranchesDialogPage } = user.pageManager;
 
   await cloudSyncFlow.fetch("My Collection R1");
   const collectionX = await workspaceFlow.getCollection({
     name: "My Collection R1",
   });
-  await httpRequestFlow.get("New Request", collectionX);
+  await httpRequestFlow.get("New Request");
   await httpRequestPage.setUrl(faker.internet.url());
   const branchX = faker.git.branch();
   await cloudSyncFlow.createBranch(branchX);
@@ -25,7 +25,6 @@ test("Verify branch, commit, merge, and restore actions on one Cloud-synced work
   await user.page.reload();
   const requestXAfterRestore = await httpRequestFlow.get(
     "New Request",
-    collectionX,
   );
 
   await cloudSyncFlow.fetch("My MCP Client");
@@ -40,16 +39,16 @@ test("Verify branch, commit, merge, and restore actions on one Cloud-synced work
   await user.page.reload();
   const clientYAfterRestore = await mcpClientFlow.get("My MCP Client");
 
-  await httpRequestFlow.get("New Request", collectionX);
+  await httpRequestFlow.get("New Request");
   await cloudSyncPage.openBranchesDialog();
-  const branchXListedOnX = await cloudSyncPage.isLocalBranchListed(branchX);
-  const branchYListedOnX = await cloudSyncPage.isLocalBranchListed(branchY);
-  await cloudSyncPage.closeBranchesDialog();
+  const branchXListedOnX = await cloudSyncBranchesDialogPage.isLocalBranchListed(branchX);
+  const branchYListedOnX = await cloudSyncBranchesDialogPage.isLocalBranchListed(branchY);
+  await cloudSyncBranchesDialogPage.closeBranchesDialog();
   await mcpClientFlow.get("My MCP Client");
   await cloudSyncPage.openBranchesDialog();
-  const branchYListedOnY = await cloudSyncPage.isLocalBranchListed(branchY);
-  const branchXListedOnY = await cloudSyncPage.isLocalBranchListed(branchX);
-  await cloudSyncPage.closeBranchesDialog();
+  const branchYListedOnY = await cloudSyncBranchesDialogPage.isLocalBranchListed(branchY);
+  const branchXListedOnY = await cloudSyncBranchesDialogPage.isLocalBranchListed(branchX);
+  await cloudSyncBranchesDialogPage.closeBranchesDialog();
 
   expect(requestXAfterRestore?.url).toBe("");
   expect(clientYAfterRestore?.url).toBe("");
