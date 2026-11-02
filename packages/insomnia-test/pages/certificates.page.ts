@@ -1,6 +1,7 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+import { EnabledLabelToggleComponent } from "../components/toggle.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import type { ClientCertificate } from "../models/client-certificate";
 import { BasePage } from "./base.page";
@@ -103,14 +104,7 @@ export class CertificatesPage extends BasePage {
   }
 
   private async setRowEnabled(row: Locator, enabled: boolean): Promise<void> {
-    const toggle = row.getByRole("button", { name: /^(Enabled|Disabled)$/ });
-    const current = (await toggle.innerText()) === "Enabled";
-    if (current !== enabled) {
-      await toggle.click();
-      await expect(toggle).toHaveText(enabled ? "Enabled" : "Disabled", {
-        timeout: DEFAULT_TIMEOUT,
-      });
-    }
+    await new EnabledLabelToggleComponent(this.page, row).set(enabled);
   }
 
   /**

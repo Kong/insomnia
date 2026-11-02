@@ -5,6 +5,7 @@ import type { Locator } from "@playwright/test";
 import { type ElectronApplication,expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
+import { CodeEditorComponent } from "../components/code-editor.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 
 export abstract class BasePage {
@@ -30,11 +31,10 @@ export abstract class BasePage {
   }
 
   /**
-   * Reads a CodeMirror editor's current value directly via its own
-   * `CodeMirror` instance API rather than scraping rendered DOM text.
+   * Reads a CodeMirror editor's current value. See `CodeEditorComponent`.
    */
   protected async readCodeMirror(locator: Locator): Promise<string> {
-    return locator.evaluate((el) => (el as any).CodeMirror?.getValue() ?? "");
+    return CodeEditorComponent.fromCodeMirror(this.page, locator).getValue();
   }
 
   /**
@@ -58,64 +58,16 @@ export abstract class BasePage {
   }
 
   /**
-   * Sets a CodeMirror editor's value directly via its own `setValue()` API
-   * instead of simulating keystrokes, re-reads it back to catch a stray
-   * race that left it with the wrong content, then watches it for 200ms
-   * to confirm the value actually holds — the immediate read-back only
-   * confirms the write landed at that instant, but a background re-render
-   * (e.g. a `{{ }}`/`{% %}` tag's inline widget redrawing) can silently
-   * revert it shortly after, which a caller that immediately re-navigates
-   * can otherwise observe as the field having raced back to its old
-   * value. Retries the whole write up to 3 times if a revert is caught
-   * within that window.
-   *
-   * This only confirms the live editor value, not that it has been
-   * persisted to disk — see e.g. `HttpRequestFlow`/`GrpcRequestFlow`'s
-   * `waitForUrlPersisted()` for that separate, stricter check.
+   * Sets a CodeMirror editor's value and confirms it holds. See
+   * `CodeEditorComponent.setValue`.
    */
   protected async setCodeMirrorValue(
     cmLocator: Locator,
     text: string,
   ): Promise<void> {
-    const deadline = Date.now() + DEFAULT_TIMEOUT;
-    let attempt = 0;
-    do {
-      attempt++;
-      await expect(async () => {
-        await cmLocator.evaluate(
-          (el, value) => (el as any).CodeMirror?.setValue(value),
-          text,
-        );
-        expect(await this.readCodeMirror(cmLocator)).toBe(text);
-      }).toPass({ timeout: DEFAULT_TIMEOUT });
-      if (await this.valueHolds(cmLocator, text, 200)) return;
-      // A revert means a background patch of a still-initializing document
-      // landed over the write; back off so the next write goes in after it
-      // rather than racing it again within the same few milliseconds.
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, Math.min(250 * attempt, 1000)),
-      );
-    } while (Date.now() < deadline);
-    throw new Error(
-      `CodeMirror value "${text}" did not hold after ${attempt} attempts`,
+    await CodeEditorComponent.fromCodeMirror(this.page, cmLocator).setValue(
+      text,
     );
-  }
-
-  /**
-   * Polls `locator`'s CodeMirror value every 50ms for `durationMs`,
-   * bailing out as soon as it no longer matches `expected` (a revert).
-   */
-  private async valueHolds(
-    locator: Locator,
-    expected: string,
-    durationMs: number,
-  ): Promise<boolean> {
-    const deadline = Date.now() + durationMs;
-    while (Date.now() < deadline) {
-      if ((await this.readCodeMirror(locator)) !== expected) return false;
-      await this.waitForRendererIdle();
-    }
-    return true;
   }
 
   /**

@@ -1,6 +1,7 @@
 import { type ElectronApplication, expect } from "@playwright/test";
 import type { Page } from "playwright-core";
 
+import { TabsComponent } from "../components/tabs.component";
 import { DEFAULT_TIMEOUT } from "../misc/constants";
 import { BasePage } from "./base.page";
 
@@ -32,6 +33,11 @@ export abstract class TabPanelPage extends BasePage {
     });
   }
 
+  /** The pane's tab bar. */
+  protected get tabs(): TabsComponent {
+    return new TabsComponent(this.page, this.page.locator(this.PANE));
+  }
+
   protected get TABPANEL(): string {
     return `${this.PANE} [role="tabpanel"]`;
   }
@@ -40,8 +46,6 @@ export abstract class TabPanelPage extends BasePage {
    * Clicks the tab within this pane identified by its data-key.
    */
   protected async switchTab(tab: string): Promise<void> {
-    await this.page
-      .locator(`${this.PANE} [data-key="${tab}"][role="tab"]`)
-      .click();
+    await this.tabs.tab(tab).click();
   }
 }
