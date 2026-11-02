@@ -33,7 +33,6 @@ testWithLegacyDatabase(
     );
     const designDocumentRequest = await httpRequestFlow.get(
       "Get echo",
-      designDocument,
     );
     const designDocumentResponse = await httpRequestFlow.send(
       designDocumentRequest!,

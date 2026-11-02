@@ -6,9 +6,9 @@ test("Verify the app's bundled plugins are reported by the plugin bridge and sta
   user,
 }) => {
   const { preferencesFlow } = user.flowManager;
-  const { preferencesPage } = user.pageManager;
+  const { preferencesPage, preferencesPluginsPage } = user.pageManager;
 
-  const bundlePlugins = await preferencesPage.getBundlePlugins();
+  const bundlePlugins = await preferencesPluginsPage.getBundlePlugins();
   const userPluginNames = await preferencesFlow.getInstalledPlugins();
 
   const bundlePluginNames = bundlePlugins.map((p) => p.name);
