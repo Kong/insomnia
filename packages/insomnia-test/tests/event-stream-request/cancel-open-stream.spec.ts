@@ -1,12 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { expect } from "@playwright/test";
 
-import { ProjectType } from "../../enums/project-types";
-import { RequestState } from "../../enums/request-state";
-import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from "../../misc/fixtures";
-import { Collection } from "../../models/collection";
-import { EventStreamMethod } from "../../models/event-stream-request";
-import { Project } from "../../models/project";
+import { ProjectType } from "@package/enums/project-types";
+import { RequestState } from "@package/enums/request-state";
+import { DEFAULT_TIMEOUT, EVENT_STREAM_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { EventStreamMethod } from "@package/models/event-stream-request";
+import { Project } from "@package/models/project";
 
 const eventCount = 20;
 
