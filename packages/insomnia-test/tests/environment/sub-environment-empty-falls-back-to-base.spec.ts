@@ -66,8 +66,8 @@ test("Verify an empty sub-environment falls back to the base environment until i
   ]);
   const afterOwnValue = await httpRequestFlow.send(request);
 
-  expect(beforeOwnValue.statusCode).toBe(200);
-  expect(beforeOwnValue.body).toMatchObject({ args: { value: baseValue } });
-  expect(afterOwnValue.statusCode).toBe(200);
-  expect(afterOwnValue.body).toMatchObject({ args: { value: subValue } });
+  expect(beforeOwnValue.statusBar.code).toBe(200);
+  expect(beforeOwnValue.preview).toMatchObject({ args: { value: baseValue } });
+  expect(afterOwnValue.statusBar.code).toBe(200);
+  expect(afterOwnValue.preview).toMatchObject({ args: { value: subValue } });
 });

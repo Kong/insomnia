@@ -62,6 +62,6 @@ test("Verify Multi-Level Nested Variable Resolution", async ({ user }) => {
   } satisfies HttpRequest);
 
   const responseView = await httpRequestFlow.send(request);
-  expect(responseView.statusCode).toBe(200);
-  expect(responseView.body).toMatchObject({ args: { value: finalValue } });
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toMatchObject({ args: { value: finalValue } });
 });
