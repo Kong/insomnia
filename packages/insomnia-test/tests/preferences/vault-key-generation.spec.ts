@@ -9,9 +9,9 @@ test("Verify a new vault key can be generated and persists across reopening Pref
 
   const generatedKey = await preferencesFlow.generateVaultKey();
 
-  const { preferencesPage } = user.pageManager;
+  const { preferencesPage, preferencesVaultPage } = user.pageManager;
   await preferencesPage.open();
-  const redisplayedKey = await preferencesPage.getVaultKey();
+  const redisplayedKey = await preferencesVaultPage.getVaultKey();
   await preferencesPage.close();
 
   expect(generatedKey.length).toBeGreaterThan(0);

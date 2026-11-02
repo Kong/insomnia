@@ -5,18 +5,18 @@ import { test } from "../../misc/fixtures";
 test("Verify logging out shows the Scratch Pad and other login entry points, and choosing Scratch Pad opens its workspace with no Document creation entry", async ({
   user,
 }) => {
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, projectPage } = user.pageManager;
 
-  await workspacePage.logOut();
-  const scratchPadEntryPointVisible = await workspacePage.isLoginEntryPointVisible(
+  await projectPage.logOut();
+  const scratchPadEntryPointVisible = await projectPage.isLoginEntryPointVisible(
     "Use local Scratch Pad",
   );
-  const emailEntryPointVisible = await workspacePage.isLoginEntryPointVisible(
+  const emailEntryPointVisible = await projectPage.isLoginEntryPointVisible(
     "Continue with Email",
   );
-  await workspacePage.clickUseLocalScratchPad();
+  await projectPage.clickUseLocalScratchPad();
   const unlockFullFeaturesVisible =
-    await workspacePage.isUnlockFullFeaturesVisible();
+    await projectPage.isUnlockFullFeaturesVisible();
 
   await user.page
     .getByRole("button", { name: "Create", exact: false })

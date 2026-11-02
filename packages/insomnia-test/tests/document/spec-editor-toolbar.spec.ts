@@ -11,7 +11,7 @@ test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Tog
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -32,15 +32,15 @@ test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Tog
       }),
     ),
   );
-  const formatBefore = await workspacePage.getFormat();
+  const formatBefore = await specPage.getFormat();
   const otherFormat =
     formatBefore === SpecFormat.JSON ? SpecFormat.YAML : SpecFormat.JSON;
-  await workspacePage.selectFormat(otherFormat);
-  const formatAfter = await workspacePage.getFormat();
+  await specPage.selectFormat(otherFormat);
+  const formatAfter = await specPage.getFormat();
 
-  const previewBefore = await workspacePage.isPreviewOpen();
-  const previewAfterOpen = await workspacePage.togglePreview();
-  const previewAfterClose = await workspacePage.togglePreview();
+  const previewBefore = await specPage.isPreviewOpen();
+  const previewAfterOpen = await specPage.togglePreview();
+  const previewAfterClose = await specPage.togglePreview();
 
   expect(collection.version).toBe("OpenAPI 3.0.0");
   expect(formatAfter).toBe(otherFormat);
@@ -54,7 +54,7 @@ test("Verify Spec Editor Toolbar's Format Switch And Preview Toggle With A YAML 
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -77,15 +77,15 @@ paths:
 `,
     ),
   );
-  const formatBefore = await workspacePage.getFormat();
-  await workspacePage.selectFormat(SpecFormat.JSON);
-  const formatJson = await workspacePage.getFormat();
-  await workspacePage.selectFormat(SpecFormat.YAML);
-  const formatYaml = await workspacePage.getFormat();
+  const formatBefore = await specPage.getFormat();
+  await specPage.selectFormat(SpecFormat.JSON);
+  const formatJson = await specPage.getFormat();
+  await specPage.selectFormat(SpecFormat.YAML);
+  const formatYaml = await specPage.getFormat();
 
-  const previewBefore = await workspacePage.isPreviewOpen();
-  const previewAfterOpen = await workspacePage.togglePreview();
-  const previewAfterClose = await workspacePage.togglePreview();
+  const previewBefore = await specPage.isPreviewOpen();
+  const previewAfterOpen = await specPage.togglePreview();
+  const previewAfterClose = await specPage.togglePreview();
 
   expect(collection.version).toBe("OpenAPI 3.0.0");
   expect(formatBefore).toBe(SpecFormat.YAML);
