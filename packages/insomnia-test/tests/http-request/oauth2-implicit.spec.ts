@@ -76,10 +76,10 @@ test("Verify Implicit grant with response type ID and Access Token authorizes th
   const tokens = await httpRequestFlow.fetchOAuth2Tokens(request);
 
   const responseView = await httpRequestFlow.send(request);
-  const body = responseView.body as { authorization?: string };
+  const body = responseView.preview as { authorization?: string };
 
   expect(tokens.identityToken).not.toBe("");
   expect(tokens.accessToken).not.toBe("");
-  expect(responseView.statusCode).toBe(200);
+  expect(responseView.statusBar.code).toBe(200);
   expect(body.authorization).toBe(`Bearer ${tokens.accessToken}`);
 });
