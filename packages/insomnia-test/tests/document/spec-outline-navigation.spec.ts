@@ -23,7 +23,7 @@ test("Verify Spec Outline Sidebar Lists Every Section And Jumps To The Matching 
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
   const s = buildSpec();
 
   const project = await workspaceFlow.createProject(
@@ -62,29 +62,29 @@ test("Verify Spec Outline Sidebar Lists Every Section And Jumps To The Matching 
     ),
   );
 
-  const infoKeys = await workspacePage.getOutlineEntryKeys("info");
-  const serverKeys = await workspacePage.getOutlineEntryKeys("servers");
-  const pathKeys = await workspacePage.getOutlineEntryKeys("paths");
-  const schemaKeys = await workspacePage.getOutlineEntryKeys("schemas");
-  const parameterKeys = await workspacePage.getOutlineEntryKeys("parameters");
-  const securityKeys = await workspacePage.getOutlineEntryKeys("securitySchemes");
+  const infoKeys = await specPage.getOutlineEntryKeys("info");
+  const serverKeys = await specPage.getOutlineEntryKeys("servers");
+  const pathKeys = await specPage.getOutlineEntryKeys("paths");
+  const schemaKeys = await specPage.getOutlineEntryKeys("schemas");
+  const parameterKeys = await specPage.getOutlineEntryKeys("parameters");
+  const securityKeys = await specPage.getOutlineEntryKeys("securitySchemes");
 
-  await workspacePage.clickOutlineEntry("info", "title");
-  const infoTitle = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("info", "license");
-  const infoLicense = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("servers", 1);
-  const server = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("paths", s.pathB);
-  const pathRow = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("paths", s.pathA, HttpMethod.Post);
-  const pathMethod = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("schemas", s.schemaB);
-  const schema = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("parameters", s.parameter);
-  const parameter = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("securitySchemes", s.securityScheme);
-  const security = await workspacePage.getEditorSelection();
+  await specPage.clickOutlineEntry("info", "title");
+  const infoTitle = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("info", "license");
+  const infoLicense = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("servers", 1);
+  const server = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("paths", s.pathB);
+  const pathRow = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("paths", s.pathA, HttpMethod.Post);
+  const pathMethod = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("schemas", s.schemaB);
+  const schema = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("parameters", s.parameter);
+  const parameter = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("securitySchemes", s.securityScheme);
+  const security = await specPage.getEditorSelection();
 
   expect(infoKeys).toEqual([
     "info.title",
@@ -115,7 +115,7 @@ test("Verify Spec Outline Sidebar Lists Every Section And Jumps To The Matching 
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
   const s = buildSpec();
 
   const project = await workspaceFlow.createProject(
@@ -171,27 +171,27 @@ components:
     ),
   );
 
-  const infoKeys = await workspacePage.getOutlineEntryKeys("info");
-  const serverKeys = await workspacePage.getOutlineEntryKeys("servers");
-  const pathKeys = await workspacePage.getOutlineEntryKeys("paths");
-  const schemaKeys = await workspacePage.getOutlineEntryKeys("schemas");
-  const parameterKeys = await workspacePage.getOutlineEntryKeys("parameters");
-  const securityKeys = await workspacePage.getOutlineEntryKeys("securitySchemes");
+  const infoKeys = await specPage.getOutlineEntryKeys("info");
+  const serverKeys = await specPage.getOutlineEntryKeys("servers");
+  const pathKeys = await specPage.getOutlineEntryKeys("paths");
+  const schemaKeys = await specPage.getOutlineEntryKeys("schemas");
+  const parameterKeys = await specPage.getOutlineEntryKeys("parameters");
+  const securityKeys = await specPage.getOutlineEntryKeys("securitySchemes");
 
-  await workspacePage.clickOutlineEntry("info", "license");
-  const infoLicense = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("servers", 1);
-  const server = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("paths", s.pathB);
-  const pathRow = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("paths", s.pathA, HttpMethod.Post);
-  const pathMethod = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("schemas", s.schemaB);
-  const schema = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("parameters", s.parameter);
-  const parameter = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("securitySchemes", s.securityScheme);
-  const security = await workspacePage.getEditorSelection();
+  await specPage.clickOutlineEntry("info", "license");
+  const infoLicense = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("servers", 1);
+  const server = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("paths", s.pathB);
+  const pathRow = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("paths", s.pathA, HttpMethod.Post);
+  const pathMethod = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("schemas", s.schemaB);
+  const schema = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("parameters", s.parameter);
+  const parameter = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("securitySchemes", s.securityScheme);
+  const security = await specPage.getEditorSelection();
 
   expect(infoKeys).toEqual([
     "info.title",
@@ -223,7 +223,7 @@ test("Verify Spec Outline Sidebar Jumps To The Line Of A Scalar Info Value In A 
   test.fail(true, "INS-4007");
 
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage } = user.pageManager;
+  const { workspacePage, specPage } = user.pageManager;
   const title = faker.commerce.productName();
   const version = faker.system.semver();
 
@@ -249,10 +249,10 @@ paths:
     ),
   );
 
-  await workspacePage.clickOutlineEntry("info", "title");
-  const infoTitle = await workspacePage.getEditorSelection();
-  await workspacePage.clickOutlineEntry("info", "version");
-  const infoVersion = await workspacePage.getEditorSelection();
+  await specPage.clickOutlineEntry("info", "title");
+  const infoTitle = await specPage.getEditorSelection();
+  await specPage.clickOutlineEntry("info", "version");
+  const infoVersion = await specPage.getEditorSelection();
 
   expect(infoTitle.text).toBe(`title: ${title}`);
   expect(infoVersion.text).toBe(`version: ${version}`);
