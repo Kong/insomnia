@@ -104,7 +104,7 @@ test("Verify WebSocket Requests Are Routed Through the Preferences Proxy", async
     );
 
     await expect
-      .poll(() => responseView.console?.(), { timeout: DEFAULT_TIMEOUT })
+      .poll(() => responseView.console(), { timeout: DEFAULT_TIMEOUT })
       .toContain("101 Switching Protocols");
     expect(proxy.targets).toContain(hostOf(WS_SERVER));
   } finally {
