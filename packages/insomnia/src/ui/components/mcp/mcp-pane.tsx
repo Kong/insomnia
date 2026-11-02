@@ -593,6 +593,7 @@ const CollectionGridListItem = (props: {
       )}
       textValue={label}
       data-testid={`test-${uniqueId}`}
+      data-selected={isSelected}
       style={style}
     >
       <div className="flex h-full w-full flex-col overflow-hidden">
