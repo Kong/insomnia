@@ -13,7 +13,8 @@
     "grpc-server": "node misc/grpc-server.ts",
     "git-server": "node misc/git-server.ts",
     "oauth2-server": "node misc/oauth2-server.ts",
-    "mock-bin-server": "node misc/mock-bin-server.ts"
+    "mock-bin-server": "node misc/mock-bin-server.ts",
+    "resolving-proxy-server": "node misc/resolving-proxy-server.ts"
   },
   "license": "Apache-2.0",
   "type": "module",

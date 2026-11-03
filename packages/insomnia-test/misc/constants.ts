@@ -54,6 +54,15 @@ export const GRPC_SERVER_MTLS = "grpcs://localhost:9002";
 export const GIT_SERVER = "http://localhost:4070";
 
 export const MOCK_BIN_SERVER = "http://localhost:4090";
+
+/**
+ * Forward proxy (`misc/resolving-proxy-server.ts`) that maps
+ * `RESOLVING_PROXY_HOST` to 127.0.0.1. Point Insomnia's proxy settings at
+ * `RESOLVING_PROXY_SERVER` to reach the mock servers without using
+ * `localhost` in the URL — mirror any change to the host into that file.
+ */
+export const RESOLVING_PROXY_SERVER = "http://127.0.0.1:4095";
+export const RESOLVING_PROXY_HOST = "insomnia.test";
 /**
  * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
  * route — mirror any change here into `misc/mock-bin-server.ts`.
