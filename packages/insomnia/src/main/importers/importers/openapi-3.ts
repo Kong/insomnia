@@ -10,8 +10,8 @@ import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
-export const name = 'OpenAPI 3.0';
-export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
+export const name = 'OpenAPI 3.x';
+export const description = 'Importer for OpenAPI 3.x specification (json/yaml)';
 const toCamelCase = (a: string) =>
   a
     .replace(/`|'/g, '')
@@ -31,6 +31,13 @@ function isPlainObject(value: any) {
 }
 
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/;
+
+// Minimal additions for OpenAPI 3.2, which `openapi-types` does not cover yet
+// `query` is handled like any other method key; `additionalOperations` maps custom HTTP methods to operations
+type PathItemObjectV3_2 = OpenAPIV3.PathItemObject & {
+  query?: OpenAPIV3.OperationObject;
+  additionalOperations?: Record<string, OpenAPIV3.OperationObject>;
+};
 
 // 3.x.x
 const MIMETYPE_JSON = 'application/json';
@@ -189,12 +196,19 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
       return [];
     }
 
-    const methods = Object.entries(schemasPerMethod)
+    const { additionalOperations, ...standardOperations } = schemasPerMethod as PathItemObjectV3_2;
+
+    const methods = Object.entries(standardOperations)
       // Only keep entries that are plain objects and not spec extensions
       .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
 
-    return methods.map(([method]) => ({
-      ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
+    // OpenAPI 3.2 `additionalOperations`: one request per custom HTTP method (e.g. PURGE)
+    const customMethods = additionalOperations && isPlainObject(additionalOperations)
+      ? Object.entries(additionalOperations).filter(([, value]) => isPlainObject(value))
+      : [];
+
+    return [...methods, ...customMethods].map(([method, operation]) => ({
+      ...(operation as OpenAPIV3.SchemaObject),
       path,
       method,
     }));
@@ -604,15 +618,21 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
     }
 
     const {
-      type,
+      type: schemaType,
       format,
       example,
+      examples,
+      const: constValue,
       readOnly,
       default: defaultValue,
       allOf,
       oneOf,
       anyOf,
     } = schema as OpenAPIV3.SchemaObject & {
+      // OpenAPI 3.1: `type` can be an array, `examples` is an array and `const` is supported
+      type?: string | string[];
+      examples?: unknown[];
+      const?: unknown;
       allOf?: OpenAPIV3.SchemaObject[];
       oneOf?: OpenAPIV3.SchemaObject[];
       anyOf?: OpenAPIV3.SchemaObject[];
@@ -624,6 +644,14 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
 
     if (example) {
       return example;
+    }
+
+    if (Array.isArray(examples) && examples.length > 0) {
+      return examples[0];
+    }
+
+    if (constValue !== undefined) {
+      return constValue;
     }
 
     if (defaultValue) {
@@ -651,6 +679,9 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
     if (anyOf && Array.isArray(anyOf) && anyOf.length > 0) {
       return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject, [...ancestors, schema]);
     }
+
+    // OpenAPI 3.1 `type: ['string', 'null']`: use the first non-null type
+    const type = Array.isArray(schemaType) ? schemaType.find(t => t !== 'null') : schemaType;
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     const factory = typeExamples[`${type}_${format}`] || typeExamples[type];

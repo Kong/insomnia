@@ -548,4 +548,73 @@ describe('openapi-3', () => {
       expect(depth).toBeLessThan(10);
     });
   });
+  describe('OpenAPI 3.2', () => {
+    it('should import additionalOperations as one request per custom method', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Cache API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            get: { operationId: 'listPets', responses: { 200: { description: 'ok' } } },
+            query: { operationId: 'queryPets', responses: { 200: { description: 'ok' } } },
+            additionalOperations: {
+              PURGE: { operationId: 'purgePets', responses: { 204: { description: 'purged' } } },
+              LINK: { operationId: 'linkPets', responses: { 204: { description: 'linked' } } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => r.method)).toEqual(['GET', 'QUERY', 'PURGE', 'LINK']);
+      expect(requests.every(r => r.url === '{{ _.base_url }}/pets')).toBe(true);
+    });
+  });
+
+  describe('OpenAPI 3.1 schema keywords', () => {
+    it('should use examples, const and the first non-null type for example values', async () => {
+      const openApiDoc = {
+        openapi: '3.1.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            post: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        name: { type: ['string', 'null'] },
+                        kind: { const: 'dog' },
+                        zero: { const: 0 },
+                        flag: { const: false },
+                        tag: { type: 'string', examples: ['rex', 'fido'] },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result?.find(item => item._type === 'request');
+
+      expect(JSON.parse(request.body.text)).toEqual({
+        name: 'string',
+        kind: 'dog',
+        zero: 0,
+        flag: false,
+        tag: 'rex',
+      });
+    });
+  });
 });
