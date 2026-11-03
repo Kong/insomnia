@@ -535,10 +535,17 @@ function SidebarDropIndicator({
         className={`absolute right-1 left-1 z-10 flex items-center rounded-sm outline-2 outline-solid ${outlineClass}`}
         style={{ transform: `translateY(${rowStart}px)`, height: `${rowHeight}px` }}
       >
-        <Icon
-          icon="turn-down"
-          className={`ml-2 h-3 w-3 ${isValid ? 'text-(--color-surprise)' : 'text-(--color-danger)'}`}
-        />
+        <span
+          data-testid="drop-indicator-on"
+          data-valid={isValid}
+          data-drop-position={target.dropPosition}
+          className="flex items-center"
+        >
+          <Icon
+            icon="turn-down"
+            className={`ml-2 h-3 w-3 ${isValid ? 'text-(--color-surprise)' : 'text-(--color-danger)'}`}
+          />
+        </span>
       </DropIndicator>
     );
   }
@@ -557,6 +564,7 @@ function SidebarDropIndicator({
         <span
           data-testid="drop-indicator-folder-name"
           data-valid={isValid}
+          data-drop-position={target.dropPosition}
           className={`absolute -top-2.5 left-0 z-10 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap ${
             isValid
               ? 'bg-(--color-surprise) text-(--color-font-surprise)'
@@ -570,6 +578,7 @@ function SidebarDropIndicator({
         <span
           data-testid="drop-indicator-dot"
           data-valid={isValid}
+          data-drop-position={target.dropPosition}
           className={`absolute -top-0.75 -left-0.75 block h-1.75 w-1.75 rounded-full ${
             isValid ? 'bg-(--color-surprise)' : 'bg-(--color-danger)'
           }`}
