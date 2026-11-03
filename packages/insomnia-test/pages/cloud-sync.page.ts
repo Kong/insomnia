@@ -67,6 +67,13 @@ export class CloudSyncPage extends BasePage {
     const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
     await expect(workspaceRow).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     await workspaceRow.click();
+    // A freshly fetched collection renders collapsed for a beat before the
+    // sidebar auto-expands it. Wait for that to settle, or a tree scan
+    // right after (e.g. `workspaceFlow.getCollection()`) clicks its Expand
+    // toggle mid-transition and fights the auto-expand.
+    await expect(workspaceRow).not.toHaveAttribute("data-expanded", "false", {
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
