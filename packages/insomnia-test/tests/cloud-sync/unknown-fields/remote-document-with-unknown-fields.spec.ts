@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
+import { seedCloudSyncProject } from "@package/misc/cloud-sync-mock";
 import { DEFAULT_TIMEOUT, test } from "@package/misc/fixtures";
-import { seedCloudSyncProject } from "@package/tests/cloud-sync/support/cloud-sync-mock";
 import { expect } from "@playwright/test";
 
 import { buildCloudSyncDocs } from './helpers';

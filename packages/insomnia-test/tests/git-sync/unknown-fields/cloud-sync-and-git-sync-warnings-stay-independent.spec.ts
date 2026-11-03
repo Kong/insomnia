@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { GitChangeList } from '@package/enums/git-change-list';
 import { ProjectType } from '@package/enums/project-types';
+import { seedCloudSyncProject } from '@package/misc/cloud-sync-mock';
 import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
-import { seedCloudSyncProject } from '@package/tests/cloud-sync/support/cloud-sync-mock';
 import { buildCloudSyncDocs } from '@package/tests/cloud-sync/unknown-fields/helpers';
 import { expect } from "@playwright/test";
 
