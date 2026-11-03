@@ -2721,6 +2721,7 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
       "_type": "environment",
       "data": {
         "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}",
+        "webhook_url": "https://example.com/webhook",
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__",
@@ -2752,6 +2753,14 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
       "description": "",
       "environment": {},
       "name": "pet-events",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__webhooks",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "Webhooks",
       "parentId": "__WORKSPACE_ID__",
     },
     {
@@ -2856,7 +2865,13 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
       "authentication": {},
       "body": {},
       "description": "",
-      "headers": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Accept",
+          "value": "text/event-stream",
+        },
+      ],
       "method": "GET",
       "name": "Stream pet events (Server-Sent Events)",
       "parameters": [],
@@ -2872,9 +2887,46 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
       "headers": [],
       "method": "GET",
       "name": "Lookup using a whole query string",
-      "parameters": [],
+      "parameters": [
+        {
+          "disabled": true,
+          "name": "name",
+          "value": "string",
+        },
+        {
+          "disabled": true,
+          "name": "type",
+          "value": "string",
+        },
+      ],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
       "url": "{{ _.base_url }}/pets/lookup",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__f9960aa6",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{
+  "id": 0,
+  "name": "string",
+  "type": "string"
+}",
+      },
+      "description": "",
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+      ],
+      "method": "POST",
+      "name": "Fired when a pet is adopted",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__webhooks",
+      "url": "{{ _.webhook_url }}",
     },
   ],
 }
