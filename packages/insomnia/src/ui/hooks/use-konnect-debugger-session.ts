@@ -105,7 +105,6 @@ export function useKonnectDebuggerSession({
 
   useEffect(() => {
     if (isDebugSessionMissingFromServer) {
-      // setDebugSessionMissing(true);
       setSessionId(null);
       services.project.update(projectId, { konnectDebugSessionId: null });
     }

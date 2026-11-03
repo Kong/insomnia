@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DebugTraceDetail } from '../debug-session-api';
-import { findTraceIdsByRouteId, getRouteIdFromKonnectRouteKey } from '../debug-trace-helper';
+import { getRouteIdFromKonnectRouteKey, getRouteIdsFromTraceDetail } from '../debug-trace-helper';
 
 const detail = (traceId: string, attributes: Record<string, any>[]): DebugTraceDetail => ({
   traceId,
@@ -30,18 +30,18 @@ describe('getRouteIdFromKonnectRouteKey', () => {
   });
 });
 
-describe('findTraceIdsByRouteId', () => {
-  const details = new Map([
-    ['t1', detail('t1', [{ 'http.route': '/a' }, { 'proxy.kong.route.id': 'route-1' }])],
-    ['t2', detail('t2', [{ 'proxy.kong.route.id': 'route-2' }])],
-    ['t3', detail('t3', [{}])],
-  ]);
-
-  it('matches traces having a span with the same proxy.kong.route.id', () => {
-    expect([...findTraceIdsByRouteId(details, 'route-1')]).toEqual(['t1']);
+describe('getRouteIdsFromTraceDetail', () => {
+  it('collects the distinct proxy.kong.route.id values of the spans', () => {
+    const traceDetail = detail('t1', [
+      { 'http.route': '/a' },
+      { 'proxy.kong.route.id': 'route-1' },
+      { 'proxy.kong.route.id': 'route-1' },
+      { 'proxy.kong.route.id': 'route-2' },
+    ]);
+    expect([...getRouteIdsFromTraceDetail(traceDetail)]).toEqual(['route-1', 'route-2']);
   });
 
-  it('matches nothing without a route id', () => {
-    expect(findTraceIdsByRouteId(details, null).size).toBe(0);
+  it('returns an empty set when no span has a route id', () => {
+    expect(getRouteIdsFromTraceDetail(detail('t2', [{}])).size).toBe(0);
   });
 });
