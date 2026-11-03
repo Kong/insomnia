@@ -10,6 +10,13 @@ const ACCOUNT_ID = "acct_64a477e6b59d43a5a607f84b4f73e3ce";
 const ORG_ID = "org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 const PROJECT_ID = "proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2";
 
+// Document ids referenced by the Cloud Sync snapshot fixtures below.
+const COLLECTION_R1_WORKSPACE_ID = "wrk_a7132f924ba7451594ba64ec411c9e13";
+const COLLECTION_R1_REQUEST_ID = "req_d11697e0652742e691374e380cdcd2b2";
+const MY_ENVIRONMENT_WORKSPACE_ID = "wrk_2068a8dfd6914c369073686bb92737ae";
+const MY_MCP_CLIENT_WORKSPACE_ID = "wrk_efab8e758b97459bab2659d8fdcf8627";
+const MY_MCP_CLIENT_REQUEST_ID = "mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0";
+
 // Feature-flag / storage-rule state, isolated per Electron instance via the
 // `x-session-id` header every request carries (sourced from
 // misc/launch.ts's SESSION_ID), so state set for one launch never leaks into
@@ -188,7 +195,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
       state: [
         {
           blob: "be076c5943e0d32b05efbbf215b4f9d2bb894a9c",
-          key: "wrk_a7132f924ba7451594ba64ec411c9e13",
+          key: COLLECTION_R1_WORKSPACE_ID,
           name: "My Collection R1",
         },
         {
@@ -198,7 +205,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
         },
         {
           blob: "d78e5942f5508063ea484bb4b497f0ed446309c9",
-          key: "req_d11697e0652742e691374e380cdcd2b2",
+          key: COLLECTION_R1_REQUEST_ID,
           name: "New Request",
         },
       ],
@@ -212,7 +219,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
       state: [
         {
           blob: "be076c5943e0d32b05efbbf215b4f9d2bb894a9c",
-          key: "wrk_a7132f924ba7451594ba64ec411c9e13",
+          key: COLLECTION_R1_WORKSPACE_ID,
           name: "My Collection R1",
         },
         {
@@ -222,7 +229,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
         },
         {
           blob: "1f8a8cd1da88d9abb4bfc1d6e662716d41705ace",
-          key: "req_d11697e0652742e691374e380cdcd2b2",
+          key: COLLECTION_R1_REQUEST_ID,
           name: "New Request",
         },
       ],
@@ -239,7 +246,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
       state: [
         {
           blob: "2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e",
-          key: "wrk_2068a8dfd6914c369073686bb92737ae",
+          key: MY_ENVIRONMENT_WORKSPACE_ID,
           name: "My Environment",
         },
         {
@@ -261,7 +268,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
       state: [
         {
           blob: "a8252b458e8a1b5f3c214e5e7f944887a142ae72",
-          key: "wrk_efab8e758b97459bab2659d8fdcf8627",
+          key: MY_MCP_CLIENT_WORKSPACE_ID,
           name: "My MCP Client",
         },
         {
@@ -271,7 +278,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
         },
         {
           blob: "2f6a337993dcbcc164187f74e4278ca22c0ea065",
-          key: "mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0",
+          key: MY_MCP_CLIENT_REQUEST_ID,
           name: "MCP request",
         },
       ],
@@ -285,7 +292,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
       state: [
         {
           blob: "a8252b458e8a1b5f3c214e5e7f944887a142ae72",
-          key: "wrk_efab8e758b97459bab2659d8fdcf8627",
+          key: MY_MCP_CLIENT_WORKSPACE_ID,
           name: "My MCP Client",
         },
         {
@@ -295,7 +302,7 @@ const cloudSyncProjectSnapshots: Record<string, any> = {
         },
         {
           blob: "379b74a13b742b573c16dda3ed38abde8cfdb0c3",
-          key: "mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0",
+          key: MY_MCP_CLIENT_REQUEST_ID,
           name: "MCP request",
         },
       ],
@@ -336,7 +343,7 @@ const cloudSyncEnvironmentNewCommitSnapshots = [
     state: [
       {
         blob: "2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e",
-        key: "wrk_2068a8dfd6914c369073686bb92737ae",
+        key: MY_ENVIRONMENT_WORKSPACE_ID,
         name: "My Environment",
       },
       {
@@ -363,7 +370,7 @@ const cloudSyncCollectionNewCommitSnapshots = [
     state: [
       {
         blob: "be076c5943e0d32b05efbbf215b4f9d2bb894a9c",
-        key: "wrk_a7132f924ba7451594ba64ec411c9e13",
+        key: COLLECTION_R1_WORKSPACE_ID,
         name: "My Collection R1",
       },
       {
@@ -373,7 +380,7 @@ const cloudSyncCollectionNewCommitSnapshots = [
       },
       {
         blob: "1f8a8cd1da88d9abb4bfc1d6e662716d41705ace",
-        key: "req_d11697e0652742e691374e380cdcd2b2",
+        key: COLLECTION_R1_REQUEST_ID,
         name: "New Request",
       },
     ],
