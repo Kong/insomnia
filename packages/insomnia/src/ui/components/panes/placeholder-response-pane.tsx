@@ -7,30 +7,36 @@ import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
-export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
+export const PlaceholderResponseContent: FC = () => {
   const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   return (
+    <PaneBody placeholder>
+      <div className="flex flex-col items-center justify-center whitespace-nowrap">
+        {[
+          'request_send',
+          'request_focusUrl',
+          'showCookiesEditor',
+          'environment_showEditor',
+          'preferences_showKeyboardShortcuts',
+        ].map(shortcut => (
+          <div key={shortcut} className="m-(--padding-sm) flex w-full items-center justify-between">
+            <div className="mr-8">{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</div>
+            <code>
+              <Hotkey keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]} useFallbackMessage />
+            </code>
+          </div>
+        ))}
+      </div>
+    </PaneBody>
+  );
+};
+
+export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
+  return (
     <Pane type="response">
       <PaneHeader />
-      <PaneBody placeholder>
-        <div className="flex flex-col items-center justify-center whitespace-nowrap">
-          {[
-            'request_send',
-            'request_focusUrl',
-            'showCookiesEditor',
-            'environment_showEditor',
-            'preferences_showKeyboardShortcuts',
-          ].map(shortcut => (
-            <div key={shortcut} className="m-(--padding-sm) flex w-full items-center justify-between">
-              <div className="mr-8">{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</div>
-              <code>
-                <Hotkey keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]} useFallbackMessage />
-              </code>
-            </div>
-          ))}
-        </div>
-      </PaneBody>
+      <PlaceholderResponseContent />
       {children}
     </Pane>
   );
