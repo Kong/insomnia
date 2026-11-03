@@ -6,7 +6,7 @@ import { MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, test } from "@package
 import { Collection } from "@package/models/collection";
 import { expect } from "@playwright/test";
 
-import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "./support/cloud-sync-mock";
+import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "@package/misc/cloud-sync-mock";
 
 // Every Cloud Sync workspace used to share one VCS singleton, so creating a sibling
 // collection Y could repoint the singleton's `_backendProject` mid-flight,

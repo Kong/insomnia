@@ -7,7 +7,7 @@ import { HTTP_SERVER, resetCloudSyncState, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { expect } from "@playwright/test";
 
-import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "./support/cloud-sync-mock";
+import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "@package/misc/cloud-sync-mock";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
