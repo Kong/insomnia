@@ -91,9 +91,12 @@ export class VariableSourcePage extends BasePage {
     const snapshot = () =>
       dialog.evaluate((el, sel) => {
         const row = el.querySelector<HTMLElement>(sel);
-        const textarea = el.querySelector<HTMLTextAreaElement>(
-          'textarea[aria-label="Live Preview"]',
-        );
+        // VariableEditor wraps the textarea in a <label>; TagEditor aria-labels it.
+        const textarea =
+          el.querySelector<HTMLTextAreaElement>('textarea[aria-label="Live Preview"]') ??
+          [...el.querySelectorAll("label")]
+            .find((label) => label.textContent?.trim().startsWith("Live Preview"))
+            ?.querySelector("textarea");
         return {
           source: row ? row.innerText.replace(/\s+/g, " ").trim() : undefined,
           preview: textarea?.value ?? "",
@@ -143,7 +146,7 @@ export class VariableSourcePage extends BasePage {
   async setModalCustomTemplate(template: string): Promise<void> {
     await this.page
       .getByRole("dialog")
-      .getByLabel("Custom", { exact: true })
+      .getByTestId("variable-custom-template")
       .fill(template);
   }
 
