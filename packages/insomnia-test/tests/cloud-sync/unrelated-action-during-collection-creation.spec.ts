@@ -2,12 +2,12 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { readBackendProjectMetas } from "@package/misc/backend-projects";
+import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "@package/misc/cloud-sync-mock";
 import { MOCK_API_SERVER, resetCloudSyncState, SESSION_ID, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import type { Environment } from "@package/models/environment";
 import { expect } from "@playwright/test";
-
-import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "@package/misc/cloud-sync-mock";
 
 test.afterAll(async () => {
   await setCloudSyncGraphQLDelay(0);
@@ -36,23 +36,10 @@ test("Verify an unrelated action during collection creation is equally safe", as
   const dataPath = await appFlow.getDataPath();
   const projectsDir = path.join(dataPath, "version-control", "projects");
   const readProjectMeta = async (workspaceId: string) => {
-    const dirs = await fs.promises.readdir(projectsDir);
-    for (const dir of dirs) {
-      const meta = JSON.parse(
-        await fs.promises.readFile(
-          path.join(projectsDir, dir, "meta.json"),
-          "utf8",
-        ),
-      );
-      if (meta.rootDocumentId === workspaceId) {
-        return {
-          rootDocumentId: meta.rootDocumentId as string,
-          backendProjectId: meta.id as string,
-          dir,
-        };
-      }
-    }
-    return;
+    const [match] = (await readBackendProjectMetas(projectsDir))
+      .filter((m) => m.rootDocumentId === workspaceId)
+      .map((m) => ({ rootDocumentId: m.rootDocumentId, backendProjectId: m.id, dir: m.dir }));
+    return match;
   };
   const countBlobFiles = async (dir: string) => {
     const blobsDir = path.join(projectsDir, dir, "blobs");
