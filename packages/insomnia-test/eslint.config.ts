@@ -30,4 +30,19 @@ export default defineConfig([
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  // Plugin fixtures are CommonJS modules loaded by Insomnia's plugin system
+  // (copied into the plugin dir by the specs), not bundled.
+  {
+    files: ['tests/**/plugin-main.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'unicorn/prefer-module': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 ]);

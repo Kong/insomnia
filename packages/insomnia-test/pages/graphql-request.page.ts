@@ -137,8 +137,8 @@ export class GraphQLRequestPage extends RequestPage {
     const errorButton = this.page.getByRole("button", {
       name: /error fetching schema/i,
     });
-    await expect(errorButton)
-      .toBeHidden({ timeout: ACTION_TIMEOUT })
+    await errorButton
+      .waitFor({ state: "hidden", timeout: ACTION_TIMEOUT })
       .catch(() => {});
     if (await errorButton.isVisible().catch(() => false)) return undefined;
 

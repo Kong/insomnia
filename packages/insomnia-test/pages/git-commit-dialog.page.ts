@@ -1,7 +1,7 @@
 import { GitChangeList } from "@package/enums/git-change-list";
 import { GitDiffView } from "@package/enums/git-diff-view";
 import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
-import { expect } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
@@ -701,7 +701,6 @@ export class GitCommitDialogPage extends BasePage {
     let previousText = '';
     // No step cap: the loop ends when scrolling stops changing what is visible (the test timeout bounds it otherwise).
     for (let step = 0; ; step++) {
-      await this.page.waitForTimeout(300);
       let previous = -1;
       let stableReads = 0;
       let count = 0;
@@ -721,9 +720,26 @@ export class GitCommitDialogPage extends BasePage {
       if (text === previousText) break; // the wheel no longer scrolls: reached the bottom
       previousText = text;
       // A step well under the editor's visible height, so no line is skipped between positions.
-      await this.page.mouse.wheel(0, 40);
+      await this.waitForViewLinesChange(viewLines, () => this.page.mouse.wheel(0, 40));
     }
     return total;
+  }
+
+  /**
+   * Runs `trigger` and waits for the editor's rendered lines to change as a result
+   * (up to 1s: when the scroll can no longer move, nothing changes and this just times out).
+   */
+  private async waitForViewLinesChange(viewLines: Locator, trigger: () => Promise<void>): Promise<void> {
+    const changed = viewLines.evaluateAll(
+      els =>
+        new Promise<void>(resolve => {
+          const observer = new MutationObserver(() => resolve());
+          els.forEach(el => observer.observe(el, { childList: true, subtree: true, characterData: true }));
+          setTimeout(resolve, 1000);
+        }),
+    );
+    await trigger();
+    await changed;
   }
 
   /**
