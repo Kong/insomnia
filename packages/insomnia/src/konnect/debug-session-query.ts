@@ -191,15 +191,7 @@ export function debugSessionsQueryOptions(ctx: DebugSessionApiContext) {
 export async function startOrAdoptDebugSession(
   ctx: DebugSessionApiContext,
   durationSecs: number,
-  // excludeSessionId?: string,
 ): Promise<DebugSession> {
-  // const sessions = await listDebugSessions(ctx);
-  // const running = sessions.find(
-  //   session => session.id !== excludeSessionId && deriveSessionState(session, Date.now()) === 'active',
-  // );
-  // if (running) {
-  //   return running;
-  // }
   const nodeIds = await listNodeIds(ctx);
   if (nodeIds.length === 0) {
     throw new DebugApiError('unknown', 'No data plane nodes are connected to this control plane.');
