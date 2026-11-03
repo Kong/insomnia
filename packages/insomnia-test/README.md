@@ -68,6 +68,7 @@ PWDEBUG=1 npx playwright test <file>      # step-through debugger
 | Git HTTP | 4070 | `npm run git-server` |
 | OAuth2 | 4080 | `npm run oauth2-server` |
 | Mock bin | 4090 | `npm run mock-bin-server` |
+| Resolving proxy (`insomnia.test` → 127.0.0.1) | 4095 | `npm run resolving-proxy-server` |
 
 TLS/mTLS certificates for these servers are generated on first run (`misc/certs.ts`, output in `misc/fixtures/generated/`, git-ignored). Endpoint constants live in `misc/constants.ts`.
 

@@ -129,6 +129,12 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 10 * 1000,
     },
+    {
+      command: "node misc/resolving-proxy-server.ts",
+      port: 4095,
+      reuseExistingServer: !process.env.CI,
+      timeout: 10 * 1000,
+    },
     ...(isDevMode
       ? [
           {
