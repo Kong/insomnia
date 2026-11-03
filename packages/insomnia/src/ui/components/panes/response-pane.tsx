@@ -7,7 +7,9 @@ import { useFetcher } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
+import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { KongLogo } from '~/ui/components/kong-logo';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
@@ -32,8 +34,9 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
-import { PlaceholderResponsePane } from './placeholder-response-pane';
+import { PlaceholderResponseContent, PlaceholderResponsePane } from './placeholder-response-pane';
 import { RequestTestResultPane } from './request-test-result-pane';
+import { KonnectDebuggerPane } from './response-konnect-debugger-pane';
 import { downloadResponseBody } from './response-pane-utils';
 
 interface Props {
@@ -47,7 +50,13 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
   const { settings } = useRootLoaderData()!;
+  const { activeProject } = useProjectLoaderData()!;
+  const { konnectRegion, konnectControlPlaneId } = activeProject;
+
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
+  // Project must have Konnect region and control plane ID to show the debugger pane
+  const showDebuggerPane = !!konnectRegion && !!konnectControlPlaneId;
+
   const handleSetFilter = async (responseFilter: string) => {
     if (!activeResponse) {
       return;
@@ -131,7 +140,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   }
 
   // If there is no previous response, show placeholder for loading indicator
-  if (!activeResponse) {
+  if (!activeResponse && !showDebuggerPane) {
     return (
       <PlaceholderResponsePane>
         {isExecuting && (
@@ -145,11 +154,13 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
     );
   }
 
-  const cookieHeaders = getSetCookieHeaders(activeResponse.headers);
+  const cookieHeaders = activeResponse ? getSetCookieHeaders(activeResponse.headers) : [];
 
   return (
     <Pane type="response">
-      {!activeResponse ? null : (
+      {!activeResponse ? (
+        <PaneHeader />
+      ) : (
         <PaneHeader className="row-spaced">
           <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
@@ -164,8 +175,9 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         </PaneHeader>
       )}
       <Tabs
-        aria-label="Request group tabs"
-        className="flex h-full w-full flex-1 flex-col"
+        key={activeResponse ? 'response-tabs' : 'konnect-projects-no-response-tabs'}
+        aria-label="Response pane tabs"
+        className="flex h-full min-h-0 w-full flex-1 flex-col"
         onSelectionChange={key => {
           if (key === 'mock-response') {
             window.main.trackAnalyticsEvent({
@@ -187,113 +199,142 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           >
             Preview
           </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="headers"
-          >
-            Headers
-            {activeResponse.headers.length > 0 && (
-              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
-                {activeResponse.headers.length}
-              </span>
-            )}
-          </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="cookies"
-          >
-            Cookies
-            {cookieHeaders.length > 0 && (
-              <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
-                {cookieHeaders.length}
-              </span>
-            )}
-          </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="test-results"
-          >
-            <div>
-              <span>Tests</span>
-              <span className={`ml-1 rounded-xs px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
-                {`${passedTestCount} / ${totalTestCount}`}
-              </span>
-            </div>
-          </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="mock-response"
-          >
-            → Mock
-          </Tab>
-          <Tab
-            className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-            id="timeline"
-          >
-            Console
-          </Tab>
+          {showDebuggerPane && (
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="konnect-debugger"
+            >
+              Debugger <KongLogo />
+            </Tab>
+          )}
+          {activeResponse && (
+            <>
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="headers"
+              >
+                Headers
+                {activeResponse.headers.length > 0 && (
+                  <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
+                    {activeResponse.headers.length}
+                  </span>
+                )}
+              </Tab>
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="cookies"
+              >
+                Cookies
+                {cookieHeaders.length > 0 && (
+                  <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
+                    {cookieHeaders.length}
+                  </span>
+                )}
+              </Tab>
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="test-results"
+              >
+                <div>
+                  <span>Tests</span>
+                  <span className={`ml-1 rounded-xs px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
+                    {`${passedTestCount} / ${totalTestCount}`}
+                  </span>
+                </div>
+              </Tab>
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="mock-response"
+              >
+                → Mock
+              </Tab>
+              <Tab
+                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                id="timeline"
+              >
+                Console
+              </Tab>
+            </>
+          )}
         </TabList>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="preview">
-          <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
-            <PreviewModeDropdown
-              download={handleDownloadResponseBody}
-              copyToClipboard={async () => {
-                const bodyBuffer = activeResponse ? await services.helpers.getResponseBodyBuffer(activeResponse) : null;
-                if (bodyBuffer) {
-                  window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
-                }
-              }}
-            />
-          </Toolbar>
-          <ResponseViewer
-            key={activeResponse._id}
-            bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
-            contentType={activeResponse.contentType || ''}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disablePreviewLinks={settings.disableResponsePreviewLinks}
-            download={handleDownloadResponseBody}
-            editorFontSize={settings.editorFontSize}
-            error={activeResponse.error}
-            filter={filter}
-            filterHistory={filterHistory}
-            bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
-            previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
-            responseId={activeResponse._id}
-            updateFilter={activeResponse.error ? undefined : handleSetFilter}
-            url={activeResponse.url}
-          />
+        <TabPanel className="flex min-h-0 w-full flex-1 flex-col overflow-hidden" id="preview">
+          {activeResponse ? (
+            <>
+              <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
+                <PreviewModeDropdown
+                  download={handleDownloadResponseBody}
+                  copyToClipboard={async () => {
+                    const bodyBuffer = await services.helpers.getResponseBodyBuffer(activeResponse);
+                    if (bodyBuffer) {
+                      window.clipboard.writeText(bodyBufferToUtf8(bodyBuffer));
+                    }
+                  }}
+                />
+              </Toolbar>
+              <ResponseViewer
+                key={activeResponse._id}
+                bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
+                contentType={activeResponse.contentType || ''}
+                disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+                disablePreviewLinks={settings.disableResponsePreviewLinks}
+                download={handleDownloadResponseBody}
+                editorFontSize={settings.editorFontSize}
+                error={activeResponse.error}
+                filter={filter}
+                filterHistory={filterHistory}
+                bodyBuffer={activeResponse.bodyBuffer}
+                getBody={() => services.helpers.getResponseBodyBuffer(activeResponse)}
+                previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
+                responseId={activeResponse._id}
+                updateFilter={activeResponse.error ? undefined : handleSetFilter}
+                url={activeResponse.url}
+              />
+            </>
+          ) : (
+            <PlaceholderResponseContent />
+          )}
         </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
-          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseHeadersViewer
-              headers={activeResponse.headers}
-              onCopyAll={() => {
-                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseHeadersCopyAllClicked });
-              }}
-            />
-          </ErrorBoundary>
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
-          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseCookiesViewer
-              cookiesSent={activeResponse.settingSendCookies}
-              cookiesStored={activeResponse.settingStoreCookies}
-              headers={cookieHeaders}
-            />
-          </ErrorBoundary>
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
-          <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="mock-response">
-          <MockResponseExtractor />
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="timeline">
-          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseTimelineViewer key={activeResponse._id} timeline={timeline} />
-          </ErrorBoundary>
-        </TabPanel>
+        {showDebuggerPane && (
+          <TabPanel className="flex min-h-0 w-full flex-1 flex-col overflow-hidden" id="konnect-debugger">
+            <ErrorBoundary errorClassName="font-error pad text-center">
+              <KonnectDebuggerPane project={activeProject} />
+            </ErrorBoundary>
+          </TabPanel>
+        )}
+        {activeResponse && (
+          <>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
+              <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+                <ResponseHeadersViewer
+                  headers={activeResponse.headers}
+                  onCopyAll={() => {
+                    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseHeadersCopyAllClicked });
+                  }}
+                />
+              </ErrorBoundary>
+            </TabPanel>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
+              <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+                <ResponseCookiesViewer
+                  cookiesSent={activeResponse.settingSendCookies}
+                  cookiesStored={activeResponse.settingStoreCookies}
+                  headers={cookieHeaders}
+                />
+              </ErrorBoundary>
+            </TabPanel>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
+              <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
+            </TabPanel>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="mock-response">
+              <MockResponseExtractor />
+            </TabPanel>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="timeline">
+              <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+                <ResponseTimelineViewer key={activeResponse._id} timeline={timeline} />
+              </ErrorBoundary>
+            </TabPanel>
+          </>
+        )}
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         {(isExecuting || isRequestSending) && (
