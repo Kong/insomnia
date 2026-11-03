@@ -22,31 +22,38 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { services } from 'insomnia-data';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-vi.mock('~/main/templating-worker-database', () => ({
-  discoverUserPluginExportsForLoader: async () => {
-    // Stands in for the real function's eventual `await import('../templating/sandbox/
-    // plugin-tag-sandbox')` → `getQuickJSModule()` call chain, without needing to also mock
-    // `buildSandboxBridge`/`readPluginModuleMap`/`electron.app.getVersion()` for no added
-    // evidentiary value — the property under test is what `getQuickJSModule()` itself resolves to,
-    // not the rest of real discovery's plumbing.
-    const { getQuickJSModule } = await import('~/templating/sandbox/quickjs-runtime');
-    (globalThis as any).__sandboxedPluginResolvedQuickJSModule = await getQuickJSModule();
-    return {
-      templateTags: [],
-      requestHooks: 0,
-      responseHooks: 0,
-      requestActions: [],
-      requestGroupActions: [],
-      workspaceActions: [],
-      documentActions: [],
-      themes: [],
-    };
-  },
-}));
+// plugins/index.ts no longer dynamically imports `~/main/templating-worker-database`; the main
+// process now hands it the sandbox-backed discovery via the shared `registerUserPluginExportDiscovery`
+// registry. Mock that module would never register anything, so register a stub discovery through the
+// real registration hook instead — standing in for the real function's eventual
+// `await import('../templating/sandbox/plugin-tag-sandbox')` → `getQuickJSModule()` call chain,
+// without needing to also mock `buildSandboxBridge`/`readPluginModuleMap`/`electron.app.getVersion()`
+// for no added evidentiary value — the property under test is what `getQuickJSModule()` itself
+// resolves to, not the rest of real discovery's plumbing.
+import { registerUserPluginExportDiscovery } from '~/common/templating/user-plugin-export-discovery';
 
 import { _testOnlySetPlugins, getPlugins } from '../index';
+
+registerUserPluginExportDiscovery(async () => {
+  // Deliberately dynamic: this test's premise is that the process's first-ever
+  // `quickjs-emscripten` resolution happens *during* the sandboxed sibling's discovery call, so a
+  // static import would defeat what's being proven. The assignment below avoids a cast; the test
+  // assertions read the flag back off `globalThis`.
+  const { getQuickJSModule } = await import('~/templating/sandbox/quickjs-runtime');
+  Object.assign(globalThis, { __sandboxedPluginResolvedQuickJSModule: await getQuickJSModule() });
+  return {
+    templateTags: [],
+    requestHooks: 0,
+    responseHooks: 0,
+    requestActions: [],
+    requestGroupActions: [],
+    workspaceActions: [],
+    documentActions: [],
+    themes: [],
+  };
+});
 
 const originalProcessType = process.type;
 
