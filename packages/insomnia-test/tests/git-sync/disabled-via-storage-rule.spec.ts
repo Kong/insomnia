@@ -30,14 +30,8 @@ test(
       .toBeTruthy();
     expect(bannerText).toContain("Cloud Sync and Local Vault");
     expect(bannerText).not.toContain("Git Sync");
-    await expect
-      .poll(
-        () =>
-          projectSettingsPage.isDisabled(
-            projectSettingsPage.projectTypeTile(ProjectType.Git),
-          ),
-        { timeout: DEFAULT_TIMEOUT },
-      )
-      .toBe(true);
+    await expect(
+      projectSettingsPage.projectTypeTile(ProjectType.Git),
+    ).toBeDisabled({ timeout: DEFAULT_TIMEOUT });
   },
 );
