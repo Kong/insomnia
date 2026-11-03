@@ -219,16 +219,23 @@ export class McpClientPage extends RequestPage {
    * same-name rows can be told apart.
    */
   async clickPrimitiveAt(type: McpPrimitiveType, index: number): Promise<void> {
-    await this.page.locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`).nth(index).click();
+    const rows = this.primitiveRows(type);
+    // The sidebar is virtualized and re-renders while capabilities finish loading, which can swallow a click.
+    await expect(async () => {
+      await rows.nth(index).click();
+      await expect(rows.nth(index)).toHaveAttribute('data-active', 'true', { timeout: 2000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  private primitiveRows(type: McpPrimitiveType): Locator {
+    return this.page.getByTestId(new RegExp(`^test-${type}_`));
   }
 
   /**
-   * Reads, per row of one primitive kind in sidebar order, whether the row is selected, from its data-selected attribute.
+   * Reads, per row of one primitive kind in sidebar order, whether the row is selected, from its data-active attribute.
    */
   async getPrimitiveSelection(type: McpPrimitiveType): Promise<boolean[]> {
-    return this.page
-      .locator(`${this.SIDEBAR} [role="row"][data-key^="${type}_"]`)
-      .evaluateAll(rows => rows.map(row => (row as HTMLElement).dataset.selected === 'true'));
+    return this.primitiveRows(type).evaluateAll(rows => rows.map(row => (row as HTMLElement).dataset.active === 'true'));
   }
 
   /**
