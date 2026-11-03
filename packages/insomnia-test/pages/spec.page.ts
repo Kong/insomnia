@@ -383,10 +383,14 @@ export class SpecPage extends BasePage {
    * Reads every suite name currently listed in the Test Suites sidebar.
    */
   async getTestSuiteNames(): Promise<string[]> {
-    return new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows.allInnerTexts();
+    // Re-opening the Tests tab re-renders the list; wait for it to settle
+    // so a read taken mid-render doesn't return a stale or partial list.
+    return this.waitForStableValue(() =>
+      new TableComponent(
+        this.page,
+        this.page.locator(this.TEST_SUITES_LIST),
+      ).rows.allInnerTexts(),
+    );
   }
 
   /**
