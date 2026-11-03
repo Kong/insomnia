@@ -32,8 +32,9 @@ test("Verify Spec Editor Toolbar's Generate Menu, Format Switch, And Preview Tog
     ),
   );
   const formatBefore = await specPage.getFormat();
-  const otherFormat =
-    formatBefore === SpecFormat.JSON ? SpecFormat.YAML : SpecFormat.JSON;
+  const otherFormat = Object.values(SpecFormat).find(
+    (format) => format !== formatBefore,
+  )!;
   await specPage.selectFormat(otherFormat);
   const formatAfter = await specPage.getFormat();
 
