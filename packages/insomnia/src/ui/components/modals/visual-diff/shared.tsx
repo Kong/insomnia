@@ -9,6 +9,7 @@ import { InlineDiffEditor } from './inline-diff-editor';
 
 const ENTITY_TYPE_LABELS: Record<VisualDiffEntityType, string> = {
   request: 'Request',
+  example: 'Example',
   grpc_request: 'gRPC Request',
   websocket_request: 'WebSocket Request',
   socketio_request: 'Socket.IO Request',
