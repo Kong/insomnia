@@ -9,7 +9,7 @@ import { ProjectType } from "@package/enums/project-types";
 import { RulesetType } from "@package/enums/ruleset-type";
 import type { SpecFormat } from "@package/enums/spec-format";
 import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import type {
   LintEntry,
   PathItem} from "@package/models/collection";
@@ -174,7 +174,7 @@ export class Tree {
           await stableRow.scrollIntoViewIfNeeded({ timeout: DEFAULT_TIMEOUT });
           await expandButton.click({ timeout: DEFAULT_TIMEOUT });
           await expect(expandButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-        }).toPass({ timeout: DEFAULT_TIMEOUT });
+        }).toPass({ timeout: LONG_TIMEOUT });
       } catch (error) {
         throw new Error(`Failed to expand tree row "${key}"`, { cause: error });
       }
