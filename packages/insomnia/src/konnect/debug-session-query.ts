@@ -167,15 +167,12 @@ export function debugTracesQueryOptions(client: QueryClient, ctx: DebugSessionAp
   });
 }
 
-/** A trace never changes once captured, so details are cached for good. */
 export function debugTraceQueryOptions(ctx: DebugSessionApiContext, sessionId: string, traceId: string) {
   return queryOptions({
     queryKey: debugSessionKeys.trace(ctx.controlPlaneId, sessionId, traceId),
     queryFn: () => getDebugTrace(ctx, sessionId, traceId),
     staleTime: Infinity,
-    gcTime: GC_TIME_MS,
-    retry: shouldRetry,
-    retryDelay,
+    ...commonQueryOptions,
   });
 }
 

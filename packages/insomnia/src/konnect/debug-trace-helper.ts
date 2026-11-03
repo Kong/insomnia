@@ -199,44 +199,10 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
   };
 }
 
-// // Request matching: a captured trace only carries the full URL it was served on, while the request being
-// // viewed may contain `{{ }}` / `{% %}` templates or `:param` placeholders. So we compare method + path and
-// // treat those placeholders as wildcards.
-// const TEMPLATE_RE = /\{\{[\s\S]*?\}\}|\{%[\s\S]*?%\}/g;
-
-// function escapeRegExp(value: string) {
-//   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-// }
-
-// // Drops the scheme, query/hash and a leading (possibly templated) host, e.g. `{{ _.base_url }}/airports` -> `/airports`.
-// function extractRequestPath(requestUrl: string): string {
-//   let rest = requestUrl.split(/[?#]/)[0].trim();
-//   rest = rest.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
-//   rest = rest.replace(/^(?:\s*(?:\{\{[\s\S]*?\}\}|\{%[\s\S]*?%\}))+/, '');
-//   const slash = rest.indexOf('/');
-//   return slash === -1 ? '/' : rest.slice(slash);
-// }
-
-// Ignores trailing slashes so `/airports/` and `/airports` compare equal.
+// Ignores trailing slashes
 function normalizePath(path: string) {
   return path.length > 1 ? path.replace(/\/+$/, '') : path;
 }
-
-// // `:id` segments and template tags each match exactly one path segment.
-// function pathToRegExp(requestPath: string): RegExp {
-//   const segments = normalizePath(requestPath)
-//     .split('/')
-//     .map(segment => {
-//       if (segment.startsWith(':') && segment.length > 1) {
-//         return '[^/]+';
-//       }
-//       return segment
-//         .split(TEMPLATE_RE)
-//         .map(part => escapeRegExp(part))
-//         .join('[^/]+');
-//     });
-//   return new RegExp(`^${segments.join('/')}$`);
-// }
 
 /** The path a trace was served on: from its URL, or the matched route pattern when no URL was captured. */
 export function getTracePath(trace: Pick<DebugTraceSummary, 'url' | 'route'>): string | null {
@@ -250,18 +216,27 @@ export function getTracePath(trace: Pick<DebugTraceSummary, 'url' | 'route'>): s
   return trace.route ? normalizePath(trace.route) : null;
 }
 
-// /** Whether a captured trace belongs to `request`: the methods agree (when both are known) and the paths match. */
-// export function isTraceForRequest(
-//   trace: Pick<DebugTraceSummary, 'method' | 'url' | 'route'>,
-//   request: { method: string; url: string },
-// ): boolean {
-//   if (trace.method && request.method && trace.method.toUpperCase() !== request.method.toUpperCase()) {
-//     return false;
-//   }
-//   const tracePath = getTracePath(trace);
-//   // Nothing to compare against, so it cannot be matched to this request.
-//   if (!tracePath || !request.url) {
-//     return false;
-//   }
-//   return pathToRegExp(extractRequestPath(request.url)).test(tracePath);
-// }
+const ROUTE_ID_ATTRIBUTE = 'proxy.kong.route.id';
+
+// konnectRouteKey is `${route.id}:${method}:${pathSegment}:${protocol}`
+export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | undefined): string | null {
+  if (!konnectRouteKey) {
+    return null;
+  }
+  const routeId = konnectRouteKey.split(':')[0];
+  return routeId;
+}
+
+/** Ids of the traces having a span served by the Kong route `routeId`. */
+export function findTraceIdsByRouteId(details: Map<string, DebugTraceDetail>, routeId: string | null): Set<string> {
+  const matching = new Set<string>();
+  if (!routeId) {
+    return matching;
+  }
+  for (const [traceId, detail] of details) {
+    if (detail.spans.some(span => span.attributes[ROUTE_ID_ATTRIBUTE] === routeId)) {
+      matching.add(traceId);
+    }
+  }
+  return matching;
+}

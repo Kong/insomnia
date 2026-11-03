@@ -297,7 +297,10 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
         {showDebuggerPane && (
           <TabPanel className="flex min-h-0 w-full flex-1 flex-col overflow-hidden" id="konnect-debugger">
             <ErrorBoundary errorClassName="font-error pad text-center">
-              <KonnectDebuggerPane project={activeProject} />
+              <KonnectDebuggerPane
+                project={activeProject}
+                konnectRouteKey={'konnectRouteKey' in activeRequest ? activeRequest.konnectRouteKey : null}
+              />
             </ErrorBoundary>
           </TabPanel>
         )}

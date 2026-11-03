@@ -6,7 +6,9 @@ import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'reac
 import type { DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
 import {
   buildSpanTree,
+  findTraceIdsByRouteId,
   flattenVisible,
+  getRouteIdFromKonnectRouteKey,
   getTracePath,
   type SpanNode,
   summarizeTrace,
@@ -74,16 +76,13 @@ const formatStartedAt = (startedAt: string | null) => {
   return `${month} ${ordinal(date.getDate())}, ${date.getFullYear()}, ${time} (${ago})`;
 };
 
-const plural = (count: number) => `${count} request${count === 1 ? '' : 's'}`;
-
 interface Props {
   project: Project;
   request?: { method: string; url: string };
-  /** Rendered URL of the latest response, preferred over the (possibly templated) request URL for matching. */
-  responseUrl?: string | null;
+  konnectRouteKey?: string | null;
 }
 
-export const KonnectDebuggerPane = ({ project, request, responseUrl }: Props) => {
+export const KonnectDebuggerPane = ({ project, konnectRouteKey }: Props) => {
   const organizationId = project.parentId;
   const { projects } = useOrganizationData(organizationId);
   const currentProject = projects.find(p => p._id === project._id) || project;
@@ -101,6 +100,7 @@ export const KonnectDebuggerPane = ({ project, request, responseUrl }: Props) =>
     debugSession,
     debugSessionState,
     traces: originTraces,
+    traceDetails,
     debugSessionAction,
     capturedSecs,
     ctx: debugSessionContext,
@@ -122,17 +122,9 @@ export const KonnectDebuggerPane = ({ project, request, responseUrl }: Props) =>
     selectedTraceId && traces.some(trace => trace.traceId === selectedTraceId) ? selectedTraceId : null;
   const selectedTrace = traces.find(trace => trace.traceId === existingSelectedTraceId) ?? null;
 
-  // const matchTarget = useMemo(
-  //   () => ({ method: request.method, url: responseUrl || request.url }),
-  //   [request.method, request.url, responseUrl],
-  // );
-
-  // const matching = useMemo(
-  //   () => new Set(traces.filter(trace => isTraceForRequest(trace, matchTarget)).map(trace => trace.traceId)),
-  //   [traces, matchTarget],
-  // );
-
-  const matching = new Set();
+  // A trace matches when one of its spans went through the route this request was synced from.
+  const routeId = getRouteIdFromKonnectRouteKey(konnectRouteKey);
+  const matching = useMemo(() => findTraceIdsByRouteId(traceDetails, routeId), [traceDetails, routeId]);
 
   const hasSession = !!debugSession;
   const showEmptyState = !hasSession && !isStartingOrStopping;
@@ -382,7 +374,7 @@ const TraceList = ({
           className={classnames(
             'flex flex-col items-start gap-0.5 border-l-2 border-solid px-3 py-2 text-left ring-1 ring-transparent transition-colors focus:ring-(--hl-md) focus:ring-inset',
             isSelected ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)',
-            isMatch ? 'border-l-lime-400' : 'border-l-transparent',
+            isMatch ? 'border-l-(--color-surprise)' : 'border-l-transparent',
             !isMatch && 'text-(--hl)',
           )}
         >
@@ -390,7 +382,10 @@ const TraceList = ({
           <span className="truncate text-xs">
             {trace.method ?? ''} {getTracePath(trace) ?? ''}
           </span>
-          <span className="text-xs text-(--hl)">{formatMs(trace.durationMs)}</span>
+          <div className="flex w-full items-center justify-between text-xs text-(--hl)">
+            <span>{formatMs(trace.durationMs)}</span>
+            {isMatch && <span className="text-(--color-surprise)">this request</span>}
+          </div>
         </Button>
       );
     })}

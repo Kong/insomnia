@@ -2,12 +2,12 @@ import { useMutation } from '@tanstack/react-query';
 import { services } from 'insomnia-data';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type DebugSession, type DebugSessionApiContext, getDebugTrace } from '~/konnect/debug-session-api';
+import { type DebugSession, type DebugSessionApiContext, type DebugTraceDetail } from '~/konnect/debug-session-api';
 import {
   asDebugError,
-  commonQueryOptions,
   debugSessionKeys,
   debugSessionQueryOptions,
+  debugTraceQueryOptions,
   debugTracesQueryOptions,
   startOrAdoptDebugSession,
   stopSessionById,
@@ -15,7 +15,7 @@ import {
 import { type DebugSessionState, deriveSessionState, getDebugSessionStartedAt } from '~/konnect/debug-trace-helper';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import uiEventBus, { KONNECT_PAT_CHANGE } from '~/ui/event-bus';
-import { useServerQuery } from '~/ui/hooks/use-query';
+import { useServerQueries, useServerQuery } from '~/ui/hooks/use-query';
 
 const AUTH_KINDS = new Set(['unauthorized', 'forbidden']);
 
@@ -103,6 +103,27 @@ export function useKonnectDebuggerSession({
   });
   const tracesError = asDebugError(tracesOriginError);
 
+  // Automatically fetch the detail of trace from trace list.
+  // The list always contains every trace id, so only fetch details that are not cached yet.
+  const traceDetails = useServerQueries({
+    queries: (debugSessionTraces || []).map(trace => {
+      const options = debugTraceQueryOptions(ctx, sessionId || '', trace.traceId);
+      return {
+        ...options,
+        enabled: isPatLoaded && !!sessionId && queryClient.getQueryData(options.queryKey) === undefined,
+      };
+    }),
+    combine: results => {
+      const details = new Map<string, DebugTraceDetail>();
+      for (const result of results) {
+        if (result.data) {
+          details.set(result.data.traceId, result.data);
+        }
+      }
+      return details;
+    },
+  });
+
   useEffect(() => {
     if (isDebugSessionMissingFromServer) {
       // setDebugSessionMissing(true);
@@ -189,10 +210,6 @@ export function useKonnectDebuggerSession({
   ];
   const authError = errors.find(error => error && AUTH_KINDS.has(error.kind)) ?? null;
   const mutationError = asDebugError(startMutation.error) || asDebugError(stopMutation.error);
-  // const hasStaleData = sessionQuery.isRefetchError || tracesQuery.isRefetchError;
-  // const transientError = [sessionError, tracesError].some(
-  //   error => error && !AUTH_KINDS.has(error.kind) && error.kind !== 'not_found',
-  // );
 
   return {
     ctx,
@@ -201,15 +218,13 @@ export function useKonnectDebuggerSession({
     debugSessionState,
     capturedSecs,
     traces: debugSessionTraces || [],
+    traceDetails,
     isLoading: !!sessionId && isLoadingDebugSession,
     debugSessionAction: startMutation.isPending ? 'starting' : stopMutation.isPending ? 'stopping' : 'idle',
     authError,
     mutationError: mutationError && !AUTH_KINDS.has(mutationError.kind) ? mutationError : null,
     sessionDeleted: isDebugSessionMissingFromServer,
     hasKonnectPat: !isPatLoaded || !!pat,
-    /** The persisted session no longer exists in Konnect and nothing newer was found. */
-    //sessionLost: isDebugSessionMissing && !debugSession,
-    // connectionLost: hasStaleData && transientError,
     startDebugSession,
     stopDebugSession,
     retryDebugSession,
@@ -218,12 +233,7 @@ export function useKonnectDebuggerSession({
 
 // Hook to fetch a detailed trace for a specific session.
 export function useKonnectDebuggerSessionTrace(ctx: DebugSessionApiContext, sessionId: string, traceId: string) {
-  const query = useServerQuery({
-    queryKey: debugSessionKeys.trace(ctx.controlPlaneId, sessionId, traceId),
-    queryFn: () => getDebugTrace(ctx, sessionId, traceId),
-    staleTime: Infinity,
-    ...commonQueryOptions,
-  });
+  const query = useServerQuery(debugTraceQueryOptions(ctx, sessionId, traceId));
   return {
     detail: query.data,
     isLoading: query.isPending,
