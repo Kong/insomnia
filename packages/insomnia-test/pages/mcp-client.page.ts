@@ -5,6 +5,10 @@ import { expect, type Locator } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
 
+/** Class the app adds to the selected sidebar row (the row has no selection attribute of its own). */
+const SELECTED_ROW_CLASS_NAME = 'bg-(--hl-sm)';
+const SELECTED_ROW_CLASS = /(^|\s)bg-\(--hl-sm\)(\s|$)/;
+
 /** The error panel embedded in a capability item's row. */
 export interface McpCapabilityError {
   title: string;
@@ -223,7 +227,7 @@ export class McpClientPage extends RequestPage {
     // The sidebar is virtualized and re-renders while capabilities finish loading, which can swallow a click.
     await expect(async () => {
       await rows.nth(index).click();
-      await expect(rows.nth(index)).toHaveAttribute('data-active', 'true', { timeout: 2000 });
+      await expect(rows.nth(index)).toHaveClass(SELECTED_ROW_CLASS, { timeout: 2000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -232,10 +236,10 @@ export class McpClientPage extends RequestPage {
   }
 
   /**
-   * Reads, per row of one primitive kind in sidebar order, whether the row is selected, from its data-active attribute.
+   * Reads, per row of one primitive kind in sidebar order, whether the row is selected, from the highlight class the app adds to the selected row.
    */
   async getPrimitiveSelection(type: McpPrimitiveType): Promise<boolean[]> {
-    return this.primitiveRows(type).evaluateAll(rows => rows.map(row => (row as HTMLElement).dataset.active === 'true'));
+    return this.primitiveRows(type).evaluateAll((rows, selectedClass) => rows.map(row => row.classList.contains(selectedClass)), SELECTED_ROW_CLASS_NAME);
   }
 
   /**
