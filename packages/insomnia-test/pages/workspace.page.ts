@@ -1144,18 +1144,20 @@ export class WorkspacePage extends BasePage {
 
     const target = indicator.first();
     const folderBadge = target.getByTestId("drop-indicator-folder-name");
+    // The sidebar tags its indicator marker (the "on" wrapper, folder-name
+    // badge or dot) with `data-valid` and `data-drop-position`. An invalid
+    // target may render without the marker or the aria label, so only read
+    // what is actually present rather than letting getAttribute() wait out
+    // the full action timeout.
+    const marker = target.locator("[data-drop-position]").first();
+    const dropLabel = target.locator('[aria-roledescription="drop indicator"]');
+    const hasMarker = (await marker.count()) > 0;
     const [ariaLabel, folderName] = await Promise.all([
-      target
-        .locator('[aria-roledescription="drop indicator"]')
-        .getAttribute("aria-label"),
+      (await dropLabel.count()) > 0 ? dropLabel.first().getAttribute("aria-label") : null,
       (await folderBadge.count()) > 0 ? folderBadge.innerText() : "",
     ]);
-    // react-aria labels an "on" drop "Drop on <name>"; line drops say
-    // "Insert ...".
-    const isValid =
-      (await target.locator("[data-valid]").first().getAttribute("data-valid")) ===
-      "true";
-    const isInto = (ariaLabel ?? "").startsWith("Drop on");
+    const isValid = hasMarker && (await marker.getAttribute("data-valid")) === "true";
+    const isInto = hasMarker && (await marker.getAttribute("data-drop-position")) === "on";
     const between = ariaLabel?.match(/^Insert between (.+) and (.+)$/);
 
     return {
