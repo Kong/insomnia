@@ -69,11 +69,14 @@ const importThenExport = async (contentStr: string): Promise<string[]> => {
   const workspaces = await importUtil.importResourcesToProject({ projectId: project._id });
   expect(workspaces.length).toBeGreaterThan(0);
 
-  return Promise.all(
+  const exports = await Promise.all(
     workspaces.map(workspace =>
       getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: true }),
     ),
   );
+  expect(exports.flatMap(({ errors }) => errors)).toEqual([]);
+
+  return exports.map(({ yaml }) => yaml);
 };
 
 describe('import/export round-trip is deterministic on real exports', () => {
