@@ -40,7 +40,8 @@ interface Pair {
 // KeyValueEditor remount that the async pair save triggers, and so it isn't prematurely consumed under
 // React StrictMode. Keying off the specific id (rather than a shared boolean) means only the newly
 // added row can autofocus — never an unrelated row in another mounted KeyValueEditor. Set on "Add",
-// read during render, and cleared once that exact row's Name editor focuses (via onAutoFocus).
+// read during render, and cleared once that exact row's Name editor reaches its autofocus moment
+// (via onAutoFocus) — even when focus is skipped because the user is typing elsewhere.
 let pendingFocusLastRowId: string | null = null;
 
 function createEmptyPair() {
