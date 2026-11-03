@@ -322,6 +322,7 @@ const ProjectNavigationSidebarInner = (
               items.push({
                 kind: 'pinnedHeader',
                 hidden: false,
+                workspaceId,
                 doc: { _id: getSidebarPinnedHeaderId(workspaceId), name: 'Pinned' },
               });
             }

@@ -1,4 +1,5 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
@@ -9,9 +10,13 @@ import { BasePage } from "./base.page";
  * assume `PreferencesPage.open()` has already shown the dialog.
  */
 export abstract class PreferencesTabPage extends BasePage {
-  protected readonly dialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Insomnia Preferences" });
+  // A getter, not a field: `AppFlow.restart()` swaps `this.page` on the
+  // retained page object, so the locator must follow the current window.
+  protected get dialog(): Locator {
+    return this.page
+      .getByRole("dialog")
+      .filter({ hasText: "Insomnia Preferences" });
+  }
 
   /**
    * Confirms the Preferences dialog is open by waiting for it to become

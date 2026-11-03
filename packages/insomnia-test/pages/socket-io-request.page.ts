@@ -51,14 +51,13 @@ export class SocketIORequestPage extends RequestPage {
   }
 
   /**
-   * Composes a Socket.IO message: switches to the body tab, adds a new
-   * argument row via "+ Arg", sets its payload directly on the CodeMirror
+   * Composes a Socket.IO message: switches to the body tab, sets the
+   * payload of the existing first argument directly on the CodeMirror
    * instance, and fills in the event name.
    */
   async setMessage(message: SocketIOMessage): Promise<void> {
     await this.switchTab("body");
     const panel = this.page.locator(this.TABPANEL);
-    await panel.getByRole("button", { name: "+ Arg" }).click();
 
     const editor = panel.locator(".CodeMirror").first();
     await editor.evaluate((el, value) => {

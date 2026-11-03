@@ -1,4 +1,5 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
@@ -8,9 +9,13 @@ import { BasePage } from "./base.page";
  * `CloudSyncPage.openHistory()`.
  */
 export class CloudSyncHistoryDialogPage extends BasePage {
-  private readonly historyDialog = this.page
-    .getByRole("dialog")
-    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  // A getter, not a field: `AppFlow.restart()` swaps `this.page` on the
+  // retained page object, so the locator must follow the current window.
+  private get historyDialog(): Locator {
+    return this.page
+      .getByRole("dialog")
+      .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  }
 
   /**
    * Waits for the History modal to be visible.

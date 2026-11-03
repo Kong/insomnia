@@ -50,7 +50,7 @@ export class ResponseViewerComponent extends BaseComponent {
   /** Header rows of the headers tab as `{ name: value }`. */
   async headers(): Promise<Record<string, string>> {
     await this.switchTab("headers");
-    const rows = this.tabs.panel.getByRole("row");
+    const rows = this.tabs.panel.getByTestId("response-header-row");
     const out: Record<string, string> = {};
     for (const cells of await rows.evaluateAll((els) =>
       els.map((el) =>
