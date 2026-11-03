@@ -21,6 +21,7 @@ import type {
 } from '~/common/plugins/types';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 import type { PluginTemplateTag, RenderPurpose } from '~/common/templating/types';
+import { getRegisteredUserPluginExportDiscovery } from '~/common/templating/user-plugin-export-discovery';
 import type { ActionDescriptor, PluginExportManifest } from '~/templating/sandbox/marshal';
 
 import { getAppBundlePlugins, isDevelopment } from '../common/constants';
@@ -63,7 +64,9 @@ export async function init() {
 // main process (via getTemplateTags in templating-worker-database) and the plugin window, so the
 // discovery has to reach the sandbox from either. In main we call the sandbox directly — the
 // `insomnia-templating-worker-database://` protocol is a renderer<->main channel and main's own
-// `fetch` can't resolve it. In a renderer (the plugin window) we go over that protocol.
+// `fetch` can't resolve it. In a renderer (the plugin window) we go over that protocol. In main the
+// implementation is provided by `main/templating-worker-database`, registered through the shared
+// `user-plugin-export-discovery` module — this file can't import that main module without a cycle.
 async function discoverUserPluginExports(
   directory: string,
   name: string,
@@ -73,8 +76,7 @@ async function discoverUserPluginExports(
   if (__IS_RENDERER__) {
     return (await fetchFromTemplateWorkerDatabase('plugin.discoverUserPluginExports', body)) as PluginExportManifest;
   }
-  const { discoverUserPluginExportsForLoader } = await import('~/main/templating-worker-database');
-  return discoverUserPluginExportsForLoader(body);
+  return getRegisteredUserPluginExportDiscovery()(body);
 }
 
 function buildUserPluginModuleFromManifest(pluginName: string, manifest: PluginExportManifest): Plugin['module'] {

@@ -10,8 +10,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '~/common/utils/invariant';
-import type { WorkspaceFileIssue } from '~/main/git-service';
-import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
+import type { FileProblemsChangedPayload, WorkspaceFileIssue } from '~/sync/git/repo-file-watcher';
 
 const mapIssuesByWorkspaceId = (issues: WorkspaceFileIssue[]) => {
   return Object.fromEntries(issues.map(issue => [issue.workspaceId, issue])) as Record<string, WorkspaceFileIssue>;

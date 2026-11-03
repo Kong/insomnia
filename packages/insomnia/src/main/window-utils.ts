@@ -30,16 +30,13 @@ import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
 import { isTrustedAppOrigin } from './trusted-origin';
+import { browserWindows } from './window-registry';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-export function getMainWindow(): ElectronBrowserWindow | null {
-  return browserWindows.get('Insomnia') ?? null;
-}
 let hiddenWindowIsBusy = false;
 
 // Every open window has its own copy of the menu, so keep them all in sync with the Debug Mode setting.
