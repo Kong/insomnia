@@ -73,8 +73,10 @@ test("Verify Running a Collection via Run Collection Context Menu", async ({
         }),
       ]),
     );
-    for (const result of allResults[i].results) {
-      if (result.name === requestC!.name) continue;
+    const executedResults = allResults[i].results.filter(
+      (result) => result.name !== requestC!.name,
+    );
+    for (const result of executedResults) {
       expect(result.durationMs).toBeGreaterThan(0);
       expect(result.bytes).toBeGreaterThan(0);
     }
