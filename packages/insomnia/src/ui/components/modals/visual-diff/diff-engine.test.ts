@@ -31,9 +31,11 @@ describe('ownFields', () => {
   it('drops nested entities, which are shown as their own cards', () => {
     const folder = { name: 'F', meta: { id: 'fld_1' }, children: [{ name: 'r', meta: { id: 'req_1' } }] };
     const env = { name: 'Base', data: { a: 1 }, subEnvironments: [{ name: 'Sub' }] };
+    const request = { name: 'R', meta: { id: 'req_1' }, examples: [{ name: 'E', meta: { id: 'exp_1' } }] };
 
     expect(ownFields(folder)).toEqual({ name: 'F', meta: { id: 'fld_1' } });
     expect(ownFields(env)).toEqual({ name: 'Base', data: { a: 1 } });
+    expect(ownFields(request)).toEqual({ name: 'R', meta: { id: 'req_1' } });
   });
 });
 
@@ -76,6 +78,46 @@ describe('computeVisualDiff - file-level sections', () => {
     expect(
       computeVisualDiff(stringify({ name: 'a', rules: {} }), stringify({ name: 'b', rules: {} })).entities,
     ).toEqual([]);
+  });
+});
+
+describe('computeVisualDiff - examples', () => {
+  const example = (id: string, body = '{}') => ({
+    name: id,
+    meta: { id },
+    request: { method: 'GET', url: 'https://a', headers: [], body: {} },
+    response: { statusCode: 200, statusMessage: '', headers: [], body },
+  });
+  const request = (examples: unknown[]) => ({
+    name: 'r',
+    url: 'https://a',
+    method: 'GET',
+    meta: { id: 'req_1' },
+    examples,
+  });
+
+  it('reports an example change as its own entity, not a request change', () => {
+    const entities = computeVisualDiff(
+      file([request([example('exp_1', 'old')])]),
+      file([request([example('exp_1', 'new')])]),
+    ).entities;
+
+    expect(entities.map(e => [e.id, e.type, e.status])).toEqual([['exp_1', 'example', 'modified']]);
+    expect(entities[0].fieldChanges.map(change => change.path)).toEqual(['response']);
+  });
+
+  it('reports added and removed examples inside their request', () => {
+    const added = computeVisualDiff(
+      file([request([example('exp_1')])]),
+      file([request([example('exp_1'), example('exp_2')])]),
+    ).entities;
+    expect(added.map(e => [e.id, e.type, e.status])).toEqual([['exp_2', 'example', 'added']]);
+
+    const removed = computeVisualDiff(
+      file([request([example('exp_1'), example('exp_2')])]),
+      file([request([example('exp_1')])]),
+    ).entities;
+    expect(removed.map(e => [e.id, e.type, e.status])).toEqual([['exp_2', 'example', 'removed']]);
   });
 });
 
