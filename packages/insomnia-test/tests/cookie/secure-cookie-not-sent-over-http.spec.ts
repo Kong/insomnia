@@ -1,16 +1,25 @@
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER, HTTP_SERVER_HTTPS, test } from "@package/misc/fixtures";
+import {
+  HTTP_SERVER,
+  HTTP_SERVER_HTTPS,
+  RESOLVING_PROXY_HOST,
+  RESOLVING_PROXY_SERVER,
+  test,
+} from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
+// Insomnia treats `localhost` as a secure context and sends Secure cookies over
+// plain http, so reach the echo server as `insomnia.test` through the resolving proxy.
+const HTTP_URL = HTTP_SERVER.replace("localhost", RESOLVING_PROXY_HOST);
+const HTTPS_URL = HTTP_SERVER_HTTPS.replace("localhost", RESOLVING_PROXY_HOST);
+
 test("Verify Secure Cookie Is Sent Over HTTPS But Not Over Plain HTTP", async ({
   user,
 }) => {
-  test.fail(true, 'INS-3179');
-
   const { cookieFlow, httpRequestFlow, workspaceFlow, preferencesFlow } =
     user.flowManager;
 
@@ -22,23 +31,29 @@ test("Verify Secure Cookie Is Sent Over HTTPS But Not Over Plain HTTP", async ({
     new Collection(faker.string.alphanumeric(10)),
   );
 
-  await preferencesFlow.set({ validateSSL: false });
+  await preferencesFlow.set({
+    validateSSL: false,
+    proxyEnabled: true,
+    httpProxy: RESOLVING_PROXY_SERVER,
+    httpsProxy: RESOLVING_PROXY_SERVER,
+    noProxy: "",
+  });
 
   const httpRequest = await httpRequestFlow.create(collection, {
     name: faker.string.alphanumeric(10),
     method: HttpMethod.Get,
-    url: `${HTTP_SERVER}/cookies`,
+    url: `${HTTP_URL}/cookies`,
   });
   const httpsRequest = await httpRequestFlow.create(collection, {
     name: faker.string.alphanumeric(10),
     method: HttpMethod.Get,
-    url: `${HTTP_SERVER_HTTPS}/cookies`,
+    url: `${HTTPS_URL}/cookies`,
   });
 
   const secureCookie = {
     key: faker.string.alphanumeric(8),
     value: faker.string.alphanumeric(8),
-    domain: "localhost",
+    domain: RESOLVING_PROXY_HOST,
     path: "/",
     secure: true,
   };
