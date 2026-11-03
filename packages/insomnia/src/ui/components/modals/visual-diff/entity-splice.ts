@@ -89,6 +89,7 @@ function safeParse(text: string): any {
 interface EntityLocation {
   section:
     | 'collection'
+    | 'example'
     | 'environments-base'
     | 'sub-environment'
     | 'routes'
@@ -97,6 +98,8 @@ interface EntityLocation {
     | 'file-section';
   // ids of ancestor folders, root to the entity's direct parent (collection section only)
   folderPath: string[];
+  // id of the request owning the example (example section only)
+  parentRequestId?: string;
   // top-level keys making up the entity (file-section only)
   keys?: readonly string[];
 }
@@ -107,6 +110,9 @@ function findInCollection(nodes: any[], entityId: string, path: string[]): Entit
   for (const node of nodes ?? []) {
     if (node?.meta?.id === entityId) {
       return { section: 'collection', folderPath: path };
+    }
+    if ((node?.examples ?? []).some((example: { meta?: { id?: string } }) => example?.meta?.id === entityId)) {
+      return { section: 'example', folderPath: path, parentRequestId: node.meta?.id };
     }
     if (Array.isArray(node?.children)) {
       const found = findInCollection(node.children, entityId, [...path, node.meta?.id]);
@@ -255,30 +261,50 @@ function descendToContainer(baseFile: any, sourceFile: any, folderPath: string[]
   return { container, sourceArray };
 }
 
-// A folder's own fields with `children` swapped for the given ones — placed after `meta`, where the
-// app writes them, and left out when empty, as the app's export does.
-function withChildren(folder: any, children: any[] | undefined): any {
-  const hasChildren = Array.isArray(children) && children.length > 0;
+// An entity's own fields with one nested collection (`children` for folders, `examples` for
+// requests) swapped for the given one. An existing key keeps its position; a missing one goes
+// where the app writes it (after `meta` for folders, last for requests) and is left out when
+// empty, as the app's export does.
+function withNested(
+  node: any,
+  key: 'children' | 'examples',
+  nested: any[] | undefined,
+  insertAfterMeta: boolean,
+): any {
+  const hasNested = Array.isArray(nested) && nested.length > 0;
   const result: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(folder)) {
-    if (key === 'children') {
+  for (const [field, value] of Object.entries(node)) {
+    if (field === key) {
+      if (hasNested) {
+        result[key] = nested;
+      }
       continue;
     }
-    result[key] = value;
-    if (key === 'meta' && hasChildren) {
-      result.children = children;
+    result[field] = value;
+    if (insertAfterMeta && field === 'meta' && hasNested && !(key in result)) {
+      result[key] = nested;
     }
   }
-  if (hasChildren && !('children' in result)) {
-    result.children = children;
+  if (hasNested && !(key in result)) {
+    result[key] = nested;
   }
   return result;
 }
 
+// Sets a request's examples, dropping the key when empty as the app's export does.
+function setExamples(request: any, examples: any[]) {
+  if (examples.length > 0) {
+    request.examples = examples;
+  } else {
+    delete request.examples;
+  }
+}
+
 // Grafts a collection-tree entity (request or folder) from source into base,
 // wherever source has it — moving it if it sits elsewhere in base, and removing
-// it if source no longer has it. A folder only carries its own fields: its
-// `children` are separate entities, so base's children are kept as-is.
+// it if source no longer has it. A folder only carries its own fields, and a
+// request only its own: their `children`/`examples` are separate entities, so
+// base's are kept as-is.
 function applyCollectionChange(baseFile: any, sourceFile: any, entityId: string) {
   if (!Array.isArray(baseFile.collection)) {
     baseFile.collection = [];
@@ -301,7 +327,12 @@ function applyCollectionChange(baseFile: any, sourceFile: any, entityId: string)
   const sourceNode = sourceArray[sourceIndex];
   // Recognised by id, not by a `children` array: the app omits `children` for an empty folder,
   // and treating such a folder as a leaf would replace base's folder along with its contents.
-  const node = entityId.startsWith('fld_') ? withChildren(sourceNode, existing?.node?.children) : sourceNode;
+  // A request keeps base's examples for the same reason: examples are their own cards.
+  const node = entityId.startsWith('fld_')
+    ? withNested(sourceNode, 'children', existing?.node?.children, true)
+    : entityId.startsWith('req')
+      ? withNested(sourceNode, 'examples', existing?.node?.examples, false)
+      : sourceNode;
 
   // Staying in the same container keeps its original position to avoid reorder noise.
   const insertAt = existing?.container === container ? existingIndex : Math.min(sourceIndex, container.length);
@@ -315,6 +346,41 @@ function applyChange(baseFile: any, sourceFile: any, entityId: string, location:
   switch (location.section) {
     case 'collection': {
       applyCollectionChange(baseFile, sourceFile, entityId);
+      return;
+    }
+    case 'example': {
+      const parentRequestId = location.parentRequestId;
+      if (!parentRequestId) {
+        return;
+      }
+      const sourceRequest = findNodeWithContainer(sourceFile.collection, parentRequestId)?.node;
+      const baseRequest = findNodeWithContainer(baseFile.collection, parentRequestId)?.node;
+
+      if (!sourceRequest) {
+        if (baseRequest) {
+          setExamples(baseRequest, spliceById(baseRequest.examples ?? [], [], entityId));
+        }
+        return;
+      }
+
+      if (!baseRequest) {
+        // The request is new too: carry it along, with only the example being staged, so the
+        // example has somewhere to live. Its other examples keep their own cards.
+        const sourceExample = (sourceRequest.examples ?? []).find((example: any) => example?.meta?.id === entityId);
+        const sourceLocation = findInCollection(sourceFile.collection, parentRequestId, []);
+        if (!sourceExample || !sourceLocation) {
+          return;
+        }
+        const { container, sourceArray } = descendToContainer(baseFile, sourceFile, sourceLocation.folderPath);
+        const sourceIndex = sourceArray.findIndex((node: any) => node?.meta?.id === parentRequestId);
+        container.splice(sourceIndex === -1 ? container.length : Math.min(sourceIndex, container.length), 0, {
+          ...sourceRequest,
+          examples: [sourceExample],
+        });
+        return;
+      }
+
+      setExamples(baseRequest, spliceById(baseRequest.examples ?? [], sourceRequest.examples ?? [], entityId));
       return;
     }
     case 'environments-base': {
