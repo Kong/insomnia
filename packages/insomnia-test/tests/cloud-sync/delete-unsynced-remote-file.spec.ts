@@ -3,11 +3,11 @@ import path from "node:path";
 
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
+import { readBackendProjectMetas } from "@package/misc/backend-projects";
+import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "@package/misc/cloud-sync-mock";
 import { HTTP_SERVER, resetCloudSyncState, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { expect } from "@playwright/test";
-
-import { getCloudSyncProjectInfo, setCloudSyncArchiveFailure } from "@package/misc/cloud-sync-mock";
 
 test.afterAll(async () => {
   await resetCloudSyncState();
@@ -68,19 +68,10 @@ test("Verify the dashboard can delete a never-pulled unsynced remote file and a 
   const dataPath = await appFlow.getDataPath();
   const projectsDir = path.join(dataPath, "version-control", "projects");
   const readProjectMeta = async (workspaceId: string) => {
-    const dirs = await fs.promises.readdir(projectsDir);
-    for (const dir of dirs) {
-      const meta = JSON.parse(
-        await fs.promises.readFile(
-          path.join(projectsDir, dir, "meta.json"),
-          "utf8",
-        ),
-      );
-      if (meta.rootDocumentId === workspaceId) {
-        return { rootDocumentId: meta.rootDocumentId as string, dir };
-      }
-    }
-    return;
+    const [match] = (await readBackendProjectMetas(projectsDir))
+      .filter((m) => m.rootDocumentId === workspaceId)
+      .map((m) => ({ rootDocumentId: m.rootDocumentId, dir: m.dir }));
+    return match;
   };
   const readLatestSnapshotState = async (dir: string) => {
     const snapshotsDir = path.join(projectsDir, dir, "snapshots");
