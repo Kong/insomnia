@@ -101,11 +101,25 @@ const EVENTS_FACTORY = [
   '}',
 ].join('\n');
 
+// `require('buffer')` is a thin re-export of the ALREADY-ambient `globalThis.Buffer` shim
+// (sandbox-globals.ts) — not a new implementation, and not a real capability boundary: every plugin
+// can already do `Buffer.from(...)` with zero manifest declaration, exactly like `atob`/`URL`, since
+// Buffer is an ambient global, not gated behind require() at all. This module exists only so code
+// written as `var { Buffer } = require('buffer')` resolves, matching real Node's own
+// `require('buffer').Buffer === global.Buffer` identity. Declaring "buffer" in a manifest does not
+// restrict anything beyond what's already unconditionally reachable — documented in PERMISSIONS.md.
+const BUFFER_FACTORY = [
+  'function () {',
+  '  return { Buffer: globalThis.Buffer, INSPECT_MAX_BYTES: 50, kMaxLength: 9007199254740991 };',
+  '}',
+].join('\n');
+
 /** Every module the sandbox can serve. Grown deliberately, one vetted entry at a time (M2/M3). */
 export const SANDBOX_MODULES: SandboxModuleDefinition[] = [
   { name: 'path', aliases: ['node:path'], factorySource: PATH_FACTORY },
   { name: 'crypto', aliases: ['node:crypto'], factorySource: CRYPTO_FACTORY },
   { name: 'events', aliases: ['node:events'], factorySource: EVENTS_FACTORY },
+  { name: 'buffer', aliases: ['node:buffer'], factorySource: BUFFER_FACTORY },
   // Vetted npm libraries (M3), bundled + pinned by scripts/generate-sandbox-vendored.ts. Heavy, so
   // only included in the eval'd registry source when a plugin declares them.
   { name: 'uuid', factorySource: UUID_FACTORY_SOURCE, heavy: true },
