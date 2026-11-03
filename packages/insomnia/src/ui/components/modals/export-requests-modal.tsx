@@ -335,6 +335,8 @@ export const ExportRequestsModal = ({
                 </Button>
               </div>
               <InviteBox source="export-modal" />
+              <hr className="m-0 shrink-0 border-0 border-t border-solid border-(--hl-md)" />
+              <p className="shrink-0 text-lg font-semibold">Select requests to export:</p>
               <div className="max-h-96 min-h-80 w-full overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
                 <Tree
                   root={state?.treeRoot}
