@@ -7,7 +7,7 @@ import { Collection } from "@package/models/collection";
 import type { Environment } from "@package/models/environment";
 import { expect } from "@playwright/test";
 
-import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "./support/cloud-sync-mock";
+import { getCloudSyncGraphQLRequestLog, setCloudSyncGraphQLDelay } from "@package/misc/cloud-sync-mock";
 
 test.afterAll(async () => {
   await setCloudSyncGraphQLDelay(0);
