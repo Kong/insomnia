@@ -167,7 +167,8 @@ jobs:
           echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
-  # Run the whole suite across a fixed number of shards in parallel. Each shard restores the
+  # Run the whole suite across the shards computed by the `shards` job (about
+  # TESTS_PER_SHARD tests each, at most MAX_SHARDS) in parallel. Each shard restores the
   # downloaded binary and runs a slice of the suite, retrying failures in-process
   # (see playwright.config.ts `retries`).
   # ---------------------------------------------------------------------------
