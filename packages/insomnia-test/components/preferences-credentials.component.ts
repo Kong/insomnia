@@ -27,6 +27,20 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
     await this.tabs.tabByName("Credentials").click();
   }
 
+  private createGitCredentialMenu(): DropdownComponent {
+    return new DropdownComponent(
+      this.page,
+      this.dialog.getByRole("button", { name: "Create Git Credential" }),
+    );
+  }
+
+  private createCloudCredentialMenu(): DropdownComponent {
+    return new DropdownComponent(
+      this.page,
+      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
+    );
+  }
+
   /**
    * Adds a custom (username/PAT) Git credential from the Credentials tab,
    * which must already be open (see `openCredentialsTab()`).
@@ -38,9 +52,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
       name: /Access Token Credential/,
       }),
     );
-    await DropdownComponent.byLabel(this.page, "Create Git Credential").select(
-      "Access Token",
-    );
+    await this.createGitCredentialMenu().select("Access Token");
     await this.page.getByLabel("Author Email").fill(credential.authorEmail);
     await this.page.getByLabel("Author Name").fill(credential.authorName);
     await this.page.getByLabel("Username").fill(credential.username);
@@ -63,10 +75,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createAwsCloudCredential(
     credential: Omit<AwsCloudCredential, "provider">,
   ): Promise<void> {
-    await new DropdownComponent(
-      this.page,
-      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
-    ).select("AWS", false);
+    await this.createCloudCredentialMenu().select("AWS", false);
     const modal = new ModalComponent(
       this.page,
       this.page.getByRole("dialog", {
@@ -98,10 +107,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createGcpCloudCredential(
     credential: Omit<GcpCloudCredential, "provider">,
   ): Promise<void> {
-    await new DropdownComponent(
-      this.page,
-      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
-    ).select("GCP", false);
+    await this.createCloudCredentialMenu().select("GCP", false);
     const modal = new ModalComponent(
       this.page,
       this.page.getByRole("dialog", {
@@ -131,10 +137,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createHashiCorpCloudCredential(
     credential: Omit<HashiCorpCloudCredential, "provider">,
   ): Promise<void> {
-    await new DropdownComponent(
-      this.page,
-      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
-    ).select("HashiCorp", false);
+    await this.createCloudCredentialMenu().select("HashiCorp", false);
     const modal = new ModalComponent(
       this.page,
       this.page.getByRole("dialog", {
