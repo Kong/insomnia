@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "@package/misc/constants";
 import type {
   EnvironmentKvPairData} from "@package/models/environment";
 import {
@@ -388,12 +388,16 @@ export class EnvironmentPage extends BasePage {
       `${this.SIDEBAR} [role="row"][data-key="${key}"]`,
     );
 
-    const editableName = row.locator(this.EDITABLE_NAME);
-    await editableName.waitFor({ state: "visible" });
-    await editableName.dblclick();
+    const editableName = stableRow.locator(this.EDITABLE_NAME);
     const input = stableRow.locator(
       'input[name="name"][aria-label="Environment name"]',
     );
+    // The dblclick can be swallowed if the row re-renders mid-click, so
+    // retry it until the inline input actually appears.
+    await expect(async () => {
+      await editableName.dblclick({ timeout: DEFAULT_TIMEOUT });
+      await expect(input).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    }).toPass({ timeout: LONG_TIMEOUT });
     await input.fill(newName);
     await input.press("Enter");
     await expect(stableRow).toHaveAttribute("aria-label", newName);
