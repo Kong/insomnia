@@ -90,5 +90,18 @@ test("Verify Deleting a Request, Folder and Collection With Open Tabs via the De
       { timeout: DEFAULT_TIMEOUT },
     )
     .toEqual([false, false, false, false]);
-  expect(await workspacePage.getResourceNotFoundToastTexts()).toEqual([]);
+  // A deleted resource's own "<Kind> not found: <id>" toast is a benign, timing
+  // dependent blip; any other resource-not-found toast is a real regression.
+  const deletedResourceIds = [
+    shortcutRequest,
+    menuRequest,
+    shortcutCollectionRequest,
+    menuCollectionRequest,
+    shortcutFolder,
+    menuFolder,
+    shortcutCollection,
+    menuCollection,
+  ].flatMap((resource) => (resource.id ? [resource.id] : []));
+  expect(deletedResourceIds).toHaveLength(8);
+  expect(await workspacePage.getResourceNotFoundToastTexts(deletedResourceIds)).toEqual([]);
 });
