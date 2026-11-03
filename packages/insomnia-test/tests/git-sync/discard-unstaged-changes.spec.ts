@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { ProjectType } from "@package/enums/project-types";
-import { DEFAULT_TIMEOUT, getServerCommits, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
+import { getServerCommits, GIT_CREDENTIAL, test } from "@package/misc/git-fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
@@ -28,13 +28,10 @@ test(
       new Collection(faker.string.alphanumeric(10)),
       faker.string.alphanumeric(10),
     );
+    const collectionNode = await workspacePage.requireItemNode(collection);
     await gitSyncFlow.discardAllChanges();
 
-    await expect
-      .poll(async () => workspacePage.findItemNode(collection), {
-        timeout: DEFAULT_TIMEOUT,
-      })
-      .toBeUndefined();
+    await workspacePage.waitForNodeRemoved(collectionNode);
 
     const committedNode = await workspacePage.findItemNode(committedCollection);
     const serverCommits = await getServerCommits();
