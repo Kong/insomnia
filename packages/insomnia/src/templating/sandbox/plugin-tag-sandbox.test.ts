@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const utilTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { return require('util').format('%s is %d', 'answer', 42); } }];";
+
+  it('a plugin declaring the node:util alias can use format', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: utilTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:util'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('answer is 42');
+  });
+
+  it('a plugin granted "util" can use format', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: utilTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['util'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('answer is 42');
+  });
+
+  it('a plugin without the grant is denied "util" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: utilTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'util' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
