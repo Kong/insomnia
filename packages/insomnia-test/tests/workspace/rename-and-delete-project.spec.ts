@@ -23,7 +23,5 @@ test("Verify Renaming And Deleting A Project Via The Dashboard", async ({
 
   expect(foundByNewName?.id).toBe(project.id);
   expect(foundByOldName).toBeUndefined();
-  await expect
-    .poll(() => workspaceFlow.getProject(newName), { timeout: 10_000 })
-    .toBeUndefined();
+  expect(await workspaceFlow.getProject(newName)).toBeUndefined();
 });
