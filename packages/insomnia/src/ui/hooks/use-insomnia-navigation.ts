@@ -103,6 +103,12 @@ const NAVIGATION_ROUTES = [
     getResource: (resourceId: string) => services.workspace.getById(resourceId),
   },
   {
+    id: 'project:konnect-debugger',
+    path: '/organization/:organizationId/project/:projectId/konnect-debugger',
+    getResourceId: params => params.projectId,
+    getResource: (resourceId: string) => services.project.getById(resourceId),
+  },
+  {
     id: 'project',
     path: '/organization/:organizationId/project/:projectId',
     getResourceId: params => params.projectId,
