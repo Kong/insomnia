@@ -17,8 +17,10 @@ export class SelectComponent extends BaseComponent {
     return new SelectComponent(page, page.getByRole("button", { name: label }));
   }
 
+  // Scoped to the Select popover: pages such as the multipart body editor also
+  // render their own listbox ("Key-value pairs"), which would trip strict mode.
   get listbox(): Locator {
-    return this.page.getByRole("listbox");
+    return this.page.locator('[data-trigger="Select"]').getByRole("listbox");
   }
 
   option(keyOrName: string | RegExp): Locator {
