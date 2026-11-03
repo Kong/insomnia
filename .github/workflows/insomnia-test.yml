@@ -113,8 +113,8 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Counts the test cases with `playwright test --list` and derives the shard
-  # count as ceil(total / TESTS_PER_SHARD), then generates the matrix indices
-  # (1..N). Needs `build` only for the cached node_modules.
+  # count as ceil(total / TESTS_PER_SHARD), capped at MAX_SHARDS, then generates
+  # the matrix indices (1..N). Needs `build` only for the cached node_modules.
   # ---------------------------------------------------------------------------
   shards:
     name: Shard Matrix
@@ -122,6 +122,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       TESTS_PER_SHARD: 10
+      MAX_SHARDS: 200
     outputs:
       indices: ${{ steps.matrix.outputs.indices }}
       total: ${{ steps.matrix.outputs.total }}
@@ -160,7 +161,8 @@ jobs:
             echo "ERROR: could not determine test count"; exit 1
           fi
           total=$(( (count + TESTS_PER_SHARD - 1) / TESTS_PER_SHARD ))
-          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard)"
+          if [ "$total" -gt "$MAX_SHARDS" ]; then total=$MAX_SHARDS; fi
+          echo "$count tests -> $total shards ($TESTS_PER_SHARD tests per shard, max $MAX_SHARDS)"
           echo "total=$total" >> "$GITHUB_OUTPUT"
           echo "indices=$(seq 1 $total | jq -sc .)" >> "$GITHUB_OUTPUT"
 
