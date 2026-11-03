@@ -228,7 +228,7 @@ export class McpClientPage extends RequestPage {
   }
 
   private primitiveRows(type: McpPrimitiveType): Locator {
-    return this.page.getByTestId(new RegExp(`^test-${type}_`));
+    return this.page.locator(`[data-testid^="test-${type}_"]`);
   }
 
   /**
