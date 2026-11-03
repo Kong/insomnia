@@ -80,6 +80,7 @@ export function init(): BaseSettings {
     updateChannel: UpdateChannel.stable,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
+    useBulkFormEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
     saveVaultKeyLocally: true,
