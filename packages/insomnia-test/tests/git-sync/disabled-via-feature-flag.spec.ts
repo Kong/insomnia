@@ -30,17 +30,11 @@ test(
       )
       .toBeTruthy();
     expect(bannerText).toContain("Git Sync limited to organizations");
-    await expect
-      .poll(() => projectSettingsPage.isHidden(projectSettingsPage.gitSetupForm), {
-        timeout: DEFAULT_TIMEOUT,
-      })
-      .toBe(true);
-    await expect
-      .poll(
-        () =>
-          projectSettingsPage.isDisabled(projectSettingsPage.scanForFilesButton),
-        { timeout: DEFAULT_TIMEOUT },
-      )
-      .toBe(true);
+    await expect(projectSettingsPage.gitSetupForm).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await expect(projectSettingsPage.scanForFilesButton).toBeDisabled({
+      timeout: DEFAULT_TIMEOUT,
+    });
   },
 );
