@@ -59,6 +59,7 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { getMethodsFromOpenApiPathItem, type PathItemObject } from '~/ui/utils/openapi-path-item-methods';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 const SwaggerUIDiv = ({ text }: { text: string }) => {
@@ -105,16 +106,6 @@ interface SpecActionItem {
   tooltip?: string;
   action: () => void;
 }
-
-const getMethodsFromOpenApiPathItem = (pathItem: OpenAPIV3.PathItemObject): string[] => {
-  const methods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].filter(
-    method =>
-      // @ts-expect-error -- shrug I don't care what pathItem has in it
-      pathItem[method],
-  );
-
-  return methods;
-};
 
 const lintOptions = {
   delay: 1000,
@@ -219,6 +210,8 @@ export const SpecView = ({
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
+  // `components.pathItems` was added in OpenAPI 3.1 and is not part of the openapi-types components type
+  const pathItems = (components as { pathItems?: Record<string, PathItemObject> } | undefined)?.pathItems;
   const showSpecInfo = Boolean(info || servers || paths || components);
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
@@ -1086,11 +1079,11 @@ export const SpecView = ({
                         <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                           <span className="truncate">{item.path}</span>
                           <span className="flex-1" />
-                          {getMethodsFromOpenApiPathItem(item).map(method => (
+                          {getMethodsFromOpenApiPathItem(item.path, item, pathItems).map(({ method, jumpTo }) => (
                             <Button
-                              key={method}
+                              key={jumpTo}
                               data-testid={`spec-outline-method-${method.toUpperCase()}`}
-                              onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
+                              onPress={() => navigateToPath(jumpTo)}
                               className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >
                               {formatMethodName(method.toUpperCase())}
