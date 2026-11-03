@@ -38,7 +38,7 @@ test("Verify Trailing Blank Row In Headers And Params Is Not Persisted Until Typ
   const paramsAfter = await httpRequestPage.getParams();
 
   const isBlank = (pair: { name: string; value: string }) =>
-    pair.name === "" && pair.value === "";
+    [pair.name, pair.value].every((text) => text === "");
 
   expect(request).toBeDefined();
   expect(headersBefore.some(isBlank)).toBe(false);
