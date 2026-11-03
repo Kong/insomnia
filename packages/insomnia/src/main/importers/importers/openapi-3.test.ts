@@ -572,6 +572,210 @@ describe('openapi-3', () => {
       expect(requests.map(r => r.method)).toEqual(['GET', 'QUERY', 'PURGE', 'LINK']);
       expect(requests.every(r => r.url === '{{ _.base_url }}/pets')).toBe(true);
     });
+
+    it('should expand an in: querystring parameter into one query parameter per property', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets/lookup': {
+            get: {
+              parameters: [
+                {
+                  name: 'filter',
+                  in: 'querystring',
+                  required: true,
+                  content: {
+                    'application/x-www-form-urlencoded': {
+                      schema: {
+                        type: 'object',
+                        required: ['name'],
+                        properties: { name: { type: 'string' }, limit: { type: 'integer', default: 10 } },
+                      },
+                    },
+                  },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result!.find(item => item._type === 'request');
+
+      expect(request.parameters).toEqual([
+        { name: 'name', value: 'string', disabled: false },
+        { name: 'limit', value: '10', disabled: true },
+      ]);
+    });
+
+    it('should disable all querystring properties when the parameter is optional, and skip non form-urlencoded content', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            get: {
+              parameters: [
+                {
+                  name: 'optional',
+                  in: 'querystring',
+                  content: {
+                    'application/x-www-form-urlencoded': {
+                      schema: { type: 'object', required: ['a'], properties: { a: { type: 'string' } } },
+                    },
+                  },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+            post: {
+              parameters: [
+                {
+                  name: 'json',
+                  in: 'querystring',
+                  required: true,
+                  content: { 'application/json': { schema: { type: 'object' } } },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const [get, post] = result!.filter(item => item._type === 'request');
+
+      expect(get.parameters).toEqual([{ name: 'a', value: 'string', disabled: true }]);
+      expect(post.parameters).toEqual([]);
+    });
+  });
+
+  describe('path level parameters', () => {
+    it('should merge Path Item parameters into each operation, letting the operation override', async () => {
+      const openApiDoc = {
+        openapi: '3.0.3',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            parameters: [
+              { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+              { name: 'sort', in: 'query', schema: { type: 'string', default: 'asc' } },
+              { name: 'X-Trace', in: 'header', required: true, schema: { type: 'string' } },
+            ],
+            get: {
+              parameters: [{ name: 'limit', in: 'query', required: true, schema: { type: 'integer', default: 50 } }],
+              responses: { 200: { description: 'ok' } },
+            },
+            post: { responses: { 200: { description: 'ok' } } },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const [get, post] = result!.filter(item => item._type === 'request');
+
+      expect(get.parameters).toEqual([
+        { name: 'sort', value: 'asc', disabled: true },
+        { name: 'limit', value: '50', disabled: false },
+      ]);
+      expect(get.headers).toContainEqual({ name: 'X-Trace', value: 'string', disabled: false });
+      expect(post.parameters).toEqual([
+        { name: 'limit', value: '10', disabled: true },
+        { name: 'sort', value: 'asc', disabled: true },
+      ]);
+    });
+  });
+
+  describe('text/event-stream responses', () => {
+    const buildDoc = (responses: Record<string, unknown>, parameters: unknown[] = []) => ({
+      openapi: '3.1.0',
+      info: { title: 'Events', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      paths: { '/events': { get: { parameters, responses } } },
+    });
+
+    it('should add an Accept header for a 2xx text/event-stream response', async () => {
+      const doc = buildDoc({ 200: { description: 'ok', content: { 'text/event-stream; charset=utf-8': {} } } });
+      const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+
+      expect(request.headers).toEqual([{ name: 'Accept', value: 'text/event-stream', disabled: false }]);
+    });
+
+    it('should accept 2XX range keys', async () => {
+      const doc = buildDoc({ '2XX': { description: 'ok', content: { 'text/event-stream': {} } } });
+      const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+
+      expect(request.headers.map(h => h.name)).toEqual(['Accept']);
+    });
+
+    it('should not add Accept for non-2xx, other streaming types or an explicit Accept parameter', async () => {
+      const nonSuccess = buildDoc({ 400: { description: 'bad', content: { 'text/event-stream': {} } } });
+      const ndjson = buildDoc({ 200: { description: 'ok', content: { 'application/x-ndjson': {} } } });
+      const explicit = buildDoc({ 200: { description: 'ok', content: { 'text/event-stream': {} } } }, [
+        { name: 'Accept', in: 'header', schema: { type: 'string', default: 'application/json' } },
+      ]);
+
+      for (const doc of [nonSuccess, ndjson]) {
+        const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+        expect(request.headers).toEqual([]);
+      }
+      const request = (await convert(JSON.stringify(explicit)))!.find(item => item._type === 'request');
+      expect(request.headers).toEqual([{ name: 'Accept', value: 'application/json', disabled: true }]);
+    });
+  });
+
+  describe('webhooks', () => {
+    const doc = {
+      openapi: '3.1.0',
+      info: { title: 'Pets', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      tags: [{ name: 'pets' }],
+      paths: { '/pets': { get: { tags: ['pets'], responses: { 200: { description: 'ok' } } } } },
+      webhooks: {
+        petAdopted: {
+          post: {
+            tags: ['pets'],
+            summary: 'Fired when a pet is adopted',
+            requestBody: {
+              content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' } } } } },
+            },
+            responses: { 200: { description: 'ok' } },
+          },
+        },
+        petRemoved: { delete: { responses: { 200: { description: 'ok' } } } },
+      },
+    };
+
+    it('should import webhook operations into a Webhooks folder using {{ _.webhook_url }}', async () => {
+      const result = await convert(JSON.stringify(doc));
+      const folder = result?.find(item => item._type === 'request_group' && item.name === 'Webhooks');
+      const webhooks = result?.filter(item => item._type === 'request' && item.parentId === folder?._id);
+
+      expect(folder).toBeDefined();
+      expect(webhooks.map(r => [r.name, r.method, r.url])).toEqual([
+        ['Fired when a pet is adopted', 'POST', '{{ _.webhook_url }}'],
+        ['petRemoved', 'DELETE', '{{ _.webhook_url }}'],
+      ]);
+      expect(webhooks[0].body.mimeType).toBe('application/json');
+      expect(webhooks[0].body.text).toContain('"name"');
+    });
+
+    it('should keep webhooks out of tag folders and define webhook_url in the base environment', async () => {
+      const result = await convert(JSON.stringify(doc));
+      const petsFolder = result?.find(item => item._type === 'request_group' && item.name === 'pets');
+      const inPetsFolder = result?.filter(item => item._type === 'request' && item.parentId === petsFolder?._id);
+      const baseEnv = result?.find(item => item._type === 'environment');
+
+      expect(inPetsFolder.map(r => r.method)).toEqual(['GET']);
+      expect(baseEnv.data.webhook_url).toBe('https://example.com/webhook');
+    });
   });
 
   describe('OpenAPI 3.1 schema keywords', () => {

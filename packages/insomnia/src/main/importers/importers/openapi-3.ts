@@ -39,6 +39,25 @@ type PathItemObjectV3_2 = OpenAPIV3.PathItemObject & {
   additionalOperations?: Record<string, OpenAPIV3.OperationObject>;
 };
 
+// `in: querystring` parameter: has `content` instead of `schema`
+interface QueryStringParameterObject {
+  name: string;
+  in: 'querystring';
+  required?: boolean;
+  content?: Record<string, OpenAPIV3.MediaTypeObject>;
+}
+
+const getWebhooks = (document: OpenAPIV3.Document) => {
+  const { webhooks } = document as OpenAPIV3.Document & { webhooks?: Record<string, PathItemObjectV3_2> };
+  return isPlainObject(webhooks)
+    ? Object.fromEntries(Object.entries(webhooks!).filter(([, item]) => isPlainObject(item)))
+    : {};
+};
+
+const WEBHOOKS_FOLDER_NAME = 'Webhooks';
+const WEBHOOKS_FOLDER_ID = 'fld___WORKSPACE_ID__webhooks';
+const WEBHOOK_URL = '{{ _.webhook_url }}';
+
 // 3.x.x
 const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_LITERALLY_ANYTHING = '*/*';
@@ -174,6 +193,40 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
 };
 
 /**
+ * Merge Path Item level parameters into an operation. Operation level parameters override path level ones with the same `name` + `in`.
+ */
+const mergeParameters = (pathParameters: unknown, operationParameters: unknown) => {
+  if (!Array.isArray(pathParameters) || pathParameters.length === 0) {
+    return operationParameters;
+  }
+  const operationList = Array.isArray(operationParameters) ? operationParameters : [];
+  const overridden = new Set(operationList.map(p => `${p?.in}:${p?.name}`));
+  return [...pathParameters.filter(p => !overridden.has(`${p?.in}:${p?.name}`)), ...operationList];
+};
+
+/**
+ * Return `[method, operation]` pairs of a Path Item, including OpenAPI 3.2 `additionalOperations` (custom HTTP methods such as PURGE).
+ * Path Item level `parameters` are merged into each operation.
+ */
+const getPathItemOperations = (pathItem: PathItemObjectV3_2): [string, OpenAPIV3.SchemaObject][] => {
+  const { additionalOperations, ...standardOperations } = pathItem;
+
+  const methods = Object.entries(standardOperations)
+    // Only keep entries that are plain objects and not spec extensions
+    .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+
+  const customMethods =
+    additionalOperations && isPlainObject(additionalOperations)
+      ? Object.entries(additionalOperations).filter(([, value]) => isPlainObject(value))
+      : [];
+
+  return [...methods, ...customMethods].map(([method, operation]) => {
+    const parameters = mergeParameters(pathItem.parameters, (operation as OpenAPIV3.OperationObject).parameters);
+    return [method, { ...(operation as OpenAPIV3.SchemaObject), ...(parameters ? { parameters } : {}) }];
+  });
+};
+
+/**
  * Create request definitions based on openapi document.
  */
 const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
@@ -196,19 +249,8 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
       return [];
     }
 
-    const { additionalOperations, ...standardOperations } = schemasPerMethod as PathItemObjectV3_2;
-
-    const methods = Object.entries(standardOperations)
-      // Only keep entries that are plain objects and not spec extensions
-      .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
-
-    // OpenAPI 3.2 `additionalOperations`: one request per custom HTTP method (e.g. PURGE)
-    const customMethods = additionalOperations && isPlainObject(additionalOperations)
-      ? Object.entries(additionalOperations).filter(([, value]) => isPlainObject(value))
-      : [];
-
-    return [...methods, ...customMethods].map(([method, operation]) => ({
-      ...(operation as OpenAPIV3.SchemaObject),
+    return getPathItemOperations(schemasPerMethod as PathItemObjectV3_2).map(([method, operation]) => ({
+      ...operation,
       path,
       method,
     }));
@@ -238,7 +280,32 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     });
   });
 
-  return [...folders, ...requests];
+  // `webhooks` (3.1+): imported into a dedicated folder, the receiver URL is left to the user via `webhook_url`
+  const webhookRequests: ImportRequest[] = [];
+  Object.entries(getWebhooks(document)).forEach(([webhookName, webhookItem]) => {
+    getPathItemOperations(webhookItem).forEach(([method, operation]) => {
+      const security = (operation as unknown as OpenAPIV3.Document).security || rootSecurity;
+      webhookRequests.push(
+        importRequest(
+          { ...operation, path: webhookName, method },
+          WEBHOOKS_FOLDER_ID,
+          security,
+          securitySchemes,
+          WEBHOOK_URL,
+        ),
+      );
+    });
+  });
+  const webhookFolders = webhookRequests.length
+    ? [
+        {
+          ...importFolderItem(defaultParent)({ name: WEBHOOKS_FOLDER_NAME } as OpenAPIV3.SchemaObject),
+          _id: WEBHOOKS_FOLDER_ID,
+        },
+      ]
+    : [];
+
+  return [...folders, ...webhookFolders, ...requests, ...webhookRequests];
 };
 
 /**
@@ -278,6 +345,7 @@ const importRequest = (
   parentId: string,
   security?: OpenAPIV3.SecurityRequirementObject[],
   securitySchemes?: OpenAPIV3.SecuritySchemeObject,
+  urlOverride?: string,
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
@@ -294,7 +362,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
+    url: urlOverride ?? `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
@@ -307,10 +375,54 @@ const importRequest = (
  * Imports insomnia definitions of query parameters.
  */
 const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
-  return convertParameters(
-    endpointSchema.parameters?.filter(
-      parameter => (parameter as OpenAPIV3.ParameterObject).in === 'query',
-    ) as OpenAPIV3.ParameterObject[],
+  return [
+    ...convertParameters(
+      endpointSchema.parameters?.filter(
+        parameter => (parameter as OpenAPIV3.ParameterObject).in === 'query',
+      ) as OpenAPIV3.ParameterObject[],
+    ),
+    ...convertQueryStringParameters(
+      endpointSchema.parameters?.filter(
+        parameter => (parameter as { in?: string }).in === 'querystring',
+      ) as QueryStringParameterObject[],
+    ),
+  ];
+};
+
+/**
+ * OpenAPI 3.2 `in: querystring` describes the whole query string as one `content` entry.
+ * Only `application/x-www-form-urlencoded` object schemas are expanded into one query parameter per property;
+ * a property is enabled only when both the parameter and the property are required.
+ */
+const convertQueryStringParameters = (parameters: QueryStringParameterObject[] = []) => {
+  return parameters.flatMap(({ required, content }) => {
+    const schema = content?.['application/x-www-form-urlencoded']?.schema as OpenAPIV3.SchemaObject | undefined;
+    const properties = schema?.properties;
+    if (!properties || !isPlainObject(properties)) {
+      return [];
+    }
+    return Object.entries(properties).flatMap(([propertyName, propertySchema]) =>
+      flattenParameter(
+        propertyName,
+        generateParameterExample(propertySchema as OpenAPIV3.SchemaObject),
+        required !== true || !schema.required?.includes(propertyName),
+      ),
+    );
+  });
+};
+
+const hasEventStreamResponse = (endpointSchema: OpenAPIV3.PathItemObject) => {
+  const { responses } = endpointSchema as OpenAPIV3.OperationObject;
+  if (!isPlainObject(responses)) {
+    return false;
+  }
+  return Object.entries(responses).some(
+    ([statusCode, response]) =>
+      /^2(\d\d|XX)$/i.test(statusCode) &&
+      isPlainObject((response as OpenAPIV3.ResponseObject)?.content) &&
+      Object.keys((response as OpenAPIV3.ResponseObject).content!).some(
+        mimeType => mimeType.split(';')[0]!.trim().toLowerCase() === 'text/event-stream',
+      ),
   );
 };
 
@@ -323,6 +435,11 @@ const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => 
       parameter => (parameter as OpenAPIV3.ParameterObject).in === 'header',
     ) as OpenAPIV3.ParameterObject[],
   );
+
+  // A 2xx `text/event-stream` response makes the request an Insomnia Event Stream request, which is detected by this Accept header
+  if (hasEventStreamResponse(endpointSchema) && !paramHeaders.some(header => header.name.toLowerCase() === 'accept')) {
+    paramHeaders = [{ name: 'Accept', disabled: false, value: 'text/event-stream' }, ...paramHeaders];
+  }
 
   const noContentTypeHeader = !paramHeaders?.find(header => header.name === 'Content-Type');
 
@@ -547,7 +664,11 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   return {};
 };
 
-const flattenParameter = (name: string, value: unknown, disabled: boolean): { name: string; value: string; disabled: boolean }[] => {
+const flattenParameter = (
+  name: string,
+  value: unknown,
+  disabled: boolean,
+): { name: string; value: string; disabled: boolean }[] => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return Object.entries(value).flatMap(([key, child]) => flattenParameter(`${name}[${key}]`, child, disabled));
   }
@@ -866,6 +987,7 @@ export const convert: Converter = async rawData => {
     name: 'Base environment',
     data: {
       base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
+      ...(Object.keys(getWebhooks(apiDocument)).length ? { webhook_url: 'https://example.com/webhook' } : {}),
     },
   };
 
