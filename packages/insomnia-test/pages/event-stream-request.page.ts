@@ -14,8 +14,7 @@ export class EventStreamRequestPage extends RequestPage {
 
   /**
    * Reads the full event-stream request state from the UI (method, url,
-   * params, body, and scripts). Headers are always returned empty since
-   * event-stream requests don't expose a headers tab.
+   * headers, params, body, and scripts).
    */
   async get(): Promise<Omit<EventStreamRequest, "name">> {
     const scripts = await this.scripts.getScripts();
@@ -23,7 +22,7 @@ export class EventStreamRequestPage extends RequestPage {
       method: (await this.getMethod()).trim() as EventStreamMethod,
       url: await this.getUrl(),
       params: await this.getParams(),
-      headers: [],
+      headers: await this.getHeaders(),
       body: await this.getBody(),
       preRequestScript: scripts?.preRequest,
       afterResponseScript: scripts?.afterResponse,
