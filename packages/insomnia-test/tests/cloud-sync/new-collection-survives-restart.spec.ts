@@ -4,6 +4,7 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { SyncStatus } from "@package/enums/sync-status";
+import { readBackendProjectMetas } from "@package/misc/backend-projects";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { expect } from "@playwright/test";
@@ -48,19 +49,9 @@ test("Verify a new collection is not left in an unsynced state after an app rest
 
   const dataPath = await appFlow.getDataPath();
   const projectsDir = path.join(dataPath, "version-control", "projects");
-  const dirs = await fs.promises.readdir(projectsDir);
-  const matchingDirs: string[] = [];
-  for (const dir of dirs) {
-    const meta = JSON.parse(
-      await fs.promises.readFile(
-        path.join(projectsDir, dir, "meta.json"),
-        "utf8",
-      ),
-    );
-    if (meta.rootDocumentId === collectionYId) {
-      matchingDirs.push(dir);
-    }
-  }
+  const matchingDirs = (await readBackendProjectMetas(projectsDir))
+    .filter((m) => m.rootDocumentId === collectionYId)
+    .map((m) => m.dir);
 
   const combinedLog = [...creationLog, ...restartLog].join("\n");
 
