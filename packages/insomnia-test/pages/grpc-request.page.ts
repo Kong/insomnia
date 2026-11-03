@@ -41,7 +41,7 @@ export class GrpcRequestPage extends RequestPage {
    */
   async commit(): Promise<void> {
     await this.switchTab(MESSAGE_TAB_KEY);
-    await this.page.locator(this.PANE).getByRole("button", { name: "Commit", exact: true }).click();
+    await this.page.locator(this.PANE).getByRole("button", { name: /^Commit\b/ }).click();
   }
 
   /**
@@ -162,6 +162,6 @@ export class GrpcRequestPage extends RequestPage {
    */
   async clickStream(): Promise<void> {
     await this.waitForRendererIdle();
-    await this.page.locator(this.PANE).getByRole("button", { name: "Stream", exact: true }).click();
+    await this.page.locator(this.PANE).getByRole("button", { name: /^Stream\b/ }).click();
   }
 }
