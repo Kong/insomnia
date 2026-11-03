@@ -13,6 +13,7 @@ import { parse as parseYaml } from 'yaml';
  * (bullet list of raw field changes). Status of dedicated visual cards:
  *
  * - [x] Request (HTTP)      -> RequestDiffCard
+ * - [x] Example             -> ExampleDiffCard
  * - [x] Environment          -> EnvironmentDiffCard
  * - [x] Request Group (folder) -> RequestGroupDiffCard
  * - [x] WebSocket Request    -> WebSocketDiffCard
@@ -36,6 +37,7 @@ export type VisualDiffEntityType =
   | 'websocket_request'
   | 'socketio_request'
   | 'request_group'
+  | 'example'
   | 'environment'
   | 'mock_route'
   | 'mcp_request'
@@ -132,7 +134,7 @@ function cleanMeta(meta: any) {
 }
 
 // Keys that are structural (handled by entity matching itself) rather than displayable fields
-const STRUCTURAL_KEYS = new Set(['children', 'subEnvironments']);
+const STRUCTURAL_KEYS = new Set(['children', 'subEnvironments', 'examples']);
 
 // An entity node minus its nested entities (eg. a folder's `children`), which get their own cards.
 export function ownFields(node: any): any {
@@ -365,6 +367,14 @@ function collectEntities(file: any): Map<string, CollectedEntity> {
     if (id) {
       map.set(id, { type: classifyCollectionNode(node), name: node.name || 'Untitled', node });
     }
+    // Examples live inside their request's file, not in a file of their own, so they are
+    // diffed as nested entities matched by id.
+    (node.examples ?? []).forEach((example: { meta?: { id?: string }; name?: string }) => {
+      const exampleId = example?.meta?.id;
+      if (exampleId) {
+        map.set(exampleId, { type: 'example', name: example.name || 'Example', node: example });
+      }
+    });
     if (Array.isArray(node.children)) {
       node.children.forEach(addCollectionNode);
     }

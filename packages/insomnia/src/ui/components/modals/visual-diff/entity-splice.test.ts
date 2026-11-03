@@ -118,6 +118,114 @@ describe('applyEntityChange - collection tree', () => {
   });
 });
 
+describe('applyEntityChange - examples', () => {
+  const example = (id: string, body = '{}') => ({
+    name: id,
+    meta: { id },
+    request: { method: 'GET', url: 'https://a' },
+    response: { statusCode: 200, statusMessage: '', headers: [], body },
+  });
+  const requestWithExamples = (examples: unknown[]) => ({ ...req('req_1'), examples });
+  const examplesOf = (file: any) =>
+    (file.collection[0].examples ?? []).map((item: any) => [item.meta.id, item.response.body]);
+
+  it('grafts one example without touching its siblings', () => {
+    const head = collectionFile(BASE_ENV, [
+      requestWithExamples([example('exp_1', 'old'), example('exp_2', 'two')]),
+    ]);
+    const workdir = collectionFile(BASE_ENV, [
+      requestWithExamples([example('exp_1', 'new'), example('exp_2', 'two'), example('exp_3', 'three')]),
+    ]);
+
+    const result = parse(applyEntityChange(head, workdir, 'exp_1'));
+
+    expect(examplesOf(result)).toEqual([
+      ['exp_1', 'new'],
+      ['exp_2', 'two'],
+    ]);
+  });
+
+  it('adds and removes a single example', () => {
+    const one = collectionFile(BASE_ENV, [requestWithExamples([example('exp_1')])]);
+    const two = collectionFile(BASE_ENV, [requestWithExamples([example('exp_1'), example('exp_2')])]);
+
+    expect(examplesOf(parse(applyEntityChange(one, two, 'exp_2')))).toEqual([
+      ['exp_1', '{}'],
+      ['exp_2', '{}'],
+    ]);
+
+    const result = parse(applyEntityChange(two, one, 'exp_2'));
+    expect(examplesOf(result)).toEqual([['exp_1', '{}']]);
+  });
+
+  it('drops the examples key when the last example is removed, as the export does', () => {
+    const withExample = collectionFile(BASE_ENV, [requestWithExamples([example('exp_1')])]);
+    const without = collectionFile(BASE_ENV, [requestWithExamples([])]);
+
+    const result = parse(applyEntityChange(withExample, without, 'exp_1'));
+
+    expect(result.collection[0]).not.toHaveProperty('examples');
+  });
+
+  it("doesn't stage example changes along with the request's own fields", () => {
+    const head = collectionFile(BASE_ENV, [
+      { ...requestWithExamples([example('exp_1', 'old')]), url: 'https://old' },
+    ]);
+    const workdir = collectionFile(BASE_ENV, [
+      { ...requestWithExamples([example('exp_1', 'new')]), url: 'https://new' },
+    ]);
+
+    const result = parse(applyEntityChange(head, workdir, 'req_1'));
+
+    expect(result.collection[0].url).toBe('https://new');
+    expect(examplesOf(result)).toEqual([['exp_1', 'old']]);
+  });
+
+  it('keeps examples where the export writes them when staging the request', () => {
+    const exportedRequest = (url: string) => ({
+      url,
+      name: 'r',
+      meta: { id: 'req_1' },
+      method: 'GET',
+      body: {},
+      parameters: [],
+      headers: [],
+      authentication: {},
+      pathParameters: [],
+      examples: [example('exp_1')],
+    });
+    const head = collectionFile(BASE_ENV, [exportedRequest('https://old')]);
+    const workdir = collectionFile(BASE_ENV, [exportedRequest('https://new')]);
+
+    const result = parse(applyEntityChange(head, workdir, 'req_1'));
+
+    expect(Object.keys(result.collection[0])).toEqual([
+      'url',
+      'name',
+      'meta',
+      'method',
+      'body',
+      'parameters',
+      'headers',
+      'authentication',
+      'pathParameters',
+      'examples',
+    ]);
+  });
+
+  it('carries a newly added request along when staging one of its examples', () => {
+    const base = collectionFile(BASE_ENV, []);
+    const source = collectionFile(BASE_ENV, [
+      requestWithExamples([example('exp_1', 'one'), example('exp_2', 'two')]),
+    ]);
+
+    const result = parse(applyEntityChange(base, source, 'exp_1'));
+
+    expect(result.collection[0].meta.id).toBe('req_1');
+    expect(examplesOf(result)).toEqual([['exp_1', 'one']]);
+  });
+});
+
 describe('applyEntityChange - base environment', () => {
   it('drops a field that is absent from the source (eg. unstaging an added `data` block)', () => {
     const head = collectionFile({ name: 'Base Environment', meta: { id: ENV_ID } });

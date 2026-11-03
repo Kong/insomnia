@@ -11,6 +11,7 @@ import { CookieJarDiffCard } from './cookie-jar-diff-card';
 import { computeVisualDiff, getBaseEnvironmentId } from './diff-engine';
 import { applyEntityChange, hasOnlyWorkspaceIdentity } from './entity-splice';
 import { EnvironmentDiffCard } from './environment-diff-card';
+import { ExampleDiffCard } from './example-diff-card';
 import { GenericEntityDiffCard } from './generic-entity-diff-card';
 import { GrpcDiffCard } from './grpc-diff-card';
 import { McpDiffCard } from './mcp-diff-card';
@@ -261,6 +262,9 @@ export const EntityDiffList: FC<Props> = ({
           switch (diff.type) {
             case 'request': {
               return <RequestDiffCard key={diff.id} diff={diff} {...actionProps} />;
+            }
+            case 'example': {
+              return <ExampleDiffCard key={diff.id} diff={diff} {...actionProps} />;
             }
             case 'request_group': {
               return <RequestGroupDiffCard key={diff.id} diff={diff} {...actionProps} />;
