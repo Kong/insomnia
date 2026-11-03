@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-import { DEFAULT_TIMEOUT, STABLE_READ_INTERVAL } from "./constants";
+import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "./constants";
 
 /**
  * Waits for the page's own event loop to drain everything already queued
@@ -44,6 +44,6 @@ export async function waitForStableValue<T>(
     streak = serialized === previous ? streak + 1 : 1;
     previous = serialized;
     expect(streak).toBeGreaterThanOrEqual(stableReads);
-  }).toPass({ timeout, intervals: [STABLE_READ_INTERVAL] });
+  }).toPass({ timeout, intervals: [POLL_INTERVAL] });
   return value;
 }
