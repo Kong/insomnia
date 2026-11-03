@@ -1,15 +1,13 @@
-import type NodeCrypto from 'node:crypto';
-import { createCipheriv, generateKeySync } from 'node:crypto';
+import { generateKeySync } from 'node:crypto';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { createFieldDecryptionFailureReport, createFieldEncryptionHooks } from './hooks';
+import {
+  createFieldDecryptionFailureReport,
+  createFieldEncryptionHooks,
+  reconcileFieldDecryptionFailures,
+} from './hooks';
 import { ENCRYPTED_VALUE_PREFIX, encryptValue } from './value';
-
-vi.mock('node:crypto', async importOriginal => {
-  const actual = await importOriginal<typeof NodeCrypto>();
-  return { ...actual, createCipheriv: vi.fn(actual.createCipheriv) };
-});
 
 const PATHS: Record<string, string[]> = {
   Request: ['authentication.password', 'authentication.token', 'authentication.value'],
@@ -143,10 +141,9 @@ describe('afterSerialization', () => {
   });
 
   it('throws instead of writing plaintext when encryption itself fails', () => {
-    const { afterSerialization } = setup();
-    vi.mocked(createCipheriv).mockImplementationOnce(() => {
-      throw new Error('cipher exploded');
-    });
+    // Passes the key check of the hook factory, but is not a real KeyObject, so `createCipheriv` rejects it
+    const fakeKey = { type: 'secret', symmetricKeySize: 32 } as unknown as typeof key;
+    const { afterSerialization } = setup(fakeKey);
     let thrown: unknown;
     try {
       afterSerialization(line(request()));
@@ -156,7 +153,7 @@ describe('afterSerialization', () => {
     expect(thrown).toBeInstanceOf(Error);
     expect((thrown as Error).message).toContain('authentication.token');
     expect((thrown as Error).message).not.toContain('secret-token');
-    expect(((thrown as Error).cause as Error).message).toBe('cipher exploded');
+    expect((thrown as Error).cause).toBeInstanceOf(Error);
   });
 
   it('throws on a line that is not JSON rather than guessing', () => {
@@ -389,5 +386,79 @@ describe('simulated load + rewrite of a datastore file', () => {
     expect(reader.failureReport.list()).toEqual([
       { type: 'Request', _id: 'req_foreign', path: 'authentication.token' },
     ]);
+  });
+});
+
+describe('reconcileFieldDecryptionFailures', () => {
+  const failure = (_id: string, path = 'authentication.token', type = 'Request') => ({ type, _id, path });
+  const ciphertext = encryptValue(otherKey, 'x');
+  const reportOf = (...failures: ReturnType<typeof failure>[]) => {
+    const report = createFieldDecryptionFailureReport();
+    failures.forEach(report.add);
+    return report;
+  };
+  const reconcile = async (
+    report: ReturnType<typeof reportOf>,
+    documents: Record<string, unknown>,
+    findDocument = vi.fn(async (_type: string, _id: string) => documents[_id]),
+  ) => {
+    await reconcileFieldDecryptionFailures(report, getEncryptedFieldPaths, findDocument);
+    return { failures: report.list(), findDocument };
+  };
+
+  it('keeps a failure while the document still holds well-formed ciphertext at that path', async () => {
+    const { failures } = await reconcile(reportOf(failure('req_1')), {
+      req_1: { authentication: { token: ciphertext } },
+    });
+    expect(failures).toEqual([failure('req_1')]);
+  });
+
+  it('drops a failure whose document was deleted or whose value was replaced', async () => {
+    const { failures } = await reconcile(
+      reportOf(failure('req_deleted'), failure('req_replaced'), failure('req_kept')),
+      {
+        req_deleted: null,
+        req_replaced: { authentication: { token: 'now plaintext' } },
+        req_kept: { authentication: { token: ciphertext } },
+      },
+    );
+    expect(failures).toEqual([failure('req_kept')]);
+  });
+
+  it('drops a failure whose path no longer holds a string, or does not exist', async () => {
+    const { failures } = await reconcile(reportOf(failure('req_1'), failure('req_2')), {
+      req_1: { authentication: { token: null } },
+      req_2: { authentication: {} },
+    });
+    expect(failures).toEqual([]);
+  });
+
+  it('reconciles array paths by their concrete path', async () => {
+    const { failures } = await reconcile(
+      reportOf(failure('jar_1', 'cookies[0].value', 'CookieJar'), failure('jar_1', 'cookies[1].value', 'CookieJar')),
+      { jar_1: { cookies: [{ value: 'plaintext' }, { value: ciphertext }] } },
+    );
+    expect(failures).toEqual([failure('jar_1', 'cookies[1].value', 'CookieJar')]);
+  });
+
+  it('looks every document up once, however many of its fields failed', async () => {
+    const { failures, findDocument } = await reconcile(
+      reportOf(failure('req_1', 'authentication.token'), failure('req_1', 'authentication.password'), failure('req_2')),
+      {
+        req_1: { authentication: { token: ciphertext, password: 'plaintext' } },
+        req_2: { authentication: { token: ciphertext } },
+      },
+    );
+    expect(findDocument).toHaveBeenCalledTimes(2);
+    expect(failures).toEqual([failure('req_1', 'authentication.token'), failure('req_2')]);
+  });
+
+  it('keeps a failure whose document cannot be looked up, so that it stays visible', async () => {
+    const { failures } = await reconcile(
+      reportOf(failure('req_1')),
+      {},
+      vi.fn(async () => {}),
+    );
+    expect(failures).toEqual([failure('req_1')]);
   });
 });
