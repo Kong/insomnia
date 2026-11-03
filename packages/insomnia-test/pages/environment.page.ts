@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type {
   EnvironmentKvPairData} from "@package/models/environment";
 import {
@@ -383,20 +383,17 @@ export class EnvironmentPage extends BasePage {
     const row = this.page.locator(
       `${this.SIDEBAR} [role="row"][aria-label="${oldName}"]`,
     );
-    const key = await this.waitForStableAttribute(row, "data-key");
-    const stableRow = this.page.locator(
-      `${this.SIDEBAR} [role="row"][data-key="${key}"]`,
+    let stableRow = row;
+    const input = this.page.locator(
+      `${this.SIDEBAR} [role="row"] input[name="name"][aria-label="Environment name"]`,
     );
-
-    const editableName = stableRow.locator(this.EDITABLE_NAME);
-    const input = stableRow.locator(
-      'input[name="name"][aria-label="Environment name"]',
-    );
-    // The dblclick can be swallowed if the row re-renders mid-click, so
-    // retry it until the inline input actually appears.
+    // Re-resolve the row's key on every attempt: right after a duplicate the
+    // old row (original env's key) is briefly shown before being swapped out.
     await expect(async () => {
-      await editableName.dblclick({ timeout: DEFAULT_TIMEOUT });
-      await expect(input).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+      const key = await this.waitForStableAttribute(row, "data-key", SHORT_TIMEOUT);
+      stableRow = this.page.locator(`${this.SIDEBAR} [role="row"][data-key="${key}"]`);
+      await stableRow.locator(this.EDITABLE_NAME).dblclick({ timeout: SHORT_TIMEOUT });
+      await expect(input).toBeVisible({ timeout: SHORT_TIMEOUT });
     }).toPass({ timeout: LONG_TIMEOUT });
     await input.fill(newName);
     await input.press("Enter");

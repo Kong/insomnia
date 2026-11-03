@@ -1,12 +1,11 @@
+export const SHORT_TIMEOUT = 2000;
+
 export const DEFAULT_TIMEOUT = 10_000;
 
 export const LONG_TIMEOUT = 60_000;
 
 /** Interval between polls of a locator or in-memory read. */
 export const POLL_INTERVAL = 200;
-
-/** Interval between the consecutive reads `waitForStableValue` compares. */
-export const STABLE_READ_INTERVAL = 100;
 
 // Matches playwright.config.ts's `use.actionTimeout`.
 export const ACTION_TIMEOUT = 30_000;
