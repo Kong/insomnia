@@ -2,11 +2,8 @@ import type { RequestHeader } from 'insomnia-data';
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import {
-  useMockRouteLoaderData,
-  useMockRoutePatcher,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { useMockRouteLoaderData, useMockRoutePatcher } from '~/ui/hooks/use-mock-route';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
