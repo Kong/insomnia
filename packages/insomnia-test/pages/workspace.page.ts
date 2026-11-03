@@ -462,7 +462,7 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click({ force: true });
+    await dropdown.getByRole("button").click();
     await this.page
       .getByRole("menuitem", { name: target, exact: true })
       .click();
@@ -492,7 +492,7 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click({ force: true });
+    await dropdown.getByRole("button").click();
     await this.page
       .getByRole("menuitem", { name: client, exact: true })
       .click();

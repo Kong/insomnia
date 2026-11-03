@@ -23,7 +23,7 @@ export class McpClientPage extends RequestPage {
    * Clicks Disconnect and waits for the button to flip back to "Connect".
    * While connected the whole URL form is `aria-disabled`, which makes
    * Playwright treat the Disconnect button inside it as not enabled even
-   * though it is clickable, so the click has to be forced.
+   * though it is clickable, so the click is dispatched directly instead.
    */
   override async disconnect(
     callback: () => Promise<void> | void = () => {},
@@ -36,7 +36,7 @@ export class McpClientPage extends RequestPage {
     const connectButton = this.page
       .locator(this.PANE)
       .getByRole("button", { name: /^(Connect|Disconnect)$/ });
-    await connectButton.click({ force: true });
+    await connectButton.dispatchEvent("click");
     await expect(connectButton).toHaveText("Connect", {
       timeout: DEFAULT_TIMEOUT,
     });

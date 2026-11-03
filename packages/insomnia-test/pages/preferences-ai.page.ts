@@ -194,7 +194,7 @@ export class PreferencesAiPage extends PreferencesTabPage {
       .getByTestId("toggle-smart-commits")
       .getByRole("switch");
     if ((await smartCommitsSwitch.isChecked()) !== enabled) {
-      await smartCommitsSwitch.click({ force: true });
+      await smartCommitsSwitch.click();
     }
     await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
   }
