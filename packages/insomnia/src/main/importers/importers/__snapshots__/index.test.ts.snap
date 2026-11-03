@@ -2702,6 +2702,184 @@ exports[`Fixtures > Import openapi3 > oauth2-input.yaml 1`] = `
 }
 `;
 
+exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
+{
+  "__export_date": "",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "Used to test Insomnia's support for OpenAPI 3.2.",
+      "name": "Pet Store (OpenAPI 3.2 sample) 1.0.0",
+      "parentId": null,
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}",
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__c7d42965",
+      "_type": "environment",
+      "data": {
+        "base_path": "/v1",
+        "host": "api.example.com",
+        "oauth2ClientId": "clientId",
+        "scheme": "https",
+        "xApiKey": "xApiKey",
+      },
+      "name": "OpenAPI env api.example.com",
+      "parentId": "__BASE_ENVIRONMENT_ID__",
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__a8acce24",
+      "_type": "request_group",
+      "description": "Everything about pets",
+      "environment": {},
+      "name": "pets",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__341937f3",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "pet-events",
+      "parentId": "__WORKSPACE_ID__",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__26e3ae98",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "List pets",
+      "parameters": [
+        {
+          "disabled": true,
+          "name": "limit",
+          "value": "0",
+        },
+      ],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__2b83261b",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{
+  "id": 0,
+  "name": "string",
+  "type": "string"
+}",
+      },
+      "description": "",
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+      ],
+      "method": "POST",
+      "name": "Create a pet",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__15fae265",
+      "_type": "request",
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{
+  "name": "string",
+  "type": "string"
+}",
+      },
+      "description": "",
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+      ],
+      "method": "QUERY",
+      "name": "Search pets with a request body",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__680c818e",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "PURGE",
+      "name": "Purge the pets cache",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__d3c8c6c7",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "Get a pet",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets/:petId",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__d9e919b5",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "Stream pet events (Server-Sent Events)",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__341937f3",
+      "url": "{{ _.base_url }}/pets/:petId/events",
+    },
+    {
+      "_id": "req___WORKSPACE_ID__fa9a8bab",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "Lookup using a whole query string",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__a8acce24",
+      "url": "{{ _.base_url }}/pets/lookup",
+    },
+  ],
+}
+`;
+
 exports[`Fixtures > Import openapi3 > path-plugin-input.yaml 1`] = `
 {
   "__export_date": "",
