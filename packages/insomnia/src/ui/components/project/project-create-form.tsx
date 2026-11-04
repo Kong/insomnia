@@ -368,6 +368,7 @@ export const ProjectCreateForm: FC<Props> = ({
           />
           {initCloneGitRepositoryFetcher.state === 'idle' && insomniaFilesContainUnknownFields.length > 0 && (
             <div
+              data-testid="project-settings-unknown-fields-warning"
               className={
                 'mt-4 flex max-h-75 flex-col items-start gap-2 overflow-y-auto rounded-xs border border-solid border-(--color-warning) px-3 py-2 text-left text-sm text-(--color-font)'
               }

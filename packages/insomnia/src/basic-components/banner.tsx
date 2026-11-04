@@ -27,7 +27,11 @@ export const Banner = ({ type, title, message, footer, className, 'aria-label': 
     >
       <Icon icon={bannerTypeToIconName[type]} className="mt-1" />
       <div className="flex flex-col gap-3">
-        {title && <div className="text-base font-semibold">{title}</div>}
+        {title && (
+          <div data-testid="banner-title" className="text-base font-semibold">
+            {title}
+          </div>
+        )}
         <div className="text-sm">{message}</div>
         {footer && <div>{footer}</div>}
       </div>

@@ -42,6 +42,7 @@ export const WorkspaceNode = ({
       style={{ paddingLeft: '2em' }}
       data-testid={`workspace-node-${workspaceName}`}
       data-project={project.name}
+      data-expanded={isCollection ? !collapsed : undefined}
       onContextMenu={e => {
         e.preventDefault();
         setIsContextMenuOpen(true);
@@ -61,10 +62,12 @@ export const WorkspaceNode = ({
         <div
           className={`${scopeToBgColorMap[workspaceScope]} ${scopeToTextColorMap[workspaceScope]} flex h-5 w-5 items-center justify-center rounded-sm px-2`}
         >
-          <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} />
+          <Icon icon={scopeToIconMap[workspaceScope]} className={ICON_CLASS} data-testid="node-type-icon" />
         </div>
 
-        <span className="min-w-0 flex-1 truncate text-base">{workspaceName}</span>
+        <span data-testid="workspace-node-name" className="min-w-0 flex-1 truncate text-base">
+          {workspaceName}
+        </span>
       </div>
       {(hasUncommittedChanges || hasUnpushedChanges) && (
         <div className="flex aspect-square h-6 shrink-0 items-center justify-center">

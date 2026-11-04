@@ -373,7 +373,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 </TextField>
                 {createNewBranchError && (
                   <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
-                    <p className="text-base">
+                    <p data-testid="git-branch-create-error" className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
                       {createNewBranchError}
                     </p>

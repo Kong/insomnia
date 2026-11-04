@@ -32,7 +32,7 @@ export const GraphQLExplorerTypeLink: FC<Props> = ({ type, onNavigate }) => {
   }
 
   return (
-    <a href="#" onClick={_handleClick} className="notice">
+    <a href="#" onClick={_handleClick} className="notice" data-testid="graphql-explorer-type-link">
       {type.name}
     </a>
   );

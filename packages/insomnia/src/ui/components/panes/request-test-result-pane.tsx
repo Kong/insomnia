@@ -106,8 +106,12 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
       );
       const message = (
         <>
-          <span className="capitalize">{result.testCase}</span>
-          <span className="text-neutral-400">{result.errorMessage ? ' | ' + result.errorMessage : ''}</span>
+          <span data-testid="test-result-case" className="capitalize">
+            {result.testCase}
+          </span>
+          <span data-testid="test-result-error" className="text-neutral-400">
+            {result.errorMessage ? ' | ' + result.errorMessage : ''}
+          </span>
         </>
       );
       const testCategory =
@@ -124,11 +128,15 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
         <div key={index} data-testid="test-result-row">
           <div className="mt-5 flex w-full items-start text-base">
             <div className="mx-1 leading-4">
-              <span className="mr-2 ml-2">{statusTag}</span>
+              <span data-testid="test-result-status" className="mr-2 ml-2">
+                {statusTag}
+              </span>
             </div>
             <div className="mr-2 min-w-0 leading-4">
-              <div className="mt-1 mr-2 w-auto break-words">{message}</div>
-              <div className="mt-1 text-sm text-neutral-400">
+              <div data-testid="test-result-name" className="mt-1 mr-2 w-auto break-words">
+                {message}
+              </div>
+              <div data-testid="test-result-detail" className="mt-1 text-sm text-neutral-400">
                 {`${testCategory} (`}
                 {executionTime}
                 {' ms)'}

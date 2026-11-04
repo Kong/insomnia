@@ -342,6 +342,7 @@ export const WorkspaceEnvironmentsEditModal = ({
                           >
                             <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
                             <Icon
+                              data-testid={item.isPrivate ? 'environment-private-icon' : undefined}
                               icon={
                                 item.isPrivate
                                   ? 'lock'

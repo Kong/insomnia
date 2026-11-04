@@ -154,13 +154,15 @@ export const Toaster = () => (
                 )}
               </span>
             )}
-            <div className="flex w-full flex-col gap-1">
+            <div data-testid="toast-body" className="flex w-full flex-col gap-1">
               <Text slot="title" className="flex w-full items-center gap-1">
-                <span className="flex-1">{toast.content.title}</span>
+                <span data-testid="toast-title" className="flex-1">
+                  {toast.content.title}
+                </span>
                 {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
-                <Text slot="description" className="max-w-md text-xs">
+                <Text slot="description" data-testid="toast-description" className="max-w-md text-xs">
                   {toast.content.description}
                 </Text>
               )}

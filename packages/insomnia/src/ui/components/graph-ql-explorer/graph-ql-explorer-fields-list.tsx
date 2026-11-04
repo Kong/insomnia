@@ -26,7 +26,7 @@ export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, o
     const description = field.description;
 
     return (
-      <li key={field.name + field.parentName}>
+      <li key={field.name + field.parentName} data-testid="graphql-explorer-field">
         {fieldLink}
         {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
         {isDeprecated && (
@@ -39,7 +39,7 @@ export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, o
           </Tooltip>
         )}
         {description && (
-          <div className="graphql-explorer__defs__description">
+          <div className="graphql-explorer__defs__description" data-testid="graphql-explorer-def-description">
             <MarkdownPreview markdown={description} />
           </div>
         )}
