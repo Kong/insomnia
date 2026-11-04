@@ -1,5 +1,4 @@
 import { ContextMenuItem } from '@package/enums/context-menu-items';
-import { LintSeverity } from '@package/enums/lint-severity';
 import { ProjectType } from '@package/enums/project-types';
 import { TreeNodeType } from '@package/enums/tree-node-types';
 import { DEFAULT_TIMEOUT } from '@package/misc/constants';
@@ -10,13 +9,10 @@ import type { EventStreamRequest } from '@package/models/event-stream-request';
 import type { GraphQLRequest } from '@package/models/graphql-request';
 import type { GrpcRequest } from '@package/models/grpc-request';
 import type { HttpRequest } from '@package/models/http-request';
-import { McpClient } from '@package/models/mcp-client';
 import { Project } from '@package/models/project';
 import type { SocketIORequest } from '@package/models/socket-io-request';
 import type { WebSocketRequest } from '@package/models/websocket-request';
 import type { PageManager } from '@package/pages/page-manager';
-import type { TreeNode } from '@package/pages/workspace.page';
-import { expect } from '@playwright/test';
 
 import { BaseFlow } from './base.flow';
 import type { FlowContext } from './flow-context';
@@ -48,17 +44,6 @@ type RequestItem =
   | EventStreamRequest
   | SocketIORequest
   | WebSocketRequest;
-
-export type WorkspaceItem =
-  | (Project & { kind: 'project' })
-  | (Collection & { kind: 'collection' })
-  | (McpClient & { kind: 'mcpClient' })
-  | (HttpRequest & { kind: 'http' })
-  | (GraphQLRequest & { kind: 'graphql' })
-  | (GrpcRequest & { kind: 'grpc' })
-  | (EventStreamRequest & { kind: 'eventStream' })
-  | (SocketIORequest & { kind: 'socketIO' })
-  | (WebSocketRequest & { kind: 'webSocket' });
 
 export class WorkspaceFlow extends BaseFlow {
   constructor(
@@ -131,28 +116,6 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
-   * Creates a Collection under `parent` via the project dashboard's
-   * empty-state "Enter API Spec" button (only rendered while `parent` has
-   * no workspaces yet) instead of the project-tree "API Collection"
-   * context menu — a different entry point into the same underlying
-   * naming dialog. Authors `collection.spec` into the spec editor
-   * afterward, if given.
-   */
-  @step()
-  async createInEmptyState(parent: Project, collection: Collection): Promise<Collection> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(parent);
-    await workspace.clickNode(node);
-    await workspace.createCollectionInEmptyState(collection.name);
-
-    if (collection.spec) {
-      await this.authorSpec(collection.name, collection.spec);
-      return this.assertCreated(await this.getCollectionSpec(collection.name), collection.name);
-    }
-    return this.assertCreated(await this.getCollection(collection.name), collection.name);
-  }
-
-  /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
    */
   @step()
@@ -206,24 +169,6 @@ export class WorkspaceFlow extends BaseFlow {
   // "Rename" entry — use `renameProject()` for that.
 
   /**
-   * Resolves any workspace item (project, collection, MCP client, or any
-   * request type) matching `item`, optionally scoped to a parent Project
-   * or Collection node, and tags the result with a `kind` discriminant
-   * identifying its concrete type.
-   */
-  async get<T = WorkspaceItem>(
-    item: string | { name: string; id?: string },
-    parent?: Project | Collection,
-  ): Promise<T | undefined> {
-    const identity = typeof item === 'string' ? { name: item } : item;
-    const workspace = this.pageManager.workspacePage;
-    const parentNode = parent ? await workspace.resolveNode(parent) : undefined;
-    const node = await workspace.findItemNode(identity, undefined, parentNode);
-    const result = node ? await this.getResolved(node, { name: node.name, id: node._id }) : undefined;
-    return result as T | undefined;
-  }
-
-  /**
    * Finds the tree node matching `item` and returns it as a Collection
    * model. A lightweight read — just `id`/`name` — for a collection that
    * doesn't carry a spec; use `getCollectionSpec()` instead for one that
@@ -268,53 +213,6 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
-   * Expands the lint panel and polls the lint summary until it reports at
-   * least `minLintErrors` errors — the lint pass reruns asynchronously after
-   * `WorkspacePage.setSpecification()`, so a bare read right after can catch
-   * a stale, lower count — then returns the settled lint summary and fired
-   * rule codes. `getCollectionSpec()` doesn't call this itself (reading the
-   * lint summary means waiting for it to settle, which not every caller
-   * wants), so call it directly whenever you need the lint state — you're
-   * already on the collection's page after `create()`/`getCollectionSpec()`/
-   * `WorkspacePage.setSpecification()`.
-   */
-  @step()
-  async getLintState(minLintErrors = 0): Promise<NonNullable<Collection['lint']>> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-
-    await specPage.expandLintPanel();
-    await expect
-      .poll(
-        async () => {
-          const summary = await specPage.getLintSummary();
-          return summary === 'none' ? 0 : summary.errors;
-        },
-        { timeout: DEFAULT_TIMEOUT },
-      )
-      .toBeGreaterThanOrEqual(minLintErrors);
-    const summary = await specPage.getLintSummary();
-    const errors = summary === 'none' ? 0 : summary.errors;
-    // The summary can update a beat before the panel's entry rows do, so
-    // wait for the listed errors to catch up with the count it reports.
-    let entries = await specPage.getLintEntries();
-    await expect
-      .poll(
-        async () => {
-          entries = await specPage.getLintEntries();
-          return entries.filter(entry => entry.severity === LintSeverity.Error).length;
-        },
-        { timeout: DEFAULT_TIMEOUT },
-      )
-      .toBe(errors);
-    return {
-      errors,
-      warnings: summary === 'none' ? 0 : summary.warnings,
-      entries,
-    };
-  }
-
-  /**
    * Types `spec` into `name`'s spec editor right after creation —
    * boilerplate-wrapped into Swagger 2.0 JSON when given as a
    * `Specification`, written verbatim otherwise (e.g. a hand-built
@@ -349,18 +247,6 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
-   * Finds the tree node matching `item` and returns it as an McpClient model.
-   */
-  private async getMcpClient(item: string | { name: string; id?: string }): Promise<McpClient | undefined> {
-    const identity = typeof item === 'string' ? { name: item } : item;
-    const node = await this.pageManager.workspacePage.findItemNode(identity);
-    if (!node) return undefined;
-    const mcpClient = new McpClient(identity.name);
-    mcpClient.id = node._id;
-    return mcpClient;
-  }
-
-  /**
    * Finds the tree node matching `item` and returns it as a Project model.
    */
   @step()
@@ -371,56 +257,5 @@ export class WorkspaceFlow extends BaseFlow {
     return Object.assign(new Project(identity.name, ProjectType.Local), {
       id: node._id,
     });
-  }
-
-  private async getResolved(
-    node: TreeNode,
-    resolved: { name: string; id: string },
-  ): Promise<WorkspaceItem | undefined> {
-    const workspace = this.pageManager.workspacePage;
-
-    if (node.type === TreeNodeType.Project) {
-      const project = await this.getProject(resolved);
-      return project && { ...project, kind: 'project' };
-    }
-
-    if (node.type === TreeNodeType.Request) {
-      const flows = this.requestFlows;
-      const label = await workspace.getRequestTypeLabel(node);
-      switch (label) {
-        case 'GQL': {
-          const request = await flows.graphqlRequestFlow.get(resolved);
-          return request && { ...request, kind: 'graphql' };
-        }
-        case 'gRPC': {
-          const request = await flows.grpcRequestFlow.get(resolved);
-          return request && { ...request, kind: 'grpc' };
-        }
-        case 'SSE': {
-          const request = await flows.eventStreamRequestFlow.get(resolved);
-          return request && { ...request, kind: 'eventStream' };
-        }
-        case 'IO': {
-          const request = await flows.socketIoRequestFlow.get(resolved);
-          return request && { ...request, kind: 'socketIO' };
-        }
-        case 'WS': {
-          const request = await flows.webSocketRequestFlow.get(resolved);
-          return request && { ...request, kind: 'webSocket' };
-        }
-        default: {
-          const request = await flows.httpRequestFlow.get(resolved);
-          return request && { ...request, kind: 'http' };
-        }
-      }
-    }
-
-    const subKind = await workspace.getWorkspaceItemKind(node);
-    if (subKind === 'mcpClient') {
-      const mcpClient = await this.getMcpClient(resolved);
-      return mcpClient && Object.assign(mcpClient, { kind: 'mcpClient' as const });
-    }
-    const collection = await this.getCollection(resolved);
-    return collection && { ...collection, kind: 'collection' };
   }
 }

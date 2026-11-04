@@ -423,29 +423,6 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
-   * Creates an API Collection meant to carry a spec, via the project
-   * dashboard's empty-state "Enter API Spec" button (accessible name still
-   * "Create document"; only rendered when the project has no workspaces
-   * yet) rather than the project-tree "API Collection" context menu item —
-   * both are the exact same entry point into the same
-   * "New Workspace" naming dialog (there is no longer a separate "Document"
-   * workspace type or creation path). Fills its placeholder-labeled name
-   * input and commits by pressing Enter (the input sits inside a native
-   * form, so Enter submits it) instead of clicking a "Create" button.
-   */
-  async createCollectionInEmptyState(name: string): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Create document", exact: true })
-      .click();
-    const input = this.page.getByPlaceholder(
-      /Enter a name for your API Collection/,
-    );
-    await input.fill(name);
-    await input.press("Enter");
-    await this.navigate();
-  }
-
-  /**
    * Convenience accessor for the full flattened list of tree nodes.
    */
   async getNodes() {
@@ -515,42 +492,11 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
-   * Reads the request-type label (e.g. GET, GraphQL) shown next to a
-   * request node's row.
-   */
-  async getRequestTypeLabel(node: TreeNode): Promise<string> {
-    const row = this.treeNav.containerRow(node._id);
-    const label = await row.getByTestId("node-type-label").innerText();
-    return label.trim();
-  }
-
-  /**
    * Scrapes and reconstructs the current state of the project navigation
    * tree.
    */
   async getTree(): Promise<Tree> {
     return await Tree.fromPage(this.page);
-  }
-
-  /**
-   * Determines the kind of workspace item a tree node represents by
-   * inspecting its row icon.
-   */
-  /**
-   * A legacy Document workspace still renders with its own
-   * "file" icon in the tree even though it's functionally just a
-   * Collection now — this doesn't distinguish that case, since nothing
-   * branches on it anymore; both render as `"collection"`.
-   */
-  async getWorkspaceItemKind(
-    node: TreeNode,
-  ): Promise<"collection" | "mcpClient"> {
-    const row = this.treeNav.containerRow(node._id);
-    const icon = await row
-      .getByTestId("node-type-icon")
-      .first()
-      .getAttribute("data-icon");
-    return icon === "mcp" ? "mcpClient" : "collection";
   }
 
   /**

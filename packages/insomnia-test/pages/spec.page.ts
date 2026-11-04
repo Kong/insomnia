@@ -1,9 +1,7 @@
 import { HttpMethod } from "@package/enums/http-method";
-import { LintSeverity } from "@package/enums/lint-severity";
 import { RulesetType } from "@package/enums/ruleset-type";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
-  LintEntry,
   PathItem} from "@package/models/collection";
 import {
   Info,
@@ -30,11 +28,6 @@ export class SpecPage extends BasePage {
   // Spec editor / lint panel / legacy unit tests — rendered on a
   // Collection's landing view once it carries an ApiSpec (the former
   // standalone Document workspace's UI lives in this same view).
-  private readonly FORMAT_BUTTON = 'button[aria-label="Spec format"]';
-  private readonly LINT_ENTRY_ROW = "div[aria-expanded]";
-  private readonly LINT_PANEL = '[data-testid="lint-panel"]';
-  private readonly LINT_PANEL_TOGGLE = '[data-testid="lint-panel-toggle"]';
-  private readonly NO_LINT_PROBLEMS = "No lint problems";
   private readonly PANE_ONE = '[data-panel-id="spec-pane-one"]';
   private readonly SPEC_EDITOR = '[data-testid="CodeEditor"] .CodeMirror';
   private readonly VIEW_RULESET_BUTTON =
@@ -42,73 +35,6 @@ export class SpecPage extends BasePage {
 
   // --- Spec editor / lint panel / legacy unit tests (folded
   // into this page from the former standalone Document workspace) ---
-
-  /**
-   * Clicks the lint toggle to expand the lint panel if it isn't already
-   * open (the toggle otherwise collapses an already-open panel, so this
-   * checks first rather than clicking unconditionally), waiting for it to
-   * attach. A no-op if the spec has no content yet (the entire toolbar,
-   * including the toggle, only renders once a spec is present) or if there
-   * are no lint problems at all (the toggle only renders once
-   * `lintMessages.length > 0`).
-   */
-  async expandLintPanel(): Promise<void> {
-    if ((await this.page.locator(this.FORMAT_BUTTON).count()) === 0) return;
-    if (await this.page.getByText(this.NO_LINT_PROBLEMS).isVisible()) return;
-    if (!(await this.page.locator(this.LINT_PANEL).isVisible())) {
-      await this.page.locator(this.LINT_PANEL_TOGGLE).click();
-    }
-    await expect(this.page.locator(this.LINT_PANEL)).toBeAttached({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Reads every lint entry currently listed in the (already expanded) lint
-   * panel, expanding each one in turn to also collect its `lineRefs` — this
-   * leaves every entry expanded afterward, and costs one click per entry,
-   * so prefer `getLintEntryCodes()` when only the rule ids are needed (e.g.
-   * inside a poll).
-   */
-  async getLintEntries(): Promise<LintEntry[]> {
-    const rows = this.page.locator(this.LINT_PANEL).locator(this.LINT_ENTRY_ROW);
-    const rowCount = await rows.count();
-    const entries: LintEntry[] = [];
-
-    for (let i = 0; i < rowCount; i++) {
-      const row = rows.nth(i);
-      const summary = await this.getLintRowSummary(row);
-      if (!summary) continue;
-
-      if ((await row.getAttribute("aria-expanded")) !== "true") {
-        await row.getByRole("button").first().click();
-      }
-      const lineRefs = await row.getByText(/^Ln \d+$/).allInnerTexts();
-      entries.push({ ...summary, lineRefs });
-    }
-
-    return entries;
-  }
-
-  /**
-   * Reads the lint toggle's error/warning summary.
-   */
-  async getLintSummary(): Promise<
-    { errors: number; warnings: number } | "none"
-  > {
-    if (
-      (await this.page.locator(this.FORMAT_BUTTON).count()) === 0 ||
-      (await this.page.getByText(this.NO_LINT_PROBLEMS).isVisible())
-    ) {
-      return "none";
-    }
-    const text = await this.page.locator(this.LINT_PANEL_TOGGLE).innerText();
-    const match = text.match(/(\d+)\s+errors?,\s*(\d+)\s+warnings?/);
-    return {
-      errors: Number(match?.[1] ?? 0),
-      warnings: Number(match?.[2] ?? 0),
-    };
-  }
 
   /**
    * Reads the "OpenAPI x.y.z" version label shown in the toolbar's left
@@ -265,31 +191,5 @@ export class SpecPage extends BasePage {
     await expect(this.page.locator(rowSelector).first()).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
-  }
-
-  /**
-   * Parses a single lint entry row's header button — its rule id,
-   * occurrence count, description, and severity (from the warning-triangle
-   * vs. error-circle icon) — without expanding the row.
-   */
-  private async getLintRowSummary(
-    row: Locator,
-  ): Promise<Omit<LintEntry, "lineRefs"> | undefined> {
-    const header = row.getByRole("button").first();
-    const text = await header.innerText();
-    const match = text.match(/^\((\d+)\)\s*(\S+):\s*(.+)$/s);
-    if (!match) return undefined;
-
-    const severity =
-      (await header.locator('svg[data-icon="triangle-exclamation"]').count()) >
-      0
-        ? LintSeverity.Warning
-        : LintSeverity.Error;
-
-    return {
-      code: match[2],
-      description: match[3].trim(),
-      severity,
-    };
   }
 }
