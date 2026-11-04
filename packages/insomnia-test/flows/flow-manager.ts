@@ -1,7 +1,5 @@
 import type { PageManager } from "@package/pages/page-manager";
 
-import { AppFlow } from "./app.flow";
-import { CloudSyncFlow } from "./cloud-sync.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import type { FlowContext } from "./flow-context";
 import { FolderFlow } from "./folder.flow";
@@ -21,8 +19,6 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
-  appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
-  cloudSyncFlow: (m: FlowDeps): CloudSyncFlow => new CloudSyncFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),

@@ -1,5 +1,4 @@
 import type { HttpMethod } from "@package/enums/http-method";
-import type { LintSeverity } from "@package/enums/lint-severity";
 import type { RulesetType } from "@package/enums/ruleset-type";
 import type { Workspace } from "insomnia-data";
 
@@ -39,20 +38,6 @@ export type PathItem = Partial<
   >
 >;
 
-/** A single lint panel entry — the Spectral rule id, how many occurrences
- * fired it, its full description text (the message following the rule id,
- * e.g. `must have required property "paths"`), its severity, and the
- * "Ln N" reference for each occurrence (one per `count`, in panel order).
- * Read by `WorkspacePage.getLintEntries()`, which expands every entry to
- * collect `lineRefs` — for a cheap, non-expanding read of just the codes,
- * use `WorkspacePage.getLintEntryCodes()` instead. */
-export interface LintEntry {
-  code: string;
-  description: string;
-  severity: LintSeverity;
-  lineRefs: string[];
-}
-
 /** Built by `WorkspacePage.getSpecification()` from the spec's own "Info"/
  * "Paths" outline panel — not the raw spec text: that panel doesn't expose
  * `host`/`basePath`/`schemes` (no "Servers" section for a Swagger 2.0 doc)
@@ -76,15 +61,6 @@ export class Collection implements Pick<Workspace, "name"> {
    * the collection has no spec attached (no "Info" section renders). Not
    * set directly; read this instead of building it yourself. */
   specification?: Specification;
-
-  /** The lint panel's settled error/warning counts, fired rule codes, and
-   * (via `entries`) each rule's full description text — populated by
-   * `WorkspaceFlow.getLintState()`. Not set directly. */
-  lint?: {
-    errors: number;
-    warnings: number;
-    entries: LintEntry[];
-  };
 
   /** Whether a custom or the default Spectral ruleset is active — populated
    * by `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`. Not set directly. */
