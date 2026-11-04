@@ -4,7 +4,7 @@ import * as os from "node:os";
 import path from "node:path";
 
 import { FlowManager } from "@package/flows/flow-manager";
-import { SessionContext } from "@package/flows/session-context";
+import { SessionContext } from "@package/misc/session-context";
 import { PageManager } from "@package/pages/page-manager";
 import type {
   ElectronApplication,

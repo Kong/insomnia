@@ -2,6 +2,7 @@ import { ContextMenuItem } from '@package/enums/context-menu-items';
 import { ProjectType } from '@package/enums/project-types';
 import { TreeNodeType } from '@package/enums/tree-node-types';
 import { DEFAULT_TIMEOUT } from '@package/misc/constants';
+import type { FlowContext } from '@package/misc/flow-context';
 import { step } from "@package/misc/step";
 import { Collection } from '@package/models/collection';
 import { Environment } from '@package/models/environment';
@@ -10,7 +11,6 @@ import { Project } from '@package/models/project';
 import type { PageManager } from '@package/pages/page-manager';
 
 import { BaseFlow } from './base.flow';
-import type { FlowContext } from './flow-context';
 import type { PreferencesFlow } from './preferences.flow';
 
 interface RequestLookup<T> {

@@ -1,3 +1,4 @@
+import type { FlowContext } from "@package/misc/flow-context";
 import { step } from "@package/misc/step";
 import type { Collection } from "@package/models/collection";
 import {
@@ -9,7 +10,6 @@ import type { Project } from "@package/models/project";
 import type { PageManager } from "@package/pages/page-manager";
 
 import { BaseFlow } from "./base.flow";
-import type { FlowContext } from "./flow-context";
 import type { WorkspaceFlow } from "./workspace.flow";
 
 const BASE_ENVIRONMENT_NAME = "Base Environment";

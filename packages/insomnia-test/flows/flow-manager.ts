@@ -1,7 +1,7 @@
+import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
 import { EnvironmentFlow } from "./environment.flow";
-import type { FlowContext } from "./flow-context";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { PreferencesFlow } from "./preferences.flow";
