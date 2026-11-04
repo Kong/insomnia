@@ -1,5 +1,6 @@
 import Color from 'color';
 import type { ThemeSettings } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { getAppDefaultTheme } from 'insomnia-data/common';
 
 import type { PluginTheme, ThemeBlock } from '~/common/plugins/bridge-types';
@@ -291,7 +292,7 @@ export async function setTheme(themeName: string) {
   themeStyleSheets.set(themeName, styleSheet);
 
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
-  syncTitleBarColors();
+  await syncTitleBarColors();
 }
 
 export const baseTheme: CompleteStyleBlock = {
@@ -324,11 +325,18 @@ export const baseTheme: CompleteStyleBlock = {
   },
 };
 
-export function syncTitleBarColors() {
+export async function syncTitleBarColors() {
   const probe = document.createElement('div');
   probe.className = 'theme--app-header';
+  // Theme classes only set variables, so apply them to read the real colors
+  probe.style.backgroundColor = 'var(--color-bg)';
+  probe.style.color = 'var(--color-font)';
   document.body.append(probe);
   const { backgroundColor: color, color: symbolColor } = getComputedStyle(probe);
   probe.remove();
-  window.main?.setTitleBarColors({ color, symbolColor });
+  const { autoDetectColorScheme } = await services.settings.get();
+  const [red, green, blue] = (color.match(/\d+/g) ?? []).map(Number);
+  const isDark = 0.299 * red + 0.587 * green + 0.114 * blue < 128;
+  const themeSource = autoDetectColorScheme ? 'system' : isDark ? 'dark' : 'light';
+  window.main?.setTitleBarColors({ color, symbolColor, themeSource });
 }

@@ -317,7 +317,7 @@ export const go = (args?: string[]) => {
   // export can remove annotations and output to a file
 
   program
-    .name('restless-cli')
+    .name('rl')
     .version(version, '-v, --version')
     .description(
       `A CLI for Restless!
@@ -326,14 +326,14 @@ export const go = (args?: string[]) => {
   You can also point it at a git repository folder, or an Restless export file.
 
   Examples:
-  $ restless-cli run collection
-  $ restless-cli run test
-  $ restless-cli lint spec
-  $ restless-cli export spec
+  $ rl run collection
+  $ rl run test
+  $ rl lint spec
+  $ rl export spec
 
 
   Restless CLI also supports configuration files, by default it will look for .insorc in the current/provided working directory.
-  $ restless-cli export spec --config /some/path/.insorc
+  $ rl export spec --config /some/path/.insorc
 `,
     )
     .option('-w, --workingDir <dir>', 'set working directory/file: .insomnia folder, *.db.json, export.yaml', '')
@@ -619,7 +619,7 @@ export const go = (args?: string[]) => {
   TIP: If you're running "inso" inside a Git project, specify the path to the Insomnia YAML file containing the global environment using the "--globals" option.
   
   Example:
-    $ restless-cli run collection --globals /path/to/global-environment.yaml
+    $ rl run collection --globals /path/to/global-environment.yaml
                 `,
               );
               return process.exit(1);

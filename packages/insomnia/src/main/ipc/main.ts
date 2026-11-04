@@ -273,7 +273,7 @@ export interface RendererToMainBridgeAPI {
   electronStorage: electronStorageBridgeAPI;
   getAppMenu: () => Promise<AppMenuItem[]>;
   clickAppMenuItem: (path: number[]) => void;
-  setTitleBarColors: (options: { color: string; symbolColor: string }) => void;
+  setTitleBarColors: (options: { color: string; symbolColor: string; themeSource: 'system' | 'light' | 'dark' }) => void;
   sync: { resolveConflict: (options: unknown) => void; cancelConflict: (options: unknown) => void };
   showNunjucksContextMenu: (options: {
     key: string;

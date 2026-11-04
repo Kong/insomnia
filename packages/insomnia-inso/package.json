@@ -17,7 +17,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "restless-cli": "bin/inso"
+    "rl": "bin/inso"
   },
   "pkg": {
     "scripts": []

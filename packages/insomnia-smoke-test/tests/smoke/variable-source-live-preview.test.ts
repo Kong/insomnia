@@ -189,7 +189,7 @@ const assertOpenLandedOnSourceEditor = async (page: Page, scenario: (typeof SCEN
   }
   await expect.soft(page).toHaveURL(/debug\/request-group\//);
   await page
-    .getByLabel('Insomnia Tabs')
+    .getByLabel('Restless Tabs')
     .getByLabel(`tab-${scenario.request}`, { exact: true })
     .waitFor({ state: 'visible' });
   await expect.soft(page.getByRole('tab', { name: 'Environment' })).toHaveAttribute('aria-selected', 'true');

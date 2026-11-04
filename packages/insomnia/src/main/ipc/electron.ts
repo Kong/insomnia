@@ -11,7 +11,7 @@ import type {
   OpenDialogOptions,
   SaveDialogOptions,
 } from 'electron';
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron';
 import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
 
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
@@ -477,11 +477,23 @@ export function registerElectronHandlers() {
     const item = findAppMenuItem(path);
     item?.click(undefined, BrowserWindow.fromWebContents(event.sender), event.sender);
   });
-  ipcMainOn('setTitleBarColors', (event, { color, symbolColor }: { color: string; symbolColor: string }) => {
-    if (hasTitleBarOverlay()) {
-      BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay({ color, symbolColor });
-    }
-  });
+  ipcMainOn(
+    'setTitleBarColors',
+    (
+      event,
+      {
+        color,
+        symbolColor,
+        themeSource,
+      }: { color: string; symbolColor: string; themeSource: typeof nativeTheme.themeSource },
+    ) => {
+      // Without this, Linux draws the window buttons from the GTK theme
+      nativeTheme.themeSource = themeSource;
+      if (hasTitleBarOverlay()) {
+        BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay({ color, symbolColor });
+      }
+    },
+  );
   ipcMainHandle('readText', () => clipboard.readText());
 
   ipcMainHandle('writeText', (_, text: string) => clipboard.writeText(text));

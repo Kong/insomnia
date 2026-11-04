@@ -112,7 +112,7 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await this.page.getByRole('dialog').waitFor({ state: 'hidden' });
     await this.page
-      .getByLabel('Insomnia Tabs')
+      .getByLabel('Restless Tabs')
       .getByLabel(`tab-${name}`, { exact: true })
       .and(this.page.locator('[data-selected="true"]'))
       .waitFor({ state: 'visible' });

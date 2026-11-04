@@ -252,7 +252,7 @@ const _launchApp = async () => {
   // Handle URLs sent via command line args
   ipcMainOnce('halfSecondAfterAppStart', async () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
-    const args = process.argv.slice(1).filter(a => a !== '.');
+    const args = process.argv.slice(1).filter(a => a !== '.' && !a.startsWith('--'));
     console.log('[main] Check args and create windows', args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();

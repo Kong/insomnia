@@ -64,7 +64,7 @@ test.describe('Debug-Sidebar', () => {
       modifiers: ['ControlOrMeta'],
     });
     // Wait for tab appear
-    await page.getByLabel('Insomnia Tabs').getByLabel('tab-test folder', { exact: true }).click();
+    await page.getByLabel('Restless Tabs').getByLabel('tab-test folder', { exact: true }).click();
     await insomnia.navigationSidebar.clearFilter();
 
     // Open Generate code

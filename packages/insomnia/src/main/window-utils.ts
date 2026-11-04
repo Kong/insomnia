@@ -367,7 +367,6 @@ export function createWindow(): ElectronBrowserWindow {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
       preferencesItem,
-      changelogItem,
       {
         type: 'separator',
       },
@@ -434,6 +433,7 @@ export function createWindow(): ElectronBrowserWindow {
   const viewMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}View`,
     submenu: [
+      ...(isMac ? [] : [{ label: `${MNEMONIC_SYM}Minimize`, role: 'minimize' as const }, { type: 'separator' as const }]),
       {
         label: `Toggle ${MNEMONIC_SYM}Full Screen`,
         role: 'togglefullscreen',
@@ -557,6 +557,7 @@ export function createWindow(): ElectronBrowserWindow {
           }
         },
       },
+      changelogItem,
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
@@ -749,34 +750,13 @@ export function createWindow(): ElectronBrowserWindow {
       },
     ],
   };
-  const toolsMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Tools`,
-    submenu: [
-      {
-        label: `${MNEMONIC_SYM}Reload Plugins`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('reload-plugins');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Clear All Response History`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('clear-all-response-history');
-        },
-      },
-    ],
+  const reloadPluginsItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Reload Plugins`,
+    click: () => BrowserWindow.getFocusedWindow()?.webContents.send('reload-plugins'),
+  };
+  const clearResponseHistoryItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Clear All Response History`,
+    click: () => BrowserWindow.getFocusedWindow()?.webContents.send('clear-all-response-history'),
   };
   const template: MenuItemConstructorOptions[] = [];
   template.push(
@@ -791,16 +771,16 @@ export function createWindow(): ElectronBrowserWindow {
           },
         },
         openFolderItem,
+        { type: 'separator' },
+        reloadPluginsItem,
+        clearResponseHistoryItem,
         // macOS keeps these in the application menu
-        ...(isMac
-          ? []
-          : [{ type: 'separator' } as const, preferencesItem, changelogItem, { type: 'separator' } as const, quitItem]),
+        ...(isMac ? [] : [{ type: 'separator' } as const, preferencesItem, { type: 'separator' } as const, quitItem]),
       ],
     },
     editMenu,
     viewMenu,
-    windowMenu,
-    toolsMenu,
+    ...(isMac ? [windowMenu] : []),
     helpMenu,
   );
 

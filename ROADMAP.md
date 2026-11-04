@@ -28,7 +28,7 @@ Only Bruno: see phases 2 to 6.
 ## Distribution
 
 - [x] GitHub Releases: AppImage, tar.gz, deb, rpm, NSIS and dmg
-- [ ] AUR
+- [ ] AUR (planned; package ready, waiting for account registration to reopen)
 - [ ] winget
 - [ ] Own Homebrew tap, then homebrew-cask once eligible
 - [ ] Flathub
@@ -36,7 +36,7 @@ Only Bruno: see phases 2 to 6.
 - [ ] Nixpkgs
 - [ ] apt and dnf repositories
 - [ ] Scoop and Chocolatey
-- [ ] npm: `restless-cli`
+- [ ] npm: `restless-cli`, which installs the `rl` command
 - [ ] Windows code signing and macOS notarization
 
 ## Phase 0: Finish the fork

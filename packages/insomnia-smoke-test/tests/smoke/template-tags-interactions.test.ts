@@ -119,13 +119,13 @@ test('All built-in template tags render their expected preview value', async ({ 
   // send request first to populate response
   await insomnia.navigationSidebar.requestRow('Base Response').click({ modifiers: ['ControlOrMeta'] });
   // Wait for tab appear
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Base Response', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Base Response', { exact: true })).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
 
   await insomnia.navigationSidebar.requestRow('Response Tag').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Response Tag', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Response Tag', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
   for (const { tagPrefix, expectedResult } of templateTagTestCases.response) {
     await page.locator(`[data-template^="${tagPrefix}"]`).click();
@@ -156,7 +156,7 @@ test('Prompt tag caches values under the storage key and re-prompts once cleared
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await insomnia.navigationSidebar.requestRow('Prompt Tag Masked').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Prompt Tag Masked', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Prompt Tag Masked', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
 
   const tagPrefix = "{% prompt 'masked prompt test'";
@@ -220,7 +220,7 @@ test('File tag renders a legible error for a non-existent file path', async ({ p
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await insomnia.navigationSidebar.requestRow('File Tag Error').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('File Tag Error', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('File Tag Error', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
 
   const tagPrefix = "{% file '/path/does/not/exist/nope.txt' %}";
@@ -230,7 +230,7 @@ test('File tag renders a legible error for a non-existent file path', async ({ p
 
   const modal = page.getByRole('dialog');
   const previewError = modal.locator('.danger');
-  await expect.soft(previewError).toContainText('Insomnia cannot access the file');
+  await expect.soft(previewError).toContainText('Restless cannot access the file');
   await expect.soft(previewError).toContainText('/path/does/not/exist/nope.txt');
   await modal.getByRole('button', { name: 'Done' }).click();
 
@@ -253,7 +253,7 @@ test('Cookie tag renders a legible error for a cookie not present in the jar', a
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
   await insomnia.navigationSidebar.requestRow('Cookie Tag Error').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Cookie Tag Error', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Cookie Tag Error', { exact: true })).toBeVisible();
   await page.getByText('Body', { exact: true }).click();
 
   const tagPrefix = "{% cookie 'http://127.0.0.1:4010/echo', 'does-not-exist' %}";
@@ -290,7 +290,7 @@ test('Response tag trigger behaviors control when the dependent request is resen
   // request body, which aborts the send and surfaces an "Unexpected Request Failure" dialog rather
   // than a 200 response.
   await insomnia.navigationSidebar.requestRow('Response Trigger Never').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Response Trigger Never', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Response Trigger Never', { exact: true })).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   const failureDialog = page.getByRole('dialog').filter({ hasText: 'Unexpected Request Failure' });
   await expect.soft(failureDialog).toBeVisible();
@@ -300,7 +300,7 @@ test('Response tag trigger behaviors control when the dependent request is resen
   // 'no-history': with no stored response for the dependency, it resends and succeeds.
   await insomnia.navigationSidebar.requestRow('Response Trigger No History').click({ modifiers: ['ControlOrMeta'] });
   await expect.soft(
-    page.getByLabel('Insomnia Tabs').getByText('Response Trigger No History', { exact: true }),
+    page.getByLabel('Restless Tabs').getByText('Response Trigger No History', { exact: true }),
   ).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
@@ -309,7 +309,7 @@ test('Response tag trigger behaviors control when the dependent request is resen
   // 'when-expired' with maxAge=0: any existing response is immediately expired, so it resends every time.
   await insomnia.navigationSidebar.requestRow('Response Trigger When Expired').click({ modifiers: ['ControlOrMeta'] });
   await expect.soft(
-    page.getByLabel('Insomnia Tabs').getByText('Response Trigger When Expired', { exact: true }),
+    page.getByLabel('Restless Tabs').getByText('Response Trigger When Expired', { exact: true }),
   ).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
@@ -317,7 +317,7 @@ test('Response tag trigger behaviors control when the dependent request is resen
 
   // 'always': resends the dependency request every time regardless of history.
   await insomnia.navigationSidebar.requestRow('Response Trigger Always').click({ modifiers: ['ControlOrMeta'] });
-  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('Response Trigger Always', { exact: true })).toBeVisible();
+  await expect.soft(page.getByLabel('Restless Tabs').getByText('Response Trigger Always', { exact: true })).toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('"1"');

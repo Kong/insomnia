@@ -155,7 +155,7 @@ test.describe('Check vault used in environment', () => {
     });
 
     // Wait for tab appear
-    await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
+    await expect.soft(page.getByLabel('Restless Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
     await page.getByRole('tab', { name: 'Console' }).click();
@@ -173,7 +173,7 @@ test.describe('Check vault used in environment', () => {
     await insomnia.navigationSidebar.requestRow('legacy-object-vault').click({
       modifiers: ['ControlOrMeta'],
     });
-    await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
+    await expect.soft(page.getByLabel('Restless Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
     await expect.soft(page.locator('[data-testid="response-status-tag"]:visible')).toContainText('200');
 
@@ -192,7 +192,7 @@ test.describe('Check vault used in environment', () => {
       modifiers: ['ControlOrMeta'],
     });
     await expect
-      .soft(page.getByLabel('Insomnia Tabs').getByText('legacy-invalid-vault', { exact: true }))
+      .soft(page.getByLabel('Restless Tabs').getByText('legacy-invalid-vault', { exact: true }))
       .toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click(); // Expect to see error message
     await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();

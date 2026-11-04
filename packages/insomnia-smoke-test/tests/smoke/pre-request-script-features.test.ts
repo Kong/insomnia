@@ -563,7 +563,7 @@ test.describe('pre-request features tests', () => {
     });
 
     // switch back to request collection tab
-    await page.getByLabel('Insomnia Tabs').getByLabel('persist global environment').first().click();
+    await page.getByLabel('Restless Tabs').getByLabel('persist global environment').first().click();
     // activate global sub environment
     await page.getByLabel('Select a Project Environment').click();
     await page.getByRole('option', { name: 'Sub Script Env' }).click();

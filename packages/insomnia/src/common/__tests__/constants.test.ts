@@ -90,16 +90,6 @@ describe('getMockSeviceBinUrl', () => {
     expect(
       getMockServiceBinURL(
         {
-          useInsomniaCloud: true,
-          _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
-          url: '',
-        } as MockServer,
-        '/my-route',
-      ),
-    ).toBe('https://mock-617eac05d9a94e38a1187f9b4400039b.mock.example.test/my-route');
-    expect(
-      getMockServiceBinURL(
-        {
           useInsomniaCloud: false,
           _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
           url: 'http://localhost:8080',

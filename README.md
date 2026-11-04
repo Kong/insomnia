@@ -17,7 +17,7 @@ With Restless you can:
 - **Design APIs** with the OpenAPI editor, visual preview and Spectral linting.
 - **Test APIs** with scripts, test suites and the collection runner.
 - **Mock APIs** with a self-hosted mock server.
-- **Build CI/CD pipelines** with `restless-cli`.
+- **Build CI/CD pipelines** with the `rl` CLI.
 - **Extend it** with plugins and themes.
 
 Everything that needs an outside service is off until you enable it:
@@ -34,40 +34,17 @@ Restless is an independent fork under the Apache-2.0 license and is not affiliat
 
 Download the latest version from [GitHub Releases](https://github.com/outmanos/restless/releases/latest).
 
-### Windows
+| Platform                | Download                  |
+| ----------------------- | ------------------------- |
+| Windows                 | `.exe` installer          |
+| macOS (Apple Silicon)   | `.dmg`                    |
+| Any Linux               | `.AppImage` or `.tar.gz`  |
+| Debian, Ubuntu, Mint    | `.deb`                    |
+| Fedora, RHEL, openSUSE  | `.rpm`                    |
 
-Run the `.exe` installer from [Releases](https://github.com/outmanos/restless/releases/latest), or use winget:
+Windows and macOS builds are not signed yet, so you may see a warning on first launch.
 
-```bash
-winget install Outmanos.Restless
-```
-
-Windows builds are not code signed yet, so SmartScreen may warn you on first launch.
-
-### macOS
-
-Download the `.dmg` from [Releases](https://github.com/outmanos/restless/releases/latest), or use Homebrew:
-
-```bash
-brew install --cask outmanos/tap/restless
-```
-
-macOS builds are for Apple Silicon and are not notarized yet, so macOS will warn you on first launch.
-
-### Linux
-
-| Distribution            | Install                                                                            |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| Any                     | [`.AppImage` or `.tar.gz`](https://github.com/outmanos/restless/releases/latest)   |
-| Debian, Ubuntu, Mint    | [`.deb`](https://github.com/outmanos/restless/releases/latest)                     |
-| Fedora, RHEL, openSUSE  | [`.rpm`](https://github.com/outmanos/restless/releases/latest)                     |
-| Arch, Manjaro, CachyOS  | [`restless-bin`](https://aur.archlinux.org/packages/restless-bin) from the AUR     |
-
-On Arch-based distributions:
-
-```bash
-yay -S restless-bin
-```
+The AUR, winget, Homebrew, Flathub and Snap are planned.
 
 ## Bugs and Feature Requests
 

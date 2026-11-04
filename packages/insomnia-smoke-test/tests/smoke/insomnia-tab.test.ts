@@ -14,7 +14,7 @@ test.describe('multiple-tab feature test', () => {
     });
     await insomnia.navigationSidebar.requestRow('My first request').click({ modifiers: ['ControlOrMeta'] });
     await insomnia.navigationSidebar.requestRow('New Request').click({ modifiers: ['ControlOrMeta'] });
-    const tab = page.getByLabel('Insomnia Tabs').getByLabel(`tab-New Request`, { exact: true });
+    const tab = page.getByLabel('Restless Tabs').getByLabel(`tab-New Request`, { exact: true });
     await expect.soft(tab).toBeVisible();
     await expect.soft(tab).toHaveAttribute('data-selected', 'true');
     await tab.getByRole('button').click();
@@ -45,12 +45,12 @@ test.describe('multiple-tab feature test', () => {
     // "foo" lives in "Tab sync collection"; sidebar is currently focused on "My first collection".
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.clickRequestOrFolder('foo');
-    const tabA = page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true });
+    const tabA = page.getByLabel('Restless Tabs').getByLabel('tab-foo', { exact: true });
     await expect.soft(tabA).toHaveAttribute('data-selected', 'true');
     // "bar" lives in "My first collection"; clicking "foo" re-focused the sidebar on "Tab sync collection".
     await insomnia.navigationSidebar.backToAllProjects();
     await insomnia.navigationSidebar.clickRequestOrFolder('bar');
-    const tabB = page.getByLabel('Insomnia Tabs').getByLabel('tab-bar', { exact: true });
+    const tabB = page.getByLabel('Restless Tabs').getByLabel('tab-bar', { exact: true });
     await expect.soft(tabB).toHaveAttribute('data-selected', 'true');
 
     //change icon after change request method
@@ -78,7 +78,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('menuitem', { name: 'add request to current' }).waitFor({ state: 'visible' });
     await page.getByRole('menuitem', { name: 'add request to current' }).click();
     await insomnia.navigationSidebar.renameRequestOrFolder('New Request', 'plus request', 'Plus button collection');
-    await page.getByLabel('Insomnia Tabs').getByLabel('tab-plus request', { exact: true }).click();
+    await page.getByLabel('Restless Tabs').getByLabel('tab-plus request', { exact: true }).click();
 
     await page.mouse.move(0, 0);
     await insomnia.projectPage.navigateFromWorkspaceBreadcrumb();
