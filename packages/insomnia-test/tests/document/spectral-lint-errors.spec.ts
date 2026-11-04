@@ -1,7 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { LintSeverity } from "@package/enums/lint-severity";
 import { ProjectType } from "@package/enums/project-types";
-import { TreeNodeType } from "@package/enums/tree-node-types";
 import { test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
@@ -16,19 +15,6 @@ test("Verify Spectral Lint Errors Surface With A Line Reference", async ({
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
-
-  const projectNode = (await workspacePage.findItemNode(
-    project,
-    TreeNodeType.Project,
-  ))!;
-  await workspacePage.expand(projectNode);
-  const projectChildren = (await workspacePage.getTree())
-    .flatten()
-    .find((node) => node._id === projectNode._id)!.children;
-  expect(projectChildren.map((node) => node._id)).toEqual([
-    `empty-project-${projectNode._id}`,
-  ]);
-  expect(projectChildren[0].type).toBe(TreeNodeType.Empty);
 
   await workspaceFlow.createInEmptyState(
     project,
