@@ -101,7 +101,7 @@ function delayResponse(req: IncomingMessage) {
   if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
     return Promise.resolve();
   }
-  return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
+  return new Promise(resolve => setTimeout(resolve, Math.min(requestedDelayMs, MAX_REPLY_DELAY_MS)));
 }
 
 function parseCookies(header?: string) {
