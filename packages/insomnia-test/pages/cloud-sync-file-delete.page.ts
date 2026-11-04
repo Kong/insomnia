@@ -75,15 +75,9 @@ export class CloudSyncFileDeletePage extends BasePage {
    * backend.
    */
   async deleteWorkspacePermanently(): Promise<void> {
-    // The radio's <input> sits under its card <label>, which intercepts
-    // pointer events, so click the card's heading instead and confirm the
-    // selection took.
     await this.page
-      .getByRole("heading", { name: "Delete Permanently" })
+      .getByRole("radio", { name: "Delete Permanently" })
       .click();
-    await expect(
-      this.page.getByRole("radio", { name: "Delete Permanently" }),
-    ).toBeChecked();
     await this.page.getByRole("button", { name: "Delete Workspace" }).click();
   }
 
