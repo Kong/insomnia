@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class KonnectPage extends BasePage {
-
   /**
    * Confirms the organization switcher — the entry point into the Konnect
    * ("Control Planes") organization — is ready.
@@ -14,16 +13,4 @@ export class KonnectPage extends BasePage {
       this.page.getByRole("button", { name: "Organizations" }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
-
-
 }

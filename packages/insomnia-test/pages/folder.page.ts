@@ -30,7 +30,6 @@ export class FolderPage extends TabPanelPage {
     this.scripts = new ScriptTabComponent(page, FOLDER_PANE);
   }
 
-
   /**
    * Also rewires the composed Auth/Scripts tab components onto the new
    * window.

@@ -20,26 +20,4 @@ export class ProjectSettingsPage extends BasePage {
   async navigate(): Promise<void> {
     await expect(this.nameField).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

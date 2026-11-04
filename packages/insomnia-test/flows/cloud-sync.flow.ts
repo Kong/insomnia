@@ -28,7 +28,6 @@ export class CloudSyncFlow extends BaseFlow {
     await cloudSyncPage.fetchUnsyncedWorkspace(name);
   }
 
-
   /**
    * Stages `requestName`, commits with `message`, then pushes.
    */
@@ -38,12 +37,6 @@ export class CloudSyncFlow extends BaseFlow {
     await cloudSyncPage.openCommitDialog();
     await cloudSyncCommitDialogPage.commitAndPush(requestName, message);
   }
-
-
-
-
-
-
 
   /**
    * Deletes an unsynced remote file directly from its project dashboard

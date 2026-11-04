@@ -3,15 +3,11 @@ import { expect } from "@playwright/test";
 
 import { PreferencesTabPage } from "./preferences-tab.page";
 
-
-
-
 /**
  * The Preferences dialog's Plugins and Scripting tabs: plugin install /
  * generate / reload, and the template-tag and script sandbox switches.
  */
 export class PreferencesPluginsPage extends PreferencesTabPage {
-
   /**
    * Switches the open Preferences dialog to the Scripting tab, where the
    * template-tag sandbox toggle and per-rule-group sandbox switches live.
@@ -19,19 +15,6 @@ export class PreferencesPluginsPage extends PreferencesTabPage {
   async openScriptingTab(): Promise<void> {
     await this.dialog.getByRole("tab", { name: "Scripting" }).click();
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   /**
    * A custom-styled switch (Scripting tab, Settings.pluginSandboxEnabled)
@@ -52,7 +35,4 @@ export class PreferencesPluginsPage extends PreferencesTabPage {
       });
     }
   }
-
-
-
 }

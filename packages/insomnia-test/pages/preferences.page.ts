@@ -22,7 +22,6 @@ export class PreferencesPage extends PreferencesTabPage {
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
-
   /**
    * Opens the Preferences dialog via its trigger button and waits for it
    * to appear.
@@ -66,7 +65,6 @@ export class PreferencesPage extends PreferencesTabPage {
     }
   }
 
-
   /**
    * A custom-styled checkbox (General tab, Settings.showLegacyUnitTests)
    * whose native input ignores direct clicks — the wrapping label is the
@@ -85,10 +83,6 @@ export class PreferencesPage extends PreferencesTabPage {
       });
     }
   }
-
-
-
-
 
   /**
    * Adds `path` to "What folders can Insomnia access?" (General tab), so
@@ -197,7 +191,6 @@ export class PreferencesPage extends PreferencesTabPage {
       });
     }
   }
-
 
   /**
    * Fills the General tab's "Request timeout (ms)" field.

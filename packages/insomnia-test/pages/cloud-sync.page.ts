@@ -60,8 +60,6 @@ export class CloudSyncPage extends BasePage {
     await workspaceRow.click();
   }
 
-
-
   /**
    * Exits sidebar collection-focus mode (narrowed to one workspace) if
    * currently active, restoring the full project tree — needed before
@@ -83,7 +81,6 @@ export class CloudSyncPage extends BasePage {
     await expect(this.syncMenu).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
-
   /**
    * Opens the Commit modal via the sync dropdown's "Commit" action.
    */
@@ -94,10 +91,4 @@ export class CloudSyncPage extends BasePage {
       .click({ delay: 500 });
     await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
 }

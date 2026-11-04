@@ -68,11 +68,8 @@ export class Specification {
   ) {}
 }
 
-
-
 export class Collection implements Pick<Workspace, "name"> {
   id?: string;
-
 
   /** Read from the spec's own "Info"/"Paths" outline panel — populated by
    * `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`, left `undefined` if

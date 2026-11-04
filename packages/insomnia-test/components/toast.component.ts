@@ -24,7 +24,4 @@ export class ToastComponent extends BaseComponent {
   ): Promise<void> {
     await expect(this.toast(text).first()).toBeVisible({ timeout });
   }
-
-
-
 }

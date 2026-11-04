@@ -30,7 +30,6 @@ import { PreferencesPage } from "./preferences.page";
 import { PreferencesAiPage } from "./preferences-ai.page";
 import { PreferencesCredentialsPage } from "./preferences-credentials.page";
 import { PreferencesPluginsPage } from "./preferences-plugins.page";
-import { PreferencesVaultPage } from "./preferences-vault.page";
 import { ProjectPage } from "./project.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
@@ -105,8 +104,6 @@ const pageRegistry = {
     new PreferencesPluginsPage(page),
   preferencesAiPage: (page: Page): PreferencesAiPage =>
     new PreferencesAiPage(page),
-  preferencesVaultPage: (page: Page): PreferencesVaultPage =>
-    new PreferencesVaultPage(page),
   cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
     new CloudSyncCommitDialogPage(page),
   cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
@@ -139,7 +136,6 @@ export class PageManager {
   findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
     return findDocs(this.page, dbFile, query);
   }
-
 
   private getOrCreate(name: PageName): unknown {
     if (!this.instances.has(name)) {

@@ -122,7 +122,6 @@ export abstract class BaseFlow {
     );
   }
 
-
   /** Reads `id`'s currently-persisted document from the app's database. */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {
     return (await this.pageManager.findDocs(dbFile, { _id: id }))[0];

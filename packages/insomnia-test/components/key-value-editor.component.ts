@@ -48,7 +48,6 @@ export class KeyValueEditorComponent extends BaseComponent {
     );
   }
 
-
   get addButton(): Locator {
     return this.root.getByRole("button", { name: "Add", exact: true });
   }
@@ -80,7 +79,4 @@ export class KeyValueEditorComponent extends BaseComponent {
     }
     return pairs;
   }
-
-
-
 }

@@ -15,19 +15,6 @@ export class TabBarComponent extends BaseComponent {
     super(page, page.locator('[aria-label="Insomnia Tabs"]'));
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   async waitForSelectedKey(key: string): Promise<void> {
     await expect(
       this.root.locator(`[role="row"][data-key="${key}"][aria-selected="true"]`),

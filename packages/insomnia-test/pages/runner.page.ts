@@ -4,11 +4,8 @@ import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
-
-
 export class RunnerPage extends BasePage {
   private readonly REQUEST_PANE = '[data-testid="request-pane"]';
-
 
   // `exact` keeps this off the neighbouring "Run Options" dropdown trigger.
   private get runButton(): Locator {
@@ -16,7 +13,6 @@ export class RunnerPage extends BasePage {
       .locator(this.REQUEST_PANE)
       .getByRole("button", { name: "Run", exact: true });
   }
-
 
   /**
    * Waits for the "Run" button to become visible and the request-order
@@ -31,22 +27,4 @@ export class RunnerPage extends BasePage {
       this.page.locator(this.REQUEST_PANE).getByTestId(/^runner-request-list-/).first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

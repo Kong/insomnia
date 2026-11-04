@@ -183,5 +183,4 @@ export class PreferencesAiPage extends PreferencesTabPage {
   async clickDeactivateAiBackend(): Promise<void> {
     await this.page.getByRole("button", { name: "Deactivate" }).click();
   }
-
 }

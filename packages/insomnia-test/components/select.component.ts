@@ -13,7 +13,6 @@ import { BaseComponent } from "./base.component";
  * `data-testid="hidden-select-container"`; it is used to verify the value.
  */
 export class SelectComponent extends BaseComponent {
-
   // Scoped to the Select popover: pages such as the multipart body editor also
   // render their own listbox ("Key-value pairs"), which would trip strict mode.
   get listbox(): Locator {
@@ -51,6 +50,5 @@ export class SelectComponent extends BaseComponent {
       .first()
       .inputValue();
   }
-
 }
 

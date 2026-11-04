@@ -3,9 +3,7 @@ import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
-
 export class MockServerPage extends BasePage {
-
   /**
    * Waits for the Mock Server view's route sidebar to be visible.
    */
@@ -14,29 +12,4 @@ export class MockServerPage extends BasePage {
       this.page.getByRole("button", { name: "New Mock Route" }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

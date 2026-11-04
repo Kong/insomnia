@@ -35,11 +35,6 @@ export class ProjectPage extends BasePage {
     });
   }
 
-
-
-
-
-
   /**
    * Selects a project type in the create-project dialog. For Local and
    * Cloud projects, waits for the Create button to become enabled. For Git
@@ -66,5 +61,4 @@ export class ProjectPage extends BasePage {
       this.page.getByRole("button", { name: "Create", exact: true }),
     ).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
   }
-
 }

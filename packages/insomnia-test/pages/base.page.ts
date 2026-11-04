@@ -148,9 +148,4 @@ export abstract class BasePage {
   ): Promise<T> {
     return waitForStableValue(read, stableReads, timeout);
   }
-
-
-
-
-
 }

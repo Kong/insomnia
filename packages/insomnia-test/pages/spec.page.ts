@@ -26,9 +26,6 @@ const METHOD_LABELS: Record<string, HttpMethod> = {
   OPTIONS: HttpMethod.Options,
 };
 
-
-
-
 export class SpecPage extends BasePage {
   // Spec editor / lint panel / legacy unit tests — rendered on a
   // Collection's landing view once it carries an ApiSpec (the former
@@ -45,9 +42,6 @@ export class SpecPage extends BasePage {
 
   // --- Spec editor / lint panel / legacy unit tests (folded
   // into this page from the former standalone Document workspace) ---
-
-
-
 
   /**
    * Clicks the lint toggle to expand the lint panel if it isn't already
@@ -68,7 +62,6 @@ export class SpecPage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
 
   /**
    * Reads every lint entry currently listed in the (already expanded) lint
@@ -96,7 +89,6 @@ export class SpecPage extends BasePage {
 
     return entries;
   }
-
 
   /**
    * Reads the lint toggle's error/warning summary.
@@ -145,7 +137,6 @@ export class SpecPage extends BasePage {
       .isVisible();
     return isCustom ? RulesetType.Custom : RulesetType.Default;
   }
-
 
   /**
    * Reads the spec's own "Info"/"Paths" outline panel (the collapsible
@@ -212,11 +203,6 @@ export class SpecPage extends BasePage {
     return new Specification(info, paths);
   }
 
-
-
-
-
-
   /**
    * Waits for the spec's CodeMirror editor to become visible, confirming
    * the collection's spec/landing view is ready for interaction.
@@ -254,13 +240,6 @@ export class SpecPage extends BasePage {
     );
   }
 
-
-
-
-
-
-
-
   /**
    * Replaces the entire spec editor's content via CodeMirror's
    * `setValue()` API.
@@ -273,11 +252,6 @@ export class SpecPage extends BasePage {
       text,
     );
   }
-
-
-
-
-
 
   private async expandOutlineSection(
     button: Locator,

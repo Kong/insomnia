@@ -77,8 +77,6 @@ const OAUTH2_ADVANCED_FIELDS: OAuth2TextField[] = [
   "origin",
 ];
 
-
-
 // A request's auth lives on the Request document; a folder's own auth
 // (inherited by its children) on the RequestGroup document.
 const AUTH_DB_FILES = [
@@ -118,7 +116,6 @@ export class AuthTabComponent extends TabPanelPage {
     return `${this.PANE} [aria-label="Change Authentication type"]`;
   }
 
-
   /**
    * Expands the OAuth 2.0 Auth tab's "Advanced Options" accordion
    * (Scope/State/Credentials/Header Prefix/Audience/Resource/Origin,
@@ -137,8 +134,6 @@ export class AuthTabComponent extends TabPanelPage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
-
 
   /**
    * Switches to the Auth tab, opens the auth-type dropdown, and selects
@@ -398,7 +393,6 @@ export class AuthTabComponent extends TabPanelPage {
     await this.toggle(id).set(enabled);
   }
 
-
   /**
    * Polls the on-disk request/folder documents until a single one holds
    * every edit in `edits` at once. The app's debounced editors can save
@@ -482,5 +476,4 @@ export class AuthTabComponent extends TabPanelPage {
       .getByTestId(`auth-field-${label.replace(/ /g, "-")}`)
       .locator(".CodeMirror");
   }
-
 }

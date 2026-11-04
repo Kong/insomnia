@@ -222,15 +222,6 @@ export class WorkspacePage extends BasePage {
 
   private readonly PROMPT_INPUT: string = 'input[id="prompt-input"]';
 
-
-
-
-
-
-
-
-
-
   /**
    * Locates a context-menu item by name, matching either a menuitem or a
    * menuitemradio role since some menu entries render as radio options.
@@ -253,7 +244,6 @@ export class WorkspacePage extends BasePage {
     await this.getContextMenuItem(item).click();
   }
 
-
   /**
    * Clicks the "Create" button and waits for the create/update dialog to
    * close.
@@ -269,10 +259,6 @@ export class WorkspacePage extends BasePage {
       .waitFor({ state: "hidden", timeout: timeoutMs });
   }
 
-
-
-
-
   /**
    * Clicks the "Create" button in the duplicate-request dialog and waits
    * for the dialog to close.
@@ -284,11 +270,6 @@ export class WorkspacePage extends BasePage {
       .click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
 
   /**
    * Scrolls a tree node's row into view and left-clicks it.
@@ -321,14 +302,6 @@ export class WorkspacePage extends BasePage {
   async expand(node: TreeNode): Promise<void> {
     await this.treeNav.expandByKey(node._id, node.name);
   }
-
-
-
-
-
-
-
-
 
   /**
    * Clicks the "Rename" button in the currently open dialog and waits
@@ -472,8 +445,6 @@ export class WorkspacePage extends BasePage {
     await this.navigate();
   }
 
-
-
   /**
    * Convenience accessor for the full flattened list of tree nodes.
    */
@@ -530,7 +501,6 @@ export class WorkspacePage extends BasePage {
     await this.waitForTreeSettled();
   }
 
-
   /**
    * Checks whether a request currently appears in the sidebar's
    * top-level "Pinned" section (distinct from its regular row in its
@@ -543,7 +513,6 @@ export class WorkspacePage extends BasePage {
         .count()) > 0
     );
   }
-
 
   /**
    * Reads the request-type label (e.g. GET, GraphQL) shown next to a
@@ -631,7 +600,6 @@ export class WorkspacePage extends BasePage {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
-
   /**
    * Presses the mouse down on a tree node's row and nudges it a few
    * pixels, crossing react-aria's own drag-start threshold so the row
@@ -681,7 +649,6 @@ export class WorkspacePage extends BasePage {
     await this.page.mouse.move(x, y, { steps: 1 });
   }
 
-
   /**
    * Releases the mouse button, committing whichever drop target the last
    * `dragOver()` call left the indicator on.
@@ -689,7 +656,6 @@ export class WorkspacePage extends BasePage {
   async releaseDrag(): Promise<void> {
     await this.page.mouse.up();
   }
-
 
   /**
    * Reads the sidebar's currently rendered drop indicator — the custom
@@ -743,9 +709,6 @@ export class WorkspacePage extends BasePage {
   private dragRow(node: TreeNode): Locator {
     return this.treeNav.containerRow(node._id);
   }
-
-
-
 
   /**
    * Fills the generic prompt input (used for naming new items such as
@@ -823,7 +786,4 @@ export class WorkspacePage extends BasePage {
     }
     return undefined;
   }
-
-
-
 }

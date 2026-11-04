@@ -24,7 +24,6 @@ export class PreferencesCredentialsPage extends PreferencesTabPage {
     await this.dialog.getByRole("tab", { name: "Credentials" }).click();
   }
 
-
   /**
    * Adds an AWS cloud (vault) credential from the Credentials tab's
    * "Service Provider Credential List", which must already be open (see

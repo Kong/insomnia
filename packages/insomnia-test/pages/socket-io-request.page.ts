@@ -7,10 +7,6 @@ export class SocketIORequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
   protected readonly persistedDbFile = "insomnia.SocketIORequest.db";
 
-
-
-
-
   /**
    * Clicks Connect and waits for the button to flip to "Disconnect", so a
    * following send doesn't race the handshake and get dropped.

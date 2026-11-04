@@ -38,8 +38,4 @@ export class FolderFlow extends BaseFlow {
     folder.id = node._id;
     return folder;
   }
-
-
-
-
 }

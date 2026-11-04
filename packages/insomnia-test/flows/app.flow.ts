@@ -3,10 +3,6 @@ import { step } from "@package/misc/step";
 import { BaseFlow } from "./base.flow";
 
 export class AppFlow extends BaseFlow {
-
-
-
-
   /**
    * Reads the main process's `userData` directory — the same path
    * Insomnia backs up its NeDB `.db` files under (`<dataPath>/backups`).
@@ -17,7 +13,6 @@ export class AppFlow extends BaseFlow {
       app.getPath("userData"),
     );
   }
-
 
   /**
    * Captures every line the main process writes to stdout/stderr while
@@ -44,5 +39,4 @@ export class AppFlow extends BaseFlow {
     }
     return lines;
   }
-
 }

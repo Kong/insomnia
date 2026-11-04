@@ -60,7 +60,6 @@ export type WorkspaceItem =
   | (SocketIORequest & { kind: 'socketIO' })
   | (WebSocketRequest & { kind: 'webSocket' });
 
-
 export class WorkspaceFlow extends BaseFlow {
   constructor(
     context: FlowContext,
@@ -90,8 +89,6 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(await this.getProject(item.name), item.name);
   }
 
-
-
   /**
    * Creates a Collection under `parent`. If it carries a `spec`, authors
    * it into the spec editor right after creation and returns the fuller
@@ -118,7 +115,6 @@ export class WorkspaceFlow extends BaseFlow {
     }
     return this.assertCreated(await this.getCollection(item.name), item.name);
   }
-
 
   /**
    * Creates an Environment under `parent`.
@@ -156,16 +152,6 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(await this.getCollection(collection.name), collection.name);
   }
 
-
-
-
-
-
-
-
-
-
-
   /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
    */
@@ -180,7 +166,6 @@ export class WorkspaceFlow extends BaseFlow {
     const newNode = await workspace.findNode(newName, TreeNodeType.Request);
     return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
   }
-
 
   /**
    * Right-clicks the tree node matching `request` and pins it via the
@@ -217,14 +202,8 @@ export class WorkspaceFlow extends BaseFlow {
     await workspacePage.clickContextMenu(action);
   }
 
-
-
-
-
   // Project is deliberately not accepted, since its context menu has no
   // "Rename" entry — use `renameProject()` for that.
-
-
 
   /**
    * Resolves any workspace item (project, collection, MCP client, or any
@@ -243,7 +222,6 @@ export class WorkspaceFlow extends BaseFlow {
     const result = node ? await this.getResolved(node, { name: node.name, id: node._id }) : undefined;
     return result as T | undefined;
   }
-
 
   /**
    * Finds the tree node matching `item` and returns it as a Collection
@@ -288,10 +266,6 @@ export class WorkspaceFlow extends BaseFlow {
 
     return collection;
   }
-
-
-
-
 
   /**
    * Expands the lint panel and polls the lint summary until it reports at
@@ -339,11 +313,6 @@ export class WorkspaceFlow extends BaseFlow {
       entries,
     };
   }
-
-
-
-
-
 
   /**
    * Types `spec` into `name`'s spec editor right after creation —
@@ -454,9 +423,4 @@ export class WorkspaceFlow extends BaseFlow {
     const collection = await this.getCollection(resolved);
     return collection && { ...collection, kind: 'collection' };
   }
-
-
-
-
-
 }
