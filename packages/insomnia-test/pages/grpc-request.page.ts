@@ -10,6 +10,7 @@ const MESSAGE_TAB_KEY = "method-type";
 
 export class GrpcRequestPage extends RequestPage {
   private readonly GRPC_METHOD_BUTTON = `${this.PANE} button[aria-label="Select gRPC method"]`;
+  private readonly MESSAGE_TAB = `${this.PANE} [data-key="${MESSAGE_TAB_KEY}"][role="tab"]`;
   private readonly METHOD_SELECT = `${this.PANE} [data-testid="hidden-select-container"] select`;
   private readonly SERVER_REFLECTION_BUTTON = `${this.PANE} button[data-testid="button-server-reflection"]`;
   /** Unary reads "Send"; server/client/bidi streaming methods read "Start" until running, then "Cancel". */
@@ -41,7 +42,7 @@ export class GrpcRequestPage extends RequestPage {
    */
   async commit(): Promise<void> {
     await this.switchTab(MESSAGE_TAB_KEY);
-    await this.page.locator(this.PANE).getByRole("button", { name: /^Commit\b/ }).click();
+    await this.page.locator(this.PANE).getByRole("button", { name: "Commit", exact: true }).click();
   }
 
   /**
@@ -75,7 +76,7 @@ export class GrpcRequestPage extends RequestPage {
    * exists.
    */
   async getBody(): Promise<string | undefined> {
-    const tab = this.tabs.tab(MESSAGE_TAB_KEY);
+    const tab = this.page.locator(this.MESSAGE_TAB);
     if ((await tab.count()) === 0) return undefined;
     await tab.click();
     const editor = this.page.locator(`${this.TABPANEL} .CodeMirror`).first();
@@ -162,6 +163,6 @@ export class GrpcRequestPage extends RequestPage {
    */
   async clickStream(): Promise<void> {
     await this.waitForRendererIdle();
-    await this.page.locator(this.PANE).getByRole("button", { name: /^Stream\b/ }).click();
+    await this.page.locator(this.PANE).getByRole("button", { name: "Stream", exact: true }).click();
   }
 }

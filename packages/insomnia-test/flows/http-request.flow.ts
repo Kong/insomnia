@@ -8,6 +8,7 @@ import type { Folder } from "@package/models/folder";
 import type { RequestAuthentication, RequestParameter } from "@package/models/http-request";
 import { HttpRequest } from "@package/models/http-request";
 import type { ResponseView } from "@package/models/response";
+import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import type { HttpRequestPage } from "@package/pages/http-request.page";
 
 import { BaseFlow } from "./base.flow";

@@ -1,5 +1,4 @@
 import { ResponseViewerComponent } from '@package/components/response-viewer.component';
-import { TabsComponent } from "@package/components/tabs.component";
 import { RequestState } from '@package/enums/request-state';
 import type { ResponseExportOption } from '@package/enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';

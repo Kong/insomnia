@@ -1,5 +1,3 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -11,20 +9,18 @@ import { BasePage } from "./base.page";
  * dropdown via `GitSyncPage.openBranchesDialog()`.
  */
 export class GitBranchesDialogPage extends BasePage {
-  private readonly branchesModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Branches" }),
-  );
-  private readonly mergeConflictsModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Resolve conflicts" }),
-  );
+  private readonly branchesDialog = this.page.getByRole("dialog", {
+    name: "Branches",
+  });
+  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
+    name: "Resolve conflicts",
+  });
 
   /**
    * Waits for the Branches modal to be visible.
    */
   async navigate(): Promise<void> {
-    await this.branchesModal.waitForVisible();
+    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -35,13 +31,13 @@ export class GitBranchesDialogPage extends BasePage {
    * have been called first.
    */
   async createBranch(branch: string): Promise<void> {
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByRole("textbox", { name: "New branch name:" })
       .fill(branch);
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByRole("button", { name: "Create", exact: true })
       .click();
-    await expect(this.branchesModal.root.getByText(`${branch} *`)).toBeVisible({
+    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -51,7 +47,7 @@ export class GitBranchesDialogPage extends BasePage {
    * `openBranchesDialog()` to have been called first.
    */
   async checkoutBranch(branch: string): Promise<void> {
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByRole("row", { name: branch, exact: true })
       .getByRole("button", { name: "Checkout" })
       .click();
@@ -62,7 +58,7 @@ export class GitBranchesDialogPage extends BasePage {
    * prompt. Requires `openBranchesDialog()` to have been called first.
    */
   async deleteBranch(branch: string): Promise<void> {
-    const row = this.branchesModal.root.getByRole("row", {
+    const row = this.branchesDialog.getByRole("row", {
       name: branch,
       exact: true,
     });
@@ -75,7 +71,7 @@ export class GitBranchesDialogPage extends BasePage {
    * Requires `openBranchesDialog()` to have been called first.
    */
   async mergeBranch(branch: string): Promise<void> {
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByLabel(branch, { exact: true })
       .getByRole("button", { name: "Merge" })
       .click();
@@ -89,10 +85,10 @@ export class GitBranchesDialogPage extends BasePage {
    * called first.
    */
   async submitNewBranch(branch: string): Promise<void> {
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByRole("textbox", { name: "New branch name:" })
       .fill(branch);
-    await this.branchesModal.root
+    await this.branchesDialog
       .getByRole("button", { name: "Create", exact: true })
       .click();
   }
@@ -103,7 +99,7 @@ export class GitBranchesDialogPage extends BasePage {
    * to appear. Requires `openBranchesDialog()` to have been called first.
    */
   async getNewBranchError(): Promise<string> {
-    const error = this.branchesModal.root.getByTestId("git-branch-create-error");
+    const error = this.branchesDialog.getByTestId("git-branch-create-error");
     await expect(error).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await error.innerText()).trim();
   }
@@ -124,7 +120,7 @@ export class GitBranchesDialogPage extends BasePage {
    */
   async getRemoteBranches(): Promise<string[]> {
     await expect(
-      this.branchesModal.root.getByText("Fetching remote branches..."),
+      this.branchesDialog.getByText("Fetching remote branches..."),
     ).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     return this.readBranchRows("Remote Branches list");
   }
@@ -135,17 +131,13 @@ export class GitBranchesDialogPage extends BasePage {
    * `openBranchesDialog()` to have been called first.
    */
   async checkoutRemoteBranch(branch: string): Promise<void> {
-    await new TableComponent(
-      this.page,
-      this.branchesModal.root.getByRole("grid", {
-        name: "Remote Branches list",
-        exact: true,
-      }),
-    )
-      .rows.filter({ hasText: branch })
+    await this.branchesDialog
+      .getByRole("grid", { name: "Remote Branches list", exact: true })
+      .getByRole("row")
+      .filter({ hasText: branch })
       .getByRole("button", { name: "Fetch and checkout" })
       .click();
-    await expect(this.branchesModal.root.getByText(`${branch} *`)).toBeVisible({
+    await expect(this.branchesDialog.getByText(`${branch} *`)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -157,25 +149,28 @@ export class GitBranchesDialogPage extends BasePage {
    * close. Call after `mergeBranch()` or `pull()` hit conflicts.
    */
   async resolveMergeConflicts(version: "Current" | "Incoming"): Promise<void> {
-    await this.mergeConflictsModal.waitForVisible();
-    const rows = new TableComponent(
-      this.page,
-      this.mergeConflictsModal.root.getByRole("grid", { name: "Conflicted changes" }),
-    ).rows;
+    await expect(this.mergeConflictsDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const rows = this.mergeConflictsDialog
+      .getByRole("grid", { name: "Conflicted changes" })
+      .getByRole("row");
     const count = await rows.count();
     for (let i = 0; i < count; i++) {
       await rows.nth(i).click();
-      await this.mergeConflictsModal.root
+      await this.mergeConflictsDialog
         .getByRole("button", {
           name: `Take all ${version.toLowerCase()} changes`,
         })
         .click();
       await this.page.getByRole("button", { name: "Confirm" }).click();
     }
-    await this.mergeConflictsModal.root
+    await this.mergeConflictsDialog
       .getByRole("button", { name: "Resolve conflicts" })
       .click();
-    await this.mergeConflictsModal.waitForHidden();
+    await expect(this.mergeConflictsDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -191,7 +186,7 @@ export class GitBranchesDialogPage extends BasePage {
   private async readBranchRows(
     list: "Branches list" | "Remote Branches list",
   ): Promise<string[]> {
-    const rows = this.branchesModal.root
+    const rows = this.branchesDialog
       .getByRole("grid", { name: list, exact: true })
       .locator('[role="row"][data-key]');
     const texts = await rows.allInnerTexts();

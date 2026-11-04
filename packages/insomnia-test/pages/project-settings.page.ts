@@ -1,5 +1,3 @@
-import { BannerComponent } from "@package/components/banner.component";
-import { ModalComponent } from "@package/components/modal.component";
 import type { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
@@ -8,11 +6,9 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ProjectSettingsPage extends BasePage {
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Create or update dialog" }),
-  );
-  private readonly dialog = this.modal.root;
+  private readonly dialog = this.page.getByRole("dialog", {
+    name: "Create or update dialog",
+  });
   private readonly relocateButton = this.dialog.getByRole("button", {
     name: "Move repository to another folder",
   });
@@ -40,11 +36,9 @@ export class ProjectSettingsPage extends BasePage {
     name: "Open",
     exact: true,
   });
-  private readonly trustFolderModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Do you trust this folder?" }),
-  );
-  private readonly trustFolderDialog = this.trustFolderModal.root;
+  private readonly trustFolderDialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Do you trust this folder?" });
 
   /**
    * Waits for the Project Settings form's "Project name" field to become
@@ -68,7 +62,7 @@ export class ProjectSettingsPage extends BasePage {
    * as a side effect — don't call `close()` afterward.
    */
   async clickUpdate(): Promise<void> {
-    await this.modal.clickButton("Update", false);
+    await this.dialog.getByRole("button", { name: "Update" }).click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -86,9 +80,9 @@ export class ProjectSettingsPage extends BasePage {
    * Restriction Banner").
    */
   async getBannerText(label: string): Promise<string | undefined> {
-    const banner = new BannerComponent(this.page, this.page.getByLabel(label));
+    const banner = this.page.getByLabel(label);
     if (!(await banner.isVisible())) return undefined;
-    return banner.text();
+    return (await banner.innerText()).trim();
   }
 
   /**
@@ -214,7 +208,9 @@ export class ProjectSettingsPage extends BasePage {
     await expect(this.trustFolderDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
-    await this.trustFolderModal.clickButton("Open folder", false);
+    await this.trustFolderDialog
+      .getByRole("button", { name: "Open folder" })
+      .click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 

@@ -1,4 +1,3 @@
-import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -15,15 +14,15 @@ export class GitSyncPage extends BasePage {
   private readonly syncMenu = this.page.getByRole("menu", {
     name: "Git Sync",
   });
-  private readonly commitModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Commit Changes" }),
-  );
-  private readonly branchesModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Branches" }),
-  );
-  private readonly historyModal = ModalComponent.byTitle(this.page, "History");
+  private readonly commitDialog = this.page.getByRole("dialog", {
+    name: "Commit Changes",
+  });
+  private readonly branchesDialog = this.page.getByRole("dialog", {
+    name: "Branches",
+  });
+  private readonly historyDialog = this.page
+    .getByRole("dialog")
+    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
 
   /**
    * Waits for a Git Sync surface to become visible: the inline
@@ -128,8 +127,8 @@ export class GitSyncPage extends BasePage {
       }
       await commitItem.click();
     }).toPass({ timeout: DEFAULT_TIMEOUT * 3 });
-    await this.commitModal.waitForVisible();
-    await expect(this.commitModal.root).not.toHaveAttribute(
+    await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await expect(this.commitDialog).not.toHaveAttribute(
       "data-loading",
       "true",
       {
@@ -137,7 +136,7 @@ export class GitSyncPage extends BasePage {
       },
     );
     await expect(
-      this.commitModal.root.locator('[role="row"][data-key]').first(),
+      this.commitDialog.locator('[role="row"][data-key]').first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -153,7 +152,7 @@ export class GitSyncPage extends BasePage {
   async openHistory(): Promise<void> {
     await this.openSyncMenu();
     await this.syncMenu.getByTestId("git-sync-menu-history").click();
-    await this.historyModal.waitForVisible();
+    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -164,7 +163,7 @@ export class GitSyncPage extends BasePage {
     await this.syncMenu
       .getByRole("menuitemradio", { name: "Branches", exact: true })
       .click();
-    await this.branchesModal.waitForVisible();
+    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**

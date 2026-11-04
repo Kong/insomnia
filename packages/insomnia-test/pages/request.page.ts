@@ -676,8 +676,8 @@ export abstract class RequestPage extends BasePage {
    */
   async setDocsMode(mode: "write" | "preview"): Promise<void> {
     await this.switchTab("docs");
-    await new TabsComponent(this.page, this.page.locator(this.TABPANEL))
-      .tab(mode)
+    await this.page
+      .locator(`${this.TABPANEL} [data-key="${mode}"][role="tab"]`)
       .click();
   }
 

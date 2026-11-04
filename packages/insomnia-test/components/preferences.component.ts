@@ -118,7 +118,7 @@ export class PreferencesComponent extends PreferencesTabComponent {
    * Export/Import shortcuts live.
    */
   async openDataTab(): Promise<void> {
-    await this.tabs.tabByName("Data").click();
+    await this.dialog.getByRole("tab", { name: "Data" }).click();
   }
 
   /**

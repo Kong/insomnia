@@ -85,30 +85,6 @@ const pageRegistry = {
     new PreferencesAiComponent(page),
   preferencesVault: (page: Page): PreferencesVaultComponent =>
     new PreferencesVaultComponent(page),
-  importPage: (page: Page): ImportPage =>
-    new ImportPage(page),
-  invitePage: (page: Page): InvitePage =>
-    new InvitePage(page),
-  konnectPage: (page: Page): KonnectPage =>
-    new KonnectPage(page),
-  mcpClientPage: (page: Page): McpClientPage =>
-    new McpClientPage(page),
-  mockServerPage: (page: Page): MockServerPage =>
-    new MockServerPage(page),
-  projectSettingsPage: (page: Page): ProjectSettingsPage =>
-    new ProjectSettingsPage(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
-  runnerPage: (page: Page): RunnerPage =>
-    new RunnerPage(page),
-  socketIoRequestPage: (page: Page): SocketIORequestPage =>
-    new SocketIORequestPage(page),
-  templateTagPage: (page: Page): TemplateTagPage =>
-    new TemplateTagPage(page),
-  variableSourcePage: (page: Page): VariableSourcePage =>
-    new VariableSourcePage(page),
-  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
-    new WebSocketRequestPage(page),
   cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
     new CloudSyncCommitDialogPage(page),
   cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
@@ -149,14 +125,8 @@ export class PageManager {
    */
   setWindow(page: Page): void {
     this.page = page;
-    for (const [name, instance] of this.instances) {
-      if (typeof (instance as BasePage).setContext === "function") {
-        // Pages are rewired in place so references a spec already holds stay valid.
-        (instance as BasePage).setContext(page);
-      } else {
-        // Components bind their root locator to the old window at construction, so rebuild.
-        this.instances.set(name, pageRegistry[name as PageName](page));
-      }
+    for (const instance of this.instances.values()) {
+      (instance as BasePage).setContext(page);
     }
   }
 

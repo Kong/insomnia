@@ -1,5 +1,3 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TableComponent } from "@package/components/table.component";
 import { EnabledLabelToggleComponent } from "@package/components/toggle.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { ClientCertificate } from "@package/models/client-certificate";
@@ -18,14 +16,10 @@ export class CertificatesPage extends BasePage {
    * that outer element, matching how every row lookup below needs to see
    * the grid's rendered content.
    */
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Manage Certificates" })
-      .first(),
-  );
-  private readonly dialog = this.modal.root;
+  private readonly dialog = this.page
+    .getByRole("dialog")
+    .filter({ hasText: "Manage Certificates" })
+    .first();
 
   /**
    * Waits for the "Manage Certificates" dialog to become visible,
@@ -48,8 +42,8 @@ export class CertificatesPage extends BasePage {
    * Closes the "Manage Certificates" dialog via its "Done" button.
    */
   async close(): Promise<void> {
-    await this.modal.clickButton("Done", false);
-    await this.modal.waitForHidden();
+    await this.dialog.getByRole("button", { name: "Done" }).click();
+    await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -79,12 +73,10 @@ export class CertificatesPage extends BasePage {
     await this.dialog
       .getByRole("button", { name: "Add client certificate" })
       .click();
-    const formModal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", { name: "Add Client Certificate" }),
-    );
-    const form = formModal.root;
-    await formModal.expectOpen();
+    const form = this.page.getByRole("dialog", {
+      name: "Add Client Certificate",
+    });
+    await expect(form).toBeVisible({ timeout: DEFAULT_TIMEOUT });
 
     await form.locator('input[name="host"]').fill(certificate.host);
     const fileInputs = form.locator('input[type="file"]');
@@ -93,7 +85,8 @@ export class CertificatesPage extends BasePage {
     if (certificate.passphrase !== undefined) {
       await form.locator('input[name="passphrase"]').fill(certificate.passphrase);
     }
-    await formModal.confirm("Add certificate");
+    await form.getByRole("button", { name: "Add certificate", exact: true }).click();
+    await expect(form).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     await expect(this.clientCertificateRow(certificate.host)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -131,7 +124,7 @@ export class CertificatesPage extends BasePage {
    * unique per test, so no further disambiguation is needed.
    */
   private clientCertificateRow(host: string): Locator {
-    return new TableComponent(this.page, this.dialog).rowByText(host);
+    return this.dialog.locator('[role="row"]').filter({ hasText: host });
   }
 
   /**

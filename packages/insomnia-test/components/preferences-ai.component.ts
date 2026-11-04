@@ -191,12 +191,10 @@ export class PreferencesAiComponent extends PreferencesTabComponent {
    * is active. Must be called with `openAiSettingsTab()` already open.
    */
   async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
-    const smartCommits = new SwitchComponent(
-      this.page,
-      this.dialog.getByTestId("toggle-smart-commits"),
-    );
-    const smartCommitsSwitch = smartCommits.control;
-    if ((await smartCommits.isOn()) !== enabled) {
+    const smartCommitsSwitch = this.dialog
+      .getByTestId("toggle-smart-commits")
+      .getByRole("switch");
+    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
       await smartCommitsSwitch.click();
     }
     await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });

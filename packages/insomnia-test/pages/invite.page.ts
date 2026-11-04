@@ -1,5 +1,3 @@
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { ModalComponent } from "@package/components/modal.component";
 import type { CollaboratorRole } from "@package/enums/collaborator-role";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
@@ -15,11 +13,9 @@ export interface Invitation {
 }
 
 export class InvitePage extends BasePage {
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Invite collaborators" }),
-  );
-  private readonly dialog = this.modal.root;
+  private readonly dialog = this.page.getByRole("dialog", {
+    name: "Invite collaborators",
+  });
   private readonly invitationList = this.dialog.getByLabel("Invitation list");
   /**
    * The invite form's "Organization members" search-results popover is a
@@ -103,7 +99,7 @@ export class InvitePage extends BasePage {
    */
   async sendInvites(): Promise<void> {
     await this.page.keyboard.press("Escape");
-    await this.modal.clickButton("Invite", false);
+    await this.dialog.getByRole("button", { name: "Invite" }).click();
   }
 
   /**
@@ -175,9 +171,7 @@ export class InvitePage extends BasePage {
    * Opens `email`'s "Invitation list" row's role menu and selects `role`.
    */
   async setMemberRole(email: string, role: CollaboratorRole): Promise<void> {
-    await new DropdownComponent(
-      this.page,
-      this.invitationRow(email).getByLabel("Menu"),
-    ).select(role);
+    await this.invitationRow(email).getByLabel("Menu").click();
+    await this.page.getByRole("menuitem", { name: role, exact: true }).click();
   }
 }

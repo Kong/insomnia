@@ -1,8 +1,6 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
-import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
 import { TabBarComponent } from "@package/components/tab-bar.component";
-import { TableComponent } from "@package/components/table.component";
 import { TreeComponent } from "@package/components/tree.component";
 import type { ContextMenuItem } from "@package/enums/context-menu-items";
 import { HttpMethod } from "@package/enums/http-method";
@@ -99,10 +97,7 @@ export class SpecPage extends BasePage {
    * (default-named) test row to render.
    */
   async createTest(): Promise<void> {
-    const rows = new TableComponent(
-      this.page,
-      this.page.locator(this.UNIT_TESTS_LIST),
-    ).rows;
+    const rows = this.page.locator(this.UNIT_TESTS_LIST).getByRole("row");
     const before = await rows.count();
     await this.page.locator(this.NEW_TEST_BUTTON).click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
@@ -113,10 +108,7 @@ export class SpecPage extends BasePage {
    * navigates straight into it.
    */
   async createTestSuite(): Promise<void> {
-    const rows = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows;
+    const rows = this.page.locator(this.TEST_SUITES_LIST).getByRole("row");
     const before = await rows.count();
     await this.page.getByRole("button", { name: "New test suite" }).click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
@@ -127,17 +119,15 @@ export class SpecPage extends BasePage {
    * and deletes it via the "Delete suite" confirm modal.
    */
   async deleteTestSuite(suiteName: string): Promise<void> {
-    const row = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).row(suiteName);
-    const actions = row.getByLabel("Unit Test Actions");
-    await actions.click();
-    await new DropdownComponent(this.page, actions)
-      .item("Delete suite")
+    const row = this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row", { name: suiteName });
+    await row.getByLabel("Unit Test Actions").click();
+    await this.page
+      .getByRole("menuitemradio", { name: "Delete suite" })
       .click();
 
-    const dialog = new ModalComponent(this.page).root;
+    const dialog = this.page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Delete" }).click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     await expect(row).toBeHidden({ timeout: DEFAULT_TIMEOUT });
@@ -379,18 +369,20 @@ export class SpecPage extends BasePage {
    * Reads every suite name currently listed in the Test Suites sidebar.
    */
   async getTestSuiteNames(): Promise<string[]> {
-    return new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows.allInnerTexts();
+    return this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row")
+      .allInnerTexts();
   }
 
   /**
    * Reads every test name currently listed under the open suite.
    */
   async getUnitTestNames(): Promise<string[]> {
-    return new TableComponent(this.page, this.page.locator(this.UNIT_TESTS_LIST))
-      .rows.allInnerTexts();
+    return this.page
+      .locator(this.UNIT_TESTS_LIST)
+      .getByRole("row")
+      .allInnerTexts();
   }
 
   /**
@@ -459,7 +451,10 @@ export class SpecPage extends BasePage {
    */
   async removeRuleset(): Promise<void> {
     await this.page.locator(this.REMOVE_RULESET_BUTTON).click();
-    await new ModalComponent(this.page).clickButton("Remove");
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Remove", exact: true })
+      .click();
     await expect(this.page.getByText(this.DEFAULT_RULESET_LABEL)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -482,10 +477,9 @@ export class SpecPage extends BasePage {
       detailPane.locator("[data-editable]").filter({ hasText: newName }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     await expect(
-      new TableComponent(
-        this.page,
-        this.page.locator(this.TEST_SUITES_LIST),
-      ).row(newName),
+      this.page
+        .locator(this.TEST_SUITES_LIST)
+        .getByRole("row", { name: newName }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -526,9 +520,7 @@ export class SpecPage extends BasePage {
   async selectFormat(format: SpecFormat): Promise<void> {
     const formatButton = this.page.locator(this.FORMAT_BUTTON);
     await formatButton.click();
-    await new DropdownComponent(this.page, formatButton)
-      .item(format, false)
-      .click();
+    await this.page.getByRole("menuitemradio", { name: format }).click();
     await expect(formatButton).toHaveText(format, { timeout: DEFAULT_TIMEOUT });
   }
 
@@ -538,10 +530,9 @@ export class SpecPage extends BasePage {
    * become the selected row.
    */
   async selectTestSuite(suiteName: string): Promise<void> {
-    const row = new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).row(suiteName);
+    const row = this.page
+      .locator(this.TEST_SUITES_LIST)
+      .getByRole("row", { name: suiteName });
     await row.click();
     await expect(row).toHaveAttribute("aria-selected", "true", {
       timeout: DEFAULT_TIMEOUT,
