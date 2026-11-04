@@ -26,7 +26,7 @@ Everything that needs an outside service is off until you enable it:
 - **AI features and the MCP client**, using your own API key or a local server.
 - **Secret managers**: HashiCorp Vault, AWS Secrets Manager and GCP Secret Manager.
 
-The goal is to be feature complete with both Insomnia and Bruno. Progress is tracked in the [roadmap](ROADMAP.md).
+The goal is to be feature complete with both Insomnia and Bruno. Guides are in the [wiki](https://github.com/outmanos/restless/wiki), and progress is tracked in the [roadmap](ROADMAP.md).
 
 Restless is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
 
