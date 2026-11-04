@@ -101,7 +101,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       return;
     }
 
-    services.helpers.getResponseTimeline(activeResponse).then(responseTimeline => {
+    services.helpers.getResponseTimeline(activeResponse, true).then(responseTimeline => {
       if (!isCancelled) {
         setTimeline(responseTimeline);
       }
