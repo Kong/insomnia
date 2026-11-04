@@ -32,15 +32,15 @@ describe('shouldBypassProxyForHost()', () => {
   });
 
   it('honors every entry in a comma-separated list, not just the first', () => {
-    const noProxy = '.rest.rodeo,.konghq.com,localhost';
+    const noProxy = '.rest.rodeo,.example.org,localhost';
     expect(shouldBypassProxyForHost('rest.rodeo', noProxy)).toBe(true);
     expect(shouldBypassProxyForHost('api.rest.rodeo', noProxy)).toBe(true);
-    expect(shouldBypassProxyForHost('konghq.com', noProxy)).toBe(true);
-    expect(shouldBypassProxyForHost('api.konghq.com', noProxy)).toBe(true);
+    expect(shouldBypassProxyForHost('example.org', noProxy)).toBe(true);
+    expect(shouldBypassProxyForHost('api.example.org', noProxy)).toBe(true);
   });
 
   it('trims whitespace around entries', () => {
-    expect(shouldBypassProxyForHost('api.rest.rodeo', ' .rest.rodeo , .konghq.com ')).toBe(true);
+    expect(shouldBypassProxyForHost('api.rest.rodeo', ' .rest.rodeo , .example.org ')).toBe(true);
   });
 
   it('is case-insensitive', () => {
@@ -48,6 +48,6 @@ describe('shouldBypassProxyForHost()', () => {
   });
 
   it('returns false for a host that does not match any entry', () => {
-    expect(shouldBypassProxyForHost('example.com', '.rest.rodeo,.konghq.com')).toBe(false);
+    expect(shouldBypassProxyForHost('example.com', '.rest.rodeo,.example.org')).toBe(false);
   });
 });
