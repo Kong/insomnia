@@ -8,10 +8,6 @@ import { cosmiconfig } from 'cosmiconfig';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
-import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
-import { getSendRequestCallbackMemDb } from 'insomnia/src/network/send-request.node';
-import { initRuntime } from 'insomnia/src/runtimes';
-import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
 import type {
   Environment,
   Request,
@@ -27,6 +23,10 @@ import { generate } from 'insomnia-testing/src/generate/generate';
 import { runTestsCli } from 'insomnia-testing/src/run/run';
 import orderedJSON from 'json-order';
 import Papa from 'papaparse';
+import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'restless/src/common/constants';
+import { getSendRequestCallbackMemDb } from 'restless/src/network/send-request.node';
+import { initRuntime } from 'restless/src/runtimes';
+import { nodeRuntime } from 'restless/src/runtimes/runtime.node';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 

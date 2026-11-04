@@ -32,10 +32,10 @@ by Insomnia (a pure-JS reimplementation or a host-backed shim), never the raw No
     vetted version is independently reviewable and can never silently drift with a routine app
     dependency bump. Invariant: the sandbox's pin must never exceed the app's own resolved version
     for the same library (the sandbox may lag the app, never lead it) — enforced by
-    `npm run sandbox:vendored:guardrail -w insomnia` (also run in CI).
+    `npm run sandbox:vendored:guardrail -w restless` (also run in CI).
     New libs are added deliberately via `scripts/generate-sandbox-vendored.ts` (see its checklist);
     to bump an already-vetted lib's version, prefer
-    `npm run sandbox:vendored:upgrade -w insomnia -- <lib>@<version>` over hand-editing
+    `npm run sandbox:vendored:upgrade -w restless -- <lib>@<version>` over hand-editing
     `vendored/pkg/package.json` — it verifies the requested version is exactly what got installed and
     exactly what ended up in the regenerated bundle, checks the guardrail above, and runs that lib's
     `<name>.regression.test.ts` suite before you commit.

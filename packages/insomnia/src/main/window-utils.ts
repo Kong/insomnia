@@ -2,20 +2,7 @@ import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
 
-import {
-  app,
-  BrowserWindow,
-  type BrowserWindow as ElectronBrowserWindow,
-  clipboard,
-  dialog,
-  ipcMain,
-  Menu,
-  type MenuItem,
-  type MenuItemConstructorOptions,
-  MessageChannelMain,
-  screen,
-  shell,
-} from 'electron';
+import { app, BrowserWindow, type BrowserWindow as ElectronBrowserWindow, clipboard, dialog, ipcMain, Menu, type MenuItem, type MenuItemConstructorOptions, MessageChannelMain, nativeTheme, screen, shell } from 'electron';
 import { models, services } from 'insomnia-data';
 import { isLinux, isMac } from 'insomnia-data/common';
 
@@ -33,7 +20,8 @@ import { hasTitleBarOverlay, setAppMenu } from './title-bar';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
-const TITLE_BAR_HEIGHT = 35;
+// One pixel under the header, so its bottom border runs beneath the window controls
+const TITLE_BAR_HEIGHT = 34;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -226,6 +214,9 @@ export function createWindow(): ElectronBrowserWindow {
       isVisibleOnAnyDisplay = false;
     }
   }
+
+  // Chromium reads this when it creates the window controls, so it must come first
+  nativeTheme.themeSource = getElectronStorage().getItem('themeSource', 'dark');
 
   const mainBrowserWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds

@@ -46,6 +46,20 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
     },
   });
 
+  // The results list keeps the overlay's own outside-click handling from firing
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (!(event.target as Element).closest('[role="dialog"], [role="listbox"], .react-aria-Popover')) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', closeOnOutsidePress);
+    return () => document.removeEventListener('pointerdown', closeOnOutsidePress);
+  }, [isOpen]);
+
   const requestSwitchKeyCombination = getPlatformKeyCombinations(settings.hotKeyRegistry.request_quickSwitch)[0];
 
   return (

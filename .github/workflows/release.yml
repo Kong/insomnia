@@ -54,7 +54,7 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libfontconfig-dev rpm
       - run: npm ci
-      - run: npm run build -w insomnia
+      - run: npm run build -w restless
       - run: npx electron-builder build --config electron-builder.config.js ${{ matrix.targets }} --publish never
         working-directory: packages/insomnia
         env:

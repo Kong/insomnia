@@ -325,6 +325,22 @@ export const baseTheme: CompleteStyleBlock = {
   },
 };
 
+const DIALOG_BACKDROP_SELECTOR = '.modal__backdrop, [style*="--visual-viewport-height"]';
+
+let dialogBackdrops: string[] = [];
+
+// Backdrops can report modern formats like oklab(), which Color can't parse
+function parseCssColor(value: string) {
+  const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    return Color('transparent');
+  }
+  context.fillStyle = value;
+  context.fillRect(0, 0, 1, 1);
+  const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data;
+  return Color.rgb(red, green, blue).alpha(alpha / 255);
+}
+
 export async function syncTitleBarColors() {
   const probe = document.createElement('div');
   probe.className = 'theme--app-header';
@@ -332,11 +348,30 @@ export async function syncTitleBarColors() {
   probe.style.backgroundColor = 'var(--color-bg)';
   probe.style.color = 'var(--color-font)';
   document.body.append(probe);
-  const { backgroundColor: color, color: symbolColor } = getComputedStyle(probe);
+  const { backgroundColor, color: foregroundColor } = getComputedStyle(probe);
   probe.remove();
   const { autoDetectColorScheme } = await services.settings.get();
-  const [red, green, blue] = (color.match(/\d+/g) ?? []).map(Number);
-  const isDark = 0.299 * red + 0.587 * green + 0.114 * blue < 128;
-  const themeSource = autoDetectColorScheme ? 'system' : isDark ? 'dark' : 'light';
-  window.main?.setTitleBarColors({ color, symbolColor, themeSource });
+  const themeSource = autoDetectColorScheme ? 'system' : parseCssColor(backgroundColor).isDark() ? 'dark' : 'light';
+  // The same blend the backdrops apply to the page, one layer at a time
+  const dim = (value: string) =>
+    dialogBackdrops
+      .map(parseCssColor)
+      .reduce((result, backdrop) => result.mix(backdrop.alpha(1), backdrop.alpha()), parseCssColor(value))
+      .hex();
+  window.main?.setTitleBarColors({ color: dim(backgroundColor), symbolColor: dim(foregroundColor), themeSource });
+}
+
+// The window controls sit above the page, so dialog backdrops can't darken them
+export function dimTitleBarWithDialogs() {
+  const observer = new MutationObserver(() => {
+    const backdrops = [...document.querySelectorAll(DIALOG_BACKDROP_SELECTOR)].map(
+      element => getComputedStyle(element).backgroundColor,
+    );
+    if (backdrops.join(',') !== dialogBackdrops.join(',')) {
+      dialogBackdrops = backdrops;
+      syncTitleBarColors();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  return () => observer.disconnect();
 }

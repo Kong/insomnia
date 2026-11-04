@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
-import type { PluginTemplateTag } from 'insomnia/src/common/templating/types';
 import { fakerFunctions } from 'insomnia-data/common';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
+import type { PluginTemplateTag } from 'restless/src/common/templating/types';
 
 import type { TemplateTag } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';

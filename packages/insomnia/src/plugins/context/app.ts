@@ -1,6 +1,6 @@
-import { getAppVersion } from 'insomnia/src/common/constants';
-import type { AppContext, RenderPurpose } from 'insomnia/src/common/templating/types';
 import { platform } from 'insomnia-data/common';
+import { getAppVersion } from 'restless/src/common/constants';
+import type { AppContext, RenderPurpose } from 'restless/src/common/templating/types';
 
 import { invariant } from '~/common/utils/invariant';
 import { getRuntime } from '~/runtimes';

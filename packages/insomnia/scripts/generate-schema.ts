@@ -7,7 +7,7 @@
  * standard JSON Schema via Zod's `z.toJSONSchema()` so that humans and AI
  * agents can validate Insomnia files against a published, stable URL.
  *
- * Run with: `npm run generate:schema -w insomnia`
+ * Run with: `npm run generate:schema -w restless`
  *
  * The output is written to the repo-root `schemas/` directory as a versioned,
  * immutable file for the current `INSOMNIA_SCHEMA_VERSION`

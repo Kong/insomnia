@@ -85,10 +85,10 @@ export const ThemePanel: FC = () => {
           onChange={isSelected => changeAutoDetect(isSelected)}
           className="group flex h-full items-center p-0"
         >
-          <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+          <div className="flex h-[14px] w-[14px] items-center justify-center rounded-[4px] border border-solid border-(--hl-lg) transition-colors group-data-selected:border-(--color-surprise) group-data-selected:bg-(--color-surprise)">
             <Icon
-              icon={'check'}
-              className="h-3 w-3 opacity-0 group-data-indeterminate:opacity-100 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+              icon="check"
+              className="h-[10px] w-[10px] text-(--color-font-surprise) opacity-0 group-data-indeterminate:opacity-100 group-data-selected:opacity-100"
             />
           </div>
         </Checkbox>

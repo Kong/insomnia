@@ -1,18 +1,4 @@
 import { format } from 'date-fns';
-import {
-  convertApiSpecSyntax,
-  detectApiSpecSyntax,
-} from 'insomnia/src/common/api-specs';
-import { getProductName } from 'insomnia/src/common/constants';
-import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
-import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
-import { Icon } from 'insomnia/src/ui/components/icon';
-import { showError, showModal } from 'insomnia/src/ui/components/modals';
-import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
-import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
-import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
-import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
 import type { Organization } from 'insomnia-data';
 import type { BaseModel, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -20,6 +6,20 @@ import { strings } from 'insomnia-data/common';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { href, useParams } from 'react-router';
+import {
+  convertApiSpecSyntax,
+  detectApiSpecSyntax,
+} from 'restless/src/common/api-specs';
+import { getProductName } from 'restless/src/common/constants';
+import { getWorkspaceLabel } from 'restless/src/common/get-workspace-label';
+import { getInsomniaV5DataExport } from 'restless/src/common/insomnia-v5';
+import { isNotNullOrUndefined } from 'restless/src/common/misc';
+import { Icon } from 'restless/src/ui/components/icon';
+import { showError, showModal } from 'restless/src/ui/components/modals';
+import { AskModal } from 'restless/src/ui/components/modals/ask-modal';
+import { ExportRequestsModal } from 'restless/src/ui/components/modals/export-requests-modal';
+import { ImportModal } from 'restless/src/ui/components/modals/import-modal/import-modal';
+import { SelectModal } from 'restless/src/ui/components/modals/select-modal';
 
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';

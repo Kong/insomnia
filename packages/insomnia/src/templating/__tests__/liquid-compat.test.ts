@@ -1,5 +1,5 @@
 // Compatibility tests confirming LiquidJS renders templates that previously
-// worked under Nunjucks. Run with: npm test -w insomnia
+// worked under Nunjucks. Run with: npm test -w restless
 import { describe, expect, it } from 'vitest';
 
 import { render } from '../index';

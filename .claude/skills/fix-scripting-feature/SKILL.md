@@ -75,9 +75,9 @@ For property/method-level detail on any single object above (real signatures, sc
 2. **Reproduce with the narrowest test** before touching app code:
    - Unit tests for the sandbox/security logic:
      ```bash
-     npm test -w insomnia -- src/scripting
+     npm test -w restless -- src/scripting
      ```
-     (not `npx vitest run src/scripting -w insomnia` — Vitest's own CLI already owns `-w`/`--watch`, so that form drops into watch mode instead of selecting the `insomnia` workspace.)
+     (not `npx vitest run src/scripting -w restless` — Vitest's own CLI already owns `-w`/`--watch`, so that form drops into watch mode instead of selecting the `insomnia` workspace.)
      Relevant files: `packages/insomnia/src/scripting/__tests__/sandbox.test.ts`, `__tests__/script-security-policy.test.ts`, `__tests__/require-interceptor.test.ts`.
    - SDK object-model unit tests:
      ```bash
@@ -85,7 +85,7 @@ For property/method-level detail on any single object above (real signatures, sc
      ```
    - Full app unit suite (if narrowing further isn't obvious):
      ```bash
-     npm test -w insomnia
+     npm test -w restless
      ```
 3. **If the bug only shows up end-to-end** (real app, real request lifecycle), run the Playwright smoke tests:
    ```bash

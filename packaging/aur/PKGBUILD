@@ -1,6 +1,6 @@
 # Maintainer: Outman <23385633+outmanos@users.noreply.github.com>
 pkgname=restless-bin
-pkgver=13.3.1
+pkgver=0.1.0
 pkgrel=1
 pkgdesc='Offline-first API client for REST, GraphQL, gRPC, WebSockets and more'
 arch=('x86_64')

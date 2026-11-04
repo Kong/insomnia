@@ -12,11 +12,12 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron';
-import { localTemplateTags } from 'insomnia/src/common/templating/local-template-tags';
+import { localTemplateTags } from 'restless/src/common/templating/local-template-tags';
 
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
 import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { invariant } from '~/common/utils/invariant';
+import { getElectronStorage } from '~/main/electron-storage';
 import { findAppMenuItem, getAppMenu, hasTitleBarOverlay, serializeAppMenu } from '~/main/title-bar';
 
 import { fnOrString } from '../../common/misc';
@@ -487,8 +488,9 @@ export function registerElectronHandlers() {
         themeSource,
       }: { color: string; symbolColor: string; themeSource: typeof nativeTheme.themeSource },
     ) => {
-      // Without this, Linux draws the window buttons from the GTK theme
+      // Saved so the next launch can set it before creating the window
       nativeTheme.themeSource = themeSource;
+      getElectronStorage().setItem('themeSource', themeSource);
       if (hasTitleBarOverlay()) {
         BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay({ color, symbolColor });
       }

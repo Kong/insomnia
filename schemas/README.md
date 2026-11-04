@@ -120,7 +120,7 @@ file drifts from the source (see [`.github/workflows/test.yml`](../.github/workf
 After changing the Zod schema, run:
 
 ```bash
-npm run generate:schema -w insomnia
+npm run generate:schema -w restless
 ```
 
 and commit the updated files in `schemas/`.

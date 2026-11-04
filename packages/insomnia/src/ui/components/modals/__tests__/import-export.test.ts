@@ -1,5 +1,5 @@
-import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/main/har';
 import { database as db, services } from 'insomnia-data';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'restless/src/main/har';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('~/runtimes', () => ({

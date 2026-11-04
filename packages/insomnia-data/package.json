@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-data",
   "license": "Apache-2.0",
-  "version": "13.3.1",
+  "version": "0.1.0",
   "author": "Outman",
   "description": "Insomnia data functionalities",
   "repository": {

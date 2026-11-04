@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
-import { showError, showModal } from 'insomnia/src/ui/components/modals';
-import { exportSpecificationToFile } from 'insomnia/src/ui/components/settings/import-export';
 import { services } from 'insomnia-data';
+import { showError, showModal } from 'restless/src/ui/components/modals';
+import { exportSpecificationToFile } from 'restless/src/ui/components/settings/import-export';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('~/ui/hooks/use-root-loader-data', () => ({
   useRootLoaderData: () => ({}),
 }));
 
-vi.mock('insomnia/src/ui/components/modals', async importOriginal => {
+vi.mock('restless/src/ui/components/modals', async importOriginal => {
   const actual = await importOriginal<Record<string, unknown>>();
   return {
     ...actual,

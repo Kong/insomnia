@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
+import { importInsomniaV5Data } from 'restless/src/common/insomnia-v5';
 import YAML from 'yaml';
 
 import { InsoError } from '../../errors';

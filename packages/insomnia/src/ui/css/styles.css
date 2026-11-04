@@ -421,6 +421,25 @@ body {
     background: var(--color-font-surprise);
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
   }
+  /* React Aria checkboxes, kept the same as the native ones above */
+  label[data-rac] > div.h-4.w-4 {
+    width: 14px !important;
+    height: 14px !important;
+    border: 1px solid var(--hl-lg) !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  label[data-rac][data-selected] > div.h-4.w-4,
+  label[data-rac][data-indeterminate] > div.h-4.w-4 {
+    border-color: var(--color-surprise) !important;
+    background: var(--color-surprise) !important;
+  }
+  label[data-rac][data-selected] > div.h-4.w-4 svg,
+  label[data-rac][data-indeterminate] > div.h-4.w-4 svg {
+    color: var(--color-font-surprise) !important;
+  }
+
   input[type='radio'] {
     accent-color: var(--color-surprise);
   }

@@ -1,11 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import classNames from 'classnames';
-import {
-  exportGlobalEnvironmentToFile,
-  exportMcpClientToFile,
-  exportMockServerToFile,
-  exportSpecificationToFile,
-} from 'insomnia/src/ui/components/settings/import-export';
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
@@ -21,6 +15,12 @@ import {
   Popover,
   SubmenuTrigger,
 } from 'react-aria-components';
+import {
+  exportGlobalEnvironmentToFile,
+  exportMcpClientToFile,
+  exportMockServerToFile,
+  exportSpecificationToFile,
+} from 'restless/src/ui/components/settings/import-export';
 
 import { database as db } from '~/common/database';
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';

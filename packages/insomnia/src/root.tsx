@@ -47,7 +47,7 @@ import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-impor
 import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
-import { setTheme } from '~/ui/plugins/misc';
+import { dimTitleBarWithDialogs, setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 
@@ -322,6 +322,8 @@ const Root = () => {
       unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
+
+  useEffect(() => dimTitleBarWithDialogs(), []);
 
   useEffect(() => {
     return window.main.on('git-device-code', (_: IpcRendererEvent, code: string) => {

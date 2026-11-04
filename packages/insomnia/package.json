@@ -1,6 +1,6 @@
 {
-  "name": "insomnia",
-  "version": "13.3.1",
+  "name": "restless",
+  "version": "0.1.0",
   "productName": "Restless",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -221,6 +221,6 @@
     "dev-server-port": 3334
   },
   "bin": {
-    "insomnia": "bin/yarn-standalone.js"
+    "restless": "bin/yarn-standalone.js"
   }
 }

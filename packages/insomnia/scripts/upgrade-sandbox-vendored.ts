@@ -1,8 +1,8 @@
 /**
  * Bump one sandbox-vendored lib's pinned version (sandbox plan M3), end-to-end:
  *
- *   npm run sandbox:vendored:upgrade -w insomnia -- <lib>@<version>
- *   e.g. npm run sandbox:vendored:upgrade -w insomnia -- uuid@9.1.0
+ *   npm run sandbox:vendored:upgrade -w restless -- <lib>@<version>
+ *   e.g. npm run sandbox:vendored:upgrade -w restless -- uuid@9.1.0
  *
  * Updates the exact pin in `vendored/pkg/package.json`, reinstalls the isolated pkg, verifies the
  * version an engineer asked for is exactly what got installed and exactly what ended up baked into
@@ -24,7 +24,7 @@ const PKG_LOCK_PATH = path.join(PKG_DIR, 'package-lock.json');
 const parseArg = (arg: string | undefined): { name: string; version: string } => {
   const at = arg?.lastIndexOf('@') ?? -1;
   if (!arg || at <= 0) {
-    throw new Error(`Usage: npm run sandbox:vendored:upgrade -w insomnia -- <lib>@<version> (got '${arg ?? ''}')`);
+    throw new Error(`Usage: npm run sandbox:vendored:upgrade -w restless -- <lib>@<version> (got '${arg ?? ''}')`);
   }
   const name = arg.slice(0, at);
   const version = arg.slice(at + 1);
