@@ -29,13 +29,10 @@ export class CloudSyncHistoryDialogPage extends BasePage {
    * `openHistory()` to have been called first.
    */
   async restoreSnapshot(message: string): Promise<void> {
-    const row = new TableComponent(this.page, this.historyModal.root).row(
-      message,
-    );
-    await row.getByRole("button", { name: "Restore" }).click();
-    // A dblclick can fire its 2nd click before React re-renders the
-    // button into its "Confirm" state, so wait for it explicitly.
-    await row.getByRole("button", { name: "Confirm" }).click();
+    await new TableComponent(this.page, this.historyModal.root)
+      .row(message)
+      .getByRole("button", { name: "Restore" })
+      .dblclick();
   }
 
   /**
