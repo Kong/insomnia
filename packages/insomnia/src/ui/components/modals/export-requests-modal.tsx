@@ -1,4 +1,3 @@
-import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
@@ -12,6 +11,7 @@ import {
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
+import { exportRequestsToFile } from '../settings/export';
 import { getMethodShortHand } from '../tags/method-tag';
 
 const { isRequest } = models.request;

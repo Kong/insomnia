@@ -12,7 +12,24 @@ import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
-import { ResponseViewer } from './response-viewer';
+
+// Declared here rather than imported from response-viewer: the body viewer imports this module,
+// so importing its props back would recreate the cycle.
+export interface BodyViewerProps {
+  bytes: number;
+  contentType: string;
+  disableHtmlPreviewJs: boolean;
+  disablePreviewLinks: boolean;
+  download: (prettify: boolean) => void;
+  editorFontSize: number;
+  filter: string;
+  filterHistory: string[];
+  bodyBuffer?: Uint8Array;
+  previewMode: string;
+  responseId: string;
+  url: string;
+  error?: string | null;
+}
 
 interface Props {
   download: (prettify: boolean) => void;
@@ -25,6 +42,7 @@ interface Props {
   filterHistory: string[];
   editorFontSize: number;
   url: string;
+  BodyViewer: FC<BodyViewerProps>;
 }
 
 export const ResponseMultipartViewer: FC<Props> = ({
@@ -38,6 +56,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
   url,
   bodyBuffer,
   contentType,
+  BodyViewer,
 }) => {
   const [parts, setParts] = useState<Part[]>([]);
   const [selectedPart, setSelectedPart] = useState<Part>();
@@ -189,7 +208,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
         </Dropdown>
       </div>
       <div className="tall wide">
-        <ResponseViewer
+        <BodyViewer
           bytes={selectedPart.bytes || 0}
           contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
           disableHtmlPreviewJs={disableHtmlPreviewJs}

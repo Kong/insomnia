@@ -10,7 +10,7 @@ import { unescapeForwardSlash } from '../../../common/misc';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
-import { ResponseMultipartViewer } from './response-multipart-viewer';
+import { type BodyViewerProps, ResponseMultipartViewer } from './response-multipart-viewer';
 import { ResponsePDFViewer } from './response-pdf-viewer';
 import { ResponseWebView } from './response-web-view';
 
@@ -51,22 +51,9 @@ export function xmlDecode(input: string) {
     (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => ESCAPED_CHARACTERS_MAP[item],
   );
 }
-export interface ResponseViewerProps {
-  bytes: number;
-  contentType: string;
-  disableHtmlPreviewJs: boolean;
-  disablePreviewLinks: boolean;
-  download: (prettify: boolean) => void;
-  editorFontSize: number;
-  filter: string;
-  filterHistory: string[];
-  bodyBuffer?: Uint8Array;
+export interface ResponseViewerProps extends BodyViewerProps {
   getBody?: (...args: any[]) => Promise<Uint8Array | string>;
-  previewMode: string;
-  responseId: string;
-  url: string;
   updateFilter?: (filter: string) => void;
-  error?: string | null;
 }
 
 export const ResponseViewer = ({
@@ -325,6 +312,7 @@ export const ResponseViewer = ({
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('multipart/') === 0) {
     return (
       <ResponseMultipartViewer
+        BodyViewer={ResponseViewer}
         bodyBuffer={overSizedBody}
         contentType={contentType}
         disableHtmlPreviewJs={disableHtmlPreviewJs}
