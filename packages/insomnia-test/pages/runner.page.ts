@@ -1,3 +1,4 @@
+import { TabsComponent } from "@package/components/tabs.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type {
   RunnerIterationResult,
@@ -68,8 +69,8 @@ export class RunnerPage extends BasePage {
    * (request configuration) pane.
    */
   async switchRequestTab(tab: RunnerRequestTab): Promise<void> {
-    await this.page
-      .locator(`${this.REQUEST_PANE} [role="tab"][data-key="${tab}"]`)
+    await new TabsComponent(this.page, this.page.locator(this.REQUEST_PANE))
+      .tab(tab)
       .click();
   }
 
@@ -248,9 +249,8 @@ export class RunnerPage extends BasePage {
    */
   async getTestResultCount(): Promise<RunnerTestResultCount> {
     const text = (
-      await this.page
-        .locator(this.RESULT_PANE)
-        .getByRole("tab", { name: /^Results/ })
+      await new TabsComponent(this.page, this.page.locator(this.RESULT_PANE))
+        .tabByName(/^Results/)
         .innerText()
     ).trim();
     const [passed, total] = text

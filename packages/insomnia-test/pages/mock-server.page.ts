@@ -1,4 +1,7 @@
+import { DropdownComponent } from "@package/components/dropdown.component";
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import type { MockBodyType } from "@package/enums/mock-body-type";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -36,7 +39,7 @@ export class MockServerPage extends BasePage {
    * be called while the create-mock-server dialog is open.
    */
   async setSelfHostedUrl(url: string): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     const radioName = { name: /^Self Hosted Mock/ };
     const radio = dialog.getByRole("radio", radioName);
     // The radio's <input> is covered by its own label content, so check() can
@@ -60,7 +63,7 @@ export class MockServerPage extends BasePage {
       .getByRole("button", { name: "New Mock Route" })
       .first()
       .click();
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await dialog.getByRole("textbox", { name: "Path" }).fill(path);
     if (method) {
       await dialog.locator('select[name="method"]').selectOption(method);
@@ -79,7 +82,7 @@ export class MockServerPage extends BasePage {
     changes: { path?: string; method?: HttpMethod },
   ): Promise<void> {
     await this.clickRouteAction(routeId, "Edit");
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     if (changes.path !== undefined) {
       await dialog.getByRole("textbox", { name: "Path" }).fill(changes.path);
     }
@@ -96,7 +99,7 @@ export class MockServerPage extends BasePage {
    */
   async deleteRoute(routeId: string): Promise<void> {
     await this.clickRouteAction(routeId, "Delete");
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await dialog.getByRole("button", { name: "Delete", exact: true }).click();
     await expect(this.routeRow(routeId)).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
@@ -155,7 +158,7 @@ export class MockServerPage extends BasePage {
       .locator(this.REQUEST_PANE)
       .getByRole("button", { name: "Show URL" })
       .click();
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await expect(dialog.getByText(/https?:\/\/\S+/)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -227,8 +230,8 @@ export class MockServerPage extends BasePage {
       .getByRole("button", { name: /^Mock / })
       .first()
       .click();
-    await this.page
-      .getByRole("menuitem", { name: bodyType, exact: true })
+    await new DropdownComponent(this.page, this.page.locator("body"))
+      .item(bodyType)
       .click();
   }
 
@@ -359,7 +362,7 @@ export class MockServerPage extends BasePage {
       .locator(this.RESPONSE_PANE)
       .getByRole("button", { name: "Create", exact: true })
       .click();
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     if (path !== undefined) {
       await dialog.getByRole("textbox", { name: "Path" }).fill(path);
     }
@@ -396,16 +399,17 @@ export class MockServerPage extends BasePage {
   ): Promise<void> {
     const row = this.routeRow(routeId);
     await row.hover();
-    await row.getByRole("button", { name: "Mock Route Actions" }).click();
-    await this.page
-      .getByRole("menuitemradio", { name: action, exact: true })
-      .click();
+    const trigger = row.getByRole("button", { name: "Mock Route Actions" });
+    await trigger.click();
+    await new DropdownComponent(this.page, trigger).item(action).click();
   }
 
   private async waitForRouteId(path: string): Promise<string> {
-    const row = this.page
-      .getByRole("grid", { name: "Mock Routes" })
-      .getByRole("row", { name: path })
+    const row = new TableComponent(
+      this.page,
+      this.page.getByRole("grid", { name: "Mock Routes" }),
+    )
+      .row(path)
       .last();
     await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     const key = await this.waitForStableAttribute(row, "data-key");

@@ -57,25 +57,6 @@ export class ProjectPage extends BasePage {
   }
 
   /**
-   * Logs out via the header's user-dropdown menu ("Log out" -> confirm
-   * "Log Out" in the modal), then waits for the login screen's "Use local
-   * Scratch Pad" entry point to appear. Works even against a session
-   * injected directly via `INSOMNIA_SESSION` (not a real backend login) —
-   * `logout()` only clears local session state.
-   */
-  async logOut(): Promise<void> {
-    await this.page
-      .getByTestId("user-dropdown")
-      .filter({ visible: true })
-      .click();
-    await this.page.getByTestId("account-logout").click();
-    await this.page.getByRole("button", { name: "Log Out" }).click();
-    await expect(this.page.getByLabel("Use local Scratch Pad")).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
    * Clicks the login screen's "Use local Scratch Pad" entry point and
    * waits for the Scratch Pad workspace to load. Must be called after
    * `logOut()`.
