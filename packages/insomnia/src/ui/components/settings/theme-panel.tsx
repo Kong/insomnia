@@ -116,7 +116,7 @@ const AccentColorPicker: FC<{ accentColor: string; themeAccent: string; onChange
           className="h-5 w-5 rounded-full outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-(--color-font)"
         />
       ))}
-      <Label className="flex items-center gap-1 text-sm">
+      <Label className="flex items-center gap-1 p-0! text-sm">
         <input
           type="color"
           value={draft || themeAccent}
