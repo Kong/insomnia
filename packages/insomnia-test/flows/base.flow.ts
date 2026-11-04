@@ -122,25 +122,6 @@ export abstract class BaseFlow {
     );
   }
 
-  /**
-   * Polls the app's `dbFile` model until a document whose `parentId`
-   * is `parentId` exists, and returns its `_id`. For models created by the
-   * app as a hidden child of a node the UI exposes (e.g. an MCP Client's
-   * McpRequest under its workspace), so the tree node's id is the parent's
-   * rather than the document's own.
-   */
-  protected async waitForChildDocId(
-    dbFile: string,
-    parentId: string,
-  ): Promise<string> {
-    let id: string | undefined;
-    await expect(async () => {
-      const docs = await this.pageManager.findDocs(dbFile, { parentId });
-      id = docs.at(-1)?._id;
-      expect(id).toBeDefined();
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-    return id!;
-  }
 
   /** Reads `id`'s currently-persisted document from the app's database. */
   private async readPersistedDoc(dbFile: string, id: string): Promise<any> {

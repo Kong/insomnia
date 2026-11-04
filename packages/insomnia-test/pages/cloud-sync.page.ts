@@ -1,4 +1,3 @@
-import { SyncStatus } from "@package/enums/sync-status";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -26,12 +25,6 @@ export class CloudSyncPage extends BasePage {
   private readonly commitDialog = this.page.getByRole("dialog", {
     name: "Commit changes",
   });
-  private readonly branchesDialog = this.page.getByRole("dialog", {
-    name: "Branches",
-  });
-  private readonly historyDialog = this.page
-    .getByRole("dialog")
-    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
 
   /**
    * Waits for the project dashboard's file/collection grid to finish its
@@ -67,36 +60,7 @@ export class CloudSyncPage extends BasePage {
     await workspaceRow.click();
   }
 
-  /**
-   * Re-clicks a workspace's own sidebar row, without going through the
-   * "unsynced" fetch path — used to re-trigger the workspace route's own
-   * data loader (e.g. right before simulating a main-window focus change,
-   * so the background "check for remote changes" logic has fresh route
-   * data to act on).
-   */
-  async reselect(name: string): Promise<void> {
-    await this.page.getByTestId(`workspace-node-${name}`).first().click();
-  }
 
-  /**
-   * Reads which sidebar row currently represents `name` — the real,
-   * locally-present workspace node, or the "unsynced" placeholder row
-   * left behind after removing just the local copy. The two are visually
-   * indistinguishable by name alone (same accessible name, different
-   * testid — a plain by-name tree lookup like `workspaceFlow.getCollection()`
-   * can't tell them apart), so this checks each row's own testid directly.
-   */
-  async isSynced(name: string): Promise<SyncStatus | undefined> {
-    if (await this.page.getByTestId(`workspace-node-${name}`).isVisible()) {
-      return SyncStatus.Synced;
-    }
-    if (
-      await this.page.getByTestId(`unsynced-workspace-node-${name}`).isVisible()
-    ) {
-      return SyncStatus.Unsynced;
-    }
-    return undefined;
-  }
 
   /**
    * Exits sidebar collection-focus mode (narrowed to one workspace) if
@@ -119,43 +83,6 @@ export class CloudSyncPage extends BasePage {
     await expect(this.syncMenu).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
-  /**
-   * Discards every uncommitted change via the sync dropdown's "Discard
-   * all changes" action, once it's no longer disabled.
-   *
-   * The click only submits an async fetcher action (rollback to the last
-   * snapshot) — the local database revert lands some time after the click
-   * resolves. Two gotchas, both required to reliably observe
-   * the reverted state afterward:
-   * - Reloading (or otherwise tearing down the renderer) before the
-   *   rollback lands can abort it entirely, leaving the pre-discard value
-   *   in place permanently — so this re-opens the sync menu and waits for
-   *   "Discard all changes" to read as not-disabled again before
-   *   returning, giving the fetcher a real round trip to settle first.
-   * - Separately, an already-open request editor pane does NOT refresh
-   *   its own CodeMirror buffer once the revert *has* landed — re-reading
-   *   `httpRequestPage.getBody()` (even re-navigating to the same request
-   *   via `httpRequestFlow.get()`, a no-op click on an already-active tab)
-   *   keeps returning the stale pre-discard text. Force a full
-   *   `page.reload()` before re-navigating to the request to get a fresh
-   *   read. The same staleness applies to `restoreSnapshot()` below.
-   */
-  async discardAllChanges(): Promise<void> {
-    await this.openSyncMenu();
-    const discardButton = this.syncMenu.getByRole("menuitemradio", {
-      name: "Discard all changes",
-    });
-    await expect(discardButton).not.toHaveAttribute("aria-disabled", "true", {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await discardButton.click({ delay: 500 });
-
-    await this.openSyncMenu();
-    await expect(discardButton).not.toHaveAttribute("aria-disabled", "true", {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await this.page.keyboard.press("Escape");
-  }
 
   /**
    * Opens the Commit modal via the sync dropdown's "Commit" action.
@@ -168,83 +95,9 @@ export class CloudSyncPage extends BasePage {
     await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
-  /**
-   * Reads whether the sync dropdown's "Commit" action is currently
-   * disabled (no staged/unstaged changes left) — opens the menu to check,
-   * then closes it again.
-   */
-  async isCommitDisabled(): Promise<boolean> {
-    await this.openSyncMenu();
-    const disabled =
-      (await this.syncMenu
-        .getByRole("menuitemradio", { name: "Commit", exact: true })
-        .getAttribute("aria-disabled")) === "true";
-    await this.page.keyboard.press("Escape");
-    return disabled;
-  }
 
-  /**
-   * Opens the History modal via the sync dropdown's "History" action,
-   * once it's no longer disabled.
-   */
-  async openHistory(): Promise<void> {
-    await this.openSyncMenu();
-    const historyButton = this.syncMenu.getByRole("menuitemradio", {
-      name: "History",
-      exact: true,
-    });
-    await expect(historyButton).not.toHaveAttribute("aria-disabled", "true", {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await historyButton.click();
-    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Opens the Branches modal via the sync dropdown's "Branches" action.
-   */
-  async openBranchesDialog(): Promise<void> {
-    await this.openSyncMenu();
-    await this.syncMenu
-      .getByRole("menuitemradio", { name: "Branches", exact: true })
-      .click();
-    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Opens the sync dropdown and waits for its "Pull" action to become
-   * enabled (reflecting a detected remote commit), then reads back its
-   * current label — plain "Pull" when there's nothing to pull, or
-   * "Pull N Commit(s)" once one is detected. Leaves the menu open;
-   * call `closeSyncMenu()` afterward.
-   */
-  async waitForPullAvailable(): Promise<string> {
-    await this.openSyncMenu();
-    const pullButton = this.syncMenu.getByRole("menuitemradio", {
-      name: /^Pull/,
-    });
-    await expect(pullButton).not.toHaveAttribute("aria-disabled", "true", {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    return (await pullButton.innerText()).trim();
-  }
 
-  /**
-   * Closes the sync dropdown menu via Escape.
-   */
-  async closeSyncMenu(): Promise<void> {
-    await this.page.keyboard.press("Escape");
-    await expect(this.syncMenu).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Clicks the sync dropdown's "Pull" menu action — requires
-   * `waitForPullAvailable()` to have already opened the menu and confirmed
-   * it's enabled. The click itself resolves as soon as the item is
-   * selected, well before the pull it kicks off (a remote fetch followed by
-   * local blob/snapshot/branch writes) actually completes.
-   */
-  async clickPull(): Promise<void> {
-    await this.syncMenu.getByRole("menuitemradio", { name: /^Pull/ }).click();
-  }
 }

@@ -20,14 +20,7 @@ export class TreeComponent extends BaseComponent {
     return this.page.getByTestId("project-navigation-tree-container");
   }
 
-  get rows(): Locator {
-    return this.root.locator('div[role="row"][data-key]');
-  }
 
-  /** Row by accessible name (the node's name). */
-  row(name: string | RegExp): Locator {
-    return this.root.getByRole("row", { name });
-  }
 
   /**
    * The row for `key` looked up inside the scroll container (the form
@@ -75,67 +68,13 @@ export class TreeComponent extends BaseComponent {
     await this.waitForExpanded(key, name, true);
   }
 
-  async collapseByKey(key: string, name: string): Promise<void> {
-    await this.pressOnRow(key, "ArrowLeft");
-    await this.waitForExpanded(key, name, false);
-  }
 
-  /** Waits for `aria-selected="true"` to hold across two consecutive reads. */
-  async waitForSelectedByKey(key: string): Promise<void> {
-    const row = this.containerRow(key);
-    let previous: string | null = null;
-    await expect(async () => {
-      const current = await row.getAttribute("aria-selected");
-      expect(current === "true").toBe(true);
-      const stable = current === previous;
-      previous = current;
-      expect(stable).toBe(true);
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  rowByKey(key: string): Locator {
-    return this.root.locator(`div[role="row"][data-key="${key}"]`);
-  }
 
-  async visibleRowNames(): Promise<string[]> {
-    return this.rows.evaluateAll((els) =>
-      els.map((el) => el.getAttribute("aria-label") ?? ""),
-    );
-  }
 
-  /** Scrolls the virtualized list down until `name` renders, then returns it. */
-  async scrollToRow(name: string | RegExp): Promise<Locator> {
-    const target = this.row(name);
-    await expect(async () => {
-      if ((await target.count()) === 0) {
-        await this.scroller.evaluate((el) => el.scrollBy(0, el.clientHeight));
-      }
-      await expect(target.first()).toBeAttached({ timeout: 1000 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-    return target.first();
-  }
 
-  async select(name: string | RegExp): Promise<void> {
-    await (await this.scrollToRow(name)).click();
-  }
 
-  async expand(name: string | RegExp): Promise<void> {
-    const row = await this.scrollToRow(name);
-    const toggle = row.getByRole("button", { name: /^Expand / });
-    if (await toggle.isVisible()) await toggle.click();
-  }
 
-  async collapse(name: string | RegExp): Promise<void> {
-    const row = await this.scrollToRow(name);
-    const toggle = row.getByRole("button", { name: /^Collapse / });
-    if (await toggle.isVisible()) await toggle.click();
-  }
 
-  async isSelected(name: string | RegExp): Promise<boolean> {
-    return (await this.row(name).first().getAttribute("aria-selected")) === "true";
-  }
 
-  async hasRow(name: string | RegExp): Promise<boolean> {
-    return (await this.row(name).count()) > 0;
-  }
 }

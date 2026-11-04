@@ -127,5 +127,4 @@ export class Settings implements SettingsInit {
     this.cloudCredentials = init.cloudCredentials;
   }
 
-  aiSmartCommits?: boolean;
 }

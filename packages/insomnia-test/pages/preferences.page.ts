@@ -22,15 +22,6 @@ export class PreferencesPage extends PreferencesTabPage {
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
-  /**
-   * Reports whether the Preferences dialog is currently open. Some
-   * actions taken from within it (e.g. a multi-file export's completion)
-   * close it as a side effect, so callers that always invoke `close()`
-   * afterward should check this first rather than assume it's still open.
-   */
-  async isOpen(): Promise<boolean> {
-    return this.dialog.isVisible();
-  }
 
   /**
    * Opens the Preferences dialog via its trigger button and waits for it
@@ -75,14 +66,6 @@ export class PreferencesPage extends PreferencesTabPage {
     }
   }
 
-  /**
-   * Reads whether the General tab's "Sidebar focus for collections"
-   * checkbox is currently checked.
-   */
-  async isSidebarFocusForCollectionsEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-sidebarFocusForCollections");
-    return label.locator('input[type="checkbox"]').isChecked();
-  }
 
   /**
    * A custom-styled checkbox (General tab, Settings.showLegacyUnitTests)
@@ -103,48 +86,9 @@ export class PreferencesPage extends PreferencesTabPage {
     }
   }
 
-  /**
-   * Reads whether the General tab's "Show legacy unit tests" checkbox is
-   * currently checked.
-   */
-  async isShowLegacyUnitTestsEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-enableLegacyUnitTests");
-    return label.locator('input[type="checkbox"]').isChecked();
-  }
 
-  /**
-   * Switches the open Preferences dialog to the Data tab, where the
-   * Export/Import shortcuts live.
-   */
-  async openDataTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Data" }).click();
-  }
 
-  /**
-   * Clicks "Export all data (N files)" on the Data tab, which bundles
-   * every project into a directory (one file per workspace) without
-   * a request-selection or format-selection step. Must be called with
-   * `openDataTab()` already open and the target save directory already
-   * stubbed via `ExportPage.stubSaveDirectoryLocation()`.
-   */
-  async clickExportAllData(): Promise<void> {
-    await this.dialog
-      .getByRole("button")
-      .filter({ hasText: /^Export all data/ })
-      .click();
-  }
 
-  /**
-   * Clicks "Export the "{name}" Project" on the Data tab. Skips the
-   * request-selection dialog and opens "Select Export Type" directly
-   * (see `ExportPage`).
-   */
-  async clickExportProject(name: string): Promise<void> {
-    await this.dialog
-      .getByTestId("export-project-button")
-      .filter({ hasText: `"${name}" Project` })
-      .click();
-  }
 
   /**
    * Adds `path` to "What folders can Insomnia access?" (General tab), so
@@ -254,14 +198,6 @@ export class PreferencesPage extends PreferencesTabPage {
     }
   }
 
-  /**
-   * Reads whether the General tab's "Filter responses by environment"
-   * checkbox is currently checked.
-   */
-  async isFilterResponsesByEnvironmentEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-filterResponsesByEnv");
-    return label.locator('input[type="checkbox"]').isChecked();
-  }
 
   /**
    * Fills the General tab's "Request timeout (ms)" field.

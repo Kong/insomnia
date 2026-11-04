@@ -25,15 +25,6 @@ export class ToastComponent extends BaseComponent {
     await expect(this.toast(text).first()).toBeVisible({ timeout });
   }
 
-  async expectNoToast(text: string | RegExp): Promise<void> {
-    await expect(this.toast(text)).toHaveCount(0);
-  }
 
-  async dismiss(text: string | RegExp): Promise<void> {
-    await this.toast(text).first().getByRole("button", { name: /close|dismiss/i }).click();
-  }
 
-  async text(text: string | RegExp): Promise<string> {
-    return (await this.toast(text).first().innerText()).trim();
-  }
 }

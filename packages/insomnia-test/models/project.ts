@@ -2,7 +2,6 @@ import type { ProjectType } from "@package/enums/project-types";
 import type { Project as AppProject } from "insomnia-data";
 
 export class Project implements Pick<AppProject, "name"> {
-  id?: string;
 
   constructor(
     readonly name: string,

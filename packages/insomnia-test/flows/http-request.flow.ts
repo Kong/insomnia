@@ -1,13 +1,11 @@
 import { ContextMenuItem } from "@package/enums/context-menu-items";
-import type { ResponseExportOption } from "@package/enums/response-export-option";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { step } from "@package/misc/step";
 import type { Collection } from "@package/models/collection";
 import type { Folder } from "@package/models/folder";
-import type { RequestAuthentication, RequestParameter } from "@package/models/http-request";
+import type { RequestAuthentication } from "@package/models/http-request";
 import { HttpRequest } from "@package/models/http-request";
 import type { ResponseView } from "@package/models/response";
-import type { OAuth2Tokens } from "@package/pages/auth-tab.page";
 import type { HttpRequestPage } from "@package/pages/http-request.page";
 
 import { BaseFlow } from "./base.flow";
@@ -37,21 +35,6 @@ export class HttpRequestFlow extends BaseFlow {
     return this.assertCreated(await this.get(request.name), request.name);
   }
 
-  /**
-   * Replaces `request`'s query parameters using the Params tab's bulk
-   * editor. Use after `create()` for requests with many params, where
-   * per-row editing is prone to a stale-row-list save race.
-   */
-  @step()
-  async setParamsBulk(request: HttpRequest, params: RequestParameter[]): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const httpRequestPage = this.pageManager.httpRequestPage;
-
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
-    await httpRequestPage.navigate();
-    await httpRequestPage.setParamsBulk(params);
-  }
 
   /**
    * Reads back an existing request's fields by name or identity, looking
@@ -96,55 +79,9 @@ export class HttpRequestFlow extends BaseFlow {
     return data;
   }
 
-  /**
-   * Navigates to `request` and clicks its Auth tab's token-fetch button
-   * (see `AuthTabComponent.fetchOAuth2Tokens()` — "Fetch Tokens" before
-   * any token exists, "Refresh Token" once one does), then reads back
-   * the resulting Refresh/Identity/Access Token fields in one call.
-   */
-  @step()
-  async fetchOAuth2Tokens(request: HttpRequest): Promise<OAuth2Tokens> {
-    const workspace = this.pageManager.workspacePage;
-    const httpRequestPage = this.pageManager.httpRequestPage;
 
-    const node = await workspace.requireItemNode(request, TreeNodeType.Request);
-    await workspace.openRequestNode(node);
-    await httpRequestPage.navigate();
 
-    await httpRequestPage.auth.fetchOAuth2Tokens();
-    return httpRequestPage.auth.getOAuth2Tokens();
-  }
 
-  /**
-   * Exports the response currently shown for the last-sent request to
-   * `filePath` via the response pane's "Preview" dropdown.
-   */
-  @step()
-  async exportResponse(option: ResponseExportOption, filePath: string): Promise<void> {
-    await this.context.stubSaveDialog(filePath);
-    await this.pageManager.responsePage.exportResponse(option);
-  }
-
-  /**
-   * Saves the large response currently shown for the last-sent request to
-   * `filePath` via the response pane's "Save To File" button.
-   */
-  @step()
-  async saveResponseToFile(filePath: string): Promise<void> {
-    await this.context.stubSaveDialog(filePath);
-    await this.pageManager.responsePage.saveResponseToFile();
-  }
-
-  /**
-   * Reads an export menu item's label and disabled state for the response
-   * currently shown.
-   */
-  @step()
-  async getResponseExportOptionState(
-    option: ResponseExportOption,
-  ): Promise<{ text: string; disabled: boolean }> {
-    return this.pageManager.responsePage.getExportOptionState(option);
-  }
 
   private async applyRequestFields(
     page: HttpRequestPage,

@@ -17,7 +17,4 @@ export class FileInputComponent extends BaseComponent {
     await this.button.click();
   }
 
-  async label(): Promise<string> {
-    return (await this.button.innerText()).trim();
-  }
 }

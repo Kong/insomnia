@@ -140,17 +140,6 @@ export class PageManager {
     return findDocs(this.page, dbFile, query);
   }
 
-  /**
-   * Rewires every already-created Page instance (and future ones) onto a
-   * fresh window — called by `AppFlow.restart()`
-   * once the relaunched app's first window is ready.
-   */
-  setWindow(page: Page): void {
-    this.page = page;
-    for (const instance of this.instances.values()) {
-      (instance as BasePage).setContext(page);
-    }
-  }
 
   private getOrCreate(name: PageName): unknown {
     if (!this.instances.has(name)) {

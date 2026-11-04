@@ -3,21 +3,8 @@ import { SearchFieldComponent } from "@package/components/search-field.component
 import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TreeComponent } from "@package/components/tree.component";
 import type { ContextMenuItem } from "@package/enums/context-menu-items";
-import { HttpMethod } from "@package/enums/http-method";
-import { LintSeverity } from "@package/enums/lint-severity";
-import { ProjectType } from "@package/enums/project-types";
-import { RulesetType } from "@package/enums/ruleset-type";
-import type { SpecFormat } from "@package/enums/spec-format";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
-import type {
-  LintEntry,
-  PathItem} from "@package/models/collection";
-import {
-  Info,
-  License,
-  Specification,
-} from "@package/models/collection";
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "playwright-core";
 
@@ -235,81 +222,14 @@ export class WorkspacePage extends BasePage {
 
   private readonly PROMPT_INPUT: string = 'input[id="prompt-input"]';
 
-  /**
-   * Opens the "+" add-tab menu and clicks "Add request to current
-   * collection", creating a new HTTP request under the active tab's
-   * collection and opening it as a new tab.
-   */
-  async addRequestToCurrentCollection(): Promise<void> {
-    const rows = this.tabBar.rows;
-    const before = await rows.count();
-    await this.tabBar.openAddMenu();
-    await this.page
-      .getByRole("menuitem", { name: "Add request to current collection" })
-      .click();
-    await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Clicks the given tab, making it the active tab, and waits for the
-   * route change to settle before returning.
-   */
-  async clickTab(name: string): Promise<void> {
-    await this.tabBar.activate(name);
-  }
 
-  /**
-   * Clicks a tab's close ("x") button.
-   */
-  async closeTab(name: string): Promise<void> {
-    await this.tabBar.close(name);
-  }
 
-  /**
-   * Reads back the currently active (selected) tab's name.
-   */
-  async getActiveTabName(): Promise<string | undefined> {
-    return this.tabBar.activeName();
-  }
 
-  /**
-   * Reads back this tab's method tag text (e.g. "GET"), for request
-   * tabs.
-   */
-  async getTabMethodTag(name: string): Promise<string> {
-    return this.tabBar.methodTag(name);
-  }
 
-  /**
-   * Reads back the names of every currently open tab, in on-screen
-   * (left-to-right) order.
-   */
-  async getTabNames(): Promise<string[]> {
-    return this.tabBar.names();
-  }
 
-  /**
-   * Checks whether a tab with the given name is currently open.
-   */
-  async isTabOpen(name: string): Promise<boolean> {
-    return this.tabBar.isOpen(name);
-  }
 
-  /**
-   * Double-clicks a temporary (italicized preview) tab to pin it, so
-   * navigating to a different request reuses a new temporary tab instead
-   * of replacing this one.
-   */
-  async pinTab(name: string): Promise<void> {
-    await this.tabBar.pin(name);
-  }
 
-  /**
-   * Opens the tab bar's "+" add-tab menu.
-   */
-  private async openAddTabMenu(): Promise<void> {
-    await this.tabBar.openAddMenu();
-  }
 
   /**
    * Locates a context-menu item by name, matching either a menuitem or a
@@ -333,17 +253,6 @@ export class WorkspacePage extends BasePage {
     await this.getContextMenuItem(item).click();
   }
 
-  /**
-   * Opens a workspace row's "⋮" actions dropdown (the "SideBar Workspace
-   * Actions" trigger, only rendered on hover) — the same underlying menu
-   * `rightClick()` also opens.
-   */
-  async openWorkspaceActionsDropdown(node: TreeNode): Promise<void> {
-    const row = this.treeNav.containerRow(node._id);
-    await row.scrollIntoViewIfNeeded();
-    await row.hover();
-    await row.getByLabel("SideBar Workspace Actions").click();
-  }
 
   /**
    * Clicks the "Create" button and waits for the create/update dialog to
@@ -360,56 +269,9 @@ export class WorkspacePage extends BasePage {
       .waitFor({ state: "hidden", timeout: timeoutMs });
   }
 
-  /**
-   * Clicks the "Ok" button on the currently open dialog and waits for it
-   * to close. Used to dismiss an error dialog (e.g. one surfaced by an
-   * action decorated with `@throwOnDialog`) so a test can continue with
-   * further steps afterward.
-   */
-  async closeDialog(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Ok" }).click();
-    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Closes the currently open dialog via Escape — works across both
-   * dialog implementations the app uses (the legacy Modal/ModalHeader
-   * pair's labeled "Modal Close Button", and newer react-aria-components
-   * Dialogs like Collection/Workspace Settings whose "x" button carries
-   * no accessible name at all).
-   */
-  async closeModal(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
-    await this.page.keyboard.press("Escape");
-    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Clicks the "Delete" (or "Delete ...") button in the currently open
-   * dialog and waits for the dialog to close.
-   */
-  async clickDelete(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
-    const deleteButton = dialog.getByRole("button", { name: /^Delete/ });
-    // The dialog can re-render right as it opens, swallowing the first
-    // click; press again while the button is still there.
-    await expect(async () => {
-      if (await deleteButton.isVisible()) await deleteButton.click({ timeout: 2000 });
-      await expect(dialog).toBeHidden({ timeout: 3000 });
-    }).toPass({ timeout: DEFAULT_TIMEOUT * 2 });
-  }
 
-  /**
-   * Clicks the "Duplicate" button and waits for the dialog to close.
-   */
-  async clickDuplicate(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
-    await this.page
-      .getByRole("button", { name: "Duplicate", exact: true })
-      .click();
-    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
 
   /**
    * Clicks the "Create" button in the duplicate-request dialog and waits
@@ -423,88 +285,10 @@ export class WorkspacePage extends BasePage {
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
-  private readonly generateCodeDialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Generate Client Code" });
 
-  private readonly generateCodeCodeMirror = this.generateCodeDialog.locator(
-    '[data-testid="CodeEditor"] .CodeMirror',
-  );
 
-  /**
-   * Reads the code snippet shown in the "Generate Client Code" dialog
-   * (opened via `ContextMenuItem.GenerateCode`), then closes it via
-   * "Done".
-   */
-  async getGeneratedCode(): Promise<string> {
-    const code = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await this.generateCodeDialog.getByRole("button", { name: "Done" }).click();
-    await expect(this.generateCodeDialog).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    return code;
-  }
 
-  /**
-   * Switches the "Generate Client Code" dialog's target language (the
-   * first of its two dropdowns, e.g. "Shell"/"Node.js"/"Python"), then
-   * waits for the snippet to actually re-render with the new target
-   * before returning — the snippet updates
-   * asynchronously (~1s) after the menu item click, so a caller reading
-   * `getGeneratedCode()` immediately after would race a stale snippet.
-   * No-ops if `target` is already the dropdown's current selection.
-   */
-  async setGenerateCodeTarget(target: string): Promise<void> {
-    const dropdown = this.generateCodeDialog.getByTestId(
-      "generate-code-target-dropdown",
-    );
-    if ((await dropdown.innerText()).trim() === target) {
-      return;
-    }
-    const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click();
-    await this.page
-      .getByRole("menuitem", { name: target, exact: true })
-      .click();
-    await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await expect
-      .poll(() => this.readCodeMirror(this.generateCodeCodeMirror), {
-        timeout: DEFAULT_TIMEOUT,
-      })
-      .not.toBe(before);
-  }
 
-  /**
-   * Switches the "Generate Client Code" dialog's client library (the
-   * second dropdown, whose options depend on the currently-selected
-   * target — e.g. Node.js offers HTTP/Request/Unirest/Axios/Fetch), then
-   * waits for the snippet to re-render with the new client, same as
-   * `setGenerateCodeTarget()`. No-ops if `client` is already the
-   * dropdown's current selection.
-   */
-  async setGenerateCodeClient(client: string): Promise<void> {
-    const dropdown = this.generateCodeDialog.getByTestId(
-      "generate-code-client-dropdown",
-    );
-    if ((await dropdown.innerText()).trim() === client) {
-      return;
-    }
-    const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click();
-    await this.page
-      .getByRole("menuitem", { name: client, exact: true })
-      .click();
-    await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
-      timeout: DEFAULT_TIMEOUT,
-    });
-    await expect
-      .poll(() => this.readCodeMirror(this.generateCodeCodeMirror), {
-        timeout: DEFAULT_TIMEOUT,
-      })
-      .not.toBe(before);
-  }
 
   /**
    * Scrolls a tree node's row into view and left-clicks it.
@@ -538,122 +322,13 @@ export class WorkspacePage extends BasePage {
     await this.treeNav.expandByKey(node._id, node.name);
   }
 
-  /**
-   * Focuses the given folder's row and presses the Left arrow key,
-   * collapsing it (a no-op if it's already collapsed). See `expand()` for
-   * why this waits for the toggle to settle rather than returning as soon
-   * as the keypress itself resolves.
-   */
-  async collapse(node: TreeNode): Promise<void> {
-    await this.treeNav.collapseByKey(node._id, node.name);
-  }
 
-  /**
-   * Checks whether a folder node is currently expanded, via its own
-   * "Collapse {name}" toggle button (only rendered while expanded — the
-   * same convention `expandAllCollapsed()` reads for "Expand {name}").
-   */
-  async isExpanded(node: TreeNode): Promise<boolean> {
-    return this.treeNav.isExpandedByKey(node._id, node.name);
-  }
 
-  /**
-   * Clicks the given node to select it, then sends the platform's "show
-   * create menu" shortcut (Cmd+N on macOS, Ctrl+N elsewhere), opening the
-   * Sidebar Shortcut Create Menu targeted at that folder/collection/project.
-   * The shortcut only opens the menu — it does not create
-   * anything by itself, unlike `workspaceFlow.createCollection()`'s own "+"-button
-   * dropdown path.
-   */
-  async openCreateShortcut(node: TreeNode): Promise<void> {
-    await this.clickNode(node);
-    // The click's own selection state (which the sidebar
-    // syncs from an async route-resource fetch, not synchronously off the
-    // click) can still be catching up when Ctrl+N fires. If that catch-up
-    // lands *after* the shortcut menu opens, the sidebar's own "close the
-    // dropdown when the selected item changes" effect fires against it and
-    // silently closes the menu moments after this method returns. Waiting
-    // for the row's own `aria-selected` to settle first lets that catch-up
-    // (and its effect) happen before the menu ever opens, so it can't
-    // close a menu that doesn't exist yet.
-    await this.waitForSelectionSettled(node);
-    // The shortcut listener is rebound on every render of the component
-    // that owns it (see CommandPalettePage.openViaShortcut()'s doc comment
-    // for the same race), so draining the renderer's task queue first
-    // ensures the re-render `waitForSelectionSettled()` just waited out has
-    // actually finished before the keypress is sent.
-    await this.waitForRendererIdle();
-    // The shortcut listener is bound to the sidebar container, not the
-    // window, so the keypress must originate inside it. Pressing on the
-    // row itself (like `expand()`) guarantees that, whereas
-    // `page.keyboard.press()` goes to whatever holds focus — which can
-    // have moved into the main pane after the click opened the item's tab.
-    await this.treeNav.containerRow(node._id).press("ControlOrMeta+n");
-    await expect(this.page.getByRole("menu")).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
 
-  /**
-   * Polls a row's `aria-selected` attribute until it reports `"true"`
-   * across two consecutive reads — see `openCreateShortcut()`'s doc
-   * comment for the async selection catch-up this waits out.
-   */
-  private async waitForSelectionSettled(node: TreeNode): Promise<void> {
-    await this.treeNav.waitForSelectedByKey(node._id);
-  }
 
-  /**
-   * Checks whether the Sidebar Shortcut Create Menu (opened via
-   * `openCreateShortcut()`) is currently visible.
-   * Matching this popover's `role="menu"` by its own
-   * `aria-label="Sidebar Shortcut Create Menu"` is unreliable right after
-   * it opens (its accessible name briefly resolves differently while
-   * react-aria-components finishes mounting the popover) — a plain
-   * `getByRole("menu")` is reliable instead, since only one menu is ever
-   * open at a time in this app.
-   */
-  async isCreateShortcutShown(): Promise<boolean> {
-    return (await this.page.getByRole("menu").count()) > 0;
-  }
 
-  /**
-   * Checks whether the one-time "Welcome to focus mode" onboarding
-   * popover is currently visible — shown the first time a workspace is
-   * focused while `Settings.sidebarFocusForCollections` is on and it
-   * hasn't been dismissed before.
-   */
-  async isFocusModePromptShown(): Promise<boolean> {
-    return (
-      (await this.page
-        .getByRole("dialog", { name: "Sidebar focus mode onboarding" })
-        .count()) > 0
-    );
-  }
 
-  /**
-   * Clicks the focus-mode onboarding popover's "Got It" button, dismissing
-   * it. The dismissal is persisted to Settings, so it stays dismissed
-   * across reloads/re-focusing.
-   */
-  async dismissFocusModePrompt(): Promise<void> {
-    const onboarding = this.page.getByRole("dialog", {
-      name: "Sidebar focus mode onboarding",
-    });
-    await onboarding.getByRole("button", { name: "Got It" }).click();
-    await expect(onboarding).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
 
-  /**
-   * Clicks the sidebar's "Back to all projects" button, returning from a
-   * collection's own (possibly focus-mode-narrowed) contents view to the
-   * full project navigation tree.
-   */
-  async goBackToProject(): Promise<void> {
-    await this.page
-      .getByRole("button", { name: "Back to all projects" })
-      .click();
-  }
 
   /**
    * Clicks the "Rename" button in the currently open dialog and waits
@@ -797,33 +472,7 @@ export class WorkspacePage extends BasePage {
     await this.navigate();
   }
 
-  /**
-   * Reads the current pane's breadcrumb trail (e.g. Project > Collection
-   * > Request), in order. A Collection with no active request/folder
-   * renders just the first two levels. A request's level renders its HTTP
-   * method above its name (e.g. "GET\nMy Request"); that method prefix is
-   * stripped so callers only see the label.
-   */
-  async getBreadcrumb(): Promise<string[]> {
-    const labels = await this.page
-      .locator('[data-testid^="workspace-breadcrumb-level-"]')
-      .allInnerTexts();
-    return labels.map((label) => label.replace(/^[A-Z]+\n/, ""));
-  }
 
-  /**
-   * Polls `getBreadcrumb()` until it matches `expected`, rather than
-   * trusting a single read right after selecting a node — the breadcrumb
-   * lags the newly-selected item by a render tick.
-   */
-  async waitForBreadcrumbSettled(expected: string[]): Promise<string[]> {
-    let breadcrumb: string[] = [];
-    await expect(async () => {
-      breadcrumb = await this.getBreadcrumb();
-      expect(breadcrumb).toEqual(expected);
-    }).toPass({ timeout: DEFAULT_TIMEOUT });
-    return breadcrumb;
-  }
 
   /**
    * Convenience accessor for the full flattened list of tree nodes.
@@ -881,20 +530,6 @@ export class WorkspacePage extends BasePage {
     await this.waitForTreeSettled();
   }
 
-  /**
-   * Checks whether a dialog with the given heading text is currently
-   * open. Every simple modal in the app (Request/Collection Settings,
-   * etc.) shares the same generic dialog role, so callers scope by
-   * heading text to tell them apart.
-   */
-  async isModalOpen(headingText: string): Promise<boolean> {
-    return (
-      (await this.page
-        .getByRole("dialog")
-        .filter({ hasText: headingText })
-        .count()) > 0
-    );
-  }
 
   /**
    * Checks whether a request currently appears in the sidebar's
@@ -909,17 +544,6 @@ export class WorkspacePage extends BasePage {
     );
   }
 
-  /**
-   * Renames a request in place via the sidebar's inline editable label
-   * (double-click to edit, Enter to submit) — distinct from the
-   * context-menu "Rename" dialog `workspaceFlow.rename*()` drives.
-   */
-  async renameRequestInline(name: string, newName: string): Promise<void> {
-    const row = this.page.locator(`[data-testid="request-node-${name}"]`);
-    await row.locator("[data-editable]").dblclick();
-    await row.getByRole("textbox").fill(newName);
-    await row.getByRole("textbox").press("Enter");
-  }
 
   /**
    * Reads the request-type label (e.g. GET, GraphQL) shown next to a
@@ -1007,17 +631,6 @@ export class WorkspacePage extends BasePage {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
-  /**
-   * Waits for a deleted node's row to actually disappear from the tree.
-   * The delete confirmation dialog can close (and its promise resolve)
-   * slightly before the underlying row is removed from the DOM, so a
-   * `getNodes()`/`getTree()` read taken immediately after confirming a
-   * delete can still briefly see the stale row.
-   */
-  async waitForNodeRemoved(node: TreeNode): Promise<void> {
-    const row = this.treeNav.containerRow(node._id);
-    await expect(row).toHaveCount(0, { timeout: DEFAULT_TIMEOUT });
-  }
 
   /**
    * Presses the mouse down on a tree node's row and nudges it a few
@@ -1068,28 +681,6 @@ export class WorkspacePage extends BasePage {
     await this.page.mouse.move(x, y, { steps: 1 });
   }
 
-  /**
-   * Same as `dragOver()`, but takes the horizontal position as an
-   * absolute pixel offset from the row's left edge rather than a
-   * fraction of its width — needed at a boundary spanning several
-   * nesting depths, where `levelFromX()`'s indent-level math is
-   * sensitive to a handful of pixels and a row-width-relative fraction
-   * isn't precise enough to land on a specific depth.
-   */
-  async dragOverPixels(
-    node: TreeNode,
-    xPixels: number,
-    yFraction: number,
-  ): Promise<void> {
-    const row = this.dragRow(node);
-    await row.scrollIntoViewIfNeeded();
-    const box = (await row.boundingBox())!;
-    const x = box.x + xPixels;
-    const y = box.y + box.height * yFraction;
-    await this.page.mouse.move(x, y, { steps: 5 });
-    await this.page.mouse.move(x, y + 1, { steps: 1 });
-    await this.page.mouse.move(x, y, { steps: 1 });
-  }
 
   /**
    * Releases the mouse button, committing whichever drop target the last
@@ -1099,20 +690,6 @@ export class WorkspacePage extends BasePage {
     await this.page.mouse.up();
   }
 
-  /**
-   * Convenience wrapper around `startDrag()`/`dragOver()`/`releaseDrag()`
-   * for a scenario that doesn't need to inspect the indicator mid-drag.
-   */
-  async dragAndDrop(
-    source: TreeNode,
-    target: TreeNode,
-    xFraction = 0.5,
-    yFraction = 0.5,
-  ): Promise<void> {
-    await this.startDrag(source);
-    await this.dragOver(target, xFraction, yFraction);
-    await this.releaseDrag();
-  }
 
   /**
    * Reads the sidebar's currently rendered drop indicator — the custom
@@ -1167,67 +744,8 @@ export class WorkspacePage extends BasePage {
     return this.treeNav.containerRow(node._id);
   }
 
-  /**
-   * Right-clicks a tree node by name and clicks a context-menu item by
-   * its visible label. Unlike clickContextMenu, the label isn't
-   * restricted to the fixed ContextMenuItem enum, so this also covers
-   * dynamically-labeled entries such as plugin-injected menu items.
-   * @throws If the node or the context-menu item is never found
-   */
-  async clickItemContextMenu(
-    nodeName: string,
-    contextMenu: string,
-    parent?: TreeNode,
-  ): Promise<void> {
-    const node = await this.findItemNode({ name: nodeName }, undefined, parent);
-    if (!node) {
-      throw new Error(`Tree node "${nodeName}" not found`);
-    }
-    await this.rightClick(node);
 
-    const menu = this.page.getByRole("menu");
-    const menuItem = menu
-      .getByRole("menuitem", { name: contextMenu })
-      .or(menu.getByRole("menuitemradio", { name: contextMenu }))
-      .or(menu.getByRole("menuitemcheckbox", { name: contextMenu }));
-    try {
-      await menuItem.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    } catch {
-      throw new Error(`Context menu item "${contextMenu}" not found`);
-    }
-    await menuItem.click();
-  }
 
-  /**
-   * Selects the target project in the duplicate dialog's project
-   * dropdown. If no project name is given, selects the option marked
-   * "(current)".
-   */
-  async selectDuplicateProject(projectName?: string): Promise<void> {
-    const select = this.page
-      .getByRole("dialog")
-      .locator('select[name="projectId"]');
-    const options = await select.locator("option").allTextContents();
-    const label = projectName
-      ? options.find((o) => o.startsWith(projectName))
-      : options.find((o) => o.includes("(current)"));
-    if (!label) {
-      throw new Error(
-        `Project "${projectName ?? "(current)"}" not found in duplicate dialog`,
-      );
-    }
-    await select.selectOption({ label });
-  }
-
-  /**
-   * Fills the name field in the duplicate dialog and verifies the value
-   * stuck.
-   */
-  async setDuplicateName(name: string): Promise<void> {
-    const input = this.page.getByRole("dialog").locator('input[name="name"]');
-    await input.fill(name);
-    await expect(input).toHaveValue(name);
-  }
 
   /**
    * Fills the generic prompt input (used for naming new items such as
@@ -1306,43 +824,6 @@ export class WorkspacePage extends BasePage {
     return undefined;
   }
 
-  /**
-   * Selects a tree node's row, focuses the row itself (the shortcut ignores
-   * inner controls) and presses the sidebar's Delete shortcut, opening the
-   * node's delete confirmation dialog.
-   */
-  async pressDeleteShortcut(node: TreeNode): Promise<void> {
-    const row = this.treeNav.containerRow(node._id);
-    await row.scrollIntoViewIfNeeded();
-    await row.click();
-    await row.focus();
-    await this.page.keyboard.press("Delete");
-  }
 
-  /**
-   * Reads the titles of any visible "resource not found" toasts, so a failing
-   * assertion names the route that raised it.
-   */
-  async getResourceNotFoundToastTexts(): Promise<string[]> {
-    return this.page
-      .getByTestId("toast-body")
-      .filter({
-        has: this.page
-          .getByTestId("toast-description")
-          .filter({
-            hasText:
-              "Please confirm that the resource still exists and has not been deleted or moved.",
-          }),
-      })
-      .allInnerTexts();
-  }
 
-  /**
-   * Counts the "resource not found" warning toasts currently on screen.
-   */
-  async countResourceNotFoundToasts(): Promise<number> {
-    return this.page
-      .getByText("Please confirm that the resource still exists and has not been deleted or moved.")
-      .count();
-  }
 }

@@ -4,22 +4,17 @@ import { ProjectType } from '@package/enums/project-types';
 import { TreeNodeType } from '@package/enums/tree-node-types';
 import { DEFAULT_TIMEOUT } from '@package/misc/constants';
 import { step } from "@package/misc/step";
-import { Collection, TestSuite, UnitTest } from '@package/models/collection';
+import { Collection } from '@package/models/collection';
 import { Environment } from '@package/models/environment';
 import type { EventStreamRequest } from '@package/models/event-stream-request';
-import type { Folder } from "@package/models/folder";
-import type { GitRepository } from '@package/models/git-repository';
 import type { GraphQLRequest } from '@package/models/graphql-request';
 import type { GrpcRequest } from '@package/models/grpc-request';
 import type { HttpRequest } from '@package/models/http-request';
 import { McpClient } from '@package/models/mcp-client';
 import { Project } from '@package/models/project';
-import type { RunnerOptions, RunnerRunResult } from '@package/models/runner';
-import { Settings } from '@package/models/settings';
 import type { SocketIORequest } from '@package/models/socket-io-request';
 import type { WebSocketRequest } from '@package/models/websocket-request';
 import type { PageManager } from '@package/pages/page-manager';
-import type { UnitTestResultRow } from '@package/pages/spec.page';
 import type { TreeNode } from '@package/pages/workspace.page';
 import { expect } from '@playwright/test';
 
@@ -65,11 +60,6 @@ export type WorkspaceItem =
   | (SocketIORequest & { kind: 'socketIO' })
   | (WebSocketRequest & { kind: 'webSocket' });
 
-/** The settled outcome of `WorkspaceFlow.runAllTests()`. */
-export interface UnitTestRunResult {
-  summary: string;
-  rows: UnitTestResultRow[];
-}
 
 export class WorkspaceFlow extends BaseFlow {
   constructor(
@@ -100,66 +90,7 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(await this.getProject(item.name), item.name);
   }
 
-  /**
-   * Creates a new Git Sync Project by adopting `item.folderPath` — an
-   * existing local folder (running `git init` inside it if it isn't
-   * already a repo) — instead of cloning from a remote URL: the "Open
-   * local folder" mode of the create-project dialog's Git sub-form.
-   */
-  @step()
-  async openLocalGitFolder(item: Project): Promise<Project> {
-    if (item.folderPath === undefined) {
-      throw new Error(`openLocalGitFolder(): Project "${item.name}" has no folderPath to open`);
-    }
-    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
-    await projectPage.clickNewProject();
-    await workspacePage.setNewItemName(item.name);
-    await projectPage.setNewProjectType(item.type);
 
-    await projectSettingsPage.selectGitOpenMode();
-    await this.context.stubFileChooser(item.folderPath);
-    await projectSettingsPage.chooseOpenFolderLocation();
-    await projectSettingsPage.confirmOpenFolder();
-    return this.assertCreated(await this.getProject(item.name), item.name);
-  }
-
-  /**
-   * Creates a new Git Sync Project by cloning a remote repo, explicitly
-   * selecting `credentialName` (a credential already configured in
-   * Preferences -> Credentials) rather than relying on whichever
-   * credential the form defaults to.
-   */
-  @step()
-  async cloneGitProject(
-    item: Project,
-    credentialName: string,
-    repo?: Partial<GitRepository>,
-  ): Promise<Project> {
-    const uri = repo?.uri ?? this.gitRepoUrl;
-    if (!uri) {
-      throw new Error(
-        'cloneGitProject(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one',
-      );
-    }
-    const branch = repo?.branch ?? 'master';
-
-    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
-    await projectPage.clickNewProject();
-    await workspacePage.setNewItemName(item.name);
-    await projectPage.setNewProjectType(item.type);
-
-    await projectSettingsPage.selectCredential(credentialName);
-    await projectSettingsPage.setRepositoryUrl(uri);
-    await projectSettingsPage.selectBranch(branch);
-    if (repo?.cloneParentDir) {
-      await this.context.stubFileChooser(repo.cloneParentDir);
-      await projectSettingsPage.chooseCloneLocation();
-    }
-    await projectSettingsPage.submitScanForFiles();
-    await projectSettingsPage.confirmClone();
-
-    return this.assertCreated(await this.getProject(item.name), item.name);
-  }
 
   /**
    * Creates a Collection under `parent`. If it carries a `spec`, authors
@@ -188,19 +119,6 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(await this.getCollection(item.name), item.name);
   }
 
-  /**
-   * Creates an McpClient under `parent`.
-   */
-  @step()
-  async createMcpClient(parent: Project, item: McpClient): Promise<McpClient> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(parent);
-    await workspace.rightClick(node);
-    await workspace.clickContextMenu(ContextMenuItem.McpClient);
-    await workspace.setNewItemName(item.name);
-    await workspace.clickCreate();
-    return this.assertCreated(await this.getMcpClient(item.name), item.name);
-  }
 
   /**
    * Creates an Environment under `parent`.
@@ -238,160 +156,15 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(await this.getCollection(collection.name), collection.name);
   }
 
-  /**
-   * Dismisses the currently open dialog (e.g. an error dialog surfaced by
-   * an action decorated with `@throwOnDialog`) by clicking its "Ok"
-   * button, so a test can continue with further steps afterward.
-   */
-  @step()
-  async closeDialog(): Promise<void> {
-    await this.pageManager.workspacePage.closeDialog();
-  }
 
-  /**
-   * Reads whether the one-time "Welcome to focus mode" onboarding popover
-   * is currently shown, then dismisses it if so.
-   */
-  @step()
-  async dismissFocusModePrompt(): Promise<boolean> {
-    const { workspacePage } = this.pageManager;
-    const shown = await workspacePage.isFocusModePromptShown();
-    if (shown) await workspacePage.dismissFocusModePrompt();
-    return shown;
-  }
 
-  /**
-   * Opens `project`'s Settings dialog via its context menu's "Settings"
-   * action and waits for it to load, leaving it open for further
-   * interaction via `pageManager.projectSettingsPage` (e.g. reading the
-   * current git repo path, relocating it).
-   */
-  @step()
-  async openSettings(project: Project): Promise<void> {
-    const { workspacePage, projectSettingsPage } = this.pageManager;
-    const node = await workspacePage.resolveNode(project);
-    await workspacePage.rightClick(node);
-    await workspacePage.clickContextMenu(ContextMenuItem.Settings);
-    await projectSettingsPage.navigate();
-  }
 
-  /**
-   * Renames `project` via its Settings dialog's "Project name" field —
-   * Project has no "Rename" context-menu item, so this is the only way
-   * to rename one.
-   */
-  @step()
-  async renameProject(project: Project, newName: string): Promise<Project> {
-    const { projectSettingsPage } = this.pageManager;
-    await this.openSettings(project);
-    await projectSettingsPage.setName(newName);
-    await projectSettingsPage.clickUpdate();
-    const renamed = new Project(newName, project.type);
-    renamed.id = project.id;
-    return renamed;
-  }
 
-  /**
-   * Right-clicks the tree node matching `item` and deletes it via the
-   * context menu. Does nothing if no matching node is found.
-   */
-  @step()
-  async delete(
-    item:
-      | Project
-      | Collection
-      | McpClient
-      | Environment
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
-  ): Promise<void> {
-    const node = await this.pageManager.workspacePage.findItemNode(item);
-    if (!node) return;
-    await this.pageManager.workspacePage.rightClick(node);
-    await this.pageManager.workspacePage.clickContextMenu(ContextMenuItem.Delete);
-    await this.pageManager.workspacePage.clickDelete();
-    await this.pageManager.workspacePage.waitForNodeRemoved(node);
-  }
 
-  /**
-   * Opens the command palette, searches for `query`, and reads back the
-   * matching result names.
-   */
-  @step()
-  async search(query: string): Promise<string[]> {
-    const { commandPalettePage } = this.pageManager;
-    await commandPalettePage.open();
-    await commandPalettePage.search(query);
-    return commandPalettePage.getResultNames();
-  }
 
-  /**
-   * Right-clicks the tree node matching `request` and reads back the
-   * generated code snippet via "Generate Code" — available for regular
-   * requests, not gRPC.
-   */
-  @step()
-  async generateCode(
-    request: HttpRequest | GraphQLRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
-    options?: { target?: string; client?: string },
-  ): Promise<string> {
-    const { workspacePage } = this.pageManager;
-    const node = await workspacePage.findItemNode(request);
-    if (!node) throw new Error(`Failed to find "${request.name}" to generate code for`);
-    await workspacePage.rightClick(node);
-    await workspacePage.clickContextMenu(ContextMenuItem.GenerateCode);
-    if (options?.target) await workspacePage.setGenerateCodeTarget(options.target);
-    if (options?.client) await workspacePage.setGenerateCodeClient(options.client);
-    return workspacePage.getGeneratedCode();
-  }
 
-  /**
-   * Duplicates a Collection via its context menu's "Duplicate" action,
-   * optionally moving the copy into `targetProject`, then re-fetches it as
-   * its full model.
-   */
-  @step()
-  async duplicateCollection(item: Collection, newName: string, targetProject?: Project): Promise<Collection> {
-    await this.duplicateViaContextMenu(item, newName, targetProject);
-    return this.assertCreated(await this.getCollection(newName), newName);
-  }
 
-  /**
-   * Duplicates an McpClient via its context menu's "Duplicate" action,
-   * optionally moving the copy into `targetProject`, then re-fetches it as
-   * its full model.
-   */
-  @step()
-  async duplicateMcpClient(item: McpClient, newName: string, targetProject?: Project): Promise<McpClient> {
-    await this.duplicateViaContextMenu(item, newName, targetProject);
-    return this.assertCreated(await this.getMcpClient(newName), newName);
-  }
 
-  /**
-   * Duplicates an Environment via its context menu's "Duplicate" action,
-   * optionally moving the copy into `targetProject`, then re-fetches it as
-   * its full model.
-   */
-  @step()
-  async duplicateEnvironment(item: Environment, newName: string, targetProject?: Project): Promise<Environment> {
-    await this.duplicateViaContextMenu(item, newName, targetProject);
-
-    // Duplicating only renames the copy's project-tree title; its inner
-    // Base Environment document still carries the source environment's
-    // original name, so it must be renamed separately to keep both in
-    // sync — mirroring createBaseEnvironment()'s own rename step — and to
-    // populate `containerName` the way environmentFlow.createBaseEnvironment() does.
-    if (item.name !== newName) {
-      await this.pageManager.environmentPage.navigate();
-      await this.pageManager.environmentPage.renameEnvironment(item.name, newName);
-    }
-    const duplicated = await this.assertCreated(await this.getEnvironment(newName), newName);
-    return Object.assign(duplicated, { containerName: newName });
-  }
 
   /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
@@ -408,21 +181,6 @@ export class WorkspaceFlow extends BaseFlow {
     return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
   }
 
-  private async duplicateViaContextMenu(
-    item: Collection | McpClient | Environment,
-    newName: string,
-    targetProject?: Project,
-  ): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(item);
-    await workspace.rightClick(node);
-    await workspace.clickContextMenu(
-      node.type === TreeNodeType.Workspace ? ContextMenuItem.DuplicateWorkspace : ContextMenuItem.Duplicate,
-    );
-    await workspace.setDuplicateName(newName);
-    await workspace.selectDuplicateProject(targetProject?.name);
-    await workspace.clickDuplicate();
-  }
 
   /**
    * Right-clicks the tree node matching `request` and pins it via the
@@ -459,120 +217,14 @@ export class WorkspaceFlow extends BaseFlow {
     await workspacePage.clickContextMenu(action);
   }
 
-  /**
-   * Renames a Collection via its context menu's "Rename" action, then
-   * re-fetches it as its full model under the new name.
-   */
-  @step()
-  async renameCollection(item: Collection, newName: string): Promise<Collection> {
-    await this.renameViaContextMenu(item, newName);
-    return this.assertCreated(await this.getCollection(newName), newName);
-  }
 
-  /**
-   * Renames an McpClient via its context menu's "Rename" action, then
-   * re-fetches it as its full model under the new name.
-   */
-  @step()
-  async renameMcpClient(item: McpClient, newName: string): Promise<McpClient> {
-    await this.renameViaContextMenu(item, newName);
-    return this.assertCreated(await this.getMcpClient(newName), newName);
-  }
 
-  /**
-   * Renames an Environment via its context menu's "Rename" action, then
-   * re-fetches it as its full model under the new name.
-   */
-  @step()
-  async renameEnvironment(item: Environment, newName: string): Promise<Environment> {
-    await this.renameViaContextMenu(item, newName);
-    return this.assertCreated(await this.getEnvironment(newName), newName);
-  }
 
-  /**
-   * Renames a request in place via its context menu's "Rename" action.
-   */
-  @step()
-  async renameRequest(item: RequestItem, newName: string): Promise<{ id: string; name: string }> {
-    await this.renameViaContextMenu(item, newName);
-    const newNode = await this.pageManager.workspacePage.findNode(newName, TreeNodeType.Request);
-    return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
-  }
 
   // Project is deliberately not accepted, since its context menu has no
   // "Rename" entry — use `renameProject()` for that.
-  private async renameViaContextMenu(
-    item: Collection | McpClient | Environment | RequestItem,
-    newName: string,
-  ): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(item);
-    await workspace.rightClick(node);
-    await workspace.clickContextMenu(ContextMenuItem.Rename);
-    await workspace.setItemName(newName);
-    await workspace.clickRename();
-  }
 
-  /**
-   * Right-clicks `collection` and opens its Runner via the "Run API
-   * Collection" context-menu action, then applies whichever `options`
-   * fields are defined. Leaves the Runner configured but does not click
-   * "Run" — use this instead of `run()` when a test needs to interact
-   * with the Runner (e.g. Cancel/Skip) while it's in flight, rather than
-   * waiting for it to finish.
-   */
-  @step()
-  async openRunner(collection: Collection, options?: RunnerOptions): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const runner = this.pageManager.runnerPage;
-    const node = await workspace.resolveNode(collection);
-    await workspace.rightClick(node);
-    await workspace.clickContextMenu(ContextMenuItem.RunCollection);
-    await runner.navigate();
 
-    if (options?.keepLogs !== undefined) await runner.setKeepLogs(options.keepLogs);
-    if (options?.bail !== undefined) await runner.setBail(options.bail);
-    if (options?.dataFilePath !== undefined) {
-      await runner.uploadData(options.dataFilePath);
-    }
-    if (options?.iterations !== undefined) {
-      await runner.setIterations(options.iterations);
-    }
-    if (options?.delay !== undefined) await runner.setDelay(options.delay);
-  }
-
-  /**
-   * Opens the Runner via `openRunner()`, clicks "Run", and waits until
-   * every configured iteration has produced a result for every selected
-   * request before returning the collected test-result count and
-   * per-iteration results.
-   */
-  @step()
-  async run(collection: Collection, options?: RunnerOptions): Promise<RunnerRunResult> {
-    const runner = this.pageManager.runnerPage;
-    await this.openRunner(collection, options);
-
-    await runner.switchRequestTab('request-order');
-    const selectedRequestCount = (await runner.getRequestOrder()).filter(item => item.selected).length;
-    const targetIterations = await runner.getIterations();
-
-    await runner.clickRun();
-
-    await expect
-      .poll(
-        async () => {
-          const results = await runner.getIterationResults();
-          return results.length === targetIterations && results.every(it => it.results.length === selectedRequestCount);
-        },
-        { timeout: DEFAULT_TIMEOUT },
-      )
-      .toBe(true);
-
-    return {
-      testResultCount: await runner.getTestResultCount(),
-      iterationResults: await runner.getIterationResultsByFilter(),
-    };
-  }
 
   /**
    * Resolves any workspace item (project, collection, MCP client, or any
@@ -592,18 +244,6 @@ export class WorkspaceFlow extends BaseFlow {
     return result as T | undefined;
   }
 
-  /**
-   * Opens the command palette, searches for `item`'s name, selects the
-   * first matching result (navigating to it), then resolves it the same
-   * way `get()` does.
-   */
-  async getByPalette<T = WorkspaceItem>(name: string): Promise<T | undefined> {
-    const { commandPalettePage } = this.pageManager;
-    await commandPalettePage.open();
-    await commandPalettePage.search(name);
-    await commandPalettePage.selectResult(name);
-    return this.get<T>(name);
-  }
 
   /**
    * Finds the tree node matching `item` and returns it as a Collection
@@ -649,74 +289,9 @@ export class WorkspaceFlow extends BaseFlow {
     return collection;
   }
 
-  /**
-   * Types `spec` into an already-existing collection's spec editor,
-   * replacing whatever content (if any) is currently there. Unlike the
-   * `spec` passed to `create()` (which only authors right after
-   * creation), this can be called at any later point — e.g. filling in a
-   * collection that started out with no spec.
-   */
-  @step()
-  async fillSpecification(item: Collection, spec: NonNullable<Collection['spec']>): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    const node = await workspace.resolveNode(item);
-    await workspace.clickNode(node);
-    await specPage.navigate();
-    await specPage.setSpecification(
-      typeof spec === 'string'
-        ? spec
-        : JSON.stringify({
-            swagger: '2.0',
-            host: 'localhost',
-            schemes: ['http'],
-            info: spec.info,
-            paths: spec.paths,
-          }),
-    );
-  }
 
-  /**
-   * Opens `item`'s Tests tab, then creates a default-named test suite (via
-   * `WorkspacePage.createTestSuite()`, which also navigates into it) and
-   * renames it — the two nearly always happen together, since a fresh
-   * suite is always named "New Suite".
-   */
-  @step()
-  async createTestSuite(item: string | { name: string; id?: string }, name: string): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    await this.openTests(item);
-    await specPage.createTestSuite();
-    await specPage.renameTestSuite('New Suite', name);
-  }
 
-  /**
-   * Opens `testSuite`'s Tests tab, selects `testSuite`, then creates a
-   * default-named test (via `WorkspacePage.createTest()`) and renames it —
-   * the two nearly always happen together, since a fresh test is always
-   * named "Returns 200".
-   */
-  @step()
-  async createUnitTest(testSuite: TestSuite, testName: string): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    await this.openTests(testSuite.collection);
-    await specPage.selectTestSuite(testSuite.name);
 
-    await specPage.createTest();
-    await specPage.renameUnitTest('Returns 200', testName);
-  }
-
-  /**
-   * Opens `item`'s Tests tab, then deletes `suiteName`'s test suite via its
-   * confirm modal (`WorkspacePage.deleteTestSuite()`).
-   */
-  @step()
-  async deleteTestSuite(item: string | { name: string; id?: string }, suiteName: string): Promise<void> {
-    await this.openTests(item);
-    await this.pageManager.specPage.deleteTestSuite(suiteName);
-  }
 
   /**
    * Expands the lint panel and polls the lint summary until it reports at
@@ -765,104 +340,10 @@ export class WorkspaceFlow extends BaseFlow {
     };
   }
 
-  /**
-   * Opens `item`'s Tests tab, selects `testSuiteName`, and reads it
-   * back — its name (`WorkspacePage.getSelectedTestSuiteName()`) together
-   * with every unit test currently listed under it
-   * (`WorkspacePage.getUnitTestNames()`) and a reference back to `item`,
-   * so the suite can be traced back to where it lives.
-   */
-  @step()
-  async getTestSuite(item: string | { name: string; id?: string }, testSuiteName: string): Promise<TestSuite> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    const node = await this.openTests(item);
-    await specPage.selectTestSuite(testSuiteName);
 
-    const collection = item instanceof Collection ? item : new Collection(typeof item === 'string' ? item : item.name);
-    if (!collection.id && node) collection.id = node._id;
 
-    const name = await specPage.getSelectedTestSuiteName();
-    const tests = (await specPage.getUnitTestNames()).map(testName => new UnitTest(testName));
-    return new TestSuite(name, tests, collection);
-  }
 
-  /**
-   * Opens `item`'s Tests tab and reads back every suite name currently
-   * listed in the Test Suites sidebar (`WorkspacePage.getTestSuiteNames()`).
-   */
-  @step()
-  async getTestSuiteNames(item: string | { name: string; id?: string }): Promise<string[]> {
-    await this.openTests(item);
-    return this.pageManager.specPage.getTestSuiteNames();
-  }
 
-  /**
-   * Navigates to `item`'s page, then removes the active custom ruleset
-   * via its confirm modal (`WorkspacePage.removeRuleset()`), reverting to
-   * the default OAS ruleset.
-   */
-  @step()
-  async removeRuleset(item: string | { name: string; id?: string }): Promise<void> {
-    const identity = typeof item === 'string' ? { name: item } : item;
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-
-    const node = await workspace.findItemNode(identity);
-    if (node) await workspace.clickNode(node);
-    await specPage.navigate();
-    await specPage.removeRuleset();
-  }
-
-  /**
-   * Opens `testSuite`'s Tests tab, selects `testSuite`, runs every test in
-   * it, and reads back the resulting pass/fail summary and per-test rows.
-   */
-  @step()
-  async runAllTests(testSuite: TestSuite): Promise<UnitTestRunResult> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    await this.openTests(testSuite.collection);
-    await specPage.selectTestSuite(testSuite.name);
-
-    await specPage.runAllTests();
-    return {
-      summary: await specPage.getTestResultSummary(),
-      rows: await specPage.getTestResultRows(),
-    };
-  }
-
-  /**
-   * Uploads a Spectral ruleset. If accepted, confirms it actually took
-   * effect by polling the lint panel until `expectCode` appears among the
-   * fired rules — bundling/re-linting happens asynchronously after the
-   * "View selected ruleset content" button already shows, so a bare read
-   * right after `WorkspacePage.uploadRuleset()` can catch a stale rule
-   * list — and returns the settled rule list. If rejected, dismisses the
-   * resulting "Invalid Spectral Ruleset" error dialog and returns
-   * `"invalid"` instead, leaving the default ruleset active.
-   */
-  @step()
-  async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
-    await this.context.stubFileChooser(filePath);
-    const result = await specPage.uploadRuleset();
-    if (result === 'invalid') {
-      await workspace.closeDialog();
-      return 'invalid';
-    }
-
-    await specPage.expandLintPanel();
-    if (expectCode) {
-      await expect
-        .poll(() => specPage.getLintEntryCodes(), {
-          timeout: DEFAULT_TIMEOUT,
-        })
-        .toContain(expectCode);
-    }
-    return specPage.getLintEntryCodes();
-  }
 
   /**
    * Types `spec` into `name`'s spec editor right after creation —
@@ -974,106 +455,8 @@ export class WorkspaceFlow extends BaseFlow {
     return collection && { ...collection, kind: 'collection' };
   }
 
-  /**
-   * Whether `ensureLegacyUnitTestsEnabled()` has already turned the
-   * Preferences -> General "Show legacy unit tests" setting on for this
-   * test — cached so repeated `openTests()` calls don't reopen Preferences
-   * every time.
-   */
-  private legacyUnitTestsEnabled = false;
 
-  /**
-   * Turns on Preferences -> General's "Show legacy unit tests" setting
-   * (default off), which gates whether the Tests tab
-   * renders at all on a Collection. A no-op after the first call.
-   */
-  private async ensureLegacyUnitTestsEnabled(): Promise<void> {
-    if (this.legacyUnitTestsEnabled) return;
-    await this.preferencesFlow.set(new Settings({ showLegacyUnitTests: true }));
-    this.legacyUnitTestsEnabled = true;
-  }
 
-  /**
-   * Finds `item`'s tree node (if not already resolved) and opens its
-   * Tests tab — the entry point for every unit-test-suite action. Turns on
-   * the "Show legacy unit tests" setting first (see
-   * `ensureLegacyUnitTestsEnabled()`), since the tab doesn't render at all
-   * while it's off.
-   */
-  private async openTests(item: string | { name: string; id?: string }): Promise<{ _id: string } | undefined> {
-    await this.ensureLegacyUnitTestsEnabled();
 
-    const identity = typeof item === 'string' ? { name: item } : item;
-    const workspace = this.pageManager.workspacePage;
-    const specPage = this.pageManager.specPage;
 
-    const node = await workspace.findItemNode(identity);
-    if (node) await workspace.clickNode(node);
-    await specPage.openTestsTab();
-    return node;
-  }
-
-  /**
-   * Deletes the tree node matching `item` with the sidebar's Delete shortcut
-   * and confirms the dialog. Does nothing if no matching node is found.
-   */
-  @step()
-  async deleteViaShortcut(
-    item:
-      | Collection
-      | McpClient
-      | Folder
-      | HttpRequest
-      | GraphQLRequest
-      | GrpcRequest
-      | EventStreamRequest
-      | SocketIORequest
-      | WebSocketRequest,
-  ): Promise<void> {
-    const node = await this.pageManager.workspacePage.findItemNode(item);
-    if (!node) return;
-    await this.pageManager.workspacePage.pressDeleteShortcut(node);
-    await this.pageManager.workspacePage.clickDelete();
-    await this.pageManager.workspacePage.waitForNodeRemoved(node);
-  }
-
-  /**
-   * Clones a Git Sync Project like `cloneGitProject(item, credentialName, repo)`, but
-   * reads the "Unknown Fields Detected" warning off the post-scan screen
-   * before confirming the clone.
-   */
-  @step()
-  async cloneWithScanReport(
-    item: Project,
-    credentialName: string,
-    repo?: Partial<GitRepository>,
-  ): Promise<{ project: Project; unknownFieldFiles: string[]; unknownFieldsWarningText: string }> {
-    const uri = repo?.uri ?? this.gitRepoUrl;
-    if (!uri) {
-      throw new Error(
-        'cloneWithScanReport(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one',
-      );
-    }
-    const branch = repo?.branch ?? 'master';
-
-    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
-    await projectPage.clickNewProject();
-    await workspacePage.setNewItemName(item.name);
-    await projectPage.setNewProjectType(item.type);
-
-    await projectSettingsPage.selectCredential(credentialName);
-    await projectSettingsPage.setRepositoryUrl(uri);
-    await projectSettingsPage.selectBranch(branch);
-    if (repo?.cloneParentDir) {
-      await this.context.stubFileChooser(repo.cloneParentDir);
-      await projectSettingsPage.chooseCloneLocation();
-    }
-    await projectSettingsPage.submitScanForFiles();
-    const unknownFieldFiles = await projectSettingsPage.getUnknownFieldFiles();
-    const unknownFieldsWarningText = await projectSettingsPage.getUnknownFieldsWarningText();
-    await projectSettingsPage.confirmClone();
-
-    const project = this.assertCreated(await this.getProject(item.name), item.name);
-    return { project, unknownFieldFiles, unknownFieldsWarningText };
-  }
 }
