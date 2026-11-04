@@ -301,11 +301,24 @@ table.json-diff-viewer {
   background-color: #e5e5e5 !important;
 }
 
+/* Lines holding fields this version of Insomnia doesn't recognize */
+.monaco-editor .unknown-field-line-bg {
+  background-color: rgba(var(--color-warning-rgb), 0.25) !important;
+}
+
 .monaco-editor .info-decoration::after {
   content: '\f05a'; /* FontAwesome info-circle icon */
   color: var(--color-font);
   font-size: 12px;
   font-family: 'Font Awesome 6 Free' !important; /* FontAwesome font family */
+}
+
+.monaco-editor .warning-decoration::after {
+  content: '\f071'; /* FontAwesome triangle-exclamation icon */
+  color: var(--color-warning);
+  font-size: 12px;
+  font-family: 'Font Awesome 6 Free' !important; /* FontAwesome font family */
+  font-weight: 900; /* the solid style of the icon */
 }
 
 .monaco-editor .codicon-unfold::before,

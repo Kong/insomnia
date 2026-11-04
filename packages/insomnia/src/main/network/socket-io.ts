@@ -12,20 +12,20 @@ import type {
   RequestHeader,
   SocketIOResponse,
 } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { version } from '../../../package.json';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
-import { filterClientCertificates } from '../../network/certificate';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { insecureReadFile, secureReadFile } from '../secure-read-file';
+import { createSensitiveValuesRegistry } from './sensitive-values-registry';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -91,6 +91,29 @@ const SocketIOConnections = new Map<string, Socket>();
 const requestIdToResponseIdMap = new Map<string, string>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
+// Confidential values to redact from timeline/event-log writes before they reach disk.
+// Only grows for the lifetime of a connection (each open/send IPC call merges in more
+// values); cleaned up in deleteRequestMaps.
+const sensitiveValues = createSensitiveValuesRegistry();
+
+const writeTimelineEntry = (requestId: string, entry: { value: string; name: string; timestamp: number }) => {
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ ...entry, value: sensitiveValues.redactText(requestId, entry.value) }) + '\n');
+};
+
+const writeSocketIOEventLog = (
+  requestId: string,
+  event: SocketIOEvent,
+  opts: { clearRequestIdMap?: boolean } = {},
+) => {
+  const redactedEvent = sensitiveValues.redactEvent(requestId, event);
+  writeEventLogAndNotify({
+    requestId,
+    data: JSON.stringify(redactedEvent) + '\n',
+    clearRequestIdMap: opts.clearRequestIdMap,
+  });
+};
 
 const protocolName = 'socketIO';
 const getEventNotificationChannel = (responseId: string) =>
@@ -150,6 +173,8 @@ interface OpenSocketIORequestOptions {
   path?: string;
   initialPayload?: string;
   suppressUserAgent?: boolean;
+  /** confidential values registered while rendering the connect payload, for timeline/event-log redaction (T10) */
+  sensitiveValues?: string[];
 }
 
 const getCertificates = async ({
@@ -170,7 +195,7 @@ const getCertificates = async ({
     (caCertficatePath && (await insecureReadFile(caCertficatePath))) || tls.rootCertificates.join('\n');
 
   const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
-  const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
+  const filteredClientCertificates = models.clientCertificate.filterClientCertificates(clientCertificates, url, 'wss:');
   const pemCertificates: string[] = [];
   const pemCertificateKeys: string[] = [];
   const pfxCertificates: string[] = [];
@@ -179,29 +204,17 @@ const getCertificates = async ({
     const { cert, key, pfx } = clientCertificate;
 
     if (cert) {
-      timelineFileStreams
-        .get(requestId)
-        ?.write(
-          JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
-        );
+      writeTimelineEntry(requestId, { value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() });
       pemCertificates.push(fs.readFileSync(cert, 'utf8'));
     }
 
     if (key) {
-      timelineFileStreams
-        .get(requestId)
-        ?.write(
-          JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
-        );
+      writeTimelineEntry(requestId, { value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() });
       pemCertificateKeys.push(fs.readFileSync(key, 'utf8'));
     }
 
     if (pfx) {
-      timelineFileStreams
-        .get(requestId)
-        ?.write(
-          JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
-        );
+      writeTimelineEntry(requestId, { value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() });
       pfxCertificates.push(fs.readFileSync(pfx, 'utf8'));
     }
   });
@@ -227,7 +240,9 @@ const createErrorResponse = async (
   requestId: string,
   environmentId: string | null,
   timelinePath: string,
-  message: string,
+  // Redacted by the caller: the error paths run deleteRequestMaps first — so a failure here can
+  // never leave the streams and maps behind — and that drops this request's value set.
+  redactedMessage: string,
 ) => {
   const settings = await services.settings.get();
   const responsePatch = {
@@ -236,7 +251,7 @@ const createErrorResponse = async (
     environmentId: environmentId,
     timelinePath,
     statusMessage: 'Error',
-    error: message,
+    error: redactedMessage,
   };
   const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
   services.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
@@ -266,6 +281,7 @@ const openSocketIOConnection = async (
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
   requestIdToResponseIdMap.set(options.requestId, responseId);
+  sensitiveValues.reset(options.requestId, options.sensitiveValues);
 
   // fallback to base environment
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(options.workspaceId);
@@ -337,7 +353,7 @@ const openSocketIOConnection = async (
     }
 
     const timeline = buildTimeline(url, options.path);
-    timeline.forEach(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+    timeline.forEach(t => writeTimelineEntry(options.requestId, t));
 
     const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
@@ -352,7 +368,7 @@ const openSocketIOConnection = async (
         type: 'open',
         timestamp: Date.now(),
       };
-      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(openEvent) + '\n' });
+      writeSocketIOEventLog(options.requestId, openEvent);
 
       if (!openedEvents.length) {
         const infoEvent: SocketIOInfoEvent = {
@@ -362,7 +378,7 @@ const openSocketIOConnection = async (
           message: 'Add event listeners to receive messages',
           timestamp: Date.now(),
         };
-        writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(infoEvent) + '\n' });
+        writeSocketIOEventLog(options.requestId, infoEvent);
       }
 
       const responsePatch: Partial<SocketIOResponse> = {
@@ -372,7 +388,7 @@ const openSocketIOConnection = async (
         timelinePath,
         eventLogPath: responseBodyPath,
         elapsedTime: performance.now() - start,
-        url: url,
+        url: sensitiveValues.redactText(options.requestId, url),
       };
 
       const res = await services.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
@@ -381,11 +397,11 @@ const openSocketIOConnection = async (
 
     const engine = socket.io.engine;
     engine.once('upgrade', () => {
-      timelineFileStreams
-        .get(request._id)
-        ?.write(
-          JSON.stringify({ value: `Upgraded to ${engine.transport.name}`, name: 'Text', timestamp: Date.now() }) + '\n',
-        );
+      writeTimelineEntry(request._id, {
+        value: `Upgraded to ${engine.transport.name}`,
+        name: 'Text',
+        timestamp: Date.now(),
+      });
     });
 
     socket.on('disconnect', async (reason, details) => {
@@ -412,14 +428,10 @@ const openSocketIOConnection = async (
         error,
         timestamp: Date.now(),
       };
+      // Redact up front: deleteRequestMaps drops this request's value set below.
+      const redactedMessage = sensitiveValues.redactText(request._id, error.message || 'Something went wrong');
       deleteRequestMaps(request._id, error.message, errorEvent);
-      createErrorResponse(
-        responseId,
-        request._id,
-        responseEnvironmentId,
-        timelinePath,
-        error.message || 'Something went wrong',
-      );
+      createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
     });
 
     // listen to all open events when the connection is opened
@@ -436,14 +448,10 @@ const openSocketIOConnection = async (
       error: e,
       timestamp: Date.now(),
     };
+    // See the comment above: redact before deleteRequestMaps clears the value set.
+    const redactedMessage = sensitiveValues.redactText(request._id, e.message || 'Something went wrong');
     deleteRequestMaps(request._id, e.message, errorEvent);
-    createErrorResponse(
-      responseId,
-      request._id,
-      responseEnvironmentId,
-      timelinePath,
-      e.message || 'Something went wrong',
-    );
+    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, redactedMessage);
   }
 };
 
@@ -453,20 +461,15 @@ const deleteRequestMaps = async (
   event?: SocketIOCloseEvent | SocketIOErrorEvent,
 ) => {
   if (event) {
-    writeEventLogAndNotify({
-      requestId: requestId,
-      data: JSON.stringify(event) + '\n',
-      clearRequestIdMap: true,
-    });
+    writeSocketIOEventLog(requestId, event, { clearRequestIdMap: true });
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams
-    .get(requestId)
-    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  writeTimelineEntry(requestId, { value: message, name: 'Text', timestamp: Date.now() });
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   SocketIOConnections.delete(requestId);
+  sensitiveValues.clear(requestId);
 };
 
 const getSocketIOReadyState = async (options: { requestId: string }): Promise<boolean> => {
@@ -492,7 +495,7 @@ const sendPayload = async (
         timestamp: Date.now(),
         eventName,
       };
-      writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(ackEvent) + '\n' });
+      writeSocketIOEventLog(options.requestId, ackEvent);
     });
   }
 
@@ -505,7 +508,7 @@ const sendPayload = async (
     timestamp: Date.now(),
     eventName,
   };
-  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(lastMessage) + '\n' });
+  writeSocketIOEventLog(options.requestId, lastMessage);
 };
 
 const sendWebSocketEvent = async (options: {
@@ -513,6 +516,7 @@ const sendWebSocketEvent = async (options: {
   eventName: string;
   args: any[];
   ack?: boolean;
+  sensitiveValues?: string[];
 }): Promise<void> => {
   const socket = SocketIOConnections.get(options.requestId);
 
@@ -521,6 +525,7 @@ const sendWebSocketEvent = async (options: {
     return;
   }
 
+  sensitiveValues.register(options.requestId, options.sensitiveValues);
   sendPayload(socket, options);
 };
 
@@ -550,7 +555,7 @@ const addSocketIOListener = (options: { eventName: string; requestId: string }) 
     timestamp: Date.now(),
     eventName: options.eventName,
   };
-  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(onEvent) + '\n' });
+  writeSocketIOEventLog(options.requestId, onEvent);
 
   socket.on(options.eventName, (...message: any[]) => {
     console.log('received message', message);
@@ -563,7 +568,7 @@ const addSocketIOListener = (options: { eventName: string; requestId: string }) 
       timestamp: Date.now(),
       eventName: options.eventName,
     };
-    writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(messageEvent) + '\n' });
+    writeSocketIOEventLog(options.requestId, messageEvent);
   });
 };
 
@@ -582,7 +587,7 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
     timestamp: Date.now(),
     eventName: options.eventName,
   };
-  writeEventLogAndNotify({ requestId: options.requestId, data: JSON.stringify(offEvent) + '\n' });
+  writeSocketIOEventLog(options.requestId, offEvent);
   socket.off(options.eventName);
 };
 

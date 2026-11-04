@@ -65,6 +65,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
           </MenuItem>
           <MenuItem
             id="logout"
+            data-testid="account-logout"
             className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
             aria-label="logout"
           >

@@ -37,12 +37,56 @@ const getTempPath = (name: string) => {
 
 type initOptions = DataStoreOptions & { dbPath?: string };
 
+type FlushChangesImpl = (id?: number, fake?: boolean) => Promise<ChangeBufferEvent[] | void>;
+
 /**
  * Create the NeDB database implementation for main process and Node.js.
+ * Every instance keeps its own collections and change listeners, so an extra
+ * instance (e.g. an in-memory scratch database) never affects another one.
  */
 export const createNedbDatabase = <O = initOptions>(
-  wrapper?: (nedbDatabase: IDatabase<initOptions>) => IDatabase<O>,
+  wrapper?: (nedbDatabase: IDatabase<initOptions>, internals: { flushChangesImpl: FlushChangesImpl }) => IDatabase<O>,
 ) => {
+  let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
+
+  // ~~~~~~~~~~~~~~~~ //
+  // Change Listeners //
+  // ~~~~~~~~~~~~~~~~ //
+  let bufferingChanges = false;
+  let bufferChangesId = 1;
+
+  let changeBuffer: ChangeBufferEvent[] = [];
+
+  let changeListeners: ChangeListener[] = [];
+
+  /** trigger all changeListeners */
+  const flushChangesImpl: FlushChangesImpl = async function (id = 0, fake = false) {
+    // Only flush if ID is 0 or the current flush ID is the same as passed
+    if (id !== 0 && bufferChangesId !== id) {
+      return;
+    }
+
+    bufferingChanges = false;
+    const changes = [...changeBuffer];
+    changeBuffer = [];
+
+    if (changes.length === 0) {
+      // No work to do
+      return;
+    }
+
+    if (fake) {
+      console.log(`[db] Dropped ${changes.length} changes.`);
+      return;
+    }
+    // Notify local listeners too
+    for (const fn of changeListeners) {
+      await fn(changes);
+    }
+
+    return changes;
+  };
+
   const originalDatabase: IDatabase<initOptions> = {
     batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
       const flushId = await database.bufferChanges();
@@ -577,46 +621,6 @@ export const createNedbDatabase = <O = initOptions>(
     }
   }
 
-  const database = wrapper ? wrapper(originalDatabase) : originalDatabase;
+  const database = wrapper ? wrapper(originalDatabase, { flushChangesImpl }) : originalDatabase;
   return database as IDatabase<O>;
-};
-
-let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
-
-// ~~~~~~~~~~~~~~~~ //
-// Change Listeners //
-// ~~~~~~~~~~~~~~~~ //
-let bufferingChanges = false;
-let bufferChangesId = 1;
-
-let changeBuffer: ChangeBufferEvent[] = [];
-
-let changeListeners: ChangeListener[] = [];
-
-/** trigger all changeListeners */
-export const flushChangesImpl = async function (id = 0, fake = false): Promise<ChangeBufferEvent[] | void> {
-  // Only flush if ID is 0 or the current flush ID is the same as passed
-  if (id !== 0 && bufferChangesId !== id) {
-    return;
-  }
-
-  bufferingChanges = false;
-  const changes = [...changeBuffer];
-  changeBuffer = [];
-
-  if (changes.length === 0) {
-    // No work to do
-    return;
-  }
-
-  if (fake) {
-    console.log(`[db] Dropped ${changes.length} changes.`);
-    return;
-  }
-  // Notify local listeners too
-  for (const fn of changeListeners) {
-    await fn(changes);
-  }
-
-  return changes;
 };

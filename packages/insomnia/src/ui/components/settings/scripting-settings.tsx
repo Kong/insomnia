@@ -1,6 +1,6 @@
 import { Switch } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { QUICKJS_SANDBOX_ENABLED } from '../../../scripting/run-script-quickjs';
 import {
@@ -16,12 +16,14 @@ const DISABLED_TOOLTIP = 'Enable the script sandbox to configure individual rule
 
 const RuleToggle = ({
   name,
+  testId,
   description,
   isEnabled,
   isDisabled,
   onChange,
 }: {
   name?: string;
+  testId?: string;
   description: string;
   isEnabled: boolean;
   isDisabled: boolean;
@@ -34,6 +36,7 @@ const RuleToggle = ({
     </div>
     <span className="group/tooltip relative inline-flex h-6 w-11 shrink-0">
       <Switch
+        data-testid={testId}
         isSelected={isEnabled}
         onChange={onChange}
         isDisabled={isDisabled}
@@ -87,6 +90,7 @@ const RuleCard = ({
         <RuleToggle
           key={rule.name}
           name={rule.name}
+          testId={`script-sandbox-rule-${rule.name}`}
           description={rule.description}
           isEnabled={!disabledNames.includes(rule.name)}
           isDisabled={!sandboxEnabled}
@@ -99,6 +103,7 @@ const RuleCard = ({
             <RuleToggle
               key={rule.name}
               name={rule.name}
+              testId={`script-sandbox-rule-${rule.name}`}
               description={rule.description}
               isEnabled={!disabledNames.includes(rule.name)}
               isDisabled={!sandboxEnabled}
@@ -116,6 +121,7 @@ const RuleCard = ({
               {group.title}
             </h4>
             <RuleToggle
+              testId={`script-sandbox-group-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
               description={group.description}
               isEnabled={allEnabled}
               isDisabled={!sandboxEnabled}
@@ -300,6 +306,7 @@ export const ScriptingSettings = () => {
               </p>
             </div>
             <Switch
+              data-testid="toggle-script-sandbox"
               isSelected={sandboxEnabled}
               onChange={enabled => patchSettings({ scriptSandboxEnabled: enabled })}
               className="group flex items-center gap-2"

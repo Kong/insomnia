@@ -3,6 +3,8 @@ import type { Project, Query, RemoteProject } from 'insomnia-data';
 import { database as db, models } from 'insomnia-data';
 
 import * as userSessionService from './user-session';
+import * as workspaceService from './workspace';
+import * as workspaceMetaService from './workspace-meta';
 
 const { type } = models.project;
 
@@ -34,7 +36,40 @@ const _getProjectByIdOrProject = async (idOrProject: string | Project) => {
 
 export async function update(idOrProject: string | Project, patch: Partial<Project>) {
   const project = await _getProjectByIdOrProject(idOrProject);
-  return db.docUpdate(project, patch);
+  const updatedProject = await db.docUpdate(project, patch);
+  // A project that stops being remote can no longer have meaningful cloud sync state.
+  if (project.remoteId !== null && patch.remoteId === null) {
+    await clearWorkspaceSyncFlags(project._id);
+  }
+  return updatedProject;
+}
+
+/**
+ * Workspace sync flags are written only by cloud sync, so they are meaningless once a
+ * project stops being a cloud project. Clear them on that transition. Skip clean metas
+ * and preserve `modified` so card timestamps do not change.
+ */
+export async function clearWorkspaceSyncFlags(projectId: string) {
+  const workspaces = await workspaceService.listByParentId(projectId);
+  if (workspaces.length === 0) {
+    return;
+  }
+
+  const workspaceMetas = await workspaceMetaService.list({
+    parentId: { $in: workspaces.map(workspace => workspace._id) },
+  });
+
+  for (const workspaceMeta of workspaceMetas) {
+    if (!workspaceMeta.hasUncommittedChanges && !workspaceMeta.hasUnpushedChanges) {
+      continue;
+    }
+    await workspaceMetaService.update(workspaceMeta, {
+      hasUncommittedChanges: false,
+      hasUnpushedChanges: false,
+      // docUpdate restamps `modified` by default; keep the original so card timestamps stay stable.
+      modified: workspaceMeta.modified,
+    });
+  }
 }
 
 export async function remove(idOrProject: string | Project) {

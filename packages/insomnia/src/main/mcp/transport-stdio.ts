@@ -5,6 +5,7 @@ import { models, services } from 'insomnia-data';
 import { shellPath } from 'shell-path';
 import { parse } from 'shell-quote';
 
+import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { type ConnectionContext, writeTimeline } from '~/main/mcp/common';
 import type { OpenMcpStdioClientConnectionOptions } from '~/main/mcp/types';
 
@@ -51,7 +52,7 @@ export const createStdioTransport = async (
       timestamp: Date.now(),
     });
   }
-  initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
+  initialTimelines.map(t => writeTimeline(context, t));
 
   const start = performance.now();
   const transport = new StdioClientTransport({
@@ -68,14 +69,11 @@ export const createStdioTransport = async (
     if (!stderrData) return; // Skip empty lines
 
     // Log stderr output to timeline with appropriate categorization
-    writeTimeline(
-      context,
-      JSON.stringify({
-        value: stderrData,
-        name: 'HeaderIn',
-        timestamp: Date.now(),
-      }),
-    );
+    writeTimeline(context, {
+      value: stderrData,
+      name: 'HeaderIn',
+      timestamp: Date.now(),
+    });
   });
   // Wrap the original send method to log outgoing requests for stdio transport
   const originalSend = transport.send.bind(transport);
@@ -84,16 +82,13 @@ export const createStdioTransport = async (
     // Create response model for initialize message and add process status timeline
     if (isInitializedMessage) {
       // Add process started timeline (similar to HTTP response timeline)
-      writeTimeline(
-        context,
-        JSON.stringify({ value: 'Process started and ready', name: 'Text', timestamp: Date.now() }),
-      );
+      writeTimeline(context, { value: 'Process started and ready', name: 'Text', timestamp: Date.now() });
 
       const responsePatch: Partial<McpResponse> = {
         _id: responseId,
         parentId: requestId,
         environmentId,
-        url,
+        url: context.sensitiveValues.size > 0 ? redactConfidentialText(url, [...context.sensitiveValues]) : url,
         status: 'success',
         elapsedTime: performance.now() - start,
         timelinePath,

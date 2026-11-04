@@ -71,6 +71,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: rendered.sensitiveValues,
         };
       }
 
@@ -90,6 +91,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+          sensitiveValues: rendered.sensitiveValues,
         };
       }
 

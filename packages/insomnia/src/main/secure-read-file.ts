@@ -20,7 +20,16 @@ export const isPathAllowed = (filePath: string, userAllowList: string[]) => {
   });
   return { isAllowed, securedPath };
 };
-const securePath = (filePath: string) => path.resolve(decodeURIComponent(filePath));
+// A malformed percent sequence (e.g. a literal `100%` filename) is not an encoded path -- treat
+// it as the literal path rather than throwing a URIError.
+const safeDecodeURIComponent = (filePath: string) => {
+  try {
+    return decodeURIComponent(filePath);
+  } catch {
+    return filePath;
+  }
+};
+const securePath = (filePath: string) => path.resolve(safeDecodeURIComponent(filePath));
 // Only responses/ and version-control/ subdirectories are in scope for this file-read surface;
 // the rest of userData (cookies, caches, etc.) is Electron/Chromium's own runtime state, not
 // something templates, plugins, or scripts have a reason to read.
@@ -65,23 +74,29 @@ const isDatabaseFileAlias = async (realPath: string) => {
   }
   return false;
 };
-// For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
-export const secureReadFile = async (filePath: string): Promise<string> => {
-  const settings = await services.settings.getOrCreate();
-  const { isAllowed, securedPath } = isPathAllowed(filePath, settings.dataFolders);
+// Allowlist + realpath + reserved-database-file enforcement for script/template/plugin-steerable
+// file reads. Returns the resolved real path to read from, so what gets read is what was checked.
+export const assertPathAllowed = async (filePath: string, userAllowList?: string[]): Promise<string> => {
+  const allowList = userAllowList ?? (await services.settings.getOrCreate()).dataFolders;
+  const { isAllowed, securedPath } = isPathAllowed(filePath, allowList);
   invariant(isAllowed && !isReservedDatabaseFile(securedPath), cannotAccessFileError(securedPath));
 
   // Re-check against the resolved real path (of both the target file and the allowed roots,
   // since e.g. macOS symlinks /var to /private/var) so a symlink can't be used to point an
   // allowed directory at a reserved database file or a location outside the allowlist.
   const realPath = await resolveRealPath(securedPath);
-  const realAllowList = await Promise.all(getSecuredFolderAllowList(settings.dataFolders).map(resolveRealPath));
+  const realAllowList = await Promise.all(getSecuredFolderAllowList(allowList).map(resolveRealPath));
   const { isAllowed: isRealPathAllowed } = isPathAllowed(realPath, realAllowList);
   invariant(
     isRealPathAllowed && !isReservedDatabaseFile(realPath) && !(await isDatabaseFileAlias(realPath)),
     cannotAccessFileError(securedPath),
   );
+  return realPath;
+};
 
+// For reading files specified by plugins, environment variables, and scripts which could come from an imported collection
+export const secureReadFile = async (filePath: string): Promise<string> => {
+  const realPath = await assertPathAllowed(filePath);
   return fs.promises.readFile(realPath, { encoding: 'utf8' });
 };
 // For reading files selected by the user via a file dialog

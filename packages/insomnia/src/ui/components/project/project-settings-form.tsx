@@ -42,6 +42,8 @@ import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { Icon } from '../icon';
+import { showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -172,7 +174,11 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [relocateFetcher.data, relocateFetcher.state]);
 
   const onUpsertProject = () => {
-    if (project) {
+    if (!project) {
+      return;
+    }
+
+    const submit = () => {
       updateProjectFetcher.submit({
         organizationId,
         projectId: project._id,
@@ -181,7 +187,37 @@ export const ProjectSettingsForm: FC<Props> = ({
           storageType,
         },
       });
+    };
+
+    // Every storage conversion regenerates document ids: the old ids stop
+    // working for inso commands, template tags and anything else referencing
+    // them.
+    if (isSwitchingStorageType(project, storageType)) {
+      showModal(AskModal, {
+        title: 'Convert project',
+        message: (
+          <div>
+            <p>
+              Converting this project will generate new IDs for every item in it. inso commands (e.g.{' '}
+              <code>inso run test &lt;id&gt;</code>), CI scripts and template tags that reference the current IDs will
+              stop working.
+            </p>
+            <p>Make sure to note down the IDs you still need before converting. Do you want to continue?</p>
+          </div>
+        ),
+        yesText: 'Convert',
+        noText: 'Cancel',
+        color: 'danger',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            submit();
+          }
+        },
+      });
+      return;
     }
+
+    submit();
   };
 
   const selectedCredential = credentials.find(c => c._id === projectData.credentialsId);

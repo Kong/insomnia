@@ -251,14 +251,23 @@ export const EventLogView: FC<Props> = ({
                   : 'focus-within:bg-(--hl-sm) focus:outline-hidden';
               const icon = getIcon(event);
               return (
-                <Row className={`group transition-colors ${rowExtraClasses}`}>
-                  <Cell className="border-b border-solid border-(--hl-sm) pl-2 align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                <Row data-testid="event-row" className={`group transition-colors ${rowExtraClasses}`}>
+                  <Cell
+                    data-testid="event-cell-icon"
+                    className="border-b border-solid border-(--hl-sm) pl-2 align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden"
+                  >
                     <SvgIcon icon={icon} style={icon === 'info' ? { fill: 'var(--color-font)' } : {}} />
                   </Cell>
-                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                  <Cell
+                    data-testid="event-cell-data"
+                    className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden"
+                  >
                     {getMessage(event, isLoading)}
                   </Cell>
-                  <Cell className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden">
+                  <Cell
+                    data-testid="event-cell-time"
+                    className="border-b border-solid border-(--hl-sm) align-middle text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden"
+                  >
                     <Timestamp time={event.timestamp} />
                   </Cell>
                 </Row>

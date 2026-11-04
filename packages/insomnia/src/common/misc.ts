@@ -1,7 +1,5 @@
 import { DEBOUNCE_MILLIS } from './constants';
 
-const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
-
 interface Header {
   name: string;
   value: string;
@@ -127,15 +125,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
     return v;
   }
   return v(...args);
-}
-
-/**
- * Escape a dynamic string for use inside of a regular expression
- * @param str - string to escape
- * @returns {string} escaped string
- */
-export function escapeRegex(str: string) {
-  return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
 export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefined): value is ValueType {

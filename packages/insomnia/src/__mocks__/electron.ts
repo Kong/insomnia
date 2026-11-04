@@ -90,4 +90,10 @@ export const electronMock = {
     readText: vi.fn(),
     clear: vi.fn(),
   },
+  // mirrors a platform without OS level encryption, where secrets are stored as they are given
+  safeStorage: {
+    isEncryptionAvailable: () => false,
+    encryptString: (raw: string) => Buffer.from(raw),
+    decryptString: (buffer: Buffer) => buffer.toString(),
+  },
 };

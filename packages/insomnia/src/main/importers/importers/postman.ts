@@ -1,7 +1,7 @@
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from 'insomnia/src/common/constants';
-import { fakerFunctions } from 'insomnia/src/common/templating/faker-functions';
 import { forceBracketNotation } from 'insomnia/src/common/templating/utils';
 import type { AuthTypeOAuth2 } from 'insomnia-data';
+import { fakerFunctions } from 'insomnia-data/common';
 
 import { translateHandlersInScript } from '~/main/importers/importers/translate-postman-script';
 
@@ -94,21 +94,26 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   return normaliseJsonPath(replaceFaker);
 };
 
-// old: {{ arr-name-with-dash }}
-// new: {{ _['arr-name-with-dash'] }}
+const VALID_IDENTIFIER = /^[\p{ID_Start}_$][\p{ID_Continue}$\u200C\u200D]*$/u;
+
+// Variable names can contain anything (dashes, spaces, dots, leading digits...), but Nunjucks only reads a
+// valid identifier as a plain lookup, so every other name has to use bracket notation.
+// old: {{ arr-name-with-dash }}, {{ my var }}, {{ 1st.name }}
+// new: {{ _['arr-name-with-dash'] }}, {{ _['my var'] }}, {{ _['1st.name'] }}
 export const normaliseJsonPath = (input?: string) => {
   if (!input) {
     return '';
   }
-  if (!input.includes('-')) {
+  if (!input.includes('{{')) {
     return input;
   }
-  // Use a regular expression to find and replace the pattern
-  return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
-    // Replace hyphens with underscores within the match
-    const replaced = forceBracketNotation('_', match);
-    // Return the replaced pattern within the curly braces
-    return `{{${replaced}}}`;
+  return input.replace(/{{\s*([^{}]*?)\s*}}/g, (match, name: string) => {
+    // If the name is empty or a valid identifier, leave it as is.
+    if (!name || VALID_IDENTIFIER.test(name)) {
+      return match;
+    }
+    // Otherwise, force bracket notation for the name.
+    return `{{${forceBracketNotation('_', name)}}}`;
   });
 };
 

@@ -99,9 +99,12 @@ function indentRemForLevel(level: number, depthOffset: number): number {
 
 // Deeper and shallower side of a multi-depth gap, or null for a same-level
 // insert. Both raw forms of one gap map to the same pair.
-function resolveGapSides(
-  { dropPosition, targetItem, realTargetItem, nextItem }: BoundaryTargets,
-): { deep: CollectionChildFlatItem; shallow: CollectionChildFlatItem } | null {
+function resolveGapSides({
+  dropPosition,
+  targetItem,
+  realTargetItem,
+  nextItem,
+}: BoundaryTargets): { deep: CollectionChildFlatItem; shallow: CollectionChildFlatItem } | null {
   const otherItem = dropPosition === 'before' ? realTargetItem : nextItem;
   if (!isCollectionChild(targetItem) || !isCollectionChild(otherItem)) {
     return null;
@@ -115,9 +118,7 @@ function resolveGapSides(
   if (dropPosition === 'after' && targetLevel < otherLevel) {
     return null;
   }
-  return targetLevel > otherLevel
-    ? { deep: targetItem, shallow: otherItem }
-    : { deep: otherItem, shallow: targetItem };
+  return targetLevel > otherLevel ? { deep: targetItem, shallow: otherItem } : { deep: otherItem, shallow: targetItem };
 }
 
 // react-stately treats `after X` and `before nextKey(X)` as one insertion point
@@ -381,15 +382,19 @@ export function canDrop(
     return false;
   }
 
-  // move request and request group into collection
+  // move request and request group into collection/design
   if (
     realDropItem.kind === 'workspace' &&
-    models.workspace.isCollection(realDropItem.doc) &&
+    (models.workspace.isCollection(realDropItem.doc) || models.workspace.isDesign(realDropItem.doc)) && // collection is same with design
     (models.requestGroup.isRequestGroup(dragItem.doc) || models.request.isRequest(dragItem.doc))
   ) {
     // Repositioning inside its own collection is not a cross-collection move, so
     // the cloud rule below does not apply.
     if (isCollectionChild(dragItem) && dragItem.workspace._id === realDropItem.doc._id) {
+      return true;
+    }
+    // allow if they are both part of the same project
+    if (dragItem.project._id === realDropItem.project._id) {
       return true;
     }
     // Moving BETWEEN collections cannot involve cloud sync on either side.
@@ -550,6 +555,8 @@ function SidebarDropIndicator({
     >
       {folderName ? (
         <span
+          data-testid="drop-indicator-folder-name"
+          data-valid={isValid}
           className={`absolute -top-2.5 left-0 z-10 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap ${
             isValid
               ? 'bg-(--color-surprise) text-(--color-font-surprise)'
@@ -561,6 +568,8 @@ function SidebarDropIndicator({
         </span>
       ) : (
         <span
+          data-testid="drop-indicator-dot"
+          data-valid={isValid}
           className={`absolute -top-0.75 -left-0.75 block h-1.75 w-1.75 rounded-full ${
             isValid ? 'bg-(--color-surprise)' : 'bg-(--color-danger)'
           }`}
@@ -793,7 +802,10 @@ export const useSidebarDragAndDrop = ({
       }
 
       // move request or request group into collection
-      if (realTargetItem?.kind === 'workspace' && models.workspace.isCollection(realTargetItem!.doc)) {
+      if (
+        realTargetItem?.kind === 'workspace' &&
+        (models.workspace.isCollection(realTargetItem!.doc) || models.workspace.isDesign(realTargetItem!.doc))
+      ) {
         const firstChildOfCollection = flatItems.find(
           (item): item is CollectionChildFlatItem =>
             item.kind === 'collectionChild' && item.doc.parentId === realTargetItem!.doc._id,
@@ -806,7 +818,10 @@ export const useSidebarDragAndDrop = ({
             targetId: realTargetItem!.doc._id,
             id: draggedItem.doc._id,
             dropPosition: 'after', // collection only accepts move into, so treat all drops as "after"
-            metaSortKey: firstChildOfCollection?.doc.metaSortKey != null ? firstChildOfCollection.doc.metaSortKey - 100 : -1 * Date.now(),
+            metaSortKey:
+              firstChildOfCollection?.doc.metaSortKey != null
+                ? firstChildOfCollection.doc.metaSortKey - 100
+                : -1 * Date.now(),
           },
         });
         return;

@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';
@@ -47,12 +47,16 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   });
   const isCancellable = currentInterval || currentTimeout;
   return (
-    <div className="flex w-full items-center gap-2 self-stretch p-2">
+    <div data-testid="mock-route-url-bar" className="flex w-full items-center gap-2 self-stretch p-2">
       <div className="shrink-0 rounded-xs bg-(--hl-xs) px-3 py-1">
-        <span className={`http-method-${mockRoute.method} text-sm font-medium`}>{mockRoute.method}</span>
+        <span data-testid="mock-route-method" className={`http-method-${mockRoute.method} text-sm font-medium`}>
+          {mockRoute.method}
+        </span>
       </div>
       <div className="flex flex-1 items-center rounded-sm border border-(--hl-sm) bg-(--color-bg) px-3 py-1">
-        <span className="flex-1 font-mono text-sm text-(--color-font)">{pathInput}</span>
+        <span data-testid="mock-route-path" className="flex-1 font-mono text-sm text-(--color-font)">
+          {pathInput}
+        </span>
       </div>
 
       <Button

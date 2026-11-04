@@ -36,7 +36,6 @@ import { convertApiSpecSyntax, detectApiSpecSyntax, parseApiSpec } from '~/commo
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
-import { useRootLoaderData } from '~/root';
 import { useDeleteProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete-ruleset';
 import { useRefreshProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.refresh-ruleset';
 import { useUpdateProjectRulesetActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.update-ruleset';
@@ -58,6 +57,7 @@ import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
@@ -1089,6 +1089,7 @@ export const SpecView = ({
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button
                               key={method}
+                              data-testid={`spec-outline-method-${method.toUpperCase()}`}
                               onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
                               className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >

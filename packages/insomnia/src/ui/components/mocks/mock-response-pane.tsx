@@ -7,10 +7,10 @@ import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-compon
 import * as reactUse from 'react-use';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
-import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 import { getMockServiceURL } from '../../../common/constants';
@@ -207,30 +207,40 @@ const HistoryViewWrapperComponentFactory = ({
             ?.map((row, index) => (
               <Fragment key={row.startedDateTime}>
                 <div
+                  data-testid="mock-history-cell-method"
+                  data-row-index={index}
                   onClick={() => setLogEntryId(index)}
                   className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.method}</div>
                 </div>
                 <div
+                  data-testid="mock-history-cell-size"
+                  data-row-index={index}
                   onClick={() => setLogEntryId(index)}
                   className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="p-2">{row.request.bodySize + row.request.headersSize}</div>
                 </div>
                 <div
+                  data-testid="mock-history-cell-date"
+                  data-row-index={index}
                   onClick={() => setLogEntryId(index)}
                   className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{getTimeFromNow(row.startedDateTime, false)}</div>
                 </div>
                 <div
+                  data-testid="mock-history-cell-ip"
+                  data-row-index={index}
                   onClick={() => setLogEntryId(index)}
                   className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >
                   <div className="truncate p-2">{row.clientIPAddress}</div>
                 </div>
                 <div
+                  data-testid="mock-history-cell-path"
+                  data-row-index={index}
                   onClick={() => setLogEntryId(index)}
                   className={`${index % 2 === 0 ? '' : 'bg-(--hl-xs)'} cursor-pointer truncate text-sm font-medium whitespace-nowrap group-last-of-type:border-none focus:outline-hidden`}
                 >

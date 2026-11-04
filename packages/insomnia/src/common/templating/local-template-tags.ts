@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import type { PluginTemplateTag } from 'insomnia/src/common/templating/types';
+import { fakerFunctions } from 'insomnia-data/common';
 import JSONBig from 'json-bigint';
 import { JSONPath } from 'jsonpath-plus';
 
@@ -7,7 +8,7 @@ import type { TemplateTag } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { utf8StringFromBytes } from '~/common/utils/utf8-bytes';
 
-import { fakerFunctions } from './faker-functions';
+import { CONFIDENTIAL_MASK_VALUE } from './confidential-value-policy';
 
 const JSONBigStringParser = JSONBig({ storeAsString: true });
 
@@ -664,6 +665,17 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf8';
         if (field === 'url') {
+          // The response document is redacted before it reaches the database (see
+          // redactResponsePatch in the send route), so a URL that contained a confidential
+          // value comes back masked. Chaining it would silently send `••••••` to the server,
+          // so fail loudly instead -- the alternative, storing the real URL and masking only
+          // on display, would mean keeping plaintext secrets on disk.
+          if (response.url.includes(CONFIDENTIAL_MASK_VALUE)) {
+            throw new Error(
+              'The response URL was redacted because it contained confidential values. ' +
+                'Turn off "Hide Confidential values in Preview/Console" in Preferences to chain it.',
+            );
+          }
           return response.url;
         }
         if (field === 'raw' && bodyBuffer !== null) {

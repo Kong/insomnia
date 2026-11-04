@@ -690,6 +690,7 @@ export const NewWorkspaceModal = ({
                         <Label className="text-sm text-(--hl)">How do you want to host your mock server?</Label>
                         <div className="flex gap-2">
                           <Radio
+                            data-testid="mock-server-type-cloud"
                             value="cloud"
                             isDisabled={isCloudMockDisabled || workspaceData.mockServerCreationType === 'ai'}
                             className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
@@ -707,6 +708,7 @@ export const NewWorkspaceModal = ({
                             </p>
                           </Radio>
                           <Radio
+                            data-testid="mock-server-type-self-hosted"
                             value="self-hosted"
                             isDisabled={isSelfHostedMockDisabled}
                             className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"

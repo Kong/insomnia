@@ -29,6 +29,17 @@ collection:
         eventName: eventname
         desc: this is a listener
         isOpen: false
+    body:
+      meta:
+        id: socket-io-payload_9a1c4f1b4f3b4d2e9c0a7d6e5f4b3a21
+        created: 1753709130600
+        modified: 1753757257862
+      eventName: hello
+      ack: false
+      args:
+        - id: 1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+          value: '"world"'
+          mode: application/json
 cookieJar:
   name: Default Jar
   meta:

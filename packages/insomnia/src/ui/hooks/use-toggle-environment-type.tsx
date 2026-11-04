@@ -2,7 +2,7 @@ import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType } from 'insomnia-data';
 import { useCallback } from 'react';
 
-import { getKVPairFromData } from '~/common/utils/environment-utils';
+import { getKVPairFromData, hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { AskModal } from '~/ui/components/modals/ask-modal';
@@ -16,6 +16,13 @@ export function useToggleEnvironmentType() {
       updateEnvironmentTypeRequest: (type: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => void,
     ) => {
       const newEnvironmentType = isSelected ? EnvironmentType.JSON : EnvironmentType.KVPAIR;
+      if (newEnvironmentType === EnvironmentType.JSON && hasProtectedKvPairs(environment.kvPairData)) {
+        showModal(AlertModal, {
+          title: 'Cannot Change Environment Type',
+          message: 'Remove all confidential markings and secrets before switching to JSON view.',
+        });
+        return;
+      }
       // clear kvPairData when switch to json view, otherwise convert json data to kvPairData
       const kvPairData = isSelected ? [] : getKVPairFromData(environment.data, environment.dataPropertyOrder ?? null);
       const foundDisabledItem = isSelected && environment.kvPairData?.some(pair => !pair.enabled);

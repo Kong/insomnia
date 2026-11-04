@@ -1,9 +1,9 @@
 import React, { type ComponentProps, type FC, type ReactNode, useCallback, useEffect, useRef } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { toKebabCase } from '../../../../../common/misc';
 import {
@@ -64,7 +64,7 @@ export const AuthInputRow: FC<Props> = ({
         // If the editor is disabled, we don't want to patch the value
         return;
       }
-      patcher(_id, { authentication: { ...authentication, [property]: value } });
+      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication });
     },
     [patcher, _id, authentication, property, disabled],
   );

@@ -15,8 +15,6 @@ import { useParams } from 'react-router';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '~/ui/components/dropdowns/request-group-actions-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
-import { showModal } from '~/ui/components/modals';
-import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import type {
   CollectionChildFlatItem,
   PinnedRequestFlatItem,
@@ -43,6 +41,7 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
     };
     return (
       <span
+        data-testid="node-type-label"
         className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${methodColorMap[doc.method] || 'bg-(--hl-md) text-(--color-font)'}`}
       >
         {getMethodShortHand(doc)}
@@ -52,21 +51,21 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
   const docShortHand = getRequestMethodShortHand(doc);
   if (models.webSocketRequest.isWebSocketRequest(doc)) {
     return (
-      <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
+      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
         {docShortHand}
       </span>
     );
   }
   if (models.socketIORequest.isSocketIORequest(doc)) {
     return (
-      <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
+      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
         {docShortHand}
       </span>
     );
   }
   if (models.grpcRequest.isGrpcRequest(doc)) {
     return (
-      <span className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
+      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
         {docShortHand}
       </span>
     );
@@ -114,7 +113,7 @@ const RequestTiming = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
-const getRequestNameOrFallback = (
+export const getRequestNameOrFallback = (
   doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
 ): string => {
   return !models.requestGroup.isRequestGroup(doc)
@@ -129,9 +128,18 @@ interface RequestNodeProps {
   // Number of ancestor indent levels to strip when the sidebar is focused on a
   // single collection (the project and workspace rows are no longer shown).
   depthOffset?: number;
+  onRename: () => void;
+  onDelete: () => void;
 }
 
-export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }: RequestNodeProps) => {
+export const RequestNode = ({
+  item,
+  onToggleFolder,
+  className,
+  depthOffset = 0,
+  onRename,
+  onDelete,
+}: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
@@ -161,7 +169,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
         </Button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
-        {isFolder ? <Icon icon="folder" className={ICON_CLASS} /> : <MethodBadge doc={doc} />}
+        {isFolder ? <Icon icon="folder" className={ICON_CLASS} data-testid="node-type-icon" /> : <MethodBadge doc={doc} />}
         <EditableInput
           value={getRequestNameOrFallback(doc)}
           name="request name"
@@ -202,16 +210,8 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestGroupActionsDropdown
           requestGroup={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchGroup(doc._id, { name: newName }),
-            })
-          }
+          onRename={onRename}
+          onDelete={onDelete}
           activeProject={project}
           activeWorkspace={workspace}
           isOpen={isContextMenuOpen}
@@ -221,16 +221,8 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {!models.requestGroup.isRequestGroup(doc) && !isEditable && (
         <RequestActionsDropdown
           request={doc}
-          onRename={() =>
-            showModal(PromptModal, {
-              title: `Rename ${getRequestNameOrFallback(doc)}`,
-              defaultValue: getRequestNameOrFallback(doc),
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: newName => patchRequest(doc._id, { name: newName }),
-            })
-          }
+          onRename={onRename}
+          onDelete={onDelete}
           activeProject={project}
           activeWorkspace={workspace}
           isPinned={item.pinned}
@@ -257,6 +249,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       data-project={project.name}
       data-workspace={workspace.name}
       data-selected={isSelected}
+      data-expanded={isFolder && !isPinnedRequest ? !collapsed : undefined}
     >
       {isPinnedRequest
         ? depthOffset === 0 && (

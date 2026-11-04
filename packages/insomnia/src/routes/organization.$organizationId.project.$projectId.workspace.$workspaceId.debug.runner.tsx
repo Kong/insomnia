@@ -1,4 +1,5 @@
 import type {
+  ChangeBufferEvent,
   ResponseTimelineEntry,
   RunnerResultPerRequest,
   RunnerTestResult,
@@ -32,7 +33,6 @@ import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
 import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '~/common/runner-feedback';
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
-import { useRootLoaderData } from '~/root';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -56,6 +56,7 @@ import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import {
   cancelExecution,
@@ -354,6 +355,21 @@ export const Runner: FC = () => {
       setTestHistory(results.reverse());
     };
     readResults();
+    // Results can also disappear from under us - "Clear All Response History" in the Tools
+    // menu removes them database-wide - so re-read whenever one is removed, and drop the
+    // result currently on screen if it was one of them.
+    return window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
+      const removedIds = changes
+        .filter(([event, doc]) => event === 'remove' && models.runnerTestResult.isRunnerTestResult(doc))
+        .map(([, doc]) => doc._id);
+
+      if (removedIds.length === 0) {
+        return;
+      }
+
+      readResults();
+      setExecutionResult(current => (current && removedIds.includes(current._id) ? null : current));
+    });
   }, [runnerId]);
 
   const [totalTime, setTotalTime] = useState({
@@ -703,7 +719,8 @@ export const Runner: FC = () => {
                       return (
                         <GridListItem
                           textValue={item.name}
-                          className={`runner-request-list-${item.name} border border-solid border-transparent text-(--color-font)`}
+                          data-testid={`runner-request-list-${item.name}`}
+                          className="border border-solid border-transparent text-(--color-font)"
                           style={{ outline: 'none' }}
                         >
                           <Button slot="drag" className="hover:cursor-grab">
@@ -999,6 +1016,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const noLogRuntime = {
     appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
+    appendTimelineOnError: async (_timelinePath: string, _data: string) => {}, // no op
   };
 
   try {

@@ -25,3 +25,4 @@ environments:
       data:
         global-sub: 55555
         exampleString: globalenv1
+        baseSourcedVar: "{{ _['global-base'] }}"

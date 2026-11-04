@@ -1,8 +1,7 @@
 import { Ajv, type ErrorObject } from 'ajv';
 import * as chai from 'chai';
-import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
-import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 import { services } from 'insomnia-data';
+import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 
 import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
@@ -32,6 +31,22 @@ export interface ResponseContentInfo {
   fileName: string;
   contentType: string;
 }
+
+export interface ScriptResponseError {
+  error: string;
+}
+
+export interface ScriptResponseData {
+  statusCode?: number;
+  statusMessage?: string;
+  headers?: { name: string; value: string }[];
+  elapsedTime: number;
+  bytesRead?: number;
+  bodyPath?: string;
+  bodyCompression?: 'zip' | null;
+}
+
+export type ScriptResponseInput = ScriptResponseData | ScriptResponseError;
 
 // TODO: unknown usage
 // export interface Timings
@@ -343,14 +358,14 @@ export class Response extends Property {
 
 export function toScriptResponse(
   originalRequest: Request,
-  partialInsoResponse: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError,
+  partialInsoResponse: ScriptResponseInput,
   responseBody: string,
 ): Response | undefined {
   if ('error' in partialInsoResponse) {
     // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
     return undefined;
   }
-  const partialResponse = partialInsoResponse as sendCurlAndWriteTimelineResponse;
+  const partialResponse = partialInsoResponse;
 
   const headers = partialResponse.headers
     ? partialResponse.headers.map(
@@ -385,9 +400,7 @@ export function toScriptResponse(
   return new Response(responseOption);
 }
 
-export async function readBodyFromPath(
-  response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined,
-) {
+export async function readBodyFromPath(response: ScriptResponseInput | undefined) {
   // it allows to execute scripts (e.g., for testing) but body contains nothing
   if (!response || 'error' in response) {
     return '';

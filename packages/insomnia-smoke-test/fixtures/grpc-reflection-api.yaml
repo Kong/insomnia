@@ -1,0 +1,46 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: gRPC Reflection API
+meta:
+  id: wrk_grpc_reflection_api_smoke
+  created: 1736278634829
+  modified: 1736278634829
+collection:
+  - url: localhost:50051
+    name: ReflectionApiUnary
+    meta:
+      id: greq_grpc_reflection_api_smoke
+      created: 1638200268776
+      modified: 1669986544274
+      isPrivate: false
+      sortKey: -1638200268776
+    body:
+      text: |-
+        {
+        	"latitude":"409146138",
+        	"longitude":"-746188906"
+        }
+    reflectionApi:
+      enabled: true
+      url: http://localhost:4010
+      apiKey: smoke-reflection-key
+      module: smoke-module
+  - url: localhost:50051
+    name: ReflectionApiInvalidKey
+    meta:
+      id: greq_grpc_reflection_api_invalid_key_smoke
+      created: 1638200268776
+      modified: 1669986544274
+      isPrivate: false
+      sortKey: -1638200268775
+    body:
+      text: |-
+        {
+        	"latitude":"409146138",
+        	"longitude":"-746188906"
+        }
+    reflectionApi:
+      enabled: true
+      url: http://localhost:4010
+      apiKey: wrong-key
+      module: smoke-module

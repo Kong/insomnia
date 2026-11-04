@@ -16,6 +16,7 @@ export interface SerializedRenderFunctions {
   projectId?: string;
   purpose?: any;
   settings?: any;
+  renderId?: string;
 }
 
 export function serializeRenderContext(context: Record<string, any>): Record<string, any> {
@@ -51,5 +52,6 @@ export function deserializeRenderContext(context: Record<string, any>): Record<s
     getProjectId: () => serializedFunctions.projectId,
     getPurpose: () => serializedFunctions.purpose,
     getSettings: () => serializedFunctions.settings,
+    getRenderId: () => serializedFunctions.renderId,
   };
 }

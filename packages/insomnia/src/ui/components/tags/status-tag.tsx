@@ -1,7 +1,8 @@
 import classnames from 'classnames';
+import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import React, { type FC, memo, type ReactNode } from 'react';
 
-import { RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS } from '../../../common/constants';
+import { RESPONSE_CODE_DESCRIPTIONS } from '../../../common/constants';
 import { Tooltip } from '../tooltip';
 
 interface Props {

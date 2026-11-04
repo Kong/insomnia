@@ -105,7 +105,7 @@ describe('test request and response objects', () => {
         mimeType: 'multipart/form-data',
         params: [
           { name: 'k1', type: 'text', value: 'v1' },
-          { name: 'k2', type: 'file', value: '/path/to/image' },
+          { name: 'k2', type: 'file', value: '', fileName: '/path/to/image' },
         ],
       },
     ];
@@ -114,6 +114,78 @@ describe('test request and response objects', () => {
       const originalReqBody = body;
       const scriptReqBody = new RequestBody(toScriptRequestBody(body));
       expect(mergeRequestBody(scriptReqBody, originalReqBody)).toEqual(originalReqBody);
+    });
+  });
+
+  it('test script-updated formdata body is mapped to multipart params', () => {
+    const scriptReqBody = new RequestBody({
+      mode: 'formdata',
+      formdata: [
+        { key: 'purpose', type: 'text', value: 'batch' },
+        { key: 'file', type: 'file', value: '/path/to/files-openai.jsonl' },
+      ],
+    });
+
+    expect(mergeRequestBody(scriptReqBody, { mimeType: 'application/json', text: '{}' })).toEqual({
+      mimeType: 'multipart/form-data',
+      params: [
+        { name: 'purpose', type: 'text', value: 'batch' },
+        { name: 'file', type: 'file', value: '', fileName: '/path/to/files-openai.jsonl' },
+      ],
+    });
+  });
+
+  it('test script-updated formdata body on a multipart request keeps the original multipart mimeType', () => {
+    const scriptReqBody = new RequestBody({
+      mode: 'formdata',
+      formdata: [
+        { key: 'k1', type: 'text', value: 'v1' },
+        { key: 'k2', type: 'text', value: 'v2', disabled: true },
+      ],
+    });
+
+    // The boundary parameter differs from the mimeType inferred for the formdata mode, proving
+    // the original value is preserved rather than fallen back to.
+    expect(
+      mergeRequestBody(scriptReqBody, {
+        mimeType: 'multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
+        params: [{ name: 'old', value: 'old' }],
+      }),
+    ).toEqual({
+      mimeType: 'multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
+      params: [
+        { name: 'k1', type: 'text', value: 'v1' },
+        { name: 'k2', type: 'text', value: 'v2', disabled: true },
+      ],
+    });
+  });
+
+  it('test script-updated urlencoded body on a raw request uses the urlencoded mimeType', () => {
+    const scriptReqBody = new RequestBody({
+      mode: 'urlencoded',
+      urlencoded: [{ key: 'k1', value: 'v1' }],
+    });
+
+    expect(mergeRequestBody(scriptReqBody, { mimeType: 'application/json', text: '{}' })).toEqual({
+      mimeType: 'application/x-www-form-urlencoded',
+      params: [{ name: 'k1', value: 'v1' }],
+    });
+  });
+
+  it('test script-updated raw body on a urlencoded request uses the raw mimeType', () => {
+    const scriptReqBody = new RequestBody({
+      mode: 'raw',
+      raw: 'rawContent',
+    });
+
+    expect(
+      mergeRequestBody(scriptReqBody, {
+        mimeType: 'application/x-www-form-urlencoded',
+        params: [{ name: 'k1', value: 'v1' }],
+      }),
+    ).toEqual({
+      mimeType: 'text/plain',
+      text: 'rawContent',
     });
   });
 

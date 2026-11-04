@@ -1,7 +1,7 @@
 import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC, type ReactNode } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
@@ -15,7 +15,9 @@ export const BooleanSetting: FC<{
   confirmBeforeToggle?: boolean;
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
-}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false }) => {
+  /** Called with the new value when the toggle is accepted. The patch may still be in flight. */
+  onAfterToggle?: (isChecked: boolean) => void;
+}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false, onAfterToggle }) => {
   const { settings } = useRootLoaderData()!;
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
@@ -25,7 +27,7 @@ export const BooleanSetting: FC<{
   return (
     <>
       <div className="">
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" data-testid={`setting-${setting}`}>
           <input
             checked={Boolean(settings[setting])}
             name={setting}
@@ -40,11 +42,13 @@ export const BooleanSetting: FC<{
                   onDone: async (isYes: boolean) => {
                     if (isYes) {
                       patchSettings({ [setting]: isChecked });
+                      onAfterToggle?.(isChecked);
                     }
                   },
                 });
               } else {
                 patchSettings({ [setting]: isChecked });
+                onAfterToggle?.(isChecked);
               }
             }}
             type="checkbox"

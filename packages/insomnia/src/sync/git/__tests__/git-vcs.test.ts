@@ -272,6 +272,52 @@ First commit!
     });
   });
 
+  describe('fileStatus()', () => {
+    it('returns the raw HEAD and index content alongside the migrated content', async () => {
+      const collectionYaml = path.join(GIT_INSOMNIA_DIR, 'collection.yaml');
+      // A schema 5.0 file: the 5.1 migration removes header ids and adds schema_version
+      const oldSchemaContent = `type: collection.insomnia.rest/5.0
+name: Test
+collection:
+  - name: Request
+    meta:
+      id: req_1
+    headers:
+      - id: pair_1
+        name: X-Test
+        value: test
+`;
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(collectionYaml, oldSchemaContent);
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+      const [change] = (await GitVCS.status()).unstaged;
+      await GitVCS.stageChanges([change]);
+      await GitVCS.commit('First commit!');
+
+      const stagedContent = oldSchemaContent.replace('value: test', 'value: staged');
+      await fsClient.promises.writeFile(collectionYaml, stagedContent);
+      await GitVCS.stageChanges([change]);
+      await fsClient.promises.writeFile(collectionYaml, oldSchemaContent.replace('value: test', 'value: workdir'));
+
+      const fileStatus = await GitVCS.fileStatus(change.path);
+
+      expect(fileStatus.rawHead).toBe(oldSchemaContent);
+      expect(fileStatus.rawStage).toBe(stagedContent);
+      expect(fileStatus.head).not.toBe(oldSchemaContent);
+      expect(fileStatus.head).not.toContain('pair_1');
+      expect(fileStatus.stage).not.toContain('pair_1');
+    });
+  });
+
   describe('push()', () => {
     it('should throw an exception when push response contains errors', async () => {
       // @ts-expect-error -- mockReturnValue is not typed

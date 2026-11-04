@@ -87,7 +87,7 @@
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "3.3.0",
-    "ajv": "^8.17.1"
+    "ajv": "^8.20.0"
   },
   "allowScripts": {
     "@getinsomnia/node-libcurl@3.3.0": true,
@@ -98,6 +98,6 @@
     "fsevents@2.3.2": true,
     "fsevents@2.3.3": true,
     "node-llama-cpp@3.18.1": true,
-    "protobufjs@7.6.4": true
+    "protobufjs@7.6.6": true
   }
 }

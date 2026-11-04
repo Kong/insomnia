@@ -8,6 +8,7 @@ import {
   ensureKeyIsValid,
   getDataFromKVPair,
   getKVPairFromData,
+  hasProtectedKvPairs,
   maskVaultEnvironmentData,
 } from './environment-utils';
 
@@ -154,12 +155,14 @@ describe('getKVPairFromData()', () => {
       value: 'bar',
       type: EnvironmentKvPairDataType.STRING,
       enabled: true,
+      isConfidential: false,
     });
     expect(result[1]).toMatchObject({
       name: 'num',
       value: '42',
       type: EnvironmentKvPairDataType.STRING,
       enabled: true,
+      isConfidential: false,
     });
   });
 
@@ -172,6 +175,7 @@ describe('getKVPairFromData()', () => {
       value: JSON.stringify({ foo: 'bar' }),
       type: EnvironmentKvPairDataType.JSON,
       enabled: true,
+      isConfidential: false,
     });
   });
 
@@ -184,12 +188,14 @@ describe('getKVPairFromData()', () => {
       value: 'val1',
       type: EnvironmentKvPairDataType.SECRET,
       enabled: true,
+      isConfidential: false,
     });
     expect(result[1]).toMatchObject({
       name: 'secret2',
       value: 'val2',
       type: EnvironmentKvPairDataType.SECRET,
       enabled: true,
+      isConfidential: false,
     });
   });
 
@@ -205,6 +211,23 @@ describe('getKVPairFromData()', () => {
 });
 
 describe('getDataFromKVPair()', () => {
+  it('does not include confidentiality metadata in environment data', () => {
+    const kvPair = [
+      {
+        id: '1',
+        name: 'token',
+        value: 'secret',
+        type: EnvironmentKvPairDataType.STRING,
+        enabled: true,
+        isConfidential: true,
+      },
+    ];
+
+    const { data } = getDataFromKVPair(kvPair);
+
+    expect(data).toEqual({ token: 'secret' });
+  });
+
   it('converts STRING pairs back to string values', () => {
     const kvPair = [{ id: '1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true }];
     const { data } = getDataFromKVPair(kvPair);
@@ -239,6 +262,23 @@ describe('getDataFromKVPair()', () => {
   it('returns dataPropertyOrder as null', () => {
     const { dataPropertyOrder } = getDataFromKVPair([]);
     expect(dataPropertyOrder).toBeNull();
+  });
+});
+
+describe('hasProtectedKvPairs()', () => {
+  it('identifies secret and confidential pairs', () => {
+    expect(hasProtectedKvPairs()).toBe(false);
+    expect(
+      hasProtectedKvPairs([{ id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.STRING }]),
+    ).toBe(false);
+    expect(
+      hasProtectedKvPairs([
+        { id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.STRING, isConfidential: true },
+      ]),
+    ).toBe(true);
+    expect(
+      hasProtectedKvPairs([{ id: '1', name: 'token', value: 'secret', type: EnvironmentKvPairDataType.SECRET }]),
+    ).toBe(true);
   });
 });
 

@@ -1,6 +1,6 @@
 import { session } from 'electron/main';
 import { models, services } from 'insomnia-data';
-import { ProxyScopes } from 'insomnia-data/common';
+import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
 
 import {
   getAIServiceURL,
@@ -12,7 +12,6 @@ import {
   getMockServiceURL,
   getSentryDsn,
 } from '~/common/constants';
-import { setDefaultProtocol } from '~/common/utils/url/protocol';
 
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { getUpdatesBaseURL } from './updates';

@@ -7,10 +7,8 @@ import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle }
 import { href, redirect, useLoaderData, useMatch, useParams } from 'react-router';
 import YAML from 'yaml';
 
-import { getProductName } from '~/common/constants';
 import { generateId } from '~/common/misc';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
-import { useRootLoaderData } from '~/root';
 import {
   useWorkspaceLoaderData,
   WORKSPACE_CONTENT_WRAPPER,
@@ -30,7 +28,6 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { ErrorModal } from '~/ui/components/modals/error-modal';
 import { GenerateCodeModal } from '~/ui/components/modals/generate-code-modal';
-import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '~/ui/components/modals/paste-curl-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { RequestSettingsModal } from '~/ui/components/modals/request-settings-modal';
@@ -48,6 +45,7 @@ import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-reque
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 
@@ -213,7 +211,6 @@ const Debug = () => {
     })),
   );
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
@@ -586,17 +583,6 @@ const Debug = () => {
           </PanelGroup>
         </Panel>
       </PanelGroup>
-      {isImportModalOpen && (
-        <ImportModal
-          onHide={() => setIsImportModalOpen(false)}
-          from={{ type: 'file' }}
-          projectName={activeProject.name ?? getProductName()}
-          workspaceName={activeWorkspace.name}
-          organizationId={organizationId}
-          defaultProjectId={projectId}
-          defaultWorkspaceId={workspaceId}
-        />
-      )}
       {isPasteCurlModalOpen && (
         <PasteCurlModal
           onImport={req => {

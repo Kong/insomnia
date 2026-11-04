@@ -568,11 +568,11 @@ export const importResourcesToWorkspace = async ({
           parentId: ResourceIdMap.get(resource.parentId),
         };
         if (models.grpcRequest.isGrpcRequest(resource)) {
-          await services.grpcRequest.create(objectToWrite);
+          await services.grpcRequest.create(objectToWrite as Partial<GrpcRequest>);
         } else if (models.unitTest.isUnitTest(resource)) {
-          await services.unitTest.create(objectToWrite);
+          await services.unitTest.create(objectToWrite as Partial<UnitTest>);
         } else if (isRequest(resource)) {
-          await services.request.create(objectToWrite);
+          await services.request.create(objectToWrite as Partial<Request>);
         } else {
           await db.docCreate(model.type, objectToWrite);
         }
@@ -662,11 +662,11 @@ export const importResourcesToNewWorkspace = async ({
         parentId: newParentId,
       };
       if (models.grpcRequest.isGrpcRequest(resource)) {
-        await services.grpcRequest.create(objectToWrite);
+        await services.grpcRequest.create(objectToWrite as Partial<GrpcRequest>);
       } else if (models.unitTest.isUnitTest(resource)) {
-        await services.unitTest.create(objectToWrite);
+        await services.unitTest.create(objectToWrite as Partial<UnitTest>);
       } else if (isRequest(resource)) {
-        await services.request.create(objectToWrite);
+        await services.request.create(objectToWrite as Partial<Request>);
       } else {
         await db.docCreate(model.type, objectToWrite);
       }
@@ -694,7 +694,7 @@ export const importResourcesToNewWorkspace = async ({
 
   if (models.project.isGitProject(project)) {
     await services.workspaceMeta.update(workspaceMeta, {
-      gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+      gitFilePath: `${sanitizeGitFileNameSegment(newWorkspace.name)}-${newWorkspace._id}.yaml`,
     });
   }
   // we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
@@ -706,6 +706,17 @@ export const importResourcesToNewWorkspace = async ({
 
   return newWorkspace;
 };
+
+/**
+ * `gitFilePath` is later joined onto a git repo's working directory (see
+ * `repo-file-watcher.ts` and `git-repo-migration.ts`) — a name straight from
+ * an imported file (Insomnia export, Postman collection, OpenAPI `info.title`,
+ * etc) must never carry a path separator or traversal sequence into that path.
+ */
+export function sanitizeGitFileNameSegment(name: string): string {
+  const sanitized = name.replace(/[/\\]/g, '-').replace(/\.\./g, '_').replace(/\0/g, '');
+  return sanitized.trim() || 'workspace';
+}
 
 export function resolveOperationId(operationId: string): { method: string; name: string } | undefined {
   for (const cache of resourceCacheList) {

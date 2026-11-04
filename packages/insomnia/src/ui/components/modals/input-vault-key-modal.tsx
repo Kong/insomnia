@@ -2,13 +2,13 @@ import { services } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export interface InputVaultKeyModalProps {
   onClose: (vaultKey?: string) => void;
@@ -89,6 +89,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                 </Heading>
                 {allowClose && (
                   <Button
+                    aria-label="Close"
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                     onPress={close}
                   >
@@ -108,7 +109,11 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                       aria-label="Vault Key Input"
                     />
                   </div>
-                  {error && <p className="notice error margin-top-sm no-margin-bottom">{error}</p>}
+                  {error && (
+                    <p className="notice error margin-top-sm no-margin-bottom" data-testid="input-vault-key-error">
+                      {error}
+                    </p>
+                  )}
                   <div className="mt-2 flex items-center justify-between">
                     <div>
                       <span className="faint text-sm">Forget Vault Key?</span>

@@ -30,7 +30,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
   const formData = useMemo(() => {
     return JSON.parse(configValue) as ExternalVaultConfig;
   }, [configValue]);
-  const selectedCredentialIdOrCredentialKey = activeTagData.args[1].value?.toString() || '';
+  const selectedCredentialIdOrCredentialKey = activeTagData.args[1]?.value?.toString() || '';
   const isLegacyCredentialTag = models.cloudCredential.isCloudCredentialId(selectedCredentialIdOrCredentialKey);
   const selectedCredentialId = isLegacyCredentialTag
     ? // legacy version to save cloud credential id in tag
@@ -73,6 +73,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           formData={formData as HashiCorpSecretConfig}
           onChange={handleFormChange}
           activeTagData={activeTagData}
+          vaultPluginData={vaultPluginData}
         />
       );
       break;

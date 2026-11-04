@@ -22,6 +22,7 @@ export const URLTag: FC<Props> = memo(({ url, small, className, maxLength, metho
 
   return (
     <div
+      data-testid="response-url-tag"
       className={classnames(
         'tag',
         {

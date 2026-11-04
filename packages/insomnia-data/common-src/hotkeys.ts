@@ -27,6 +27,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   sidebar_focusFilter: 'Filter Sidebar',
   sidebar_showCreateDropdown: 'Open Create Dropdown',
   sidebar_toggle: 'Toggle Sidebar',
+  sidebar_rename: 'Rename Item',
   response_focus: 'Focus Response',
   showCookiesEditor: 'Edit Cookies',
   request_createHTTP: 'Create HTTP Request',
@@ -34,7 +35,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   request_showCreateFolder: 'Create Folder',
   request_showDuplicate: 'Duplicate Request',
   request_togglePin: 'Pin/Unpin Request',
-  environment_showVariableSourceAndValue: 'Show variable source and value',
+  environment_showVariableSourceAndValue: 'Template tags show variable source and value',
   beautifyRequestBody: 'Beautify Active Code Editors',
   graphql_explorer_focus_filter: 'Focus GraphQL Explorer Filter',
   close_tab: 'Close Tab',
@@ -131,6 +132,10 @@ const defaultRegistry: HotKeyRegistry = {
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],
     winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.backslash.keyCode }],
+  },
+  sidebar_rename: {
+    macKeys: [{ keyCode: keyboardKeys.f2.keyCode }],
+    winLinuxKeys: [{ keyCode: keyboardKeys.f2.keyCode }],
   },
   response_focus: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.singlequote.keyCode }],

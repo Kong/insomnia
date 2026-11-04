@@ -10,7 +10,11 @@ import { localTemplateTags } from '../local-template-tags';
 import { type PluginTemplateTagContext } from '../types';
 
 // Minimal mock context for the response tag
-function makeResponseContext(body: string, contentType = 'application/json; charset=utf-8'): PluginTemplateTagContext {
+function makeResponseContext(
+  body: string,
+  contentType = 'application/json; charset=utf-8',
+  url = 'http://example.com',
+): PluginTemplateTagContext {
   const bodyBuffer = Buffer.from(body, 'utf8');
   return {
     context: {
@@ -37,7 +41,7 @@ function makeResponseContext(body: string, contentType = 'application/json; char
             statusCode: 200,
             contentType,
             headers: [],
-            url: 'http://example.com',
+            url,
             error: '',
             environmentId: undefined,
             globalEnvironmentId: undefined,
@@ -52,6 +56,23 @@ function makeResponseContext(body: string, contentType = 'application/json; char
 describe('response tag', () => {
   const responseTag = localTemplateTags.find(p => p.templateTag.name === 'response')?.templateTag;
   invariant(responseTag, 'missing response tag in localTemplateTags');
+
+  describe('url attribute', () => {
+    it('returns the response URL', async () => {
+      const ctx = makeResponseContext('{}', undefined, 'http://example.com/users');
+      await expect(responseTag.run(ctx, 'url', 'req_1', '', 'never', 60)).resolves.toBe('http://example.com/users');
+    });
+
+    it('throws when the stored URL was redacted, rather than chaining the mask', async () => {
+      // Response documents are redacted before they are persisted, so a URL built from a
+      // confidential variable comes back masked. Returning it would silently send `••••••`
+      // to the server.
+      const ctx = makeResponseContext('{}', undefined, 'http://example.com/••••••/users');
+      await expect(responseTag.run(ctx, 'url', 'req_1', '', 'never', 60)).rejects.toThrow(
+        /redacted because it contained confidential values/,
+      );
+    });
+  });
 
   describe('JSONPath body attribute - large integer precision', () => {
     it('returns a large integer (19 digits) with exact precision', async () => {

@@ -88,7 +88,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       if (mockServerType === 'self-hosted') {
         const mockServerUrl = workspaceData.mockServerUrl;
-        invariant(typeof mockServerUrl === 'string' && mockServerUrl.trim() !== '', 'Mock Server URL is required');
+        invariant(
+          typeof mockServerUrl === 'string' && mockServerUrl.trim().replace(/\/+$/, '') !== '',
+          'Mock Server URL is required',
+        );
       }
     }
 
@@ -315,7 +318,7 @@ async function createMockServer(
       mockServerPatch.useInsomniaCloud = true;
     } else {
       mockServerPatch.useInsomniaCloud = false;
-      mockServerPatch.url = workspaceData.mockServerUrl!;
+      mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);

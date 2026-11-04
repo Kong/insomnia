@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import type { TemplateTag } from '~/common/plugins/types';
 import * as extWorker from '~/common/templating/liquid-extension-worker';
 
@@ -39,11 +40,32 @@ const userPluginTag: TemplateTag = {
   },
 };
 
+const externalVaultTag: TemplateTag = {
+  plugin: {
+    name: EXTERNAL_VAULT_PLUGIN_NAME,
+    description: 'the bundled external vault plugin',
+    version: '1.0.0',
+    directory: '',
+    config: { disabled: false },
+    permissions: { modules: [], capabilities: [] },
+    permissionWarnings: [],
+    permissionsDeclared: false,
+    module: {},
+  },
+  templateTag: {
+    name: 'vault',
+    displayName: 'External Vault',
+    description: 'reads a secret from an external vault provider',
+    args: [],
+    run: async () => 'unrouted',
+  },
+};
+
 let nextId = 0;
-async function sendRenderJob(input: string) {
+async function sendRenderJob(input: string, context: Record<string, any> = {}) {
   const id = `test-id-${nextId++}`;
   await (globalThis as any).self.onmessage({
-    data: JSON.stringify({ id, input, context: {}, path: 'test', ignoreUndefinedEnvVariable: false }),
+    data: JSON.stringify({ id, input, context, path: 'test', ignoreUndefinedEnvVariable: false }),
   });
   const call = postMessage.mock.calls.find(([msg]) => msg.id === id);
   return call?.[0];
@@ -103,5 +125,50 @@ describe('templating.worker reload handling', () => {
     const afterReload = await sendRenderJob('{% requestbodyhmac %}');
     expect(afterReload.err).toBeFalsy();
     expect(afterReload.result).toBe('ROUTED_RESULT');
+  });
+});
+
+// The worker-to-main `sensitiveValue` bridge is the only place an external vault tag's result gets
+// registered for timeline redaction on the renderer path: the collector itself cannot cross the
+// structured-clone Worker boundary. It depends on two things that nothing else in the render path
+// would notice breaking -- `renderId` surviving serialization into the worker's render context, and
+// `globalThis.postMessage` existing in the worker realm. If either stops working the registration
+// is dropped silently and the secret lands unredacted on disk, so it is covered here end-to-end
+// through the real worker message handler.
+describe('templating.worker sensitive value bridge', () => {
+  beforeEach(async () => {
+    postMessage.mockClear();
+    mockFetch.mockReset();
+    mockFetch.mockImplementation(async (path: any) => {
+      switch (path) {
+        case 'plugin.getBundlePluginTemplateTags': {
+          return [externalVaultTag];
+        }
+        case 'plugin.getUserPluginTemplateTags': {
+          return [];
+        }
+        case 'plugin.executeBundlePluginTag': {
+          return 'super-secret-value';
+        }
+        default: {
+          return;
+        }
+      }
+    });
+    const workerModule = await import('~/ui/templating/worker');
+    workerModule.reload();
+  });
+
+  it('posts the external vault tag result back under the render id', async () => {
+    const context = { serializedFunctions: { purpose: 'send', renderId: 'render-id-1' } };
+    const job = await sendRenderJob('{% vault %}', context);
+    expect(job.err).toBeFalsy();
+    expect(job.result).toBe('super-secret-value');
+
+    expect(postMessage).toHaveBeenCalledWith({
+      type: 'sensitiveValue',
+      id: 'render-id-1',
+      value: 'super-secret-value',
+    });
   });
 });

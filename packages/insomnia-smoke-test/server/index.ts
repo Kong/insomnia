@@ -29,6 +29,7 @@ import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
+import grpcReflectionApi from './grpc-reflection-api';
 import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
@@ -109,6 +110,7 @@ app.get('/cookies', (_req, res) => {
 app.use('/file', express.static('fixtures/files'));
 app.use('/auth/basic', basicAuthRouter);
 app.use('/protected', mtlsRouter);
+app.use(grpcReflectionApi);
 
 githubApi(app);
 gitlabApi(app);

@@ -78,7 +78,6 @@ function migrateWeirdUrls(request: Request) {
  */
 function migrateAuthType(request: Request) {
   const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
-  // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
     // @ts-expect-error -- old model
     request.authentication.type = 'basic';

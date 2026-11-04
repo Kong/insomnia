@@ -1,7 +1,7 @@
 import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';

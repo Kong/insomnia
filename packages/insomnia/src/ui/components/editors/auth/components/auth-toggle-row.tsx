@@ -50,7 +50,8 @@ export const AuthToggleRow: FC<Props> = ({
   const databaseValue = Boolean(authentication[property]);
 
   const onChange = useCallback(
-    (value?: boolean) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    (value?: boolean) =>
+      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication }),
     [patcher, _id, authentication, property],
   );
   const isActuallyOn = invert ? !databaseValue : databaseValue;

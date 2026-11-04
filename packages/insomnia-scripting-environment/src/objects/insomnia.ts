@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { filterClientCertificates } from 'insomnia/src/network/certificate';
 import type { ClientCertificate, RequestHeader, RequestTestResult, Settings } from 'insomnia-data';
+import { models } from 'insomnia-data';
 
 import { toPreRequestAuth } from './auth';
 import { getExistingConsole } from './console';
@@ -14,7 +14,7 @@ import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } fr
 import { RequestInfo } from './request-info';
 import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
-import { sendRequest } from './send-request';
+import { type CurlRequestExecutor, sendRequest } from './send-request';
 import { skip, test, type TestHandler } from './test';
 import { resolveProtocolForProxy, toUrlObject } from './urls';
 import { checkIfUrlIncludesTag } from './utils';
@@ -45,6 +45,7 @@ export class InsomniaObject {
   private requestTestResults: RequestTestResult[];
 
   private parentFolders: ParentFolders;
+  private _curlRequest?: CurlRequestExecutor;
 
   constructor(rawObj: {
     globals: Environment;
@@ -62,6 +63,7 @@ export class InsomniaObject {
     response?: ScriptResponse;
     parentFolders: ParentFolders;
     vault?: Vault;
+    curlRequest?: CurlRequestExecutor;
   }) {
     this.globals = rawObj.globals;
     this.baseGlobals = rawObj.baseGlobals;
@@ -82,6 +84,7 @@ export class InsomniaObject {
 
     this.requestTestResults = new Array<RequestTestResult>();
     this.parentFolders = rawObj.parentFolders;
+    this._curlRequest = rawObj.curlRequest;
 
     return new Proxy(this, {
       get: (target, prop, receiver) => {
@@ -101,7 +104,10 @@ export class InsomniaObject {
   }
 
   sendRequest(request: string | ScriptRequest, cb: (error?: string, response?: ScriptResponse) => void) {
-    return sendRequest(request, cb, this._settings);
+    if (!this._curlRequest) {
+      throw new Error('sendRequest is not available in this execution context.');
+    }
+    return sendRequest(request, cb, this._settings, this._curlRequest);
   }
 
   test = () => {
@@ -141,7 +147,7 @@ export class InsomniaObject {
   };
 }
 
-export async function initInsomniaObject(rawObj: RequestContext, log: (...args: any[]) => void) {
+export async function initInsomniaObject(rawObj: RequestContext, log: (...args: any[]) => void, curlRequest?: CurlRequestExecutor) {
   // Mapping rule for the global environment:
   // - If global base environment is selected, both `baseGlobals` and `globals` point to the selected one.
   // - If one global sub environment is selected,  `baseGlobals` points to the base env of the selected one and `globals` points to the selected one.
@@ -202,7 +208,10 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
   // todo: find if theres a better way to get the best cert
   // (╯°□°）╯︵ ┻━┻
   const ifUrlIncludesTag = checkIfUrlIncludesTag(rawObj.request.url);
-  const matchedCertificates = filterClientCertificates(rawObj.clientCertificates || [], rawObj.request.url);
+  const matchedCertificates = models.clientCertificate.filterClientCertificates(
+    rawObj.clientCertificates || [],
+    rawObj.request.url,
+  );
   const initEmptyCert = ifUrlIncludesTag || matchedCertificates?.length === 0;
   if (initEmptyCert) {
     getExistingConsole().warn(
@@ -283,5 +292,6 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
     response,
     execution,
     parentFolders,
+    curlRequest,
   });
 }

@@ -1,8 +1,8 @@
 import electron from 'electron';
 import type { DataStoreOptions, IDatabase } from 'insomnia-data';
-import { createNedbDatabase, flushChangesImpl } from 'insomnia-data/node';
+import { createNedbDatabase } from 'insomnia-data/node';
 
-export const mainDatabase: IDatabase = createNedbDatabase(nedbDatabase => ({
+export const mainDatabase: IDatabase = createNedbDatabase((nedbDatabase, { flushChangesImpl }) => ({
   ...nedbDatabase,
   init: async (config: DataStoreOptions = {}, forceReset = false) => {
     const dbPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');

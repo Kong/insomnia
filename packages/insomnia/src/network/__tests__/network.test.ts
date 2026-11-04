@@ -397,7 +397,8 @@ describe('sendCurlAndWriteTimeline()', () => {
 
   it('sends multipart form data', async () => {
     const workspace = await services.workspace.create();
-    const settings = await services.settings.getOrCreate();
+    let settings = await services.settings.getOrCreate();
+    settings = await services.settings.update(settings, { dataFolders: [nodePath.resolve(__dirname)] });
     await services.cookieJar.create({
       parentId: workspace._id,
     });

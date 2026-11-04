@@ -5,13 +5,32 @@ import { useIsLightTheme } from '~/ui/hooks/theme';
 
 import { monaco } from './monaco.client';
 
+// Applied by the editor decoration, which cannot carry a data-testid, so tests select lines by this class.
+export const UNKNOWN_FIELD_LINE_CLASS = 'unknown-field-line-bg';
+
+export interface DiffEditorHighlight {
+  startLine: number;
+  endLine: number;
+  message: string;
+}
+
 interface DiffEditorProps {
   original: string;
   modified: string;
   highlightSystemChange?: boolean;
+  // Lines of `original` to highlight, e.g. fields this version of Insomnia doesn't recognize.
+  originalHighlights?: DiffEditorHighlight[];
 }
 
-export const DiffEditor = ({ original, modified, highlightSystemChange = false }: DiffEditorProps) => {
+// A stable default: a fresh `[]` per render would re-run the models effect on every render.
+const NO_HIGHLIGHTS: DiffEditorHighlight[] = [];
+
+export const DiffEditor = ({
+  original,
+  modified,
+  highlightSystemChange = false,
+  originalHighlights = NO_HIGHLIGHTS,
+}: DiffEditorProps) => {
   const monacoEl = useRef<HTMLDivElement | null>(null);
 
   const editorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
@@ -32,6 +51,9 @@ export const DiffEditor = ({ original, modified, highlightSystemChange = false }
       renderSideBySide: true,
       useInlineViewWhenSpaceIsLimited: true,
       readOnly: true,
+      // Indentation is structure in YAML (eg. a request moved out of a folder is
+      // an indentation-only change), so it must not be hidden as whitespace noise.
+      ignoreTrimWhitespace: false,
       scrollBeyondLastLine: false,
       automaticLayout: true,
       contextmenu: false,
@@ -95,11 +117,42 @@ export const DiffEditor = ({ original, modified, highlightSystemChange = false }
 
     modelsRef.current = { original: originalModel, modified: modifiedModel };
 
+    // In the inline view (the default when the editor is narrower than 900px) removed lines are rendered as view zones
+    // that ignore decorations on the original editor, so highlights would never show. Stay side-by-side for them.
+    diffEditor.updateOptions({ useInlineViewWhenSpaceIsLimited: originalHighlights.length === 0 });
+
     // Set new models
     diffEditor.setModel({
       original: originalModel,
       modified: modifiedModel,
     });
+
+    // Decorations belong to the model, so they are dropped together with it when the models are replaced
+    if (originalHighlights.length > 0) {
+      diffEditor.getOriginalEditor().createDecorationsCollection(
+        originalHighlights.flatMap(({ startLine, endLine, message }) => {
+          const common = {
+            className: UNKNOWN_FIELD_LINE_CLASS,
+            isWholeLine: true,
+            showIfCollapsed: false,
+          };
+          return [
+            // The start line is the only one with a warning icon in the glyph margin
+            {
+              range: new monaco.Range(startLine, 1, startLine, 1),
+              options: {
+                ...common,
+                glyphMarginClassName: 'warning-decoration',
+                glyphMarginHoverMessage: { value: message },
+              },
+            },
+            ...(endLine > startLine
+              ? [{ range: new monaco.Range(startLine + 1, 1, endLine, 1), options: common }]
+              : []),
+          ];
+        }),
+      );
+    }
 
     // Add system change decorations if enabled
     if (highlightSystemChange) {
@@ -125,7 +178,7 @@ export const DiffEditor = ({ original, modified, highlightSystemChange = false }
     }
 
     diffEditor.layout(undefined, true);
-  }, [original, modified, highlightSystemChange]);
+  }, [original, modified, highlightSystemChange, originalHighlights]);
 
   return <div className="h-full w-full" ref={monacoEl} />;
 };

@@ -7,7 +7,8 @@ import { describe, expect, it, vi } from 'vitest';
 // multipart body is denied when reached through the QuickJS bridge). This implementation runs with
 // an already-privileged execution model (a real Electron BrowserWindow, or a direct Node/Inso
 // import) rather than through the sandboxed `insomnia-templating-worker-database://` protocol
-// handler, so its behavior toward a multipart body is intentionally left as-is here.
+// handler, so its behavior toward a multipart body is intentionally left as-is here. The
+// dataFolders allowlist is enforced further down, inside the real curlRequest (mocked here).
 
 vi.mock('insomnia-data', () => ({
   services: {

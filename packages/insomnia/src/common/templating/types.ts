@@ -15,6 +15,7 @@ import type {
   Response,
   ResponseHeader,
   Services,
+  Settings,
   SocketIORequest,
   UserUploadEnvironment,
   WebSocketRequest,
@@ -63,7 +64,16 @@ export interface SerializedCookie {
   hostOnly?: boolean;
 }
 
+// TODO: check if we still need no-render, since we do not have any entry points that require it
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+
+export interface SensitiveValueCollector {
+  register(value: string): void;
+  redact(text: string): string;
+  readonly isEmpty: boolean;
+  /** Snapshot of every registered raw value, for cross-IPC transfer (e.g. to the main process for WS/SocketIO/MCP timeline redaction). */
+  readonly values: readonly string[];
+}
 export type PluginToMainAPIPaths =
   | 'readFile'
   | 'nodeOS'
@@ -139,6 +149,10 @@ export interface BaseRenderContextOptions {
   purpose?: RenderPurpose;
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
+  // When true the user has explicitly clicked reveal in the VariableEditor;
+  // this bypasses hideSecretValuesInPreviewAndConsole for the current render only.
+  forceReveal?: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }
 export type RenderContextAncestor =
   | Request
@@ -259,14 +273,35 @@ export type PluginArgument =
   | PluginArgumentFile
   | PluginArgumentNumber;
 
+export interface VariableSourceMeta {
+  // Display name of the source; also the value the "Template tags show variable source and value"
+  // setting renders inline (the keySource entry).
+  label: string;
+  // Workspace whose UI owns the source; absence means the source is not navigable
+  // (e.g. transient variables set by scripts or user-uploaded runner data).
+  workspaceId?: string;
+  // Specific environment to select after navigation, when the source is an environment.
+  environmentId?: string;
+  // Folder whose pane hosts the environment editor, when the source is a folder environment.
+  requestGroupId?: string;
+}
+
+// Opens the editor that owns a variable's source. Implemented by `useOpenVariableSource`.
+export type OpenVariableSource = (source: VariableSourceMeta) => void;
+
 export interface BaseRenderContext {
   getMeta: () => { requestId?: string; workspaceId?: string };
-  getKeysContext: () => { keyContext: Record<string, string> }; // { keyContext: { 'env var name': 'Base Env' } };
+  getKeysContext: () => {
+    keyContext: Record<string, string>; // { keyContext: { 'env var name': 'Base Env' } };
+    keyContextMeta?: Record<string, VariableSourceMeta>;
+  };
   getPurpose: () => RenderPurpose | undefined;
+  getSettings: () => Pick<Settings, 'dataFolders' | 'hideSecretValuesInPreviewAndConsole'> & { forceReveal?: boolean };
   getExtraInfo: () => { requestChain: string[] } | undefined;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
+  getSensitiveValueCollector?: () => SensitiveValueCollector | null;
   [key: string]: any;
 }
 
@@ -377,4 +412,5 @@ export interface RenderInputType {
   context: BaseRenderContext;
   path: string;
   ignoreUndefinedEnvVariable: boolean;
+  sensitiveValueCollector?: SensitiveValueCollector | null;
 }

@@ -1,10 +1,11 @@
+import { createFileRegistry, type DescMethodUnary, fromJson, toBinary } from '@bufbuild/protobuf';
 import {
-  FileDescriptorSet as ProtobufEsFileDescriptorSet,
-  MethodIdempotency,
-  MethodKind,
-  proto3,
-} from '@bufbuild/protobuf';
-import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
+  file_google_protobuf_descriptor,
+  FileDescriptorProtoSchema,
+  type FileDescriptorSet,
+  FileDescriptorSetSchema,
+} from '@bufbuild/protobuf/wkt';
+import { Code, ConnectError } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import {
   type Call,
@@ -132,65 +133,76 @@ const getMethodsFromReflectionServer = async (
   disableUserAgentHeader: boolean,
 ): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
-  const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
-    { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    {
-      no: 3,
-      name: 'symbols',
-      kind: 'scalar',
-      T: 9 /* ScalarType.STRING */,
-      repeated: true,
-    },
-  ]);
-  const GetFileDescriptorSetResponse = proto3.makeMessageType(
-    'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
-    () => [
-      {
-        no: 1,
-        name: 'file_descriptor_set',
-        kind: 'message',
-        T: ProtobufEsFileDescriptorSet,
-      },
-      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    ],
+  const reflectionRegistry = createFileRegistry(
+    fromJson(FileDescriptorProtoSchema, {
+      name: 'buf/reflect/v1beta1/file_descriptor_set_service.proto',
+      package: 'buf.reflect.v1beta1',
+      syntax: 'proto3',
+      dependency: ['google/protobuf/descriptor.proto'],
+      messageType: [
+        {
+          name: 'GetFileDescriptorSetRequest',
+          field: [
+            { name: 'module', number: 1, label: 'LABEL_OPTIONAL', type: 'TYPE_STRING', jsonName: 'module' },
+            { name: 'version', number: 2, label: 'LABEL_OPTIONAL', type: 'TYPE_STRING', jsonName: 'version' },
+            { name: 'symbols', number: 3, label: 'LABEL_REPEATED', type: 'TYPE_STRING', jsonName: 'symbols' },
+          ],
+        },
+        {
+          name: 'GetFileDescriptorSetResponse',
+          field: [
+            {
+              name: 'file_descriptor_set',
+              number: 1,
+              label: 'LABEL_OPTIONAL',
+              type: 'TYPE_MESSAGE',
+              typeName: '.google.protobuf.FileDescriptorSet',
+              jsonName: 'fileDescriptorSet',
+            },
+            { name: 'version', number: 2, label: 'LABEL_OPTIONAL', type: 'TYPE_STRING', jsonName: 'version' },
+          ],
+        },
+      ],
+      service: [
+        {
+          name: 'FileDescriptorSetService',
+          method: [
+            {
+              name: 'GetFileDescriptorSet',
+              inputType: '.buf.reflect.v1beta1.GetFileDescriptorSetRequest',
+              outputType: '.buf.reflect.v1beta1.GetFileDescriptorSetResponse',
+              options: { idempotencyLevel: 'NO_SIDE_EFFECTS' },
+            },
+          ],
+        },
+      ],
+    }),
+    importName => (importName === 'google/protobuf/descriptor.proto' ? file_google_protobuf_descriptor : undefined),
   );
-  const FileDescriptorSetService = {
-    typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
-    methods: {
-      getFileDescriptorSet: {
-        name: 'GetFileDescriptorSet',
-        I: GetFileDescriptorSetRequest,
-        O: GetFileDescriptorSetResponse,
-        kind: MethodKind.Unary,
-        idempotency: MethodIdempotency.NoSideEffects,
-      },
-    },
-  } as const;
+  const FileDescriptorSetService = reflectionRegistry.getService('buf.reflect.v1beta1.FileDescriptorSetService');
+  invariant(FileDescriptorSetService, 'FileDescriptorSetService is missing from the reflection descriptor');
   const transport = createConnectTransport({
     baseUrl: url,
     httpVersion: '1.1',
   });
-  const client = createPromiseClient(FileDescriptorSetService, transport);
+  const getFileDescriptorSetMethod = FileDescriptorSetService.method.getFileDescriptorSet;
+  invariant(getFileDescriptorSetMethod.methodKind === 'unary', 'GetFileDescriptorSet must be a unary method');
   const headers: HeadersInit = {
     ...(disableUserAgentHeader ? {} : { 'User-Agent': `insomnia/${version}` }),
     ...(apiKey === '' ? {} : { Authorization: `Bearer ${apiKey}` }),
   };
   try {
-    const res = await client.getFileDescriptorSet(
-      {
-        module,
-      },
-      {
-        headers,
-      },
-    );
+    // Calls the transport directly: createClient() cannot type a descriptor built at runtime.
+    const res = await transport.unary(getFileDescriptorSetMethod as DescMethodUnary, undefined, undefined, headers, {
+      module,
+    });
+    const response = res.message as { fileDescriptorSet?: FileDescriptorSet };
     const methodDefs: MethodDefs[] = [];
-    if (res.fileDescriptorSet === undefined) {
+    if (response.fileDescriptorSet === undefined) {
       return [];
     }
     const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
-      Buffer.from(res.fileDescriptorSet.toBinary()),
+      Buffer.from(toBinary(FileDescriptorSetSchema, response.fileDescriptorSet)),
     );
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);

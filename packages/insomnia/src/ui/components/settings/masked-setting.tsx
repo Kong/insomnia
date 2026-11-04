@@ -2,7 +2,7 @@ import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';

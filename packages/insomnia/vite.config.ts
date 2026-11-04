@@ -71,7 +71,6 @@ export default defineConfig(({ mode }) => {
         '@stoplight/spectral-core',
         'isomorphic-git',
         'json-bigint',
-        '@faker-js/faker',
       ],
     },
     resolve: {

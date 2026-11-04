@@ -9,8 +9,9 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BrowserWindow } from 'electron';
 import type { McpResponse, RequestHeader } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import type { Dispatcher } from 'undici';
+import { type Dispatcher, fetch as undiciFetch } from 'undici';
 
+import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { type ConnectionContext, getFetchDispatcher, writeEventLogAndNotify, writeTimeline } from '~/main/mcp/common';
 import { MCPAuthError, type McpOAuthClientProvider } from '~/main/mcp/oauth-client-provider';
 import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from '~/main/mcp/types';
@@ -19,6 +20,11 @@ import type { McpAuthEventWithoutBase, OpenMcpHTTPClientConnectionOptions } from
 interface NodeRequestInit extends RequestInit {
   dispatcher?: Dispatcher;
 }
+
+// Use undici's own fetch: the global (Electron built-in) fetch ships an older undici whose handler API
+// is incompatible with dispatchers created by the installed undici.
+const dispatcherFetch = (url: string | URL, init: NodeRequestInit) =>
+  undiciFetch(url, init as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>;
 
 export const createStreamableHTTPTransport = async (
   context: ConnectionContext,
@@ -100,7 +106,7 @@ const wrappedFetch = async (
       { value: `Preparing request to ${url.toString()}`, name: 'Text', timestamp: Date.now() },
       { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
     ];
-    initialTimelines.map(t => writeTimeline(context, JSON.stringify(t)));
+    initialTimelines.map(t => writeTimeline(context, t));
   }
   const requestHeaders: { name: string; value: string }[] = [...reqHeader.entries()].map(([name, value]) => ({
     name,
@@ -109,7 +115,7 @@ const wrappedFetch = async (
   const requestMethodLine = `${method.toUpperCase()} ${url} ${isJsonRequest && requestBody?.method ? `\nJSON-RPC Method: ${requestBody.method}` : ''}`;
   const headersOut = requestHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
   const start = performance.now();
-  const response = await fetch(url, {
+  const response = await dispatcherFetch(url, {
     ...init,
     dispatcher: await getFetchDispatcher(requestId),
   } as NodeRequestInit);
@@ -117,16 +123,18 @@ const wrappedFetch = async (
     `${requestMethodLine}\n${headersOut}`,
     response,
   );
-  timeline.map(t => writeTimeline(context, JSON.stringify(t)));
+  timeline.map(t => writeTimeline(context, t));
 
   if (isMcpInitializeRequest) {
     // Create response model only for initialize response
+    const { sensitiveValues } = context;
+    const responseUrl = url.toString();
     const responsePatch: Partial<McpResponse> = {
       _id: responseId,
       parentId: requestId,
       environmentId,
       headers: responseHeaders,
-      url: url.toString(),
+      url: sensitiveValues.size > 0 ? redactConfidentialText(responseUrl, [...sensitiveValues]) : responseUrl,
       statusCode,
       statusMessage,
       elapsedTime: performance.now() - start,
@@ -202,7 +210,7 @@ const wrappedFetch = async (
       };
       writeEventLogAndNotify(context, authRequestEvent);
       try {
-        const response = await fetch(url, {
+        const response = await dispatcherFetch(url, {
           ...init,
           dispatcher: await getFetchDispatcher(requestId),
         } as NodeRequestInit);

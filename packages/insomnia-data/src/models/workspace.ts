@@ -1,6 +1,7 @@
 import { strings } from 'insomnia-data/common';
+import { z } from 'zod/v4';
 
-import type { BaseModel } from './base-types';
+import { type BaseModel, createModelSchema } from './base-types';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -9,14 +10,6 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
-
-export interface BaseWorkspace {
-  name: string;
-  description: string;
-  certificates?: any; // deprecated
-  scope: 'design' | 'collection' | 'mock-server' | 'environment' | 'mcp';
-  konnectServiceId?: string | null;
-}
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
@@ -28,11 +21,20 @@ export const WorkspaceScopeKeys = {
   mcp: 'mcp',
 } as const;
 
-export type Workspace = BaseModel & BaseWorkspace;
+export const baseWorkspaceSchema = z.object({
+  name: z.string().default(`New ${strings.collection.singular}`),
+  description: z.string().default(''),
+  certificates: z.any().optional(), // deprecated
+  scope: z.enum(Object.values(WorkspaceScopeKeys)),
+  konnectServiceId: z.string().optional().nullable(),
+});
+export type BaseWorkspace = z.infer<typeof baseWorkspaceSchema>;
+
+export const schema = createModelSchema(type, prefix).extend(baseWorkspaceSchema.shape);
+export type Workspace = z.infer<typeof schema>;
 
 export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 
-export const optionalKeys = ['konnectServiceId'];
 export const isWorkspaceId = (id?: string | null) => id?.startsWith(prefix + '_');
 
 export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
@@ -45,6 +47,8 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
   workspace.scope === WorkspaceScopeKeys.environment;
 
 export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
+
+export const optionalKeys: (keyof BaseWorkspace)[] = ['konnectServiceId'];
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,

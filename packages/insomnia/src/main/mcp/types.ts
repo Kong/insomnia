@@ -70,7 +70,12 @@ export interface CommonMcpOptions {
   requestId: string;
 }
 
-export interface OpenMcpStdioClientConnectionOptions extends CommonMcpOptions {
+export interface OpenMcpConnectionSensitiveOptions {
+  /** confidential values registered while rendering the connect payload, for main-process timeline/event-log redaction (T10) */
+  sensitiveValues?: string[];
+}
+
+export interface OpenMcpStdioClientConnectionOptions extends CommonMcpOptions, OpenMcpConnectionSensitiveOptions {
   workspaceId: string;
   // TODO: should rename to command or urlOrCommand
   url: string;
@@ -78,7 +83,7 @@ export interface OpenMcpStdioClientConnectionOptions extends CommonMcpOptions {
   env: Record<string, string>;
 }
 
-export interface OpenMcpHTTPClientConnectionOptions extends CommonMcpOptions {
+export interface OpenMcpHTTPClientConnectionOptions extends CommonMcpOptions, OpenMcpConnectionSensitiveOptions {
   workspaceId: string;
   url: string;
   transportType: typeof models.mcpRequest.TRANSPORT_TYPES.HTTP;

@@ -2,7 +2,7 @@ import type { AnalyticsBrowser } from '@customerio/cdp-analytics-browser';
 import { useEffect, useRef } from 'react';
 
 import { getCioCdnUrl, getCioSiteId, getCioWriteKey } from '~/common/constants';
-import { useRootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 // Global singleton
 let globalAnalyticsInstance: AnalyticsBrowser | null = null;

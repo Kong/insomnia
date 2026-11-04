@@ -590,6 +590,16 @@ export function toScriptRequestBody(insomniaReqBody: InsomniaRequestBody): Reque
       mode: 'file',
       file: insomniaReqBody.fileName,
     };
+  } else if (insomniaReqBody.mimeType?.startsWith('multipart/form-data') && insomniaReqBody.params !== undefined) {
+    reqBodyOpt = {
+      mode: 'formdata',
+      formdata: insomniaReqBody.params.map((param: RequestBodyParameter) => ({
+        key: param.name,
+        type: param.type,
+        value: param.type === 'file' ? (param.fileName ?? param.value ?? '') : (param.value ?? ''),
+        disabled: param.disabled,
+      })),
+    };
   } else if (insomniaReqBody.params !== undefined) {
     reqBodyOpt = {
       mode: 'urlencoded',
@@ -645,7 +655,9 @@ export function mergeRequestBody(
       }
     }
   }
-  if (originalReqBody.mimeType) {
+  // Keep the original mimeType unless the script switched away from the body mode it was given
+  // (params bodies are given as formdata for multipart, urlencoded otherwise)
+  if (originalReqBody.mimeType && toScriptRequestBody(originalReqBody).mode === updatedReqBody?.mode) {
     mimeType = originalReqBody.mimeType;
   }
 
@@ -657,20 +669,36 @@ export function mergeRequestBody(
           ? JSON.stringify(updatedReqBody?.graphql)
           : undefined;
 
+    const params =
+      updatedReqBody?.mode === 'formdata'
+        ? updatedReqBody?.formdata?.map((param: FormParam) => {
+            const isFile = param.type === 'file';
+            return {
+              name: param.key,
+              value: isFile ? '' : param.value,
+              type: param.type,
+              fileName: isFile ? param.value : undefined,
+              disabled: param.disabled,
+            };
+          }, {})
+        : updatedReqBody?.mode === 'urlencoded'
+          ? updatedReqBody?.urlencoded?.map((param: QueryParam) => {
+              return {
+                name: param.key,
+                value: param.value,
+                type: param.type,
+                fileName: param.fileName,
+                multiline: param.multiline,
+                disabled: param.disabled,
+              };
+            }, {})
+          : undefined;
+
     return {
       mimeType: mimeType,
       text: textContent,
       fileName: updatedReqBody?.file,
-      params: updatedReqBody?.urlencoded?.map((param: QueryParam) => {
-        return {
-          name: param.key,
-          value: param.value,
-          type: param.type,
-          fileName: param.fileName,
-          multiline: param.multiline,
-          disabled: param.disabled,
-        };
-      }, {}),
+      params,
     };
   } catch (e) {
     throw new Error(`failed to update body: ${e}`);
