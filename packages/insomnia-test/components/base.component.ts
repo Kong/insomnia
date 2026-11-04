@@ -1,5 +1,7 @@
-import { waitForRendererIdle } from "@package/misc/wait";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { waitForRendererIdle, waitForStableValue } from "@package/misc/wait";
 import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 /**
  * Root of the component layer (flow → page → component). A component wraps
@@ -16,7 +18,27 @@ export abstract class BaseComponent {
     readonly root: Locator,
   ) {}
 
+  async isVisible(): Promise<boolean> {
+    return this.root.isVisible();
+  }
+
+  async waitForVisible(timeout = DEFAULT_TIMEOUT): Promise<void> {
+    await expect(this.root).toBeVisible({ timeout });
+  }
+
+  async waitForHidden(timeout = DEFAULT_TIMEOUT): Promise<void> {
+    await expect(this.root).toBeHidden({ timeout });
+  }
+
   protected async waitForRendererIdle(): Promise<void> {
     await waitForRendererIdle(this.page);
+  }
+
+  protected async waitForStableValue<T>(
+    read: () => Promise<T>,
+    stableReads?: number,
+    timeout?: number,
+  ): Promise<T> {
+    return waitForStableValue(read, stableReads, timeout);
   }
 }

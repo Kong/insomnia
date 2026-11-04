@@ -1,7 +1,9 @@
 import { ResponseViewerComponent } from '@package/components/response-viewer.component';
+import { RequestState } from '@package/enums/request-state';
+import type { ResponseExportOption } from '@package/enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
 import type { ResponseHeader, ResponseStatusBar, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { BasePage } from './base.page';
 
@@ -38,6 +40,10 @@ export class ResponsePage extends BasePage {
     return new ResponseViewerComponent(this.page);
   }
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
+
+  private get cancelRequestButton(): Locator {
+    return this.page.locator(this.PANE).getByRole('button', { name: 'Cancel Request' });
+  }
 
   /**
    * Assembles the full response state currently shown in the response
@@ -141,6 +147,53 @@ export class ResponsePage extends BasePage {
   }
 
   /**
+   * Reads a specific streamed gRPC response message by clicking its
+   * "Response N" tab and parsing the editor content as JSON, falling back
+   * to the raw text when it isn't valid JSON.
+   */
+  async getGrpcMessage(index = 0): Promise<unknown> {
+    const tab = this.page.locator(this.PANE).getByRole('tab', { name: `Response ${index + 1}`, exact: true });
+    if ((await tab.count()) === 0) return undefined;
+    await tab.click();
+    const editor = this.page.locator(`${this.PANE} [role="tabpanel"] .CodeMirror`).first();
+    const raw = await this.readCodeMirror(editor);
+    if (!raw) return undefined;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+
+  /**
+   * Reads every streamed gRPC response message, in order, by walking
+   * "Response N" tabs until one doesn't exist. Works uniformly for unary
+   * (a single "Response 1" tab) and server/client/bidi-streaming calls
+   * (one tab per message received).
+   */
+  async getGrpcMessages(): Promise<unknown[]> {
+    const messages: unknown[] = [];
+    for (let index = 0; ; index++) {
+      const message = await this.getGrpcMessage(index);
+      if (message === undefined) break;
+      messages.push(message);
+    }
+    return messages;
+  }
+
+  /**
+   * Reads the gRPC response status tag and splits it into a status code
+   * and message.
+   */
+  async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
+    const tag = this.viewer.statusTag;
+    if ((await tag.count()) === 0) return undefined;
+    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
+    const [code, ...rest] = raw.split(/\s+/);
+    return { code, message: rest.join(' ') };
+  }
+
+  /**
    * Reads all response headers listed on the "headers" tab.
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
@@ -171,6 +224,27 @@ export class ResponsePage extends BasePage {
       results.push({ name, status, error });
     }
     return results;
+  }
+
+  /**
+   * Clicks "Cancel Request" while a request is in flight.
+   */
+  async cancelRequest(): Promise<void> {
+    await this.cancelRequestButton.click();
+  }
+
+  /**
+   * Reports whether text (e.g. `"Request was cancelled"`, `"Executing
+   * script timeout"`) is currently visible anywhere in the response pane.
+   */
+  async hasMessage(text: string): Promise<boolean> {
+    return this.page.locator(this.PANE).getByText(text).first().isVisible();
+  }
+
+  async getRequestState(): Promise<RequestState> {
+    const cancelButton = this.cancelRequestButton;
+    if ((await cancelButton.count()) === 0) return RequestState.Idle;
+    return (await cancelButton.first().isVisible()) ? RequestState.Sending : RequestState.Idle;
   }
 
   /**
@@ -217,6 +291,54 @@ export class ResponsePage extends BasePage {
     if (await dialog.isVisible()) {
       throw new Error((await dialog.innerText()).trim());
     }
+  }
+
+  /**
+   * Confirms a gRPC response has been rendered by waiting for the
+   * response status tag to become visible. If an error dialog appears
+   * instead (gRPC business failures), throws using its text.
+   */
+  async navigateGrpc(): Promise<void> {
+    const statusTag = this.viewer.statusTag;
+    const dialog = this.page.getByRole('dialog').first();
+    await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
+  }
+
+  /**
+   * Exports the response currently shown via the "Preview" dropdown,
+   * writing it through the native save dialog, which must already be
+   * stubbed (see `FlowContext.stubSaveDialog`).
+   */
+  async exportResponse(option: ResponseExportOption): Promise<void> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    await this.page.getByRole('menuitem', { name: option }).click();
+  }
+
+  /**
+   * Clicks the "Save To File" button that only renders for responses over
+   * the large-response threshold, writing the raw body through the native
+   * save dialog, which must already be stubbed (see
+   * `FlowContext.stubSaveDialog`).
+   */
+  async saveResponseToFile(): Promise<void> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Save To File' }).click();
+  }
+
+  /**
+   * Opens the "Preview" dropdown and reads one export item's label and
+   * whether it is disabled, then closes the dropdown.
+   */
+  async getExportOptionState(option: ResponseExportOption): Promise<{ text: string; disabled: boolean }> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    const item = this.page.getByRole('menuitem', { name: option });
+    await item.waitFor({ state: 'visible' });
+    const text = (await item.innerText()).replace(/\s+/g, ' ').trim();
+    const disabled = /cursor-not-allowed/.test((await item.getAttribute('class')) ?? '');
+    await this.page.keyboard.press('Escape');
+    return { text, disabled };
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {
