@@ -32,8 +32,6 @@ export const baseWebSocketRequestSchema = z.object({
   parameters: RequestParametersSchema.optional().default([]),
   pathParameters: RequestPathParametersSchema.optional(),
   disableUserAgentHeader: z.boolean().optional(),
-  konnectRouteKey: z.string().nullable().optional(),
-  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
 });
 export const baseWebSocketRequestWithSettingsSchema = z.object({
   ...baseWebSocketRequestSchema.shape,
@@ -66,8 +64,6 @@ export const init = (): BaseWebSocketRequest => ({
 // for those keys do not need to add in model init method but can update
 export const optionalKeys: (keyof BaseWebSocketRequest)[] = [
   'settingUseProxy',
-  'konnectRouteKey',
-  'konnectManagedHeaderNames',
   'disableUserAgentHeader',
 ];
 
@@ -75,6 +71,5 @@ export function rewriteReferences(request: WebSocketRequest, idMapping: Map<stri
   return {
     ...request,
     ...replaceIdsInFields(request, ['url', 'headers', 'authentication', 'parameters', 'pathParameters'], idMapping),
-    konnectRouteKey: null,
   };
 }

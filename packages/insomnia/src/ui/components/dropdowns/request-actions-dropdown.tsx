@@ -16,7 +16,6 @@ import { useParams } from 'react-router';
 
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -73,7 +72,6 @@ export const RequestActionsDropdown = ({
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestOpenInNewTabClicked });
     tabNavigate(
       {
         organization: organizationId,
@@ -109,7 +107,6 @@ export const RequestActionsDropdown = ({
     if (!request) {
       return;
     }
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuDuplicateClicked });
 
     showModal(PromptModal, {
       title: 'Duplicate Request',
@@ -147,9 +144,6 @@ export const RequestActionsDropdown = ({
 
   const generateCode = () => {
     if (isRequest(request)) {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.generateCodeClicked,
-      });
 
       showModal(GenerateCodeModal, { request });
     }
@@ -170,10 +164,6 @@ export const RequestActionsDropdown = ({
       if (cmd) {
         window.clipboard.writeText(cmd);
       }
-
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.copyAsCurl,
-      });
     } catch (err) {
       showModal(AlertModal, {
         title: 'Could not generate cURL',
@@ -183,7 +173,6 @@ export const RequestActionsDropdown = ({
   };
 
   const togglePin = () => {
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuPinClicked });
     patchRequestMeta(request._id, { pinned: !isPinned });
   };
 
@@ -269,7 +258,6 @@ export const RequestActionsDropdown = ({
           id: 'Rename',
           name: 'Rename',
           action: () => {
-            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuRenameClicked });
             onRename();
           },
           icon: 'edit',
@@ -288,7 +276,6 @@ export const RequestActionsDropdown = ({
           icon: 'gear',
           hint: hotKeyRegistry.request_showSettings,
           action: () => {
-            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestListMenuSettingsClicked });
             setIsSettingsModalOpen(true);
           },
         },

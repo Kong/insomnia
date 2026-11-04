@@ -35,7 +35,6 @@ import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { HelpTooltip } from '~/ui/components/help-tooltip';
@@ -286,11 +285,6 @@ export const Runner: FC = () => {
     }
     setCanceledRun(false);
     setIsRunning(true);
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.collectionRunExecute,
-      properties: { iterations: iterationCount },
-    });
 
     updateTabById?.(buildRunnerTabId(workspaceId, targetFolderId), { temporary: false });
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));

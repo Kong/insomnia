@@ -151,7 +151,7 @@ test.describe('confidential value redaction', () => {
   // reveal -- and it is also what keeps the spec above from passing vacuously.
   test('writes plaintext to the timeline when the setting is off', async ({ app, page, dataPath, insomnia }) => {
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
     // click + poll rather than uncheck(): the checkbox is controlled by the root loader's
     // settings, so it only flips once the patch has round-tripped. uncheck() verifies the
     // state immediately after its click and fails on that gap.

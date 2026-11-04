@@ -229,7 +229,7 @@ export const CloudServiceCredentialList = () => {
             <NumberSetting
               label="Secret Cache Duration (min)"
               setting="vaultSecretCacheDuration"
-              help="Set how long external vault secrets are cached in Insomnia (minutes). Use 0 to disable caching. Click Reset Cache to clear all cached secrets."
+              help="Set how long external vault secrets are cached in Restless (minutes). Use 0 to disable caching. Click Reset Cache to clear all cached secrets."
               min={0}
               max={720}
             />

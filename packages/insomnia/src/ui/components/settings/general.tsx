@@ -31,7 +31,7 @@ const onHideConfidentialValuesToggled = (isHiding: boolean) => {
     showModal(AlertModal, {
       title: 'Hiding Confidential Variables',
       message:
-        'You are now hiding Confidential variables in the Insomnia UI. Consider clearing your Response History to remove any potentially confidential information from your local logs/history. You can do this in a Collection’s Settings, or globally from the Tools menu.',
+        'You are now hiding Confidential variables in the Restless UI. Consider clearing your Response History to remove any potentially confidential information from your local logs/history. You can do this in a Collection’s Settings, or globally from the Tools menu.',
     });
     return;
   }
@@ -67,6 +67,11 @@ export const General: FC = () => {
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
+          <BooleanSetting
+            label="Open Insomnia web links"
+            setting="handleInsomniaLinks"
+            help="Opens insomnia:// plugin, theme and import links here. Turn this off if you also use Insomnia. Takes effect after a restart."
+          />
           <BooleanSetting
             label="Sidebar focus for collections"
             setting="sidebarFocusForCollections"
@@ -248,7 +253,7 @@ export const General: FC = () => {
         <BooleanSetting
           label="Clear OAuth 2 session on start"
           setting="clearOAuth2SessionOnRestart"
-          help="If checked, clears the OAuth session every time Insomnia is relaunched."
+          help="If checked, clears the OAuth session every time Restless is relaunched."
         />
         <button
           className="pointer flex h-(--line-height-xs) items-center justify-center rounded-md border border-solid border-(--hl-lg) px-(--padding-sm) hover:bg-(--hl-xs)"
@@ -268,9 +273,9 @@ export const General: FC = () => {
 
       <div className="form-row pad-top-sm">
         <TextArraySetting
-          label="What folders can Insomnia access?"
+          label="What folders can Restless access?"
           setting="dataFolders"
-          help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
+          help="This allows you to control what folders Restless (and scripts within Restless) can read/write to."
           placeholder="e.g., /Users/folder1"
         />
       </div>
@@ -312,7 +317,7 @@ export const General: FC = () => {
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
-        help="Add a custom path to direct Insomnia to a different plugin directory."
+        help="Add a custom path to direct Restless to a different plugin directory."
         placeholder="~/.insomnia:/other/path"
       />
     </div>

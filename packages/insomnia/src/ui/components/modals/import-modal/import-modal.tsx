@@ -23,13 +23,6 @@ import {
   requiresNewWorkspace,
   type ScanResult,
 } from '../../../../common/import';
-import {
-  AnalyticsEvent,
-  importAttributionKey,
-  PENDING_IMPORT_ATTRIBUTION_KEY,
-  readPendingImportAttribution,
-  trackImportEvent,
-} from '../../../analytics';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
 import { HelpTooltip } from '../../help-tooltip';
@@ -287,18 +280,9 @@ export const ImportModal: FC<ImportModalProps> = ({
   // Track the import completion event, redirect to the new workspace and close the modal
   useEffect(() => {
     if (importFetcher?.data?.done === true && scanResourcesFetcherData?.length) {
-      trackImportEvent(AnalyticsEvent.importCompleted, {
-        workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
-        requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
-      });
       const workspace = importFetcher?.data?.singleImportedWorkspace;
       const request = importFetcher?.data?.singleImportedRequest;
       const targetProjectId = importFetcher?.data?.singleImportedProjectId || createdProjectId || defaultProjectId;
-      const attribution = readPendingImportAttribution();
-      if ((attribution.importSource || attribution.importSourceUrl) && request) {
-        window.localStorage.setItem(importAttributionKey(request._id), JSON.stringify(attribution));
-      }
-      window.sessionStorage.removeItem(PENDING_IMPORT_ATTRIBUTION_KEY);
       if (workspace && request) {
         navigate(
           `/organization/${organizationId}/project/${targetProjectId}/workspace/${workspace._id}/debug/request/${request._id}`,
@@ -345,13 +329,8 @@ export const ImportModal: FC<ImportModalProps> = ({
     : projectName
       ? `Import to "${projectName}" Project`
       : 'Import';
-  const isScratchPad =
-    defaultProjectId &&
-    models.project.isScratchpadProject({
-      _id: defaultProjectId,
-    });
 
-  const cannotImportToWorkspace = totalWorkspacesCount > 1 && isScratchPad;
+  const cannotImportToWorkspace = totalWorkspacesCount > 1 && false;
 
   const importErrors = [
     ...(importFetcher.data?.errors || []),
@@ -413,12 +392,6 @@ export const ImportModal: FC<ImportModalProps> = ({
                   overrideBaseEnvironmentData,
                 },
               });
-              scanResourcesFetcherData
-                .filter(({ errors }) => errors.length === 0)
-                .forEach(scanResult => {
-                  const type = scanResult.type?.id ?? 'unknown';
-                  trackImportEvent(AnalyticsEvent.dataImport, { 'data-import-type': type });
-                });
             }}
           />
         ) : autoScan && scanResourcesFetcher.state === 'loading' ? (
@@ -563,7 +536,7 @@ const ScanResourcesForm = ({
                   className="h-[200px] resize-none font-mono"
                   name="curl"
                   defaultValue={from?.type === 'curl' ? from.defaultValue : undefined}
-                  placeholder="curl --request GET --url http://insomnia.rest/"
+                  placeholder="curl --request GET --url https://example.com/"
                   onChange={async event => {
                     const { value } = event.target;
                     const { message: msg } = await validateCurl(value);
@@ -824,7 +797,7 @@ const ImportResourcesForm = ({
         <div>
           {errors && errors.length > 0 && (
             <div className="notice error margin-top-sm">
-              <Heading className="font-bold">Error while importing to Insomnia:</Heading>
+              <Heading className="font-bold">Error while importing to Restless:</Heading>
               <p>{errors[0]}</p>
             </div>
           )}

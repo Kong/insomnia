@@ -29,7 +29,7 @@ export const DatePicker = <T extends DateValue>({
   ...props
 }: CustomDatePickerProps<T>) => {
   return (
-    <RaDatePicker aria-label="Insomnia Date Picker" {...props}>
+    <RaDatePicker aria-label="Restless Date Picker" {...props}>
       <Group className="flex w-full items-center justify-between rounded-sm border border-solid border-(--hl-sm) px-2 py-1 data-invalid:border-(--color-danger)">
         <DateInput>{segment => <DateSegment segment={segment} />}</DateInput>
         <Button>

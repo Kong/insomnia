@@ -6,7 +6,6 @@ import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -166,16 +165,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       <Tabs
         aria-label="Request group tabs"
         className="flex h-full w-full flex-1 flex-col"
-        onSelectionChange={key => {
-          if (key === 'mock-response') {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.responseToMockClicked,
-              properties: {
-                source: 'Response Pane Tab',
-              },
-            });
-          }
-        }}
       >
         <TabList
           className="flex h-(--line-height-sm) w-full shrink-0 items-center overflow-x-auto border-b border-solid border-b-(--hl-md) bg-(--color-bg)"
@@ -269,7 +258,6 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <ResponseHeadersViewer
               headers={activeResponse.headers}
               onCopyAll={() => {
-                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseHeadersCopyAllClicked });
               }}
             />
           </ErrorBoundary>

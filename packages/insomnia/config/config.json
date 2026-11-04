@@ -1,10 +1,10 @@
 {
-  "name": "insomnium",
-  "appId": "com.insomnium.app",
-  "userDataFolder": "Insomnium",
-  "productName": "Insomnium",
+  "name": "restless",
+  "appId": "com.restless.app",
+  "userDataFolder": "Restless",
+  "productName": "Restless",
   "synopsis": "The local-first API client",
   "githubOrg": "outmanos",
-  "githubRepo": "insomnium",
-  "bundlePlugins": [{ "name": "insomnium-plugin-secret-managers" }]
+  "githubRepo": "restless",
+  "bundlePlugins": [{ "name": "restless-plugin-secret-managers" }]
 }

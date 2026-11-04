@@ -63,7 +63,7 @@ export function findUnknownFieldRanges(yamlText: string, schema: z.ZodTypeAny): 
         addRange(
           [pair.key.range![0], (valueRange ?? pair.key.range!)[1], (valueRange ?? pair.key.range!)[2]],
           unknownKey,
-          `Unrecognized field "${unknownKey}": fields that were added by a newer version of Insomnia, or manual file edits.`,
+          `Unrecognized field "${unknownKey}": fields that were added by a newer version of Restless, or manual file edits.`,
         );
       }
     }

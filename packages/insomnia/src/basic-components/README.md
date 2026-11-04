@@ -1,7 +1,7 @@
 # `~/basic-components` — Shared Component Library
 
 Insomnia's shared component library, built on `react-aria-components` + TailwindCSS. Full design/roadmap:
-[Insomnia Shared Component Library Plan](https://konghq.atlassian.net/wiki/spaces/~712020f987dca73e964e60aafab91ddc862706/pages/5729714608/Insomnia+Shared+Component+Library+Plan) (Confluence). Conventions: [`AGENTS.md`](./AGENTS.md).
+Insomnia Shared Component Library Plan (Confluence). Conventions: [`AGENTS.md`](./AGENTS.md).
 
 Full per-component docs (props, variants, live examples) live on the Docusaurus site
 `packages/insomnia-component-docs`, not in this file.

@@ -5,16 +5,6 @@ import { database as db } from '~/common/database';
 import GitVCS from '~/sync/git/git-vcs';
 
 // See git-service-repo-folder.test.ts for why main/analytics is replaced.
-vi.mock('~/main/analytics', async () => {
-  const { AnalyticsEvent } = await import('insomnia-analytics');
-  return {
-    AnalyticsEvent,
-    trackAnalyticsEvent: vi.fn(),
-    setCurrentOrganizationId: vi.fn(),
-    trackPageView: vi.fn(),
-  };
-});
-
 const reportModule = await import('~/common/insomnia-v5-change-report');
 const buildReport = vi.spyOn(reportModule, 'buildInsomniaChangeReport');
 const { diffFileLoader } = await import('~/main/git-service');

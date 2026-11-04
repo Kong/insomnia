@@ -38,7 +38,7 @@ const unsetEnvVar = 'insomnia.environment.unset("variable_name");';
 const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
 const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");';
 const sendReq = `const resp = await insomnia.sendRequest(
-	'https://insomnia.rest/',
+	'https://example.com/',
 	(err, resp) => {
 		if (err != null) {
 			throw err;

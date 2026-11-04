@@ -1,27 +1,27 @@
 # Maintainer: Outman <23385633+outmanos@users.noreply.github.com>
-pkgname=insomnium-next-bin
+pkgname=restless-bin
 pkgver=13.3.1
 pkgrel=1
 pkgdesc='Offline-first API client for REST, GraphQL, gRPC, WebSockets and more'
 arch=('x86_64')
-url='https://github.com/outmanos/insomnium'
+url='https://github.com/outmanos/restless'
 license=('Apache-2.0')
 depends=('alsa-lib' 'curl' 'gtk3' 'libnotify' 'nss' 'xdg-utils')
-provides=('insomnium')
-conflicts=('insomnium' 'insomnium-bin' 'insomnium-git')
+provides=('restless')
+conflicts=('restless')
 options=('!strip')
-source=("Insomnium.Core-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/Insomnium.Core-${pkgver}.tar.gz"
-        'insomnium.desktop'
-        "insomnium-${pkgver}.svg::https://raw.githubusercontent.com/outmanos/insomnium/v${pkgver}/packages/insomnia/src/icons/icon.svg")
+source=("Restless-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/Restless-${pkgver}.tar.gz"
+        'restless.desktop'
+        "restless-${pkgver}.svg::https://raw.githubusercontent.com/outmanos/restless/v${pkgver}/packages/insomnia/src/icons/icon.svg")
 sha256sums=('SKIP'
             'SKIP'
             'SKIP')
 
 package() {
-  install -d "${pkgdir}/opt/insomnium" "${pkgdir}/usr/bin"
-  cp -a "Insomnium.Core-${pkgver}/." "${pkgdir}/opt/insomnium/"
-  ln -s /opt/insomnium/insomnium "${pkgdir}/usr/bin/insomnium"
+  install -d "${pkgdir}/opt/restless" "${pkgdir}/usr/bin"
+  cp -a "Restless-${pkgver}/." "${pkgdir}/opt/restless/"
+  ln -s /opt/restless/restless "${pkgdir}/usr/bin/restless"
 
-  install -Dm644 insomnium.desktop "${pkgdir}/usr/share/applications/insomnium.desktop"
-  install -Dm644 "insomnium-${pkgver}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/insomnium.svg"
+  install -Dm644 restless.desktop "${pkgdir}/usr/share/applications/restless.desktop"
+  install -Dm644 "restless-${pkgver}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/restless.svg"
 }

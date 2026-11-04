@@ -25,7 +25,7 @@ describe('main window security posture', () => {
     // Isolate the main window construction (the hidden window legitimately uses
     // nodeIntegration:true / contextIsolation:false, so we must not scan it).
     const start = source.indexOf('const mainBrowserWindow = new BrowserWindow(');
-    const end = source.indexOf("browserWindows.set('Insomnia'", start);
+    const end = source.indexOf("browserWindows.set('Restless'", start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const mainWindowBlock = source.slice(start, end);

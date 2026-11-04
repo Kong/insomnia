@@ -6,7 +6,6 @@ import { useLocation, useParams } from 'react-router';
 import { isNotNullOrUndefined } from '~/common/misc';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { EnvironmentPicker } from '~/ui/components/environment-picker';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -20,7 +19,7 @@ import uiEventBus, { OPEN_ENVIRONMENTS_MODAL } from '~/ui/event-bus';
 
 export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: boolean }) {
   const { organizationId } = useParams();
-  const isScratchPad = organizationId ? models.organization.isScratchpadOrganizationId(organizationId) : false;
+  const isScratchPad = organizationId ? false : false;
   const { activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useWorkspaceLoaderData()!;
   const { activeRequest } = useRequestLoaderData() || {};
   const breadcrumbs = useWorkspaceBreadcrumbs();
@@ -112,20 +111,10 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
                 isOpen={isEnvironmentPickerOpen}
                 onOpenChange={isOpen => {
                   setIsEnvironmentPickerOpen(isOpen);
-                  if (isOpen) {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.requestEnvironmentClicked,
-                    });
-                  }
                 }}
                 isProjectPickerOpen={isProjectEnvironmentPickerOpen}
                 onProjectPickerOpenChange={isOpen => {
                   setIsProjectEnvironmentPickerOpen(isOpen);
-                  if (isOpen) {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.requestEnvironmentClicked,
-                    });
-                  }
                 }}
                 onOpenEnvironmentSettingsModal={() => requestEnvironmentsModal()}
               />
@@ -133,9 +122,6 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
                 <Button
                   aria-label="Add Cookies"
                   onPress={() => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.requestAddCookiesClicked,
-                    });
                     setIsCookieModalOpen(true);
                   }}
                   className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -149,9 +135,6 @@ export default function WorkspacePaneHeader({ hasSettings }: { hasSettings: bool
               <Button
                 aria-label="Add Certificates"
                 onPress={() => {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.requestAddCertificatesClicked,
-                  });
                   setCertificatesModalOpen(true);
                 }}
                 className="flex h-7 items-center justify-center gap-2 rounded-xs px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"

@@ -25,7 +25,7 @@ export const confirmOpenFolderTrust = (folderPath: string): Promise<boolean> =>
         <div className="flex flex-col gap-3 text-left">
           <p>Only open folders from a source you trust.</p>
           <p className="text-sm text-(--hl)">
-            Insomnia will read this folder and import any API collections, environments and lint rulesets it contains.
+            Restless will read this folder and import any API collections, environments and lint rulesets it contains.
             Collections can include pre-request and after-response scripts that run when you send their requests.
           </p>
           <div className="rounded-xs bg-(--hl-xxs) px-2 py-1 font-mono text-xs break-all text-(--color-font)">

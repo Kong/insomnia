@@ -1,4 +1,4 @@
-const BINARY_PREFIX = 'Insomnium.Core';
+const BINARY_PREFIX = 'Restless';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
@@ -8,12 +8,12 @@ const BINARY_PREFIX = 'Insomnium.Core';
  */
 const config = {
   npmRebuild: false,
-  appId: 'com.insomnium.app',
+  appId: 'com.restless.app',
   protocols: [
     {
-      name: 'Insomnium',
+      name: 'Restless',
       role: 'Viewer',
-      schemes: ['insomnium'],
+      schemes: ['restless'],
     },
   ],
   files: [
@@ -24,7 +24,7 @@ const config = {
     },
     './package.json',
   ],
-  publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium' },
+  publish: { provider: 'github', owner: 'outmanos', repo: 'restless' },
   extraResources: [
     {
       from: './bin',
@@ -54,8 +54,8 @@ const config = {
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
       NSLocalNetworkUsageDescription:
-        'Insomnium needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
-      // Allow Finder "Open With → Insomnium" on folders so they can be opened as Git projects.
+        'Restless needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
+      // Allow Finder "Open With → Restless" on folders so they can be opened as Git projects.
       CFBundleDocumentTypes: [
         {
           CFBundleTypeName: 'Folder',
@@ -116,7 +116,7 @@ const config = {
         arch: ['x64'],
       },
     ],
-    publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium' },
+    publish: { provider: 'github', owner: 'outmanos', repo: 'restless' },
     generateUpdatesFilesForAllChannels: true,
   },
   nsis: {
@@ -131,7 +131,7 @@ const config = {
     uninstallerIcon: './build/icon.ico',
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: 'Insomnium',
+    shortcutName: 'Restless',
     deleteAppDataOnUninstall: false,
   },
   portable: {
@@ -140,12 +140,12 @@ const config = {
   linux: {
     // artifactName: `${BINARY_PREFIX}-\${version}-\${arch}.\${ext}`, // TODO-ARM64 - Re-enable when we have ARM64 build from insomnia-ee
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    executableName: 'insomnium',
+    executableName: 'restless',
     synopsis: 'The local-first API client',
     category: 'Development',
     desktop: {
       entry: {
-        Name: 'Insomnium',
+        Name: 'Restless',
         Comment: 'The local-first API client',
         Categories: 'Development',
         Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',

@@ -1,7 +1,6 @@
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
-import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 interface Props {
@@ -24,9 +23,6 @@ export const ProjectEmptyView: FC<Props> = ({
           aria-label="Create request collection"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
           onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.emptyStateSendRequestClicked,
-            });
             onCreateRequestCollectionWithRequest();
           }}
         >
@@ -37,9 +33,6 @@ export const ProjectEmptyView: FC<Props> = ({
           aria-label="Create document"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
           onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.emptyStateCreateDocumentClicked,
-            });
             onCreateDesignDocument();
           }}
         >
@@ -50,12 +43,6 @@ export const ProjectEmptyView: FC<Props> = ({
           aria-label="Import"
           className="flex w-full max-w-[180px] flex-col items-center justify-center gap-(--padding-xs) rounded-md border border-solid border-(--hl-sm) px-12 py-8 text-(--font-size-sm) shadow-xs transition-all duration-100 hover:bg-(--color-bg) sm:gap-(--padding-sm)"
           onPress={() => {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.importStarted,
-              properties: {
-                source: 'home-page',
-              },
-            });
 
             onImportFrom();
           }}

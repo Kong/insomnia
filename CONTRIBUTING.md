@@ -1,11 +1,11 @@
-# Contributing to Insomnium
+# Contributing to Restless
 
 Contributions are welcome. They should target this fork, not [Kong/insomnia](https://github.com/Kong/insomnia).
 Please follow the [Kind Communication Guidelines](CODE_OF_CONDUCT.md).
 
 ## Using the issue tracker
 
-Use [GitHub Issues](https://github.com/outmanos/insomnium/issues) for bugs and feature requests. Search existing
+Use [GitHub Issues](https://github.com/outmanos/restless/issues) for bugs and feature requests. Search existing
 and closed issues first. Do not report bugs in this fork to Kong, or bugs in Kong's Insomnia here.
 
 Report security problems privately, as described in the [security policy](SECURITY.md).
@@ -16,7 +16,7 @@ Check that the bug still happens on the latest `develop` branch, then include:
 
 - Steps to reproduce it
 - What you expected and what happened
-- Your Insomnium version and operating system
+- Your Restless version and operating system
 
 ## Feature requests
 
@@ -33,7 +33,7 @@ Requests must fit the project's rules:
 
 Open an issue first for anything large. Keep each pull request to one change.
 
-Before submitting, follow [Develop Insomnium](README.md#develop-insomnium) to set up, then run:
+Before submitting, follow [Develop Restless](README.md#develop-restless) to set up, then run:
 
 ```bash
 npm run lint

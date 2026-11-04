@@ -49,7 +49,7 @@ const getSecuredFolderAllowList = (userAllowList: string[]) => {
 // allowed to reach those files even though that directory is otherwise an allowed root.
 const isReservedDatabaseFile = (filePath: string) => /^insomnia\..+\.db.*$/i.test(path.basename(filePath));
 const cannotAccessFileError = (securedPath: string) =>
-  `Insomnia cannot access the file "${securedPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`;
+  `Restless cannot access the file "${securedPath}". You must specify which directories Restless can access in ${SECURITY_SETTINGS_PATH_LABEL}`;
 const resolveRealPath = async (filePath: string) => fs.promises.realpath(filePath).catch(() => filePath);
 const statOrNull = async (filePath: string) => fs.promises.stat(filePath).catch(() => null);
 const getUserdataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');

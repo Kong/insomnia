@@ -314,18 +314,8 @@ export function canDrop(
   }
 
   const dropIsProject = realDropItem.kind === 'project';
-  const dragInCloud = models.project.isRemoteProject(dragItem.project);
   if (dragItem.kind === 'workspace') {
     const dragWorkspaceScope = dragItem.doc.scope;
-    // Konnect workspaces are keyed to their project's control plane, so moving one across projects
-    // would orphan it and make the next sync delete or duplicate it.
-    const dropProject = realDropItem.kind === 'project' ? realDropItem.doc : realDropItem.project;
-    const dropToAnotherKonnectProject =
-      dragItem.project._id !== dropProject._id &&
-      (dragItem.project.konnectControlPlaneId != null || dropProject.konnectControlPlaneId != null);
-    if (dropToAnotherKonnectProject) {
-      return false;
-    }
     if (realDropItem) {
       if (realDropItem.kind === 'project') {
         const dropToAnotherProject = dragItem.project._id !== realDropItem.doc._id;
@@ -333,26 +323,18 @@ export function canDrop(
         if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
           return false;
         }
-        if (dropToAnotherProject && (dragInCloud || models.project.isRemoteProject(realDropItem.doc))) {
-          // can not move cloud sync workspace into another project, and can not move any workspace into cloud sync project
-          return false;
-        }
+        
         return true;
       }
       const isWorkspaceMoveAllowed = () => {
-        if (dragInCloud) {
-          // cloud sync workspaces can only move within same project and cannot move into other projects
-          return (
-            dragItem.project._id === realDropItem.project._id && models.project.isRemoteProject(realDropItem.project)
-          );
-        }
+        
         const dropToAnotherProject = dragItem.project._id !== realDropItem.project._id;
         // only allow moving collection and design workspace into another project
         if (dropToAnotherProject && !allowCrossProjectDropWorkspaceScope.includes(dragWorkspaceScope)) {
           return false;
         }
         // local/git workspace can move within same project or move into other local/git project
-        return !models.project.isRemoteProject(realDropItem.project);
+        return true;
       };
       if (realDropItem.kind === 'workspace') {
         if (realDropItem.doc.scope === 'collection' && expandedProjectAndWorkspaceIds?.includes(realDropItem.doc._id)) {
@@ -397,9 +379,7 @@ export function canDrop(
     if (dragItem.project._id === realDropItem.project._id) {
       return true;
     }
-    // Moving BETWEEN collections cannot involve cloud sync on either side.
-    const dropInCloud = models.project.isRemoteProject(realDropItem.project);
-    return !dragInCloud && !dropInCloud;
+    return true;
   }
 
   // An empty PROJECT or COLLECTION placeholder has no sibling list to join. An

@@ -105,7 +105,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
           </Button>
           <HelpTooltip>
             Convert this tag to new format for reliable syncing in git & cloud sync projects. Note: once converted, the
-            tag will only work on this version of Insomnia or later.
+            tag will only work on this version of Restless or later.
           </HelpTooltip>
         </div>
       )}

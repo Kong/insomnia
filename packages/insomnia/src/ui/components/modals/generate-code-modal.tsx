@@ -3,7 +3,6 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Button } from 'react-aria-components';
 
 import type { HTTPSnippetClient, HTTPSnippetTarget } from '~/types/code-snippet';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { CopyButton } from '../base/copy-button';
@@ -102,13 +101,6 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         });
         setSnippet(cmd as string);
       }
-
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.generateCodeLanguageChanged,
-        properties: {
-          language: target?.title,
-        },
-      });
     },
     [props.environmentId],
   );

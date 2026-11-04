@@ -50,8 +50,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       token_endpoint_auth_method: 'none',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
-      client_name: 'Insomnium MCP Client',
-      client_uri: 'https://github.com/outmanos/insomnium',
+      client_name: 'Restless MCP Client',
+      client_uri: 'https://github.com/outmanos/restless',
       scope: 'scope' in this.authentication ? this.authentication.scope : undefined,
     };
   }

@@ -10,7 +10,6 @@ import {
 } from '~/common/import';
 import { invariant } from '~/common/utils/invariant';
 import type { ImportEntry } from '~/main/importers/entities';
-import { AnalyticsEvent, trackImportEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 export const scanImportResources = async (data: {
@@ -26,8 +25,6 @@ export const scanImportResources = async (data: {
 
   invariant(typeof source === 'string', 'Source is required.');
   invariant(IMPORT_SOURCE_TYPES.includes(source), 'Unsupported import type');
-
-  trackImportEvent(AnalyticsEvent.importScanned, { source });
 
   const contentList: ImportEntry[] = [];
 

@@ -142,7 +142,7 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins are built and maintained by third-party developers. Thank you! Insomnia does not review, endorse, or
+        Plugins are built and maintained by third-party developers. Thank you! Restless does not review, endorse, or
         support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
         <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
@@ -232,7 +232,7 @@ export const Plugins: FC = () => {
                         ...state,
                         ...idleState,
                         error: err,
-                        installPluginErrMsg: `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.`,
+                        installPluginErrMsg: `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Restless.`,
                       }));
                     }
                   }}

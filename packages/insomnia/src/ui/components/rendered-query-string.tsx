@@ -14,7 +14,6 @@ import { Link } from 'react-aria-components';
 import { RenderError } from '~/common/templating/render-error';
 import { encodeProtectedUrl, protectMask, restoreMask } from '~/common/utils/url/confidential-mask';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '~/common/utils/url/querystring';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 
 import { database as db } from '../../common/database';
@@ -134,10 +133,6 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       window.showAlert({
         title: 'URL Too Long',
         message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
-      });
-    } else {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.requestUrlCopied,
       });
     }
   }, [tooLong]);

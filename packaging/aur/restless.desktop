@@ -1,10 +1,11 @@
 [Desktop Entry]
-Name=Insomnium
+Name=Restless
 Comment=The local-first API client
-Exec=insomnium %U
+Exec=restless %U
 Terminal=false
 Type=Application
-Icon=insomnium
+Icon=restless
 Categories=Development;
+MimeType=x-scheme-handler/restless;x-scheme-handler/insomnia;
 Keywords=GraphQL;REST;gRPC;SOAP;openAPI;GitOps;
-StartupWMClass=Insomnium
+StartupWMClass=Restless

@@ -1,14 +1,14 @@
-# Insomnium
+# Restless
 
-[![license](https://img.shields.io/github/license/outmanos/insomnium.svg)](LICENSE)
+[![license](https://img.shields.io/github/license/outmanos/restless.svg)](LICENSE)
 
-Insomnium is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
+Restless is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
 for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It requires **no account** and has **zero telemetry**.
 
-The name comes from the original Insomnium, which was the inspiration behind this fork. You can read
+This fork was inspired by the original Insomnium, which was unfortunately nuked. You can read
 [its backstory here](docs/insomnium/README.md).
 
-With Insomnium you can:
+With Restless you can:
 
 - **Work offline** with every core feature and no login.
 - **Keep your data in plain files** with `File > Open Folder…`, which stores collections as YAML in a Git repository.
@@ -17,7 +17,7 @@ With Insomnium you can:
 - **Design APIs** with the OpenAPI editor, visual preview and Spectral linting.
 - **Test APIs** with scripts, test suites and the collection runner.
 - **Mock APIs** with a self-hosted mock server.
-- **Build CI/CD pipelines** with the Inso CLI.
+- **Build CI/CD pipelines** with `restless-cli`.
 - **Extend it** with plugins and themes.
 
 Everything that needs an outside service is off until you enable it:
@@ -28,31 +28,60 @@ Everything that needs an outside service is off until you enable it:
 
 The goal is to be feature complete with both Insomnia and Bruno. Progress is tracked in the [roadmap](ROADMAP.md).
 
-Insomnium is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
+Restless is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
 
 ## Install
 
-### Arch Linux
+Download the latest version from [GitHub Releases](https://github.com/outmanos/restless/releases/latest).
 
-Install [`insomnium-next-bin`](https://aur.archlinux.org/packages/insomnium-next-bin) from the AUR:
+### Windows
+
+Run the `.exe` installer from [Releases](https://github.com/outmanos/restless/releases/latest), or use winget:
 
 ```bash
-yay -S insomnium-next-bin
+winget install Outmanos.Restless
+```
+
+Windows builds are not code signed yet, so SmartScreen may warn you on first launch.
+
+### macOS
+
+Download the `.dmg` from [Releases](https://github.com/outmanos/restless/releases/latest), or use Homebrew:
+
+```bash
+brew install --cask outmanos/tap/restless
+```
+
+macOS builds are for Apple Silicon and are not notarized yet, so macOS will warn you on first launch.
+
+### Linux
+
+| Distribution            | Install                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Any                     | [`.AppImage` or `.tar.gz`](https://github.com/outmanos/restless/releases/latest)   |
+| Debian, Ubuntu, Mint    | [`.deb`](https://github.com/outmanos/restless/releases/latest)                     |
+| Fedora, RHEL, openSUSE  | [`.rpm`](https://github.com/outmanos/restless/releases/latest)                     |
+| Arch, Manjaro, CachyOS  | [`restless-bin`](https://aur.archlinux.org/packages/restless-bin) from the AUR     |
+
+On Arch-based distributions:
+
+```bash
+yay -S restless-bin
 ```
 
 ## Bugs and Feature Requests
 
 Have a bug or a feature request? First, read the
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/outmanos/insomnium/issues).
+[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/outmanos/restless/issues).
 
 
 ## Contributing
 
 Please read through our [contributing guidelines](CONTRIBUTING.md) and [Kind Communication Guidelines](CODE_OF_CONDUCT.md). Included are directions for opening issues, coding standards, and notes on development.
 
-## Develop Insomnium
+## Develop Restless
 
-Development on Insomnium can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
+Development on Restless can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 
 <details>
 <summary>Initial Dev Setup</summary>
@@ -139,7 +168,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 </details>
 
-## Develop Inso CLI
+## Develop the CLI
 
 - `npm i`
 - Start the compiler in watch mode: `npm run inso-start`
@@ -147,7 +176,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 ## Plugins
 
-Insomnium loads Insomnia plugins. Install one by its npm package name in `Preferences > Plugins`.
+Restless loads Insomnia plugins. Install one by its npm package name in `Preferences > Plugins`.
 
 ## License
 

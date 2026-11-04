@@ -140,7 +140,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       property="redirectUrl"
       key="redirectUrl"
       help={
-        'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+        'This can be whatever you want or need it to be. Restless will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
       }
     />
   );
@@ -161,7 +161,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       label="Using default browser"
       property="useDefaultBrowser"
       key="useDefaultBrowser"
-      help="You must use the redirect URL provided by the app when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Insomnia."
+      help="You must use the redirect URL provided by the app when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Restless."
       onTitle="Click to use built-in browser"
       offTitle="Click to use default browser"
     />

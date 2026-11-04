@@ -23,7 +23,6 @@ import { getAppVersion, getProductName, REALTIME_EVENTS_CHANNELS } from '~/commo
 import { getMcpMethodFromMessage, METHOD_NOTIFICATION_CANCELLED } from '~/common/mcp-utils';
 import { redactConfidentialText } from '~/common/network/sensitive-value-collector';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import {
   callTool,
   getPrompt,
@@ -248,26 +247,7 @@ const createTransportAndConnect = async (context: ConnectionContext, mcpClient: 
 
   const mcpRequest = await services.mcpRequest.getById(connectionOptions.requestId);
   invariant(mcpRequest, 'MCP Request not found');
-
-  let authType = 'none';
-  if ('type' in mcpRequest.authentication) {
-    authType =
-      mcpRequest.authentication.type === 'oauth2'
-        ? 'oauth2-' + mcpRequest.authentication.grantType
-        : mcpRequest.authentication.type;
-  }
-  const authDisabled = 'disabled' in mcpRequest.authentication && mcpRequest.authentication.disabled;
   const isFirstConnection = !mcpRequest.connected;
-  trackAnalyticsEvent(AnalyticsEvent.mcpClientConnected, {
-    transportType: connectionOptions.transportType,
-    firstTime: isFirstConnection,
-    ...(connectionOptions.transportType === models.mcpRequest.TRANSPORT_TYPES.HTTP
-      ? {
-          authType,
-          authDisabled,
-        }
-      : {}),
-  });
   if (isFirstConnection) {
     // Mark as connected for the first time
     await services.mcpRequest.update(mcpRequest, { connected: true });
@@ -456,7 +436,6 @@ const closeMcpConnection = async (options: CommonMcpOptions) => {
     // Execute clear resource subscription in main process rather than UI to make sure closeAllMcpConnections method will clear subscriptions
     await services.mcpRequest.clearResourceSubscriptions(requestId);
   }
-  trackAnalyticsEvent(AnalyticsEvent.mcpClientDisconnected);
 };
 
 const closeAllMcpConnections = () => {

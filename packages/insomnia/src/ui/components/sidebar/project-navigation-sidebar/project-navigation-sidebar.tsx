@@ -24,7 +24,6 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import type { StorageRules } from '~/common/organization-storage-rules';
 import { sortMethodMap } from '~/common/sorting';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
-import { AnalyticsEvent } from '~/ui/analytics';
 import type { WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
 import { SidebarShortcutActionsDropdown } from '~/ui/components/dropdowns/sidebar-shortcut-actions-dropdown';
 import { SidebarWorkspaceDropdown } from '~/ui/components/dropdowns/sidebar-workspace-dropdown';
@@ -152,14 +151,6 @@ const ProjectNavigationSidebarInner = (
   // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
 
   useEffect(() => {
-    if (projectNavigationSidebarFilter) {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.projectListFiltered,
-        properties: {
-          project_id: activeProjectId,
-        },
-      });
-    }
   }, [projectNavigationSidebarFilter, activeProjectId]);
 
   const flatItems = useMemo<FlatItem[]>(() => {
@@ -214,7 +205,7 @@ const ProjectNavigationSidebarInner = (
             );
 
             // Change indicators apply to git and cloud (remote) projects only
-            const showSyncStatus = models.project.isRemoteProject(project) || models.project.isGitProject(project);
+            const showSyncStatus = models.project.isGitProject(project);
             const workspaceMeta = showSyncStatus ? workspaceMetas.find(wm => wm.parentId === workspaceId) : undefined;
             const hasUncommittedChanges = !!workspaceMeta?.hasUncommittedChanges;
             const hasUnpushedChanges = !!workspaceMeta?.hasUnpushedChanges;
@@ -731,13 +722,6 @@ const ProjectNavigationSidebarInner = (
       }
 
       event.preventDefault();
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.keyboardShortcutUsed,
-        properties: {
-          source: 'navigation-sidebar',
-          action: 'showCreateDropdown',
-        },
-      });
 
       const targetId = targetItem.doc._id;
       const targetIndex = visibleFlatItems.findIndex(item => item.doc._id === targetId);
@@ -768,13 +752,6 @@ const ProjectNavigationSidebarInner = (
       }
 
       event.preventDefault();
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.keyboardShortcutUsed,
-        properties: {
-          source: 'navigation-sidebar',
-          action: 'rename',
-        },
-      });
 
       const targetKey = getSidebarGridListItemId(targetItem);
       // scroll to focused item if it is not currently visible
@@ -918,13 +895,6 @@ const ProjectNavigationSidebarInner = (
                 }
                 e.preventDefault();
                 e.stopPropagation();
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.keyboardShortcutUsed,
-                  properties: {
-                    source: 'navigation-sidebar',
-                    action: 'deleteItem',
-                  },
-                });
                 showDeleteModal(focusedItem);
                 return;
               }
@@ -1007,10 +977,6 @@ const ProjectNavigationSidebarInner = (
                           if (routeInfo?.resourceId === docId) {
                             toggleProjectOrWorkspace(docId);
                           } else {
-                            window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.projectSwitched,
-                                properties: { project_id: docId },
-                              });
                             navigate(`/organization/${organizationId}/project/${docId}`);
                           }
                         } else if (item.kind === 'workspace') {

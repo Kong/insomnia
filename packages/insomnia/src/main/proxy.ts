@@ -26,8 +26,7 @@ function insomniaIntegrationHosts() {
   return urls.flatMap(url => {
     try {
       const host = new URL(setDefaultProtocol(url)).host;
-      // Leading-dot form also bypasses subdomains — needed for e.g. Insomnia Cloud's
-      // per-mock-server `mock-<id>.mock.insomnia.run` hosts (see getMockServiceBinURL).
+      // Leading-dot form also bypasses subdomains.
       // Same convention already documented on the `noProxy` setting in the UI.
       return [host, `.${host}`];
     } catch {

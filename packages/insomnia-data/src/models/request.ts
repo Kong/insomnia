@@ -380,8 +380,6 @@ export const baseRequestSchema = z.object({
   metaSortKey: z.number(),
   pathParameters: RequestPathParametersSchema.optional(),
   disableUserAgentHeader: z.boolean().optional(),
-  konnectRouteKey: z.string().nullable().optional(),
-  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
 });
 export const baseRequestSchemaWithSettings = z.object({
   ...baseRequestSchema.shape,
@@ -422,8 +420,6 @@ export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
   isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
 export const optionalKeys: (keyof BaseRequest)[] = [
-  'konnectRouteKey',
-  'konnectManagedHeaderNames',
   'disableUserAgentHeader',
 ];
 
@@ -469,6 +465,5 @@ export function rewriteReferences(request: Request, idMapping: Map<string, strin
       ],
       idMapping,
     ),
-    konnectRouteKey: null,
   };
 }

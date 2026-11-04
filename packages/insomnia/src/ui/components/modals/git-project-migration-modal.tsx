@@ -65,7 +65,7 @@ export const GitProjectMigrationModal: FC<{
               <div className="flex shrink-0 items-center justify-between gap-2">
                 <Heading slot="title" className="flex items-center gap-2 text-2xl">
                   <Icon icon="triangle-exclamation" className="text-(--color-font-warning)" />
-                  We found legacy Insomnia files in your repository
+                  We found legacy Restless files in your repository
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -78,7 +78,7 @@ export const GitProjectMigrationModal: FC<{
                 <div className="max-h-96 w-full overflow-x-hidden overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
                   <Table
                     selectionMode="none"
-                    aria-label="Insomnia files"
+                    aria-label="Restless files"
                     className="w-full table-fixed border-separate border-spacing-0"
                   >
                     <TableHeader>
@@ -142,7 +142,7 @@ export const GitProjectMigrationModal: FC<{
                   </p>
                   <p className="pt-2">
                     By migrating these <strong>a new commit will be created</strong> which once synced will result in
-                    any users on older versions of Insomnia no longer being able to access these collections.
+                    any users on older versions of Restless no longer being able to access these collections.
                   </p>
                 </div>
               </div>

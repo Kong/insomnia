@@ -9,7 +9,6 @@ import { services } from 'insomnia-data';
 import { ProxyScopes } from 'insomnia-data/common';
 
 import { validatePluginName } from '~/common/utils/plugin-name';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import { isDevelopment } from '../common/constants';
 
@@ -158,11 +157,6 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
         }),
     );
-
-    trackAnalyticsEvent(AnalyticsEvent.installPlugin, {
-      pluginName: moduleName,
-      pluginVersion: info.version,
-    });
   } catch (err) {
     // Log and rethrow any installation errors
     console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);

@@ -3,7 +3,6 @@ import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { findConflictingMockRoute } from '~/ui/utils/mock-route';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -52,10 +51,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       delete patch.mockServerName;
       const mockRoute = await services.mockRoute.create({ ...patch, parentId: newMockServer._id });
 
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.mockRouteCreate,
-      });
-
       return redirect(
         href(
           '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId',
@@ -72,13 +67,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const mockServer = await services.mockServer.getById(patch.parentId);
     invariant(mockServer, 'Mock server not found');
     const mockRoute = await services.mockRoute.create(patch);
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockRouteCreate,
-      properties: {
-        source: 'from_response',
-      },
-    });
 
     return redirect(
       href(

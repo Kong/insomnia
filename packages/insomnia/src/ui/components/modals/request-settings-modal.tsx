@@ -56,7 +56,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && !models.organization.isScratchpadOrganizationId(organizationId)) {
+    if (isIdleAndUninitialized && true) {
       workspacesFetcher.load({
         organizationId,
         projectId,

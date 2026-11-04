@@ -68,9 +68,6 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
       workspaceId: selectedWorkspaceId,
       requestType: 'HTTP',
       parentId: selectedWorkspaceId,
-      metrics: {
-        source: 'add-request-to-collection-modal',
-      },
     });
     previousRequestFetcherState.current = 'loading';
   };

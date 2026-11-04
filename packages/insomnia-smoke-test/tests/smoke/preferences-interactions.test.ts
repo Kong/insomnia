@@ -5,12 +5,12 @@ import { test } from '../../playwright/test';
 
 test('Preferences through click', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnium Preferences').first().click();
+  await page.locator('text=Restless Preferences').first().click();
 });
 
 test('Preferences through keyboard shortcut', async ({ page }) => {
   await page.locator('.app').press(process.platform === 'darwin' ? 'Meta+,' : 'Control+,');
-  await page.locator('text=Insomnium Preferences').first().click();
+  await page.locator('text=Restless Preferences').first().click();
 });
 
 
@@ -32,7 +32,7 @@ test('Check filter responses by environment preference', async ({ app, page, ins
 
   // Set filter responses by environment
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnium Preferences').first().click();
+  await page.locator('text=Restless Preferences').first().click();
   await page.locator('text=Filter responses by environment').click();
   await page.locator('.app').press('Escape');
 
@@ -46,7 +46,7 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   const responsePane = page.getByTestId('response-pane');
 
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnium Preferences').first().click();
+  await page.locator('text=Restless Preferences').first().click();
   await page.locator('[name="timeout"]').fill('1000');
 
   await page.getByRole('tab', { name: 'Proxy' }).click();

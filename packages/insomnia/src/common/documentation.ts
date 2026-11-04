@@ -1,25 +1,22 @@
-const insomniaDocs = (slug: string) => `https://github.com/outmanos/insomnium#readme`;
-const newInsomniaDocs = (slug: string) => `https://github.com/outmanos/insomnium#readme`;
+const projectDocs = 'https://github.com/outmanos/restless#readme';
 
-export const docsBase = insomniaDocs('/');
-export const docsGitSync = insomniaDocs('/insomnia/git-sync');
-export const docsTemplateTags = insomniaDocs('/insomnia/template-tags');
-export const docsVersionControl = insomniaDocs('/insomnia/version-control-sync');
-export const docsPlugins = insomniaDocs('/insomnia/introduction-to-plugins');
-export const docsImportExport = insomniaDocs('/insomnia/import-export-data');
-export const docsKeyMaps = insomniaDocs('/insomnia/key-maps');
-export const docsIntroductionInsomnia = insomniaDocs('/insomnia/get-started');
-export const docsWorkingWithDesignDocs = insomniaDocs('/insomnia/design-documents');
-export const docsUnitTesting = insomniaDocs('/insomnia/unit-testing');
-export const docsIntroductionToInsoCLI = insomniaDocs('/inso-cli/introduction');
-export const docsPreRequestScript = insomniaDocs('/insomnia/pre-request-script');
-export const docsAfterResponseScript = insomniaDocs('/insomnia/after-response-script');
-export const docsMcpClient = newInsomniaDocs('/mcp-clients-in-insomnia');
-export const docsMcpAuthentication = newInsomniaDocs('/mcp-clients-in-insomnia/#mcp-authentication');
-export const docsPricingLearnMoreLink = newInsomniaDocs(
-  '/storage/#what-are-the-user-and-git-sync-limits-for-the-essentials-plan',
-);
-export const docsPreRequestAndAfterResponseScripts = newInsomniaDocs('/scripts');
+export const docsBase = projectDocs;
+export const docsGitSync = projectDocs;
+export const docsTemplateTags = projectDocs;
+export const docsVersionControl = projectDocs;
+export const docsPlugins = projectDocs;
+export const docsImportExport = projectDocs;
+export const docsKeyMaps = projectDocs;
+export const docsIntroductionInsomnia = projectDocs;
+export const docsWorkingWithDesignDocs = projectDocs;
+export const docsUnitTesting = projectDocs;
+export const docsIntroductionToInsoCLI = projectDocs;
+export const docsPreRequestScript = projectDocs;
+export const docsAfterResponseScript = projectDocs;
+export const docsMcpClient = projectDocs;
+export const docsMcpAuthentication = projectDocs;
+export const docsPricingLearnMoreLink = projectDocs;
+export const docsPreRequestAndAfterResponseScripts = projectDocs;
 
 export const docsGitAccessToken = {
   github: 'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
@@ -32,7 +29,7 @@ export const docsGitAccessToken = {
 
 export const documentationLinks = {
   introductionToInsomnia: {
-    title: 'Introduction to Insomnia',
+    title: 'Introduction to Restless',
     url: docsIntroductionInsomnia,
   },
   workingWithDesignDocs: {

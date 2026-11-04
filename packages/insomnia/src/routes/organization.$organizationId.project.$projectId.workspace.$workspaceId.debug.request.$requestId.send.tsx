@@ -1,19 +1,9 @@
 import contentDisposition from 'content-disposition';
-import type {
-  Environment,
-  Request,
-  RequestGroup,
-  RequestMeta,
-  RequestTestResult,
-  ResponseInfo,
-  RunnerResultPerRequestPerIteration,
-  UserUploadEnvironment,
-} from 'insomnia-data';
-import { database as db, models, services } from 'insomnia-data';
+import type { Environment, RequestMeta, RequestTestResult, ResponseInfo, RunnerResultPerRequestPerIteration, UserUploadEnvironment } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
-import { CONTENT_TYPE_GRAPHQL } from '~/common/constants';
 import { getContentDispositionHeader } from '~/common/misc';
 import {
   createSensitiveValueCollector,
@@ -39,7 +29,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
-import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
@@ -391,7 +380,7 @@ export const sendActionImplementation = async (options: {
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { requestId } = params;
-  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable, workspaceId, projectId } =
+  const { shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable } =
     (await request.json()) as SendActionParams;
 
   try {
@@ -401,81 +390,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       ignoreUndefinedEnvVariable,
     });
 
-    const requestMeta = await services.requestMeta.getByParentId(requestId);
-
-    if (requestMeta?.activeResponseId) {
-      const response = await services.response.getById(requestMeta.activeResponseId);
-      if (response) {
-        const settings = await services.settings.getOrCreate();
-        const activeRequest = await services.request.getById(requestId);
-
-        if (activeRequest) {
-          const [requestAndAncestors, clientCertificates] = await Promise.all([
-            db.withAncestors<Request | RequestGroup>(activeRequest as Request, [
-              models.request.type,
-              models.requestGroup.type,
-            ]),
-            services.clientCertificate.findByParentId(workspaceId),
-          ]);
-          const docsWithScripts = requestAndAncestors.filter(
-            (doc): doc is Request | RequestGroup =>
-              models.request.isRequest(doc) || models.requestGroup.isRequestGroup(doc),
-          );
-          const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
-          const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);
-
-          const requestType =
-            activeRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL
-              ? 'GraphQL'
-              : models.request.isEventStreamRequest(activeRequest)
-                ? 'Event Stream'
-                : 'HTTP';
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.requestExecuted,
-            properties: {
-              project_id: projectId,
-              collection_id: workspaceId,
-              request_key_id: requestId,
-              preferredHttpVersion: settings.preferredHttpVersion,
-              authenticationType: activeRequest.authentication?.type,
-              mimeType: activeRequest.body.mimeType,
-              protocol: activeRequest.type,
-              response_header_names: activeRequest.headers.map(h => h.name),
-              count_headers: response.headers.length,
-              count_cookies: response.headers.find(h => h.name === 'set-cookie')?.value.split(',').length || 0,
-              count_tests: response.requestTestResults?.length || 0,
-              has_prescript: allPreScripts.length > 0,
-              has_postscript: allPostScripts.length > 0,
-              count_prescript_lines: allPreScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
-              count_postscript_lines: allPostScripts.reduce((sum, s) => sum + s.split('\n').length, 0),
-              count_query_parameters: activeRequest.parameters?.length ?? 0,
-              count_path_parameters: activeRequest.pathParameters?.length ?? 0,
-              has_docs: !!activeRequest.description,
-              count_certificates: clientCertificates.length,
-              request_type: requestType,
-              source: 'request-pane',
-            },
-          });
-
-          const attributionStorageKey = importAttributionKey(requestId);
-          const jsonImportAttribution = window.localStorage.getItem(attributionStorageKey);
-          if (jsonImportAttribution) {
-            try {
-              const importAttribution = JSON.parse(jsonImportAttribution) as ImportAttribution;
-              window.main.trackAnalyticsEvent({
-                event: AnalyticsEvent.importedRequestFirstSend,
-                properties: {
-                  ...importAttribution,
-                  protocol: activeRequest.type,
-                },
-              });
-            } finally {
-              window.localStorage.removeItem(attributionStorageKey);
-            }
-          }
-        }
-      }
-    }
 
     return null;
   } catch (error) {

@@ -3,7 +3,6 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { findConflictingMockRoute } from '~/ui/utils/mock-route';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -39,10 +38,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     }
 
     await services.mockRoute.update(mockRoute, patch);
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockRouteEdit,
-    });
 
     return null;
   } catch (err) {

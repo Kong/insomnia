@@ -384,7 +384,7 @@ test.describe('pre-request features tests', () => {
 
     // update proxy configuration
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
 
     await page.getByLabel('Request timeout (ms)').fill('5000');
     await page.getByRole('tab', { name: 'Proxy' }).click();
@@ -768,7 +768,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Scopes" blocked roots group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const scopesSwitch = page.locator('div:has(> h4:has-text("Scopes")) label[data-react-aria-pressable]');
     await scopesSwitch.scrollIntoViewIfNeeded();
@@ -805,7 +805,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Prototype Mutation" blocked properties group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const protoMutationSwitch = page.locator(
       'div:has(> h4:has-text("Prototype Mutation")) label[data-react-aria-pressable]',
@@ -842,7 +842,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable the "Runtime APIs" mask group
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const runtimeApisSwitch = page.locator('div:has(> h4:has-text("Runtime APIs")) label[data-react-aria-pressable]');
     await runtimeApisSwitch.scrollIntoViewIfNeeded();
@@ -876,7 +876,7 @@ test.describe('sandbox features', () => {
 
     // navigate to Settings → Scripting, disable only the "Node.js Internals" BLOCKED ROOTS group.
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnium Preferences').first().click();
+    await page.locator('text=Restless Preferences').first().click();
     await page.getByRole('tab', { name: 'Scripting' }).click();
     const nodeInternalsSwitch = page.locator(
       'xpath=//h4[normalize-space(text())="Node.js Internals"]/following-sibling::div[1]//label[@data-react-aria-pressable]',

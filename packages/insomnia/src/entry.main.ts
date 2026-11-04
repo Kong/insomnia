@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import inspector from 'node:inspector';
-import { arch, release } from 'node:os';
 import path from 'node:path';
 
 import electron, { app, BrowserWindow, session } from 'electron';
@@ -22,7 +21,6 @@ import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, isDevelopment } from './common/constants';
-import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
@@ -130,6 +128,16 @@ app.on('ready', async () => {
   initServices(servicesNodeImpl);
   initRuntime(nodeRuntime);
   await _createModelInstances();
+
+  // Lets Insomnia's plugin, theme and import web links open here
+  if (!isDevelopment() && !process.env.PLAYWRIGHT) {
+    const { handleInsomniaLinks } = await services.settings.get();
+    if (handleInsomniaLinks) {
+      app.setAsDefaultProtocolClient('insomnia');
+    } else {
+      app.removeAsDefaultProtocolClient('insomnia');
+    }
+  }
   // proxy has to be set up before backup's net.fetch below
   await watchProxySettings();
   // backup needs the channel from settings which needs the database
@@ -151,7 +159,7 @@ app.on('ready', async () => {
 });
 
 // Set as default protocol
-const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const defaultProtocol = `restless${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
 let defaultProtocolSuccessful: boolean;
 if (isDevelopment()) {
@@ -232,7 +240,7 @@ const toOpenFolderDeepLink = async (rawPath: string): Promise<string | null> => 
     if (!stats.isDirectory()) {
       return null;
     }
-    return `insomnia://app/open-folder?path=${encodeURIComponent(rawPath)}`;
+    return `restless://app/open-folder?path=${encodeURIComponent(rawPath)}`;
   } catch {
     return null;
   }
@@ -352,32 +360,6 @@ async function _createModelInstances() {
   }
 }
 
-function getOperatingSystem(): string {
-  switch (process.platform) {
-    case 'darwin': {
-      return 'macOS';
-    }
-    case 'win32': {
-      return 'Windows';
-    }
-    case 'linux': {
-      return 'Linux';
-    }
-    case 'freebsd': {
-      return 'FreeBSD';
-    }
-    case 'openbsd': {
-      return 'OpenBSD';
-    }
-    case 'aix': {
-      return 'AIX';
-    }
-    default: {
-      return process.platform;
-    }
-  }
-}
-
 async function _trackStats() {
   // Handle the stats
   const oldStats = await services.stats.get();
@@ -387,30 +369,6 @@ async function _trackStats() {
     currentVersion: getAppVersion(),
     lastVersion: oldStats.currentVersion,
     launches: oldStats.launches + 1,
-  });
-
-  const localProjects = await services.project.count({
-    remoteId: null,
-    parentId: { $ne: null },
-  });
-
-  const remoteProjects = await services.project.count({
-    remoteId: { $ne: null },
-    parentId: { $ne: null },
-  });
-
-  const settings = await services.settings.get();
-
-  trackAnalyticsEvent(AnalyticsEvent.appStarted, {
-    localProjects,
-    remoteProjects,
-    createdRequests: stats.createdRequests,
-    deletedRequests: stats.deletedRequests,
-    executedRequests: stats.executedRequests,
-    themeName: settings.theme,
-    operatingSystem: getOperatingSystem(),
-    osVersion: release(),
-    architecture: arch(),
   });
 
   ipcMainOnce('halfSecondAfterAppStart', async () => {
@@ -431,7 +389,7 @@ async function _trackStats() {
             status: 'info',
             link: {
               label: "See What's New",
-              url: 'https://github.com/outmanos/insomnium/releases',
+              url: 'https://github.com/outmanos/restless/releases',
               external: true,
             },
           },

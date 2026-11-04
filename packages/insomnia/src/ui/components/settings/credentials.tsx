@@ -253,7 +253,7 @@ const GitEditProviderOAuthForm = ({
                 return;
               }
 
-              completeSignInFetcher.submit({ provider: provider.type, code, state, isEditing });
+              completeSignInFetcher.submit({ provider: provider.type, code, state });
             }
           }}
         >

@@ -321,7 +321,7 @@ describe('getPluginCommonContext', () => {
 });
 
 describe('executePluginMainAction', () => {
-  const bundlePluginName = 'insomnium-plugin-secret-managers';
+  const bundlePluginName = 'restless-plugin-secret-managers';
 
   afterEach(() => {
     vi.clearAllMocks();

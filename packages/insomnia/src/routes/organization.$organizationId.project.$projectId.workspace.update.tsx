@@ -3,7 +3,6 @@ import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.update';
@@ -54,10 +53,6 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       name: patch.name || workspace.name,
       useInsomniaCloud,
       url: mockServerUrl,
-    });
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockEdit,
     });
   }
 

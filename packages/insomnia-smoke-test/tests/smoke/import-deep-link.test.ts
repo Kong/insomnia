@@ -29,7 +29,7 @@ test.describe('import deep links', () => {
   });
 
   test('bare clipboard param opens the Import modal on the Clipboard tab', async ({ app, insomnia }) => {
-    await sendDeepLink(app, 'insomnia://app/import?clipboard');
+    await sendDeepLink(app, 'restless://app/import?clipboard');
 
     await expect.soft(insomnia.page.getByLabel('Import from')).toBeVisible();
     // The app uses the non-standard `data-test-id` attribute (see playwright/pages).
@@ -39,7 +39,7 @@ test.describe('import deep links', () => {
 
   test('bare curl param selects the cURL tab with an empty input and no error', async ({ app, insomnia }) => {
     // Param names are case-insensitive.
-    await sendDeepLink(app, 'insomnia://app/import?CuRl');
+    await sendDeepLink(app, 'restless://app/import?CuRl');
 
     await expect.soft(insomnia.page.getByLabel('Import from')).toBeVisible();
     const curlInput = insomnia.page.locator('textarea[name="curl"]');
@@ -51,7 +51,7 @@ test.describe('import deep links', () => {
 
   test('value-bearing curl param auto-scans and shows the detected request', async ({ app, insomnia }) => {
     const curlCommand = 'curl --request GET --url http://insomnia.rest/';
-    await sendDeepLink(app, `insomnia://app/import?curl=${encodeURIComponent(curlCommand)}`);
+    await sendDeepLink(app, `restless://app/import?curl=${encodeURIComponent(curlCommand)}`);
 
     await expect.soft(insomnia.page.getByRole('dialog')).toBeVisible();
     // A value-bearing param auto-scans: the modal skips the source picker and

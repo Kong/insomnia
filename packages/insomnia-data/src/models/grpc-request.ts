@@ -38,8 +38,6 @@ export const baseGrpcRequestSchema = z.object({
     module: z.string().optional().default(''),
   }),
   disableUserAgentHeader: z.boolean().optional(),
-  konnectRouteKey: z.string().nullable().optional(),
-  konnectManagedHeaderNames: z.array(z.string()).nullable().optional(),
 });
 export type BaseGrpcRequest = z.infer<typeof baseGrpcRequestSchema>;
 
@@ -51,8 +49,6 @@ export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequ
 export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 export const optionalKeys: (keyof BaseGrpcRequest)[] = [
-  'konnectRouteKey',
-  'konnectManagedHeaderNames',
   'disableUserAgentHeader',
 ];
 
@@ -61,7 +57,6 @@ export function rewriteReferences(request: GrpcRequest, idMapping: Map<string, s
     ...request,
     protoFileId: request.protoFileId ? idMapping.get(request.protoFileId) : undefined,
     ...replaceIdsInFields(request, ['url', 'body', 'metadata'], idMapping),
-    konnectRouteKey: null,
   };
 }
 

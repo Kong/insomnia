@@ -31,7 +31,6 @@ import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
-import { AnalyticsEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
@@ -105,7 +104,6 @@ export const SidebarWorkspaceDropdown = ({
   const projectName = project.name || getProductName();
   // Legacy design workspace is treated as collection for now.
   const isCollectionLike = models.workspace.isCollection(workspace) || models.workspace.isDesign(workspace);
-  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
 
   const createRequest = (requestType: CreateRequestType) => {
     newRequestFetcher.submit({
@@ -274,10 +272,6 @@ export const SidebarWorkspaceDropdown = ({
         name: 'Export',
         icon: 'file-export',
         action: () => {
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportStarted,
-            properties: { source: `${workspace.scope}-list` },
-          });
           if (workspace.scope === 'mock-server') {
             return exportMockServerToFile(workspace);
           }
@@ -320,34 +314,6 @@ export const SidebarWorkspaceDropdown = ({
     ],
   };
 
-  const scratchpadActionList: ActionSection = {
-    name: 'Actions',
-    id: 'Actions',
-    icon: 'cog',
-    items: [
-      {
-        id: 'Export',
-        name: 'Export',
-        icon: 'file-export',
-        action: () => {
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportStarted,
-            properties: { source: `${workspace.scope}-list` },
-          });
-          if (workspace.scope === 'mock-server') {
-            return exportMockServerToFile(workspace);
-          }
-          if (workspace.scope === 'environment') {
-            return exportGlobalEnvironmentToFile(workspace);
-          }
-          if (workspace.scope === 'mcp') {
-            return exportMcpClientToFile(workspace);
-          }
-          return setIsExportModalOpen(true);
-        },
-      },
-    ],
-  };
 
   const pluginActionSection: ActionSection = {
     name: 'Plugins',
@@ -361,9 +327,7 @@ export const SidebarWorkspaceDropdown = ({
     })),
   };
 
-  const allSections: ActionSection[] = isScratchpadWorkspace
-    ? [...createSections, scratchpadActionList]
-    : [...createSections, actionSection, ...(actionPlugins.length > 0 ? [pluginActionSection] : [])];
+  const allSections: ActionSection[] = [...createSections, actionSection, ...(actionPlugins.length > 0 ? [pluginActionSection] : [])];
 
   return (
     <Fragment>

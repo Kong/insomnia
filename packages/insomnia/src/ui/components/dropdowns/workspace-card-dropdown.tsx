@@ -6,7 +6,7 @@ import {
 import type { ApiSpec, MockServer, Project, Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
-import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
+import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { href, useParams } from 'react-router';
 
 import type { SerializableDocumentActionMeta } from '~/common/plugins/bridge-types';
@@ -18,7 +18,6 @@ import { plugins } from '~/ui/plugins/renderer-bridge';
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { AnalyticsEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -175,12 +174,6 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 label="Import"
                 icon="file-import"
                 onClick={() => {
-                  window.main.trackAnalyticsEvent({
-                    event: AnalyticsEvent.importStarted,
-                    properties: {
-                      source: `${workspace.scope}-list`,
-                    },
-                  });
 
                   setIsImportModalOpen(true);
                 }}
@@ -192,12 +185,6 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               label="Export"
               icon="file-export"
               onClick={() => {
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.exportStarted,
-                  properties: {
-                    source: `${workspace.scope}-list`,
-                  },
-                });
 
                 if (workspace.scope === 'mock-server') {
                   return exportMockServerToFile(workspace);
@@ -277,7 +264,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
                     <Heading className="text-2xl">
-                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                      {'Delete'} {getWorkspaceLabel(workspace).singular}
                     </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -297,14 +284,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     <input type="hidden" name="workspaceId" value={workspace._id} />
                     <div>
                       <p className="line-clamp-5">
-                        {project.konnectControlPlaneId ? (
-                          <>
-                            Do you wish to remove your local copy of the{' '}
-                            <strong className="break-all whitespace-pre-wrap">{workspace?.name}</strong>{' '}
-                            {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any
-                            other users.
-                          </>
-                        ) : (
+                        {(
                           <>
                             This will permanently delete the{' '}
                             <strong className="break-all whitespace-pre-wrap">{workspace?.name}</strong>{' '}
@@ -312,35 +292,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                           </>
                         )}
                       </p>
-                      {models.project.isRemoteProject(project) && (
-                        <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
-                          <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
-                          <div className="flex gap-2">
-                            <Radio
-                              value="true"
-                              aria-label="Remove Local Copy"
-                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                            >
-                              <div>
-                                <Heading className="text-lg font-bold">Remove Local Copy</Heading>
-                                <p className="pt-2">The project will still exist on the Cloud.</p>
-                              </div>
-                            </Radio>
-                            <Radio
-                              value="false"
-                              aria-label="Delete Permanently"
-                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                            >
-                              <div>
-                                <Heading className="text-lg font-bold">Delete Permanently</Heading>
-                                <p className="pt-2">
-                                  The project will be deleted everywhere. You cannot undo this action.
-                                </p>
-                              </div>
-                            </Radio>
-                          </div>
-                        </RadioGroup>
-                      )}
+                      
                     </div>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
                       <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
@@ -351,7 +303,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
+                        {'Delete'}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

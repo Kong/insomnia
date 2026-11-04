@@ -5,7 +5,6 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
@@ -49,10 +48,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: workspaceId,
     });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.unitTestRunAll,
-      properties: { organizationId, projectId },
-    });
 
     return redirect(
       href(
@@ -92,10 +87,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     const testResult = await services.unitTestResult.create({
       results,
       parentId: workspaceId,
-    });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.unitTestRunAll,
-      properties: { organizationId, projectId },
     });
 
     return redirect(

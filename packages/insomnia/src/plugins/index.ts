@@ -282,7 +282,7 @@ async function traversePluginPath(
             pluginJson,
             modulePath,
             parsedPermissions,
-            `"${pluginName}" is the name of one of Insomnia's own bundled plugins; this folder is not loaded, to avoid an ambiguous or spoofed trust grant.`,
+            `"${pluginName}" is the name of one of Restless's own bundled plugins; this folder is not loaded, to avoid an ambiguous or spoofed trust grant.`,
           );
           continue;
         }
@@ -477,7 +477,7 @@ function getBundlePluginMap() {
       bundlePluginMap[pluginName] = {
         name: pluginName,
         displayName: '',
-        description: `Insomnia bundled plugin for ${pluginName}`,
+        description: `Restless bundled plugin for ${pluginName}`,
         version: 'unknown',
         directory: '',
         config: { disabled: false },

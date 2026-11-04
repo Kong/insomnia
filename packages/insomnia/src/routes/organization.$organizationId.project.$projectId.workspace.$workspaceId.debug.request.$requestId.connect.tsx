@@ -12,7 +12,6 @@ import { href } from 'react-router';
 
 import type { RenderedRequest } from '~/common/templating/types';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
@@ -54,10 +53,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
       sensitiveValues: rendered.sensitiveValues,
     });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestExecuted,
-      properties: { request_type: 'WebSocket' },
-    });
   }
   if (isGraphqlSubscriptionRequest(req)) {
     window.main.webSocket.open({
@@ -83,18 +78,10 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
       sensitiveValues: rendered.sensitiveValues,
     });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestExecuted,
-      properties: { request_type: 'GraphQL' },
-    });
   }
   if (isEventStreamRequest(req)) {
     const renderedRequest = { ...req, ...rendered } as RenderedRequest;
     window.main.curl.open({ workspaceId, renderedRequest, sensitiveValues: rendered.sensitiveValues });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestExecuted,
-      properties: { request_type: 'Event Stream' },
-    });
   }
   if (models.socketIORequest.isSocketIORequest(req)) {
     window.main.socketIO.open({
@@ -109,16 +96,8 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
       suppressUserAgent: rendered.suppressUserAgent,
       sensitiveValues: rendered.sensitiveValues,
     });
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestExecuted,
-      properties: { request_type: 'SocketIO' },
-    });
   }
   if (models.mcpRequest.isMcpRequest(req)) {
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestExecuted,
-      properties: { request_type: 'MCP' },
-    });
     return window.main.mcp.connect({
       requestId,
       workspaceId,

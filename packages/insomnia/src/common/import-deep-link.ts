@@ -5,12 +5,20 @@ export interface ParsedDeepLink {
   params: Record<string, string>;
 }
 
+const INSOMNIA_LINK_PATHS = ['app/import', 'plugins/install', 'plugins/theme'];
+
+/** Maps an insomnia:// plugin, theme or import link to restless://. Any other insomnia:// link returns null. */
+export const convertInsomniaDeepLink = (url: string): string | null => {
+  const match = /^insomnia:\/\/([^?]*)(.*)$/s.exec(url);
+  return match && INSOMNIA_LINK_PATHS.includes(match[1]) ? `restless://${match[1]}${match[2]}` : null;
+};
+
 export const parseDeepLinkUrl = (url: string, isDevelopment = false): ParsedDeepLink | null => {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
   } catch {
-    console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
+    console.log('[deep-link] Invalid args, expected restless://x/y/z', url);
     return null;
   }
   let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
@@ -18,7 +26,7 @@ export const parseDeepLinkUrl = (url: string, isDevelopment = false): ParsedDeep
 
   // Normalize the dev protocol so the path matches the production switch cases
   if (isDevelopment) {
-    urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
+    urlWithoutParams = urlWithoutParams.replace('restlessdev://', 'restless://');
   }
   return { urlWithoutParams, params };
 };
@@ -73,7 +81,7 @@ export const resolveImportDeepLink = (params: Record<string, string>): ImportDee
     };
   }
 
-  // A bare param (e.g. `insomnia://app/import?clipboard`, or `?curl` with no
+  // A bare param (e.g. `restless://app/import?clipboard`, or `?curl` with no
   // value) opens the Import modal with that tab selected, nothing pre-populated.
   for (const type of DEEP_LINK_SOURCE_ORDER) {
     if (findSourceParam(params, type) !== undefined) {

@@ -58,8 +58,6 @@ import { getSendRequestCallback } from '~/network/unit-test-feature';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import { getRuntime } from '../../runtimes';
-import type { AnalyticsEvent } from '../analytics';
-import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
 import {
   authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
@@ -277,9 +275,6 @@ export interface RendererToMainBridgeAPI {
   clickAppMenuItem: (path: number[]) => void;
   setTitleBarColors: (options: { color: string; symbolColor: string }) => void;
   sync: { resolveConflict: (options: unknown) => void; cancelConflict: (options: unknown) => void };
-  trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
-  trackPageView: (options: { name: string }) => void;
-  setCurrentOrganizationId: (organizationId: string | undefined) => void;
   showNunjucksContextMenu: (options: {
     key: string;
     nunjucksTag?: { template: string; range: MarkerRange };
@@ -652,18 +647,6 @@ export function registerMainHandlers() {
     cancelCurlRequest(requestId);
   });
 
-  ipcMainOn(
-    'trackAnalyticsEvent',
-    (_, options: { event: AnalyticsEvent; properties?: Record<string, unknown> }): void => {
-      trackAnalyticsEvent(options.event, options.properties);
-    },
-  );
-  ipcMainOn('trackPageView', (_, options: { name: string }): void => {
-    trackPageView(options.name);
-  });
-  ipcMainOn('analytics.setOrganizationId', (_, organizationId: string | undefined): void => {
-    setCurrentOrganizationId(organizationId);
-  });
 
   ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
     return installPlugin(lookupName, allowScopedPackageNames);

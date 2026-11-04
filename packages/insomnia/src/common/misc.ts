@@ -152,12 +152,12 @@ export function unescapeForwardSlash(str: string): string {
   });
 }
 
-export const SECURITY_SETTINGS_PATH_LABEL = 'Insomnia Preferences → General → Security';
+export const SECURITY_SETTINGS_PATH_LABEL = 'Restless Preferences → General → Security';
 
 export function cannotAccessPathError(accessingPath: string): string {
   return __IS_RENDERER__
-    ? `Insomnia cannot access the file "${accessingPath}". You must specify which directories Insomnia can access in ${SECURITY_SETTINGS_PATH_LABEL}`
-    : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
+    ? `Restless cannot access the file "${accessingPath}". You must specify which directories Restless can access in ${SECURITY_SETTINGS_PATH_LABEL}`
+    : `Restless cannot access the file ‘${accessingPath}’. You must specify which directories Restless can access with one or more "--dataFolders <directory>".`;
 }
 
 export interface DefaultBrowserRedirectParam {

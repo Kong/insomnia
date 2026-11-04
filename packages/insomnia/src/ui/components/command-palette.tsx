@@ -25,7 +25,6 @@ import { useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
@@ -44,9 +43,6 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
       setIsOpen(true);
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.quickSearchOpenedByKeyboard,
-      });
     },
   });
 
@@ -56,11 +52,6 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
     <DialogTrigger
       onOpenChange={isOpen => {
         setIsOpen(isOpen);
-        if (isOpen) {
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.quickSearchOpenedByMouse,
-          });
-        }
       }}
       isOpen={isOpen}
     >

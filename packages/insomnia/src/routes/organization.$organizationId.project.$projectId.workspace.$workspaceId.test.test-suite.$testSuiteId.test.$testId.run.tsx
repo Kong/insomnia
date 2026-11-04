@@ -5,7 +5,6 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
@@ -50,7 +49,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(
@@ -91,7 +89,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       href(

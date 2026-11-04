@@ -26,7 +26,6 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '../../ui/analytics';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '../hooks/use-request';
@@ -396,9 +395,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="code"
                           label="Generate Client Code"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuGenerateCodeClicked,
-                            });
                             showModal(GenerateCodeModal, { request: activeRequest });
                           }}
                         />
@@ -410,9 +406,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="clock-o"
                           label="Send After Delay"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuSendAfterDelayClicked,
-                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',
@@ -430,9 +423,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="repeat"
                           label="Repeat on Interval"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuRepeatAfterIntervalClicked,
-                            });
                             showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send on Interval',
@@ -462,9 +452,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                             icon="download"
                             label="Download After Send"
                             onClick={async () => {
-                              window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.requestSendMenuDownloadAfterSendClicked,
-                              });
                               const { canceled, filePaths } = await window.dialog.showOpenDialog({
                                 title: 'Select Download Location',
                                 buttonLabel: 'Select',
@@ -483,9 +470,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="download"
                           label="Send And Download"
                           onClick={() => {
-                            window.main.trackAnalyticsEvent({
-                              event: AnalyticsEvent.requestSendMenuSendAndDownloadClicked,
-                            });
                             sendOrConnect(true);
                           }}
                         />

@@ -18,7 +18,6 @@ export const canSync = true;
 export const optionalKeys: (keyof BaseRequestGroup)[] = [
   'kvPairData',
   'environmentType',
-  'konnectRouteId',
   'environmentPropertyOrder',
 ];
 export const baseRequestGroupSchema = z.object({
@@ -33,7 +32,6 @@ export const baseRequestGroupSchema = z.object({
   metaSortKey: z.number(),
   preRequestScript: z.string().optional(),
   afterResponseScript: z.string().optional(),
-  konnectRouteId: z.string().nullable().optional(),
 });
 export type BaseRequestGroup = z.infer<typeof baseRequestGroupSchema>;
 
@@ -64,6 +62,5 @@ export function rewriteReferences(group: RequestGroup, idMapping: Map<string, st
       ['authentication', 'headers', 'preRequestScript', 'afterResponseScript', 'environment', 'kvPairData'],
       idMapping,
     ),
-    konnectRouteId: null,
   };
 }

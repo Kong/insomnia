@@ -35,7 +35,6 @@ import type { CurlEvent } from '../../../main/network/curl';
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '../../../ui/analytics';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -550,7 +549,6 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                 <ResponseHeadersViewer
                   headers={response.headers}
                   onCopyAll={() => {
-                    window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpResponseHeadersCopyAllClicked });
                   }}
                 />
               </ErrorBoundary>

@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
 import { exportSpecificationToFile } from 'insomnia/src/ui/components/settings/import-export';
 import { services } from 'insomnia-data';
@@ -25,7 +24,6 @@ const mockShowModal = vi.mocked(showModal);
 const mockShowError = vi.mocked(showError);
 const mockShowSaveDialog = vi.fn();
 const mockWriteFile = vi.fn();
-const mockTrackAnalyticsEvent = vi.fn();
 
 /**
  * Drives the SelectModal shown by exportSpecificationToFile() as if the user had
@@ -49,7 +47,7 @@ describe('exportSpecificationToFile()', () => {
     vi.clearAllMocks();
     Object.assign(window, {
       dialog: { showSaveDialog: mockShowSaveDialog },
-      main: { writeFile: mockWriteFile, trackAnalyticsEvent: mockTrackAnalyticsEvent },
+      main: { writeFile: mockWriteFile },
       app: { getPath: () => '/desktop' },
       path: {
         join: (...args: string[]) => args.join('/'),
@@ -87,10 +85,6 @@ describe('exportSpecificationToFile()', () => {
 
     expect(mockShowError).not.toHaveBeenCalled();
     expect(writtenFiles()).toEqual([{ path: '/tmp/export/out.yaml', content: YAML_SPEC }]);
-    expect(mockTrackAnalyticsEvent).toHaveBeenCalledWith({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'collection' },
-    });
   });
 
   it('converts a YAML spec to JSON when requested', async () => {

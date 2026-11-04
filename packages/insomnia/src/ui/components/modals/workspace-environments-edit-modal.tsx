@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentType, models } from 'insomnia-data';
+import { EnvironmentType } from 'insomnia-data';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -78,7 +78,7 @@ export const WorkspaceEnvironmentsEditModal = ({
   const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
   const { toggleEnvironmentType } = useToggleEnvironmentType();
 
-  const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
+  const { baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta } = routeData;
   const preselectedEnvironmentId =
     initialEnvironmentId && [baseEnvironment, ...subEnvironments].some(env => env._id === initialEnvironmentId)
       ? initialEnvironmentId
@@ -90,7 +90,7 @@ export const WorkspaceEnvironmentsEditModal = ({
     }
   }, [initialEnvironmentId, preselectedEnvironmentId, selectionRequestId]);
   const isUsingInsomniaCloudSync = Boolean(
-    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+    false,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
@@ -157,7 +157,7 @@ export const WorkspaceEnvironmentsEditModal = ({
     {
       id: 'shared',
       name: 'Add Sub Environment',
-      description: `Sub environments are additional nested environments that ${isUsingGitSync ? 'sync with Git Sync' : isUsingInsomniaCloudSync ? 'sync with Insomnia Sync' : 'can be exported'} and are shared with your team.`,
+      description: `Sub environments are additional nested environments that ${isUsingGitSync ? 'sync with Git Sync' : isUsingInsomniaCloudSync ? 'sync with Restless Sync' : 'can be exported'} and are shared with your team.`,
       icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
       action: async () => {
         createEnvironmentFetcher.submit({

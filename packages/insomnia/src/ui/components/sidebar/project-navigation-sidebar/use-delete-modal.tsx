@@ -28,15 +28,11 @@ export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options)
     if (item.kind === 'project') {
       const { doc: project } = item;
       const projectName = project.name;
-      let title = 'Delete Project';
+      const title = 'Delete Project';
       let message = `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`;
-      let yesText = 'Delete';
+      const yesText = 'Delete';
 
-      if (project.konnectControlPlaneId) {
-        title = 'Remove Project';
-        message = `Do you wish to remove your local copy of the "${projectName}" project? This will not affect anything in Konnect, or any other users.`;
-        yesText = 'Remove';
-      } else if (models.project.isGitProject(project)) {
+      if (models.project.isGitProject(project)) {
         message = `You are deleting the Git project "${projectName}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`;
       }
 
@@ -57,9 +53,7 @@ export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options)
 
     if (item.kind === 'workspace') {
       // The scratchpad can't be deleted
-      if (models.workspace.isScratchpad(item.doc)) {
-        return;
-      }
+      
       setWorkspaceToDelete(item);
       return;
     }

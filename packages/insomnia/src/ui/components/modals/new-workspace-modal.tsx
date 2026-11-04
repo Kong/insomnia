@@ -31,7 +31,6 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
-import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -55,7 +54,6 @@ export const NewWorkspaceModal = ({
   onOpenChange,
   project,
   scope,
-  storageRules,
   sourceApiSpec,
   onCreateWorkspace,
   redirectAfterCreate = true,
@@ -73,9 +71,6 @@ export const NewWorkspaceModal = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
 
-  const isSelfHostedMockDisabled = !storageRules.enableLocalVault && !storageRules.enableGitSync;
-  const isCloudMockDisabled = !project.remoteId || !storageRules.enableCloudSync;
-
   const { settings } = useRootLoaderData()!;
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
@@ -83,7 +78,7 @@ export const NewWorkspaceModal = ({
     name: string;
     scope: WorkspaceScope;
     folderPath?: string;
-    mockServerType?: 'self-hosted' | 'cloud';
+    mockServerType?: 'self-hosted';
     mockServerUrl?: string;
     mockServerCreationType?: 'ai' | 'manual';
     mockServerOASFilePath?: string;
@@ -98,7 +93,7 @@ export const NewWorkspaceModal = ({
     scope,
     folderPath: '',
     fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
-    mockServerType: isCloudMockDisabled ? 'self-hosted' : 'cloud',
+    mockServerType: 'self-hosted',
     mockServerUrl: '',
     mockServerCreationType: sourceApiSpec?.contents ? 'ai' : 'manual',
     mockServerSpecSource: 'file',
@@ -165,11 +160,6 @@ export const NewWorkspaceModal = ({
   }, [gitRepoTreeFetcher, isOpen, project]);
 
   useEffect(() => {
-    if (isOpen && scope === models.workspace.WorkspaceScopeKeys.mockServer) {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.mockCreateModalOpened,
-      });
-    }
   }, [isOpen, scope]);
 
   const createNewWorkspace = () => {
@@ -189,7 +179,7 @@ export const NewWorkspaceModal = ({
   const selectedFolder = workspaceData.folderPath || gitRepoTreeFetcher.data?.repositoryTree.id || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
-  const defaultMockServerType = isCloudMockDisabled ? 'self-hosted' : 'cloud';
+  const defaultMockServerType = 'self-hosted';
   const defaultMockServerCreationType = sourceApiSpec?.contents ? 'ai' : 'manual';
   const defaultFileName = safeToUseInsomniaFileName(defaultNameByScope[scope]);
 
@@ -392,7 +382,7 @@ export const NewWorkspaceModal = ({
                           setWorkspaceData({
                             ...workspaceData,
                             mockServerCreationType: creationType as 'ai' | 'manual',
-                            mockServerType: creationType === 'ai' ? 'self-hosted' : workspaceData.mockServerType,
+                            mockServerType: 'self-hosted',
                           });
                         }}
                         className="mb-2 flex flex-col gap-2"
@@ -428,7 +418,7 @@ export const NewWorkspaceModal = ({
                               </div>
                               <p className="pt-2">
                                 {!isGenerateMockServersWithAIEnabled
-                                  ? 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'
+                                  ? 'Enable generating mock servers with AI in Restless Preferences → AI Settings to use this feature.'
                                   : 'Automatically generate a mock server from an OpenAPI spec.'}
                               </p>
                             </Radio>
@@ -439,7 +429,7 @@ export const NewWorkspaceModal = ({
                       {workspaceData.mockServerCreationType === 'ai' && (
                         <div className="mb-4">
                           <Label className="mb-2 block text-sm text-(--hl)">
-                            What should Insomnia generate your mock server from?
+                            What should Restless generate your mock server from?
                           </Label>
                           {sourceApiSpec?.contents ? (
                             <div className="flex items-center gap-2 rounded-sm border border-(--hl-md) bg-(--hl-xs) p-3">
@@ -575,7 +565,7 @@ export const NewWorkspaceModal = ({
                             <div className="group relative">
                               <Icon icon="info-circle" className="cursor-help text-(--hl)" />
                               <div className="absolute top-full left-1/2 z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border border-(--hl-sm) bg-(--color-bg) p-3 text-xs text-(--color-font) shadow-lg group-hover:block">
-                                Insomnia can generate a mock server that will use liquid templates in the mock response
+                                Restless can generate a mock server that will use liquid templates in the mock response
                                 bodies. These templates can be used to dynamically populate response data using request
                                 data and/or faker functions.
                               </div>
@@ -680,63 +670,16 @@ export const NewWorkspaceModal = ({
                         </div>
                       )}
 
-                      <RadioGroup
-                        name="mockServerType"
-                        value={workspaceData.mockServerType}
-                        onChange={serverType => {
-                          setWorkspaceData({
-                            ...workspaceData,
-                            mockServerType: serverType as 'self-hosted' | 'cloud',
-                          });
-                        }}
-                        className="mb-2 flex flex-col gap-2"
-                      >
-                        <Label className="text-sm text-(--hl)">How do you want to host your mock server?</Label>
-                        <div className="flex gap-2">
-                          <Radio
-                            data-testid="mock-server-type-cloud"
-                            value="cloud"
-                            isDisabled={isCloudMockDisabled || workspaceData.mockServerCreationType === 'ai'}
-                            className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon icon="globe" />
-                              <Heading className="text-lg font-bold">Cloud Mock</Heading>
-                            </div>
-                            <p className="pt-2">
-                              {workspaceData.mockServerCreationType === 'ai'
-                                ? 'Not available when creating with Auto Generate.'
-                                : isCloudMockDisabled
-                                  ? 'Only available for cloud projects'
-                                  : 'Runs on Insomnia cloud, ideal for collaboration.'}
-                            </p>
-                          </Radio>
-                          <Radio
-                            data-testid="mock-server-type-self-hosted"
-                            value="self-hosted"
-                            isDisabled={isSelfHostedMockDisabled}
-                            className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon icon="server" />
-                              <Heading className="text-lg font-bold">Self Hosted Mock</Heading>
-                            </div>
-                            <p className="pt-2">
-                              Runs locally or on your infrastructure, ideal for private usage and lower latency.
-                            </p>
-                          </Radio>
-                        </div>
-                      </RadioGroup>
                       <div className="-mt-2 flex items-center gap-2 text-sm">
                         <Icon icon="info-circle" />
                         <span>
                           To learn more about self hosting{' '}
-                          <Link href="https://github.com/outmanos/insomnium#readme" className="underline">
+                          <Link href="https://github.com/outmanos/restless#readme" className="underline">
                             click here
                           </Link>
                         </span>
                       </div>
-                      {workspaceData.mockServerType === 'self-hosted' && (
+                      {(
                         <TextField
                           name="mockServerUrl"
                           value={workspaceData.mockServerUrl}

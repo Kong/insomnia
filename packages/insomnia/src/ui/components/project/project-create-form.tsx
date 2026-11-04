@@ -301,7 +301,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 <div className="flex flex-col gap-2 px-0.5">
                   <Label className="text-sm text-(--color-font)">Folder</Label>
                   <p className="text-xs">
-                    Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
+                    Restless will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
                   </p>
                   <div className="flex items-center gap-2">
@@ -372,8 +372,8 @@ export const ProjectCreateForm: FC<Props> = ({
                 Unknown Fields Detected
               </h3>
               <span>
-                The files listed below contain fields not recognized by this version of Insomnia (i.e. fields added by a
-                newer version of Insomnia, or manual edits).
+                The files listed below contain fields not recognized by this version of Restless (i.e. fields added by a
+                newer version of Restless, or manual edits).
               </span>
               <ul className="flex list-disc flex-col gap-2 pl-5 font-bold">
                 {insomniaFilesContainUnknownFields.map(f => (
@@ -385,7 +385,7 @@ export const ProjectCreateForm: FC<Props> = ({
 
               <span>
                 You can safely open and work with these files, but committing changes to these files from this version
-                of Insomnia may break or remove functionality for your collaborators. We recommend upgrading. Best
+                of Restless may break or remove functionality for your collaborators. We recommend upgrading. Best
                 practice is to collaborate from the same major version.
               </span>
             </div>

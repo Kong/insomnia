@@ -4,7 +4,6 @@ import { app, BrowserWindow } from 'electron';
 import { services } from 'insomnia-data';
 
 import { LLM_BACKENDS } from '~/common/constants';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { ipcMainHandle } from '~/main/ipc/electron';
 
 const LLM_PLUGIN_NAME = 'insomnia-llm';
@@ -137,11 +136,6 @@ export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<bool
 
 export const setAIFeatureEnabled = async (feature: AIFeatureNames, enabled: boolean): Promise<void> => {
   await services.pluginData.upsertByKey(LLM_PLUGIN_NAME, `feature.${feature}`, String(enabled));
-
-  trackAnalyticsEvent(enabled ? AnalyticsEvent.aiFeatureEnabled : AnalyticsEvent.aiFeatureDisabled, {
-    feature: feature,
-    set_for: 'user',
-  });
 };
 
 export interface LLMConfigServiceAPI {

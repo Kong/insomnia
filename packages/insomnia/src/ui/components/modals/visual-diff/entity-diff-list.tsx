@@ -187,7 +187,7 @@ export const EntityDiffList: FC<Props> = ({
   if (formatIssue === 'invalid') {
     return (
       <TextViewHint
-        message="This is not a valid Insomnia file, so the Visual view cannot show it."
+        message="This is not a valid Restless file, so the Visual view cannot show it."
         onShowTextView={onShowTextView}
       />
     );
@@ -218,7 +218,7 @@ export const EntityDiffList: FC<Props> = ({
         // Cards are matched up by id and actions splice entities into a file written the way Insomnia exports it,
         // so a file in any other shape (eg. edited by hand) can show incomplete cards and lose what isn't an entity.
         <WarningBanner className="shrink-0 text-sm" data-testid="visual-diff-format-warning">
-          This file isn&apos;t in the format Insomnia writes, eg. it was edited by hand or by another version. Cards may
+          This file isn&apos;t in the format Restless writes, eg. it was edited by hand or by another version. Cards may
           be incomplete, and staging or discarding a card rewrites the whole file, losing comments and formatting.{' '}
           <Button onPress={onShowTextView} className="cursor-pointer underline hover:brightness-125">
             Open the Text view

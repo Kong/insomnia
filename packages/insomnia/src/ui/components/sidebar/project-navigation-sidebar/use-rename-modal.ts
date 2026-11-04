@@ -22,9 +22,7 @@ export const useRenameModal = () => {
     if (item.kind === 'workspace') {
       const { doc, organizationId, project } = item;
       // The scratchpad can't be renamed
-      if (models.workspace.isScratchpad(doc)) {
-        return;
-      }
+      
       showModal(PromptModal, {
         title: `Rename ${getWorkspaceLabel(doc).singular}`,
         defaultValue: doc.name,

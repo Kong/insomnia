@@ -19,7 +19,6 @@ import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.ch
 import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
 import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
-import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 import type { MergeConflict } from '~/sync/git/merge-types';
@@ -40,7 +39,7 @@ interface Props {
   showDeprecatedWarning: boolean;
 }
 
-export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled, showDeprecatedWarning }) => {
+export const GitSyncDropdown: FC<Props> = ({ gitRepository, showDeprecatedWarning }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -57,7 +56,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitRepoDataFetcher = useGitProjectRepoFetcher();
   const gitFetchFetcher = useGitProjectFetchActionFetcher();
   const gitStatusFetcher = useGitProjectStatusActionFetcher();
-  const resetGitStatusFetcher = useGitProjectResetActionFetcher();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -324,28 +322,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
 
-  const switchToInsomniaSyncList: {
-    id: string;
-    label: string;
-    icon: IconProp;
-    isDisabled?: boolean;
-    action: () => void;
-  }[] = isInsomniaSyncEnabled
-    ? [
-        {
-          id: 'switch-to-git-repo',
-          label: 'Switch to Insomnia Sync',
-          icon: 'cloud',
-          action: async () => {
-            resetGitStatusFetcher.submit({
-              projectId,
-              workspaceId,
-            });
-          },
-        },
-      ]
-    : [];
-
   const branchesActionList: {
     id: string;
     label: string;
@@ -371,7 +347,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       : [];
 
   const allSyncMenuActionList = [
-    ...switchToInsomniaSyncList,
     ...gitSyncActions,
     ...branchesActionList,
     ...currentBranchActions,
@@ -388,7 +363,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
               capability.{' '}
               <Button
                 className="underline"
-                onPress={() => window.main.openInBrowser('https://github.com/outmanos/insomnium#readme')}
+                onPress={() => window.main.openInBrowser('https://github.com/outmanos/restless#readme')}
               >
                 Migration Guide
               </Button>
@@ -433,25 +408,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             }}
             className="max-h-[85vh] max-w-lg overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
           >
-            <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
-              <Collection items={switchToInsomniaSyncList}>
-                {item => (
-                  <MenuItem
-                    textValue={item.label}
-                    className={
-                      'group flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
-                    }
-                    aria-label={item.label}
-                    data-testid={`git-sync-menu-${item.id}`}
-                  >
-                    <div className="group-pressed:opacity-80 flex w-full items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all group-hover:bg-(--color-surprise)/80 group-hover:ring-inset group-focus:bg-(--color-surprise)/80 group-focus:ring-inset hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80">
-                      <Icon icon={item.icon} />
-                      <div>{item.label}</div>
-                    </div>
-                  </MenuItem>
-                )}
-              </Collection>
-            </MenuSection>
             <MenuSection className="border-b border-solid border-(--hl-sm) pb-2 empty:border-none empty:pb-0">
               <Collection items={gitSyncActions}>
                 {item => (

@@ -1,7 +1,7 @@
 import type { Project, Workspace } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import { useCallback, useEffect, useRef } from 'react';
-import { Button, Dialog, Heading, Label, Modal, ModalOverlay, Radio, RadioGroup } from 'react-aria-components';
+import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { href } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
@@ -18,7 +18,7 @@ interface Props {
   onDeleted?: () => void;
 }
 
-export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClose, onDeleted }: Props) => {
+export const WorkspaceDeleteModal = ({ workspace, organizationId, onClose, onDeleted }: Props) => {
   const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
   const workspaceId = workspace._id;
   const workspaceName = workspace.name;
@@ -78,7 +78,7 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-2">
                 <Heading className="text-2xl">
-                  {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                  {'Delete'} {getWorkspaceLabel(workspace).singular}
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -98,14 +98,7 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
                 <input type="hidden" name="workspaceId" value={workspaceId} />
                 <div>
                   <p className="line-clamp-5">
-                    {project.konnectControlPlaneId ? (
-                      <>
-                        Do you wish to remove your local copy of the{' '}
-                        <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
-                        {getWorkspaceLabel(workspace).singular}? This will not affect anything in Konnect, or any other
-                        users.
-                      </>
-                    ) : (
+                    {(
                       <>
                         This will permanently delete the{' '}
                         <strong className="break-all whitespace-pre-wrap">{workspaceName}</strong>{' '}
@@ -113,33 +106,7 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
                       </>
                     )}
                   </p>
-                  {models.project.isRemoteProject(project) && (
-                    <RadioGroup name="localOnly" defaultValue="true" className="mb-2 flex flex-col gap-2">
-                      <Label className="text-sm text-(--hl)">How do you want to delete it?</Label>
-                      <div className="flex gap-2">
-                        <Radio
-                          value="true"
-                          aria-label="Remove Local Copy"
-                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                        >
-                          <div>
-                            <Heading className="text-lg font-bold">Remove Local Copy</Heading>
-                            <p className="pt-2">The project will still exist on the Cloud.</p>
-                          </div>
-                        </Radio>
-                        <Radio
-                          value="false"
-                          aria-label="Delete Permanently"
-                          className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                        >
-                          <div>
-                            <Heading className="text-lg font-bold">Delete Permanently</Heading>
-                            <p className="pt-2">The project will be deleted everywhere. You cannot undo this action.</p>
-                          </div>
-                        </Radio>
-                      </div>
-                    </RadioGroup>
-                  )}
+                  
                 </div>
                 {deleteWorkspaceFetcher.data?.error && (
                   <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
@@ -150,7 +117,7 @@ export const WorkspaceDeleteModal = ({ workspace, project, organizationId, onClo
                     aria-label="Delete Workspace"
                     className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                   >
-                    {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
+                    {'Delete'}
                   </Button>
                 </div>
               </deleteWorkspaceFetcher.Form>

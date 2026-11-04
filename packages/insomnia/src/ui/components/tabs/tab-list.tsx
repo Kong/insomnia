@@ -276,9 +276,6 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         workspaceId,
         requestType: 'HTTP',
         parentId: workspaceId,
-        metrics: {
-          source: 'tab-list',
-        },
       });
     }
   };
@@ -406,7 +403,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         onScroll={handleScroll}
       >
         <GridList
-          aria-label="Insomnia Tabs"
+          aria-label="Restless Tabs"
           onSelectionChange={handleSelectionChange}
           selectedKeys={showActiveStatus && activeTabId ? [activeTabId] : []}
           disallowEmptySelection

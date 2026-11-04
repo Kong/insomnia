@@ -16,7 +16,7 @@ export const baseMockServerSchema = z.object({
   parentId: z.string(),
   name: z.string().optional().default(''),
   url: z.string(),
-  useInsomniaCloud: z.boolean().default(true),
+  useInsomniaCloud: z.boolean().default(false),
 });
 export type BaseMockServer = z.infer<typeof baseMockServerSchema>;
 
@@ -28,7 +28,7 @@ export function init(): BaseMockServer {
     parentId: '',
     name: 'New Mock',
     url: 'http://localhost:8080',
-    useInsomniaCloud: true,
+    useInsomniaCloud: false,
   };
 }
 

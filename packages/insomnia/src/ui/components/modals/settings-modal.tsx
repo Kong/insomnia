@@ -2,7 +2,6 @@ import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
-import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
@@ -80,11 +79,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           selectedKey={defaultTabKey}
           onSelectionChange={key => {
             setDefaultTabKey(key.toString());
-
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.preferencesViewed,
-              properties: { tab: key.toString() },
-            });
           }}
           aria-label="Settings"
           className="flex h-full w-full flex-1 flex-col"
@@ -157,7 +151,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <BooleanSetting
               label="Enable proxy"
               setting="proxyEnabled"
-              help="If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication."
+              help="If checked, enables a global network proxy on all requests sent through Restless. This proxy supports Basic Auth, digest, and NTLM authentication."
             />
 
             <div className="pt-4">
@@ -166,10 +160,10 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
                 setting="proxyScope"
                 disabled={!settings.proxyEnabled}
                 values={[
-                  { value: ProxyScopes.requests, name: 'Only when sending requests in Insomnia' },
-                  { value: ProxyScopes.all, name: 'All traffic sent by Insomnia' },
+                  { value: ProxyScopes.requests, name: 'Only when sending requests in Restless' },
+                  { value: ProxyScopes.all, name: 'All traffic sent by Restless' },
                 ]}
-                help="When All traffic is selected, Insomnia uses the configured proxy for all calls, including login, git, auto-updates, etc."
+                help="When All traffic is selected, Restless uses the configured proxy for all calls, including login, git, auto-updates, etc."
               />
             </div>
 
@@ -228,9 +222,4 @@ SettingsModal.displayName = 'SettingsModal';
 
 export const showSettingsModal = (options?: { tab?: SettingsModalTabKey }) => {
   showModal(SettingsModal, options);
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.preferencesViewed,
-    properties: { tab: options?.tab || 'general' },
-  });
 };

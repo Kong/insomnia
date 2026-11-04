@@ -8,7 +8,6 @@ import * as reactUse from 'react-use';
 
 import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
 import { RenderError } from '~/common/templating/render-error';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
@@ -198,10 +197,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   : undefined,
               }
             : {}),
-        });
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.requestExecuted,
-          properties: { request_type: 'gRPC' },
         });
         setGrpcState({
           ...grpcState,

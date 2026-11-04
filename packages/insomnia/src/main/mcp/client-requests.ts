@@ -12,7 +12,6 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { METHOD_SUBSCRIBE_RESOURCE, METHOD_UNSUBSCRIBE_RESOURCE } from '~/common/mcp-utils';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 import { getActiveMcpClient, getReadyActiveMcpConnectionContext, writeEventLogAndNotify } from '~/main/mcp/common';
 import type { CommonMcpOptions, McpMessageEventWithoutBase } from '~/main/mcp/types';
 
@@ -31,7 +30,6 @@ export const callTool = async (options: CommonMcpOptions & CallToolRequest['para
   const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const response = await mcpClient.callTool(params, CompatibilityCallToolResultSchema);
-    trackAnalyticsEvent(AnalyticsEvent.mcpToolCalled);
     return response.content;
   }
   return null;
@@ -52,7 +50,6 @@ export const getPrompt = async (options: CommonMcpOptions & GetPromptRequest['pa
   const mcpClient = getActiveMcpClient(options.requestId);
   if (mcpClient) {
     const prompt = await mcpClient.getPrompt(params);
-    trackAnalyticsEvent(AnalyticsEvent.mcpPromptCalled);
     return prompt;
   }
   return null;
@@ -83,7 +80,6 @@ export const readResource = async (options: CommonMcpOptions & ReadResourceReque
   const mcpClient = getActiveMcpClient(requestId);
   if (mcpClient) {
     const resource = await mcpClient.readResource(params);
-    trackAnalyticsEvent(AnalyticsEvent.mcpResourceRead);
     return resource;
   }
   return null;

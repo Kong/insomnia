@@ -31,12 +31,8 @@ export const HAS_SEEN_ONBOARDING_KEY = `hasSeenOnboardingV${ONBOARDING_VERSION}`
 
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
-export const getInsomniaSession = () => env.INSOMNIA_SESSION;
-export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
-export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
 export const getInsomniaVaultSalt = () => env.INSOMNIA_VAULT_SALT;
 export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
-export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
@@ -101,31 +97,10 @@ export const OAUTH_LOOPBACK_PORT = 53_682;
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || `http://127.0.0.1:${OAUTH_LOOPBACK_PORT}/callback`;
 
 // API
-export const getApiBaseURL = () => env.INSOMNIA_API_URL || '';
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || '';
+export const getMockServiceBinURL = (mockServer: MockServer, path: string) =>
+  `${mockServer.url}/bin/${mockServer._id}${path}`;
 
-export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
-  if (!mockServer.useInsomniaCloud) {
-    return `${mockServer.url}/bin/${mockServer._id}${path}`;
-  }
-  const baseUrl = getMockServiceURL();
-  const url = new URL(baseUrl);
-  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
-  return url.origin + path;
-};
 
-export const getAIServiceURL = () => env.INSOMNIA_AI_URL || '';
-export const getKonnectApiUrl = () => env.KONNECT_API_URL || '';
-export const getKonnectApiRegions = (): string[] => {
-  const regions = (env.KONNECT_API_REGIONS ?? '')
-    .split(',')
-    .map((r: string) => r.trim())
-    .filter(Boolean);
-  return regions.length > 0 ? regions : ['us', 'eu', 'au', 'in', 'sg'];
-};
-
-// App website
-export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || '';
 
 // GitHub API
 export const getGitHubRestApiUrl = () => env.INSOMNIA_GITHUB_REST_API_URL || 'https://api.github.com';
@@ -341,7 +316,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   'type-asc': 'Requests First',
 };
 
-export const EXTERNAL_VAULT_PLUGIN_NAME = 'insomnium-plugin-secret-managers';
+export const EXTERNAL_VAULT_PLUGIN_NAME = 'restless-plugin-secret-managers';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 

@@ -15,7 +15,7 @@ export const GitNonOriginBranchBanner: FC<Props> = ({ currentBranch }) => {
     <div className="flex w-full items-center gap-3 bg-[rgba(var(--color-warning-rgb),0.1)] px-3 py-1.5 text-xs text-(--color-font)">
       <Icon icon="triangle-exclamation" className="shrink-0 text-(--color-warning)" />
       <span className="min-w-0 flex-1 wrap-break-word whitespace-normal">
-        This branch tracks a non-origin remote which is currently unsupported in Insomnia
+        This branch tracks a non-origin remote which is currently unsupported in Restless
       </span>
       <DialogTrigger>
         <Button className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-(--color-font) ring-1 ring-(--hl) transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">

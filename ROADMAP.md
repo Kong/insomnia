@@ -21,20 +21,40 @@ Only here: Socket.IO, MCP client, OpenAPI design editor with Spectral lint, unit
 
 Only Bruno: see phases 2 to 6.
 
+## Next up
+
+- [ ] One-click migration from an existing Insomnia or Bruno install
+
+## Distribution
+
+- [x] GitHub Releases: AppImage, tar.gz, deb, rpm, NSIS and dmg
+- [ ] AUR
+- [ ] winget
+- [ ] Own Homebrew tap, then homebrew-cask once eligible
+- [ ] Flathub
+- [ ] Snap Store
+- [ ] Nixpkgs
+- [ ] apt and dnf repositories
+- [ ] Scoop and Chocolatey
+- [ ] npm: `restless-cli`
+- [ ] Windows code signing and macOS notarization
+
 ## Phase 0: Finish the fork
 
-- [ ] Fix the 5 failing smoke tests
+- [x] Fix the 5 failing smoke tests
 - [ ] Verify title bar, menus and shortcuts on Linux, Windows and macOS
-- [ ] Release CI: build, sign, publish to GitHub releases, test the updater
-- [ ] Remove the Squirrel target; NSIS only on Windows
+- [x] Release CI: build and publish to GitHub releases on merge to main
+- [ ] Test the updater against a real release
+- [ ] Code signing for Windows and macOS
+- [x] Remove the Squirrel target; NSIS only on Windows
 - [ ] Fix the remaining audit findings
-- [ ] Rewrite README, CONTRIBUTING and SECURITY for this project
-- [ ] Add Apache notices for changed files
-- [ ] Remove Kong docs links, dead cloud branches and no-op telemetry calls
-- [ ] Rename the `insomnia://` scheme and hide the cloud mock option
-- [ ] Replace remaining Insomnia names in app text
-- [ ] Remove the leftover Google Fonts and Customer.io exception in `api.protocol.ts`
-- [ ] Import data from an existing Insomnia or Bruno install
+- [x] Rewrite README, CONTRIBUTING and SECURITY for this project
+- [x] Add Apache NOTICE file for this fork
+- [x] Remove Kong docs links, dead cloud code and telemetry
+- [x] Move to the `restless://` scheme and remove the cloud mock option
+- [x] Keep Insomnia plugin, theme and import web links working, with an option to turn them off
+- [x] Replace Insomnia names in app text
+- [x] Remove the Google Fonts and Customer.io exception
 
 ## Phase 1: Restore what the rip removed
 

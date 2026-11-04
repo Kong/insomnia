@@ -1,6 +1,5 @@
 import React, { type FC, useState } from 'react';
 
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
 
 const parseSetCookieHeader = (headerValue: string) => {
@@ -77,7 +76,6 @@ export const ResponseCookiesViewer: FC<Props> = props => {
           className="pull-right btn btn--clicky"
           onClick={() => {
             setIsCookieModalOpen(true);
-            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.responseCookiesManageCookiesClicked });
           }}
         >
           Manage Cookies

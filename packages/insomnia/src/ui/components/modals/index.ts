@@ -40,7 +40,6 @@ export function showModal<
 >(modalComponent: ModalComponent<TModalProps>, config?: ModalHandleShowOptions<GetRefHandleFromProps<TModalProps>>) {
   const name = modalComponent.name || modalComponent.displayName;
   invariant(name, 'Modal must have a name or displayName');
-  window.main.trackPageView({ name });
 
   const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
 

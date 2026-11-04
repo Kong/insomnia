@@ -16,7 +16,6 @@ import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '../../../ui/analytics';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -207,7 +206,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                       isDisabled={!urlHasQueryParameters}
                       onPress={() => {
                         handleImportQueryFromUrl();
-                        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsImportFromURLClicked });
                       }}
                       className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
                     >
@@ -218,7 +216,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         patchSettings({
                           useBulkParametersEditor: isSelected,
                         });
-                        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsBulkEditToggled });
                       }}
                       isSelected={settings.useBulkParametersEditor}
                       className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
@@ -240,7 +237,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                     key={contentType}
                     bulk={settings.useBulkParametersEditor}
                     onDescriptionToggle={() => {
-                      window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsDescriptionToggled });
                     }}
                   />
                 </ErrorBoundary>
@@ -310,7 +306,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 requestType="Request"
                 disableUserAgentHeader={activeRequest.disableUserAgentHeader}
                 onDescriptionToggle={() => {
-                  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersDescriptionToggled });
                 }}
               />
             </div>
@@ -323,7 +318,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 patchSettings({
                   useBulkHeaderEditor: !settings.useBulkHeaderEditor,
                 });
-                window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersBulkEditToggled });
               }}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
@@ -376,12 +370,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   historyKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
                   onChange={preRequestScript => patchRequest(requestId, { preRequestScript })}
-                  onSnippetAdded={snippetName => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.requestScriptsPreScriptSnippetAdded,
-                      properties: { snippetName },
-                    });
-                  }}
                 />
               </ErrorBoundary>
             </TabPanel>
@@ -394,12 +382,6 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                   historyKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
                   onChange={afterResponseScript => patchRequest(requestId, { afterResponseScript })}
-                  onSnippetAdded={snippetName => {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.requestScriptsPostScriptSnippetAdded,
-                      properties: { snippetName },
-                    });
-                  }}
                 />
               </ErrorBoundary>
             </TabPanel>

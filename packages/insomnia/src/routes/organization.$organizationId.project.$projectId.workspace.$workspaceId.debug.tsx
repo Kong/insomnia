@@ -19,7 +19,6 @@ import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizati
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CollectionTab } from '~/ui/components/collection-tab';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
@@ -362,23 +361,12 @@ const Debug = () => {
         : requestGroupId && isRequestGroupId(requestGroupId)
           ? requestGroupId
           : activeWorkspace._id;
-
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.keyboardShortcutUsed,
-        properties: {
-          source: parentId === activeWorkspace._id ? 'empty-collection-page' : 'collection-page-request-list',
-          action: 'createHttpRequest',
-        },
-      });
       createRequestFetcher.submit({
         organizationId,
         projectId,
         workspaceId,
         requestType: 'HTTP',
         parentId,
-        metrics: {
-          source: 'shortcut',
-        },
       });
     },
     request_showCreateFolder: () => {
@@ -445,9 +433,6 @@ const Debug = () => {
       requestType,
       parentId,
       req,
-      metrics: {
-        source: 'sidebar',
-      },
     });
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(

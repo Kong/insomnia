@@ -53,8 +53,8 @@ const pathLookup: Record<string, string | Record<string, string>> = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
   darwin: path.join('mac-universal', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia'),
   linux: {
-    x64: path.join('linux-unpacked', 'insomnium'),
-    arm64: path.join('linux-arm64-unpacked', 'insomnium'),
+    x64: path.join('linux-unpacked', 'restless'),
+    arm64: path.join('linux-arm64-unpacked', 'restless'),
   },
 };
 

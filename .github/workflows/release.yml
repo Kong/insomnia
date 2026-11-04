@@ -65,7 +65,7 @@ jobs:
           name: dist-${{ runner.os }}
           if-no-files-found: error
           path: |
-            packages/insomnia/dist/Insomnium.Core-*
+            packages/insomnia/dist/Restless-*
             packages/insomnia/dist/latest*.yml
 
   publish:

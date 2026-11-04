@@ -1,5 +1,4 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { models } from 'insomnia-data';
 import { Fragment, useState } from 'react';
 import { Button, Dialog, DialogTrigger, Heading, ListBox, ListBoxItem, Popover, Text } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
@@ -73,10 +72,9 @@ export const EnvironmentPicker = ({
   const { features } = useOrganizationPermissions();
   const storageRules = useOrganizationStorageRule(organizationId);
   const isUsingInsomniaCloudSync = Boolean(
-    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+    false,
   );
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
-  const isScratchpadProject = models.project.isScratchpadProject(activeProject);
 
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
   const setActiveGlobalEnvironmentFetcher = useEnvironmentSetActiveGlobalActionFetcher();
@@ -144,7 +142,7 @@ export const EnvironmentPicker = ({
 
   return (
     <div className="flex items-center gap-1">
-      {!isScratchpadProject && (
+      {(
         <DialogTrigger isOpen={isProjectPickerOpen} onOpenChange={onProjectPickerOpenChange}>
           <Button aria-label="Select a Project Environment" className={triggerButtonClassName}>
             <Icon
@@ -343,7 +341,7 @@ export const EnvironmentPicker = ({
           </Dialog>
         </Popover>
       </DialogTrigger>
-      {!isScratchpadProject && isNewProjectEnvironmentModalOpen && (
+      {isNewProjectEnvironmentModalOpen && (
         <NewWorkspaceModal
           isOpen
           project={activeProject}

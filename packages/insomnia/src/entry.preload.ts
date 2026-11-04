@@ -297,9 +297,6 @@ const main: Window['main'] = {
   secretStorage,
   electronStorage,
   sync,
-  trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
-  trackPageView: options => ipcRenderer.send('trackPageView', options),
-  setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
@@ -470,13 +467,9 @@ const env: Window['env'] = {
   PLAYWRIGHT_TEST: process.env.PLAYWRIGHT_TEST,
   // E2E fixtures: pre-seed auth state so tests bypass login/key-derivation UI
   INSOMNIA_SKIP_ONBOARDING: process.env.INSOMNIA_SKIP_ONBOARDING,
-  INSOMNIA_SESSION: process.env.INSOMNIA_SESSION,
-  INSOMNIA_SECRET_KEY: process.env.INSOMNIA_SECRET_KEY,
-  INSOMNIA_PUBLIC_KEY: process.env.INSOMNIA_PUBLIC_KEY,
   // E2E vault fixtures: pre-seed deterministic salt/key/SRP secret
   INSOMNIA_VAULT_SALT: process.env.INSOMNIA_VAULT_SALT,
   INSOMNIA_VAULT_KEY: process.env.INSOMNIA_VAULT_KEY,
-  INSOMNIA_VAULT_SRP_SECRET: process.env.INSOMNIA_VAULT_SRP_SECRET,
   // App environment: gates dev features and selects analytics keys
   INSOMNIA_ENV: process.env.INSOMNIA_ENV,
   // Injected at build time; shown in the About screen
@@ -488,12 +481,6 @@ const env: Window['env'] = {
   // OAuth flow URL overrides for dev/staging environments
   OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
   // Service URL overrides: allow dev/CI to target local or staging backends
-  INSOMNIA_API_URL: process.env.INSOMNIA_API_URL,
-  INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,
-  INSOMNIA_AI_URL: process.env.INSOMNIA_AI_URL,
-  KONNECT_API_URL: process.env.KONNECT_API_URL,
-  KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
-  INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
   // GitHub API URL overrides for GitHub Enterprise targets
   INSOMNIA_GITHUB_REST_API_URL: process.env.INSOMNIA_GITHUB_REST_API_URL,
   INSOMNIA_GITHUB_API_URL: process.env.INSOMNIA_GITHUB_API_URL,

@@ -2,7 +2,6 @@ import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW } from 'insomnia-data/common';
 import { Fragment, useCallback, useRef, useState } from 'react';
 
 import { bytesToBase64, utf8StringFromBytes } from '~/common/utils/utf8-bytes';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 
 import { HUGE_RESPONSE_MB, LARGE_RESPONSE_MB } from '../../../common/constants';
@@ -264,12 +263,6 @@ export const ResponseViewer = ({
         truncateLongLines
         updateFilter={filter => {
           updateFilter?.(filter);
-
-          if (filter) {
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.filterCreatedResponseBody,
-            });
-          }
         }}
       />
     );
@@ -392,12 +385,6 @@ export const ResponseViewer = ({
       truncateLongLines
       updateFilter={filter => {
         updateFilter?.(filter);
-
-        if (filter) {
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.filterCreatedResponseBody,
-          });
-        }
       }}
     />
   );

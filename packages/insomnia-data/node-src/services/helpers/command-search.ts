@@ -56,7 +56,7 @@ export async function commandSearch(params: {
       );
     });
 
-  const { allOrganizations, organizationId, projectId, workspaceId, filter, requestId } = params;
+  const { allOrganizations, projectId, workspaceId, filter, requestId } = params;
 
   try {
     const requestFilter = (req: Request | WebSocketRequest | GrpcRequest) => {
@@ -77,9 +77,7 @@ export async function commandSearch(params: {
       );
     };
 
-    const allOrganizationsIds = models.organization.isScratchpadOrganizationId(organizationId)
-      ? [organizationId]
-      : allOrganizations.map(org => org.id);
+    const allOrganizationsIds = allOrganizations.map(org => org.id);
 
     const allProjects = await abortable(
       projectService.list({

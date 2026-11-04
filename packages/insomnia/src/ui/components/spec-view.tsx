@@ -1,6 +1,6 @@
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
-import { type ApiSpec, models } from 'insomnia-data';
+import { type ApiSpec } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -44,7 +44,6 @@ import { useRequestNewActionFetcher } from '~/routes/organization.$organizationI
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
 import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { Badge } from '~/ui/components/base/badge';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
@@ -444,17 +443,6 @@ export const SpecView = ({
 
     await updateProjectRuleset({ organizationId, projectId, rulesetContent: content });
 
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.uploadLintRulesetClicked,
-      properties: {
-        project_type: models.project.isGitProject(activeProject)
-          ? 'git'
-          : models.project.isRemoteProject(activeProject)
-            ? 'remote'
-            : 'local',
-      },
-    });
-
     setSelectedRulesetPath(gitSyncRulesetPath || rulesetWritePath);
   };
 
@@ -532,9 +520,6 @@ export const SpecView = ({
             badge: <Badge icon="sparkles" color="surprise" label="AI" style={{ marginLeft: 'auto', marginRight: '0' }} />,
             isDisabled: !apiSpec?.contents || !isGenerateMockServersWithAIEnabled,
             action: () => {
-              window.main.trackAnalyticsEvent({
-                event: AnalyticsEvent.designerGenerateMockClicked,
-              });
               setNewMockServerModalOpen(true);
             },
           },
@@ -734,12 +719,6 @@ export const SpecView = ({
           className="flex shrink-0 items-center justify-center rounded-md border border-solid border-(--hl-md) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
           onChange={value => {
             setIsSpecPaneOpen(value);
-            window.main.trackAnalyticsEvent({
-              event: AnalyticsEvent.designerPreviewToggled,
-              properties: {
-                status: !value ? 'open' : 'collapsed',
-              },
-            });
           }}
         >
           {({ isSelected }) => (

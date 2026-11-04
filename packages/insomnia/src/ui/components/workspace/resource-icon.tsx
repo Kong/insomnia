@@ -11,9 +11,7 @@ export function ResourceIcon({ resource }: { resource: any }) {
   const isProject = models.project.isProject(resource);
   let icon: IconProp | null = null;
   if (isProject) {
-    icon = models.project.isRemoteProject(resource)
-      ? 'globe-americas'
-      : models.project.isGitProject(resource)
+    icon = models.project.isGitProject(resource)
         ? ['fab', 'git-alt']
         : 'laptop';
   }

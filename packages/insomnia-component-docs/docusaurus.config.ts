@@ -65,7 +65,7 @@ const config: Config = {
           label: 'Components',
         },
         {
-          href: 'https://github.com/kong/insomnia',
+          href: 'https://github.com/outmanos/restless',
           label: 'GitHub',
           position: 'right',
         },

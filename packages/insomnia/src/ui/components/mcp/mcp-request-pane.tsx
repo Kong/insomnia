@@ -20,7 +20,6 @@ import {
   type McpRequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { AnalyticsEvent } from '../../../ui/analytics';
 import { useRequestPatcher, useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor, type CodeEditorHandle } from '../.client/codemirror/code-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -392,7 +391,6 @@ export const McpRequestPane: FC<Props> = ({
                         mode="json"
                         placeholder=""
                         onPrettify={() => {
-                          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestParamsBeautifyClicked });
                         }}
                       />
                     </div>
@@ -425,7 +423,6 @@ export const McpRequestPane: FC<Props> = ({
             requestType="McpRequest"
             disableUserAgentHeader={activeRequest.disableUserAgentHeader}
             onDescriptionToggle={() => {
-              window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestHeadersDescriptionToggled });
             }}
           />
         </TabPanel>

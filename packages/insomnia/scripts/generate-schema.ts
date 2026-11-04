@@ -73,7 +73,7 @@ const normalizeSchema = (node: unknown): void => {
 };
 
 // Public, stable URL the schemas are published at (raw files on the default branch).
-const SCHEMA_BASE_URL = 'https://raw.githubusercontent.com/outmanos/insomnium/main/schemas';
+const SCHEMA_BASE_URL = 'https://raw.githubusercontent.com/outmanos/restless/main/schemas';
 
 const SRC_DIR = path.resolve(__dirname, '../src');
 const PARSER_ENTRY = path.join(SRC_DIR, 'common/import-v5-parser.ts');

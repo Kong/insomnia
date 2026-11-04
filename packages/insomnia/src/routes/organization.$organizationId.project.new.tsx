@@ -3,7 +3,6 @@ import { href, redirect } from 'react-router';
 
 import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -92,24 +91,6 @@ const createProjectImpl = async (organizationId: string, newProjectData: CreateP
 
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
   const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
-
-  let git_provider = 'none';
-
-  if (newProjectData.credentialsId) {
-    const credentials = await services.gitCredentials.getById(newProjectData.credentialsId);
-    if (credentials) {
-      git_provider = credentials.provider;
-    }
-  }
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.projectCreated,
-    properties: {
-      storage: newProjectData.storageType,
-      git_provider,
-      project_id: newProjectId,
-    },
-  });
 
   showToast({
     title: 'Project created',

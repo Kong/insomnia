@@ -24,9 +24,6 @@ export const PlaceholderRequestPane: FC = () => {
         workspaceId,
         requestType: 'HTTP',
         parentId: workspaceId,
-        metrics: {
-          source: 'placeholder-request-pane',
-        },
       }),
     [requestFetcher, organizationId, projectId, workspaceId],
   );

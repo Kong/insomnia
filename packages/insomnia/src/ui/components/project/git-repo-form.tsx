@@ -361,7 +361,7 @@ export const GitRepoForm: FC<Props> = ({
                   />
                 ) : (
                   <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
-                    Managed by Insomnia (default location)
+                    Managed by Restless (default location)
                   </div>
                 )}
                 <Button
@@ -370,7 +370,7 @@ export const GitRepoForm: FC<Props> = ({
                     const defaultPath =
                       projectData.cloneParentDir ||
                       getLastCloneParentDir() ||
-                      window.path.join(window.app.getPath('home'), 'Insomnia');
+                      window.path.join(window.app.getPath('home'), 'Restless');
                     const { canceled, filePath } = await selectFileOrFolder({
                       itemTypes: ['directory'],
                       defaultPath,

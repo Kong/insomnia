@@ -27,7 +27,6 @@ import {
   extractNunjucksTagFromCoords,
   replaceVaultTagIdIfNeeded,
 } from '~/common/templating/utils';
-import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { Icon } from '~/ui/components/icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { FilterHelpModal } from '~/ui/components/modals/filter-help-modal';
@@ -908,7 +907,6 @@ export const CodeEditor = memo(
                   defaultValue={filter || ''}
                   placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
                   onFocus={() => {
-                    trackOnceDaily(AnalyticsEvent.responsePreviewJSONPathEntered);
                   }}
                   onKeyDown={createKeybindingsHandler({
                     Enter: () => {

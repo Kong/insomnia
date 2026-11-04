@@ -149,7 +149,7 @@ export const GitChangeAnalysis = ({ diagnostics }: { diagnostics: GitDiffDiagnos
       {expanded && (
         <div className="flex max-h-[45vh] flex-col gap-3 overflow-y-auto">
           <div className="grid grid-cols-2 gap-x-4 text-(--hl-xl)">
-            <div>Insomnia {diagnostics.appVersion}</div>
+            <div>Restless {diagnostics.appVersion}</div>
             <div>{diagnostics.comparing}</div>
             <div className="break-all">file: {diagnostics.filepath}</div>
             <div>
@@ -244,7 +244,7 @@ export const GitChangeAnalysis = ({ diagnostics }: { diagnostics: GitDiffDiagnos
             <Truncated total={report.reordered.length} />
           </Section>
 
-          <Section title="Insomnia metadata only (timestamps / sort keys)" count={report.metadataChanged.length}>
+          <Section title="Restless metadata only (timestamps / sort keys)" count={report.metadataChanged.length}>
             {report.metadataChanged.slice(0, MAX_ROWS).map(entity => (
               <div key={entity.id} className="flex flex-col">
                 <EntityLine entity={entity} />

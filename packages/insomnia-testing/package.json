@@ -6,11 +6,11 @@
   "author": "Outman",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/outmanos/insomnium.git",
+    "url": "git+https://github.com/outmanos/restless.git",
     "directory": "packages/insomnia-testing"
   },
   "bugs": {
-    "url": "https://github.com/outmanos/insomnium/issues"
+    "url": "https://github.com/outmanos/restless/issues"
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -20,6 +20,6 @@
   "dependencies": {
     "chai-json-schema": "1.5.1"
   },
-  "homepage": "https://github.com/outmanos/insomnium#readme",
+  "homepage": "https://github.com/outmanos/restless#readme",
   "description": ""
 }

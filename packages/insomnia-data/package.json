@@ -7,13 +7,13 @@
   "description": "Insomnia data functionalities",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/outmanos/insomnium.git",
+    "url": "git+https://github.com/outmanos/restless.git",
     "directory": "packages/insomnia-data"
   },
   "bugs": {
-    "url": "https://github.com/outmanos/insomnium/issues"
+    "url": "https://github.com/outmanos/restless/issues"
   },
-  "homepage": "https://github.com/outmanos/insomnium#readme",
+  "homepage": "https://github.com/outmanos/restless#readme",
   "exports": {
     ".": {
       "import": "./src/index.ts",

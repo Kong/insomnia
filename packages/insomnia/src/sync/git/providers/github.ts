@@ -304,7 +304,7 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
           const params = new URLSearchParams({ code: 'device', state });
           BrowserWindow.getAllWindows()[0]?.webContents.send(
             'shell:open',
-            `insomnia://oauth/github/authenticate?${params}`,
+            `restless://oauth/github/authenticate?${params}`,
           );
         })
         .catch(error => {

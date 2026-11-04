@@ -1,4 +1,4 @@
-import { models } from 'insomnia-data';
+
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
@@ -207,9 +207,8 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       // If the tab being deleted is the only tab and is active, navigate to its
       // fallback (e.g. the parent folder/collection) or the project dashboard
       if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
-        if (!models.organization.isScratchpadOrganizationId(organizationId)) {
+        
           navigate(options.fallbackUrl || `/organization/${organizationId}/project/${projectId}`);
-        }
         updateInsomniaTabs({
           organizationId,
           tabList: [],
@@ -271,7 +270,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
       }
 
       if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
-        if (options.navigateOnAllClose !== false && !models.organization.isScratchpadOrganizationId(organizationId)) {
+        if (options.navigateOnAllClose !== false && true) {
           navigate(`/organization/${organizationId}/project/${projectId}`);
         }
         updateInsomniaTabs({

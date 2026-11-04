@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { models } from 'insomnia-data';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
 
 import { database as db } from '~/common/database';
@@ -14,16 +14,6 @@ import { fsClient } from '~/sync/git/fs-client';
 // legacy-migration logic under test here (and don't play well with the
 // project's lightweight `electron` test mock). Replace it with a no-op that
 // keeps the real, dependency-free `AnalyticsEvent` enum intact.
-vi.mock('~/main/analytics', async () => {
-  const { AnalyticsEvent } = await import('insomnia-analytics');
-  return {
-    AnalyticsEvent,
-    trackAnalyticsEvent: vi.fn(),
-    setCurrentOrganizationId: vi.fn(),
-    trackPageView: vi.fn(),
-  };
-});
-
 const { importLegacyInsomniaFolder } = await import('~/main/git-service');
 
 const PROJECT_ID = 'proj_test';

@@ -20,7 +20,6 @@ import { models, services } from 'insomnia-data';
 import { isLinux, isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
 import appConfig from '../../config/config.json';
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
@@ -40,9 +39,9 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+const browserWindows = new Map<'Restless' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
 export function getMainWindow(): ElectronBrowserWindow | null {
-  return browserWindows.get('Insomnia') ?? null;
+  return browserWindows.get('Restless') ?? null;
 }
 let hiddenWindowIsBusy = false;
 
@@ -99,7 +98,7 @@ const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: Bro
 };
 
 export async function createHiddenBrowserWindow() {
-  const mainWindow = browserWindows.get('Insomnia');
+  const mainWindow = browserWindows.get('Restless');
   invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
 
   console.log('[main] Registering the hidden window restarting handler');
@@ -265,7 +264,7 @@ export function createWindow(): ElectronBrowserWindow {
   if (!isMac) {
     mainBrowserWindow.setMenuBarVisibility(false);
   }
-  browserWindows.set('Insomnia', mainBrowserWindow);
+  browserWindows.set('Restless', mainBrowserWindow);
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
@@ -320,8 +319,8 @@ export function createWindow(): ElectronBrowserWindow {
   mainBrowserWindow.loadURL(appUrl);
   // Emitted when the window is closed.
   mainBrowserWindow.on('closed', () => {
-    if (browserWindows.get('Insomnia')) {
-      browserWindows.delete('Insomnia');
+    if (browserWindows.get('Restless')) {
+      browserWindows.delete('Restless');
     }
   });
 
@@ -343,7 +342,7 @@ export function createWindow(): ElectronBrowserWindow {
         properties: ['openDirectory', 'createDirectory'],
       });
       if (!canceled && filePaths[0]) {
-        window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
+        window.webContents.send('shell:open', `restless://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
       }
     },
   };
@@ -351,7 +350,6 @@ export function createWindow(): ElectronBrowserWindow {
   const preferencesItem: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Preferences`,
     click: () => {
-      trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
       mainBrowserWindow.webContents?.send('toggle-preferences');
     },
   };
@@ -603,7 +601,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://github.com/outmanos/insomnium/blob/main/LICENSE');
+          shell.openExternal('https://github.com/outmanos/restless/blob/main/LICENSE');
         },
       },
     ],
@@ -830,7 +828,7 @@ async function showUnresponsiveModal() {
     defaultId: 1,
     cancelId: 0,
     title: 'Unresponsive',
-    message: 'Insomnia has become unresponsive. Do you want to reload?',
+    message: 'Restless has become unresponsive. Do you want to reload?',
   });
 
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
@@ -923,7 +921,7 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 };
 
 export function createWindowsAndReturnMain() {
-  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
+  const mainWindow = browserWindows.get('Restless') ?? createWindow();
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }

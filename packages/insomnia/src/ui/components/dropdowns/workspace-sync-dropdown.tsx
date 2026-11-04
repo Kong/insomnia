@@ -12,7 +12,6 @@ export const WorkspaceSyncDropdown: FC = () => {
   const { features } = useOrganizationPermissions();
 
   const isLocalProject =
-    !models.project.isRemoteProject(activeProject) &&
     !activeWorkspaceMeta?.gitRepositoryId &&
     !models.project.isGitProject(activeProject);
 
@@ -22,7 +21,7 @@ export const WorkspaceSyncDropdown: FC = () => {
 
   const shouldShowGitSyncDropdown =
     features.gitSync.enabled &&
-    (activeWorkspaceMeta?.gitRepositoryId || !models.project.isRemoteProject(activeProject));
+    (activeWorkspaceMeta?.gitRepositoryId || true);
   if (shouldShowGitSyncDropdown) {
     if (models.project.isGitProject(activeProject)) {
       return (

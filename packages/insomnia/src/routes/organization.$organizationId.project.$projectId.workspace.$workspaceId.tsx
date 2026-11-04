@@ -81,7 +81,7 @@ const workspaceFileIssueModalText: Partial<Record<FileIssueKind, { modalTitle: s
   'parse-error': {
     modalTitle: 'Cannot read file: Invalid schema',
     summary:
-      'Recent changes introduced schema errors in the Insomnia file for this page. Resolve the file using the CLI to unlock this page.',
+      'Recent changes introduced schema errors in the Restless file for this page. Resolve the file using the CLI to unlock this page.',
   },
 };
 

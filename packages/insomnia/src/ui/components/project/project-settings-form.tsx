@@ -51,11 +51,11 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
     return true;
   }
 
-  if (storageType === 'local' && (models.project.isRemoteProject(project) || models.project.isGitProject(project))) {
+  if (storageType === 'local' && (models.project.isGitProject(project))) {
     return true;
   }
 
-  if (storageType === 'remote' && !models.project.isRemoteProject(project)) {
+  if (storageType === 'remote' && true) {
     return true;
   }
 
@@ -432,19 +432,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
               />
             </TextField>
-            {project?.konnectControlPlaneId ? (
-              <div className="flex flex-col gap-2">
-                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
-                  Type
-                </Label>
-                <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
-                  <div className="flex items-center gap-2">
-                    <Icon icon="laptop" />
-                    <span>Synced from Konnect</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
+            {(
               <ProjectTypeSelect
                 storageRules={storageRules}
                 value={storageType}
@@ -465,11 +453,11 @@ export const ProjectSettingsForm: FC<Props> = ({
               message={
                 models.project.isGitProject(project!)
                   ? 'Changing this project to a Cloud Sync project will remove the connection to your repo. This does not delete the project files on the remote repo.'
-                  : 'Anything added in the project will be securely synced to the Insomnia cloud and enables you to collaborate on projects with others. '
+                  : 'Anything added in the project will be securely synced to the Restless cloud and enables you to collaborate on projects with others. '
               }
               footer={
                 <LearnMoreLink
-                  href={`https://github.com/outmanos/insomnium#readme
+                  href={`https://github.com/outmanos/restless#readme
                     models.project.isGitProject(project!)
                       ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
                       : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
@@ -496,7 +484,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
               footer={
                 <LearnMoreLink
-                  href={`https://github.com/outmanos/insomnium#readme
+                  href={`https://github.com/outmanos/restless#readme
                     models.project.isGitProject(project!)
                       ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
                       : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
@@ -516,7 +504,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </Label>
                 <div className="text-xs text-(--hl-xl)">
                   Can be used to manage file changes with git.{' '}
-                  <a href="https://github.com/outmanos/insomnium#readme" className="underline">
+                  <a href="https://github.com/outmanos/restless#readme" className="underline">
                     Learn more ↗
                   </a>
                 </div>

@@ -4,7 +4,6 @@ import { href, redirect } from 'react-router';
 
 import { importResourcesToWorkspace, scanResources } from '~/common/import';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
@@ -44,7 +43,7 @@ export async function generateRequestCollection({
     throw new Error('Error Generating Configuration');
   }
 
-  const scannedResources = await scanResources([
+  await scanResources([
     {
       contentStr: apiSpec.contents,
     },
@@ -52,13 +51,6 @@ export async function generateRequestCollection({
 
   await importResourcesToWorkspace({
     workspaceId,
-  });
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.generateCollection,
-    properties: {
-      count_requests: scannedResources.map(r => r.requests?.length ?? 0).reduce((a, b) => a + b, 0),
-    },
   });
 }
 

@@ -95,7 +95,7 @@ export async function canonicalizeInsomniaFileContent(content: string): Promise<
     }
     return canonicalContent;
   } catch (err) {
-    console.warn('[git] Failed to canonicalize Insomnia file content', err);
+    console.warn('[git] Failed to canonicalize Restless file content', err);
     return content;
   }
 }

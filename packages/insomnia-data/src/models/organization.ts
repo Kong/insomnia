@@ -8,5 +8,3 @@ export const LOCAL_ORGANIZATION: Organization = { id: LOCAL_ORGANIZATION_ID, nam
 
 // Everything lives on this machine, so every organization is local.
 export const isLocalOrganizationId = (_organizationId: string) => true;
-export const isScratchpadOrganizationId = (_organizationId: string) => false;
-export const isKonnectOrganizationId = (_organizationId: string) => false;

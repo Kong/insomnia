@@ -7,7 +7,6 @@ import { getProductName } from 'insomnia/src/common/constants';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
-import { AnalyticsEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
 import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
@@ -99,7 +98,7 @@ const showSaveExportedFileDialog = async ({
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
   const options = {
-    title: 'Export Insomnia Data',
+    title: 'Export Restless Data',
     buttonLabel: 'Export',
     defaultPath: `${window.path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
@@ -111,7 +110,7 @@ const showSaveExportedFolderDialog = async () => {
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || window.app.getPath('desktop');
   const options = {
-    title: 'Export Insomnia Data',
+    title: 'Export Restless Data',
     buttonLabel: 'Export',
     properties: ['openDirectory'],
     defaultPath: dir,
@@ -213,7 +212,6 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.exportCompleted });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -241,10 +239,6 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mock-server' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -281,10 +275,6 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: shouldExportPrivateEnvironments,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'environment' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -314,7 +304,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
         shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       }
       const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: 'Insomnia',
+        exportedFileNamePrefix: 'Restless',
         selectedFormat,
       });
 
@@ -348,7 +338,6 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           }
         }
         await writeExportedFileToFileSystem(fileName, stringifiedExport);
-        window.main.trackAnalyticsEvent({ event: AnalyticsEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -418,10 +407,6 @@ export const exportSpecificationToFile = async (workspace: Workspace) => {
 
       try {
         await writeExportedFileToFileSystem(fileName, specification);
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.dataExport,
-          properties: { type: selectedFormat, scope: workspace.scope },
-        });
       } catch {
         showError({
           title: 'Export Failed',
@@ -447,10 +432,6 @@ export const exportMcpClientToFile = async (workspace: Workspace) => {
       includePrivateEnvironments: false,
     });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.dataExport,
-      properties: { type: 'yaml', scope: 'mcp' },
-    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -737,7 +718,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
       isIdleAndUninitialized &&
       organizationId &&
       projectId &&
-      !models.organization.isScratchpadOrganizationId(organizationId)
+      true
     ) {
       workspacesFetcher.load({
         organizationId,
@@ -765,11 +746,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-  const isScratchPadWorkspace = models.workspace.isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
-    !isScratchPadWorkspace && (activeProject || features.bulkImport?.enabled);
+    (activeProject || features.bulkImport?.enabled);
 
   return (
     <Fragment>
@@ -802,7 +782,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 const { filePaths, canceled } = await window.dialog.showOpenDialog({
                   properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
                   buttonLabel: 'Select',
-                  title: 'Export All Insomnia Data',
+                  title: 'Export All Restless Data',
                 });
 
                 if (canceled) {
@@ -828,9 +808,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });
-                window.main.trackAnalyticsEvent({
-                  event: AnalyticsEvent.exportAllCollections,
-                });
               }}
               aria-label="Export all data"
             >
@@ -849,7 +826,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={
-                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                    false
                   }
                   onPress={() => setIsImportModalOpen(true)}
                 >
@@ -861,7 +838,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Button
                   className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   isDisabled={
-                    workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData?.activeWorkspace)
+                    false
                   }
                   onPress={() => setIsImportProjectsModalOpen(true)}
                 >
@@ -954,16 +931,7 @@ const ExportSection = ({
   setIsExportModalOpen: (value: boolean) => void;
   handleExportProjectToFile: () => void;
 }) => {
-  if (models.workspace.isScratchpad(workspace)) {
-    return (
-      <Button
-        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        onPress={() => setIsExportModalOpen(true)}
-      >
-        Export the "{workspace.name}" {getWorkspaceLabel(workspace).singular}
-      </Button>
-    );
-  }
+  
 
   return (
     <>

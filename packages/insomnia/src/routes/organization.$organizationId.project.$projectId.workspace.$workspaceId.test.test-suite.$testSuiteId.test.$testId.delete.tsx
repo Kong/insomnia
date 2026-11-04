@@ -4,7 +4,6 @@ import { href } from 'react-router';
 
 import { database } from '~/common/database';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
@@ -18,7 +17,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(unitTest, 'Test not found');
 
   await services.unitTest.remove(unitTest);
-  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestDelete });
 
   return null;
 }

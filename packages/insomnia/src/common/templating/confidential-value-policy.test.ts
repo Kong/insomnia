@@ -52,7 +52,7 @@ describe('getConfidentialValuePolicy', () => {
 });
 
 describe('shouldMaskExternalVaultTag', () => {
-  const PLUGIN = 'insomnium-plugin-secret-managers';
+  const PLUGIN = 'restless-plugin-secret-managers';
   const TAG = 'vault';
 
   it('returns false for non-vault plugin', () => {

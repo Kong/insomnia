@@ -12,13 +12,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('../main/analytics', () => ({
-  trackAnalyticsEvent: vi.fn(),
-  AnalyticsEvent: {
-    installPlugin: 'Plugin Installed',
-  },
-}));
-
 vi.mock('insomnia-data', () => ({
   services: {
     settings: {

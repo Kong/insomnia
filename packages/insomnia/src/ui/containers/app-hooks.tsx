@@ -8,7 +8,7 @@ export const AppHooks: FC = () => {
   useSettingsSideEffects();
   useGlobalKeyboardShortcuts();
   useThemeChange();
-  // Used for detecting if we just updated Insomnia and app --args or insomnia:// and
+  // Used for detecting if we just updated Insomnia and app --args or restless:// and
   useEffect(() => {
     setTimeout(() => window.main.halfSecondAfterAppStart(), 500);
   }, []);

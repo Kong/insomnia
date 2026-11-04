@@ -179,7 +179,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                       </button>
                     </div>
                     <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
-                      If your browser does not open the Insomnia app automatically you can manually paste the redirect
+                      If your browser does not open the Restless app automatically you can manually paste the redirect
                       URL in Azure to here.
                     </p>
                     <Form

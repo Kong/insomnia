@@ -3,7 +3,6 @@ import { href, redirect } from 'react-router';
 
 import { getMockServiceBinURL } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.generate-request-collection';
@@ -61,13 +60,6 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
       ],
     });
   }
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.generateCollectionFromMock,
-    properties: {
-      count_requests: mockRoutes.length,
-    },
-  });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {

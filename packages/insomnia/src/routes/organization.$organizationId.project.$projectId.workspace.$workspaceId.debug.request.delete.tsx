@@ -2,7 +2,6 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
@@ -18,10 +17,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   await services.helpers.removeRequest(req);
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
   invariant(workspaceMeta, 'Workspace meta not found');
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.requestDeleted,
-  });
 
   if (workspaceMeta.activeRequestId === id) {
     await services.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });

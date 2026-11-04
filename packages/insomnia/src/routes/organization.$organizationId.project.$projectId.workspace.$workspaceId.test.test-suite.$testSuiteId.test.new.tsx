@@ -2,7 +2,6 @@ import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.new';
@@ -21,8 +20,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 expect(response1.status).to.equal(200);`,
     name,
   });
-
-  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.unitTestCreate });
 
   return null;
 }

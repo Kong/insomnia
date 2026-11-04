@@ -4,7 +4,6 @@ import { href } from 'react-router';
 import { database } from '~/common/database';
 import { projectLock, regenerateProjectDocIds } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -195,14 +194,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
     // local project rename
     await services.project.update(project, { name });
-
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.projectUpdated,
-      properties: {
-        storage: 'local',
-        project_id: project._id,
-      },
-    });
 
     showToast({
       title: 'Project updated',

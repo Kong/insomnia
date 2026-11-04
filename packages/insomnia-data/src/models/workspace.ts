@@ -25,7 +25,6 @@ export const baseWorkspaceSchema = z.object({
   description: z.string().default(''),
   certificates: z.any().optional(), // deprecated
   scope: z.enum(Object.values(WorkspaceScopeKeys)),
-  konnectServiceId: z.string().optional().nullable(),
 });
 export type BaseWorkspace = z.infer<typeof baseWorkspaceSchema>;
 
@@ -47,7 +46,7 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
 
 export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
 
-export const optionalKeys: (keyof BaseWorkspace)[] = ['konnectServiceId'];
+export const optionalKeys: (keyof BaseWorkspace)[] = [];
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,

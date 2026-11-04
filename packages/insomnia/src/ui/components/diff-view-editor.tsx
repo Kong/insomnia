@@ -185,7 +185,7 @@ export const DiffEditor = ({
 
 const hoverMessage = [
   {
-    value: 'This is a required change to Insomnia metadata\n\nand can not be manually edited or discarded.',
+    value: 'This is a required change to Restless metadata\n\nand can not be manually edited or discarded.',
   },
 ];
 

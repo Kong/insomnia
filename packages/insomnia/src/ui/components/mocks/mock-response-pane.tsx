@@ -13,7 +13,6 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 
-import { getMockServiceURL } from '../../../common/constants';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -159,7 +158,7 @@ const HistoryViewWrapperComponentFactory = ({
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;
-    const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+    const mockbinUrl = mockServer.url;
     try {
       const res = await fetchMockbinLogs({
         mockbinUrl,
@@ -180,7 +179,6 @@ const HistoryViewWrapperComponentFactory = ({
     mockRoute.name,
     mockRoute.parentId,
     mockServer.url,
-    mockServer.useInsomniaCloud,
     userSession.id,
   ]);
   // refetches logs whenever the path changes, or a response is received, or tenseconds elapses or history tab is click

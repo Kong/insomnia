@@ -4,7 +4,6 @@ import * as reactUse from 'react-use';
 
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 import { type ColorScheme } from '~/common/plugins/types';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { applyColorScheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -57,10 +56,6 @@ export const useThemes = () => {
   // Activate the theme for the selected color scheme
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.themeChanged,
-        properties: { themeName, colorScheme },
-      });
 
       switch (colorScheme) {
         case 'light': {

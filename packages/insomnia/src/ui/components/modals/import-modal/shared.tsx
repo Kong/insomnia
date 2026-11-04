@@ -20,7 +20,7 @@ export const validImportExtensions = [
 ];
 
 export const disclaimer =
-  'Insomnia provides features that may automatically execute code. Only import files from trusted sources.';
+  'Restless provides features that may automatically execute code. Only import files from trusted sources.';
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
   <div className="flex items-center gap-(--padding-xs) rounded-md p-(--padding-sm) text-(length:--font-size-xs)">

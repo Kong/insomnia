@@ -464,7 +464,7 @@ const ImportProjectsList = ({
               showModal(AlertModal, {
                 title: 'Cancel Import?',
                 message:
-                  'If you cancel now, Insomnia will finish importing the current folder then stop. You’ll be able to use projects that have already been imported. Do you wish to cancel?',
+                  'If you cancel now, Restless will finish importing the current folder then stop. You’ll be able to use projects that have already been imported. Do you wish to cancel?',
                 addCancel: true,
                 onConfirm: onCancel,
               });

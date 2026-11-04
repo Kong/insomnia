@@ -3,7 +3,6 @@ import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -43,12 +42,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
 
   await services.helpers.updateRequest(req, patch);
-
-  if (req.name !== patch.name) {
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.requestRenamed,
-    });
-  }
 
   return null;
 }

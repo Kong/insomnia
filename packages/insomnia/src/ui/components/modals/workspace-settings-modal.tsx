@@ -78,8 +78,6 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     };
   }, [gitFilePath, project, workspace._id]);
 
-  const isScratchpadWorkspace = models.workspace.isScratchpad(workspace);
-
   const workspaceFetcher = useWorkspaceUpdateActionFetcher();
 
   const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
@@ -163,14 +161,14 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   <TextField
                     name="name"
                     isRequired
-                    isReadOnly={isScratchpadWorkspace}
+                    isReadOnly={false}
                     value={nameValue}
                     onChange={setNameValue}
                     className="group relative flex max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                   >
                     <Label className="text-sm text-(--hl)">Name</Label>
                     <Input
-                      autoFocus={!isScratchpadWorkspace}
+                      autoFocus={true}
                       placeholder="Awesome API"
                       className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) p-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                     />

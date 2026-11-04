@@ -2,7 +2,6 @@ import { EnvironmentType, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
@@ -10,7 +9,7 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { workspaceId } = params;
 
-  const { isPrivate, environmentType = EnvironmentType.KVPAIR, source } = await request.json();
+  const { isPrivate, environmentType = EnvironmentType.KVPAIR } = await request.json();
 
   const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
@@ -20,11 +19,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     parentId: baseEnvironment._id,
     environmentType,
     isPrivate,
-  });
-
-  window.main.trackAnalyticsEvent({
-    event: AnalyticsEvent.environmentCreate,
-    properties: { type: isPrivate ? 'private' : 'global', ...(source && { source }) },
   });
 
   return environment;

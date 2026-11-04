@@ -75,7 +75,7 @@ const MigrationView = () => {
 
           {isUpdateCompletedSuccessfully ? (
             <p className="text-sm">
-              All {migratedCount} Insomnia git project{migratedCount !== 1 ? 's' : ''} on your local system have been
+              All {migratedCount} Restless git project{migratedCount !== 1 ? 's' : ''} on your local system have been
               updated. You can now explore them, use git from your favourite CLI, or modify them from any other tool of
               your choice.
             </p>
@@ -99,7 +99,7 @@ const MigrationView = () => {
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
                 Having trouble and need to contact us, or back up to an old version? See our{' '}
-                <ExternalLink className="underline" href="https://github.com/outmanos/insomnium#readme">
+                <ExternalLink className="underline" href="https://github.com/outmanos/restless#readme">
                   docs.
                 </ExternalLink>
               </p>
@@ -108,19 +108,19 @@ const MigrationView = () => {
             <>
               <p className="text-sm">
                 In order to continue with this update, we need to adjust your local projects. This is required to enable
-                managing Insomnia changes using git on the CLI.
+                managing Restless changes using git on the CLI.
               </p>
               <p className="text-sm">
                 Note: This change is backwards compatible, but we strongly recommend{' '}
-                <ExternalLink className="underline" href="https://github.com/outmanos/insomnium#readme">
+                <ExternalLink className="underline" href="https://github.com/outmanos/restless#readme">
                   following these best practices
                 </ExternalLink>{' '}
-                when returning to an earlier version of Insomnia.
+                when returning to an earlier version of Restless.
               </p>
               <p className="text-sm">
                 {isUpdateRunning
                   ? 'Note: Your data is safe and the update only takes seconds.'
-                  : 'Note: This update does NOT affect any ongoing work or pending changes, and only affects how your local Insomnia files are stored.'}
+                  : 'Note: This update does NOT affect any ongoing work or pending changes, and only affects how your local Restless files are stored.'}
               </p>
             </>
           )}
@@ -131,7 +131,7 @@ const MigrationView = () => {
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 to={postMigrationPath}
               >
-                Open Insomnia
+                Open Restless
               </Link>
             ) : isUpdateCompletedWithErrors ? (
               <div className="flex h-[32px] w-full items-center justify-between gap-3">
@@ -147,7 +147,7 @@ const MigrationView = () => {
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   to={postMigrationPath}
                 >
-                  Open Insomnia
+                  Open Restless
                 </Link>
               </div>
             ) : isUpdateErrored ? (
@@ -200,7 +200,7 @@ const Component = () => {
                 <h1 className="text-center text-xl">What's new in v12.6.0</h1>
                 <div className="relative flex h-96 flex-col gap-4 bg-(--color-bg) p-4 text-left">
                   <h1 className="flex justify-between text-lg">
-                    <span>Manage Insomnia changes using git CLI actions</span>
+                    <span>Manage Restless changes using git CLI actions</span>
                   </h1>
                   <div className="flex flex-1 flex-col items-center gap-3 overflow-y-auto">
                     <p className="text-sm text-[#828282]">

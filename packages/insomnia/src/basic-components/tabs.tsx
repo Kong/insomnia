@@ -36,7 +36,7 @@ export const Tabs = ({ items, ...props }: CustomTabsProps<TabItem>) => {
     <RaTabs className="flex data-[orientation=horizontal]:flex-col data-[orientation=vertical]:flex-row" {...props}>
       <TabList
         className="flex border-(--hl-md) data-[orientation=horizontal]:mb-2 data-[orientation=horizontal]:border-b data-[orientation=vertical]:mr-2 data-[orientation=vertical]:flex-col data-[orientation=vertical]:border-r"
-        aria-label="Insomnia tabs"
+        aria-label="Restless tabs"
         items={items}
       >
         {item => (

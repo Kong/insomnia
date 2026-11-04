@@ -20,7 +20,6 @@ import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { StorageRules } from '~/common/organization-storage-rules';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { exportProjectToFile } from '~/ui/components/settings/import-export';
@@ -103,12 +102,6 @@ export const ProjectDropdown: FC<Props> = ({
       name: 'Import',
       icon: 'file-import',
       action: () => {
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.importStarted,
-          properties: {
-            source: 'project',
-          },
-        });
         setImportModalType('file');
       },
     },
@@ -117,12 +110,6 @@ export const ProjectDropdown: FC<Props> = ({
       name: 'Export',
       icon: 'file-export',
       action: async (projectId: string, projectName: string) => {
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.exportStarted,
-          properties: {
-            source: 'project',
-          },
-        });
         const workspacesForProject = await services.workspace.listByParentId(projectId);
         exportProjectToFile(projectName, workspacesForProject);
       },

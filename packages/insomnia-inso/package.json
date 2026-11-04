@@ -1,28 +1,26 @@
 {
   "private": true,
-  "name": "insomnia-inso",
+  "name": "restless-cli",
   "version": "13.3.1",
   "homepage": "https://insomnia.rest",
-  "description": "A CLI for Insomnium",
+  "description": "A CLI for Restless",
   "author": "Outman",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/outmanos/insomnium.git",
+    "url": "git+https://github.com/outmanos/restless.git",
     "directory": "packages/insomnia-inso"
   },
   "bugs": {
-    "url": "https://github.com/outmanos/insomnium/issues"
+    "url": "https://github.com/outmanos/restless/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "inso": "bin/inso"
+    "restless-cli": "bin/inso"
   },
   "pkg": {
-    "scripts": [
-      "../../node_modules/@kong/**/*.js"
-    ]
+    "scripts": []
   },
   "//": [
     "pkg attributes is used to manually include modules in the packing process of pkg",

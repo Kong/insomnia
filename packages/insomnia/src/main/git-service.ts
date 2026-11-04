@@ -77,7 +77,6 @@ import { projectRoutableFSClient } from '../sync/git/project-routable-fs-client'
 import { RepoFileWatcherRegistry, type WatcherNotifier } from '../sync/git/repo-file-watcher';
 import { routableFSClient } from '../sync/git/routable-fs-client';
 import { shallowClone } from '../sync/git/shallow-clone';
-import { AnalyticsEvent, trackAnalyticsEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 import { writeFileWithinDir } from './safe-fs-write';
 
@@ -390,7 +389,7 @@ async function assertBranchOnOrigin(context: string): Promise<void> {
     const branch = await GitVCS.getCurrentBranch();
     throw new Error(
       `Cannot ${context}: branch "${branch}" tracks remote "${trackingRemote}" (${remoteUrl}), ` +
-        `but Insomnia only manages the "origin" remote. ` +
+        `but Restless only manages the "origin" remote. ` +
         `Use the git CLI to ${context} this branch, or run: ` +
         `git branch --set-upstream-to=origin/${branch}`,
     );
@@ -637,7 +636,7 @@ async function getGitFSClient({
     }
     if (!isAvailable) {
       throw new Error(
-        `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Insomnia. Use "Move to another folder" to reconnect it to its new location.`,
+        `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Restless. Use "Move to another folder" to reconnect it to its new location.`,
       );
     }
   }
@@ -1308,7 +1307,7 @@ export async function importLegacyInsomniaFolder({
     };
   } catch (e) {
     return {
-      errors: [`Failed to import legacy Insomnia folder: ${e.message}`],
+      errors: [`Failed to import legacy Restless folder: ${e.message}`],
     };
   }
 }
@@ -1496,33 +1495,19 @@ export const cloneGitRepoAction = async ({
 
       repoSettingsPatch.directory = resolvedDirectory;
     }
-
-    let provider = 'custom';
     if (credentialsId) {
       const credentials = await services.gitCredentials.getById(credentialsId);
       invariant(credentials, 'Git Credentials not found');
       if (!models.gitCredentials.isGitCredentialsV2(credentials)) {
         throw new Error('Invalid Git Credentials');
       }
-      provider = credentials.provider;
     }
 
     if (!projectId) {
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
-        ...vcsEventProperties('git', 'clone'),
-        provider,
-        repoId: repoSettingsPatch._id,
-      });
       repoSettingsPatch.needsFullClone = true;
 
       const inMemoryFsClient = MemClient.createClient();
 
-      let providerName = 'custom';
-      if (repoSettingsPatch.credentialsId) {
-        const credentials = await services.gitCredentials.getById(repoSettingsPatch.credentialsId);
-        invariant(credentials, 'Git Credentials not found');
-        providerName = credentials.provider;
-      }
 
       try {
         await shallowClone({
@@ -1558,7 +1543,7 @@ export const cloneGitRepoAction = async ({
 
         if (existingWorkspaces.length > 0) {
           return {
-            errors: ['The repository being cloned contains workspaces that already exist in Insomnia.'],
+            errors: ['The repository being cloned contains workspaces that already exist in Restless.'],
           };
         }
       }
@@ -1687,11 +1672,6 @@ export const cloneGitRepoAction = async ({
       });
 
       await database.flushChanges(bufferId);
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone'),
-        providerName,
-        repoId: repoSettingsPatch._id,
-      });
 
       return {
         organizationId,
@@ -1711,12 +1691,6 @@ export const cloneGitRepoAction = async ({
         repoSettingsPatch.folderSlug = slug;
       }
     }
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsSyncStart, {
-      ...vcsEventProperties('git', 'clone'),
-      provider,
-      repoId: repoSettingsPatch._id,
-    });
     repoSettingsPatch.needsFullClone = true;
 
     const inMemoryFsClient = MemClient.createClient();
@@ -1771,12 +1745,6 @@ export const cloneGitRepoAction = async ({
       });
       await services.apiSpec.getOrCreateForParentId(workspace._id);
 
-      trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-        ...vcsEventProperties('git', 'clone', 'no directory found'),
-        providerName: provider,
-        repoId: repoSettingsPatch._id,
-      });
-
       workspaceId = workspace._id;
 
       const newRepo = await services.gitRepository.create(repoSettingsPatch);
@@ -1790,11 +1758,6 @@ export const cloneGitRepoAction = async ({
       const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
       if (workspaces.length === 0) {
-        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'no workspaces found'),
-          providerName: provider,
-          repoId: repoSettingsPatch._id,
-        });
 
         return {
           errors: ['No workspaces found in repository'],
@@ -1802,11 +1765,6 @@ export const cloneGitRepoAction = async ({
       }
 
       if (workspaces.length > 1) {
-        trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-          ...vcsEventProperties('git', 'clone', 'multiple workspaces found'),
-          providerName: provider,
-          repoId: repoSettingsPatch._id,
-        });
 
         return {
           errors: ['Multiple workspaces found in repository. Expected one.'],
@@ -1894,11 +1852,6 @@ export const cloneGitRepoAction = async ({
 
     // Flush DB changes
     await database.flushChanges(bufferId);
-    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-      ...vcsEventProperties('git', 'clone'),
-      providerName: provider,
-      repoId: repoSettingsPatch._id,
-    });
 
     invariant(workspaceId, 'Workspace ID is required');
 
@@ -2035,12 +1988,6 @@ export const openGitRepoAction = async ({
     });
 
     await database.flushChanges(bufferId);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsSyncComplete, {
-      ...vcsEventProperties('git', 'clone'),
-      providerName: 'custom',
-      repoId: gitRepository._id,
-    });
 
     return { organizationId, projectId: project._id };
   } catch (e) {
@@ -2394,18 +2341,6 @@ export const commitToGitRepoAction = async ({
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
-    let providerName = 'custom';
-    if (gitRepository?.credentialsId) {
-      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
-      invariant(credentials, 'Git Credentials not found');
-      providerName = credentials.provider;
-    }
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'commit'),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentialsId);
     // update workspace meta with git sync data, use for show unpushed changes on collection card
@@ -2482,7 +2417,7 @@ export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { project
   const result = await importLegacyInsomniaFolder({ fsClient, projectId });
 
   if (result.errors) {
-    console.error('Failed to import legacy Insomnia folder', result.errors);
+    console.error('Failed to import legacy Restless folder', result.errors);
     return;
   }
 
@@ -2523,18 +2458,6 @@ export const commitAndPushToGitRepoAction = async ({
     await GitVCS.setAuthor();
     await GitVCS.commit(message);
 
-    let providerName = 'custom';
-    if (repo.credentialsId) {
-      const credentials = await services.gitCredentials.getById(repo.credentialsId);
-      invariant(credentials, 'Git Credentials not found');
-      providerName = credentials.provider;
-    }
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'commit'),
-      providerName,
-      repoId: repo._id,
-    });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Error while committing changes';
     return { errors: [message] };
@@ -2573,20 +2496,8 @@ export const commitAndPushToGitRepoAction = async ({
   }
 
   const bufferId = await database.bufferChanges();
-  let providerName = 'custom';
-  if (repo.credentialsId) {
-    const credentials = await services.gitCredentials.getById(repo.credentialsId);
-    invariant(credentials, 'Git Credentials not found');
-    providerName = credentials.provider;
-  }
   try {
     await GitVCS.push(repo.credentialsId);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push'),
-      providerName,
-      repoId: repo._id,
-    });
 
     const hasUnpushedChanges = await GitVCS.canPush(repo.credentialsId);
 
@@ -2626,12 +2537,6 @@ export const commitAndPushToGitRepoAction = async ({
       };
     }
     const errorMessage = getErrorMessage(err);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push', errorMessage),
-      providerName,
-      repoId: repo._id,
-    });
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
@@ -2680,22 +2585,11 @@ export const createNewGitBranchAction = async ({
       };
     }
 
-    let providerName = 'custom';
-    if (gitRepository?.credentialsId) {
-      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
-      invariant(credentials, 'Git Credentials not found');
-      providerName = credentials.provider;
-    }
     // Create directly rather than GitVCS.checkout(branch) — the collision
     // check above already ruled out an existing branch of this name, so
     // checkout()'s own re-check (which repeats the same local/synced/remote
     // lookups, including a network round-trip) would just be redundant work.
     await GitVCS.branch(branch, true);
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'create_branch'),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     const { hasUncommittedChanges } = await getGitChanges();
 
@@ -2857,12 +2751,6 @@ export const mergeGitBranch = async ({
   allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
   const gitRepository = await getGitRepository({ workspaceId, projectId });
-  let providerName = 'custom';
-  if (gitRepository?.credentialsId) {
-    const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
-    invariant(credentials, 'Git Credentials not found');
-    providerName = credentials.provider;
-  }
 
   invariant(typeof theirsBranch === 'string', 'Branch name is required');
 
@@ -2882,12 +2770,6 @@ export const mergeGitBranch = async ({
     const gitRepoId = gitRepository._id;
     await repoFileWatcherRegistry.importAllFiles(gitRepoId);
     clearConflictSuppression(gitRepository._id);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'merge_branch'),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
@@ -2912,12 +2794,6 @@ export const mergeGitBranch = async ({
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'merge_branch', errorMessage),
-      providerName,
-      repoId: gitRepository._id,
-    });
-
     return {
       errors: [errorMessage],
     };
@@ -2929,8 +2805,6 @@ export interface DeleteGitBranchResult {
 }
 
 export const deleteGitBranchAction = async ({
-  projectId,
-  workspaceId,
   branch,
 }: {
   projectId: string;
@@ -2938,21 +2812,8 @@ export const deleteGitBranchAction = async ({
   branch: string;
 }): Promise<DeleteGitBranchResult> => {
   try {
-    const repo = await getGitRepository({ workspaceId, projectId });
     await GitVCS.deleteBranch(branch);
 
-    let providerName = 'custom';
-    if (repo.credentialsId) {
-      const credentials = await services.gitCredentials.getById(repo.credentialsId);
-      invariant(credentials, 'Git Credentials not found');
-      providerName = credentials.provider;
-    }
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'delete_branch'),
-      providerName,
-      repoId: repo._id,
-    });
     return {};
   } catch (err) {
     const errorMessage = getErrorMessage(err);
@@ -2975,8 +2836,6 @@ export interface PushToGitRemoteResult {
 export const pushToGitRemoteAction = async ({
   projectId,
   workspaceId,
-  // @TODO - Force is never used
-  force,
 }: {
   projectId: string;
   workspaceId?: string;
@@ -3021,21 +2880,9 @@ export const pushToGitRemoteAction = async ({
     };
   }
 
-  let providerName = 'custom';
-  if (gitRepository?.credentialsId) {
-    const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
-    invariant(credentials, 'Git Credentials not found');
-    providerName = credentials.provider;
-  }
   try {
     const bufferId = await database.bufferChanges();
     await GitVCS.push(gitRepository.credentialsId);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', force ? 'force_push' : 'push'),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     await services.gitRepository.update(gitRepository, {
       hasUnpushedChanges: false,
@@ -3085,12 +2932,6 @@ export const pushToGitRemoteAction = async ({
       };
     }
     const errorMessage = getErrorMessage(err);
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'push', errorMessage),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
@@ -3158,12 +2999,6 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     await repoFileWatcherRegistry.importAllFiles(gitRepository._id, { skipOrphanRemoval: hasBlockedWrites });
     clearConflictSuppression(repoId);
 
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'pull'),
-      providerName: credentials.provider,
-      repoId: gitRepository._id,
-    });
-
     const log = (await GitVCS.log({ depth: 1 })) || [];
 
     const author = log[0] ? log[0].commit.author : null;
@@ -3215,20 +3050,6 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
     }
-
-    const gitRepository = await getGitRepository({ projectId, workspaceId });
-    let providerName = 'custom';
-    if (gitRepository?.credentialsId) {
-      const credentials = await services.gitCredentials.getById(gitRepository.credentialsId);
-      invariant(credentials, 'Git Credentials not found');
-      providerName = credentials.provider;
-    }
-
-    trackAnalyticsEvent(AnalyticsEvent.vcsAction, {
-      ...vcsEventProperties('git', 'pull', errorMessage),
-      providerName,
-      repoId: gitRepository._id,
-    });
 
     return {
       success: false,
@@ -3836,12 +3657,10 @@ async function completeSignInToGitProvider({
   provider,
   code,
   state,
-  isEditing,
 }: {
   provider: GitRemoteProviderType;
   code: string;
   state: string;
-  isEditing?: boolean;
 }) {
   const gitProvider = gitRemoteProviderRegistry.get(provider);
 
@@ -3853,12 +3672,6 @@ async function completeSignInToGitProvider({
 
     if (!result.success) {
       return { errors: [result.error || `Failed to complete the ${provider} OAuth flow`] };
-    }
-
-    if (isEditing) {
-      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationUpdated, { provider });
-    } else {
-      trackAnalyticsEvent(AnalyticsEvent.gitAuthenticationCompleted, { provider });
     }
 
     return {};
@@ -4170,7 +3983,7 @@ export const resolveGitRepoFolderPathAction = async ({
     if (!isAvailable) {
       return {
         errors: [
-          `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Insomnia. Use "Move to another folder" to reconnect it to its new location.`,
+          `Repository folder not found at "${baseDir}". It may have been moved, renamed, or deleted outside Restless. Use "Move to another folder" to reconnect it to its new location.`,
         ],
       };
     }

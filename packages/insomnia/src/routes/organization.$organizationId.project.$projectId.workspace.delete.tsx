@@ -3,7 +3,6 @@ import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.delete';
@@ -21,12 +20,6 @@ async function deleteWorkspace(
   invariant(project, 'Project not found');
 
   await deleteWorkspaceFromLocal(workspace);
-
-  if (workspace.scope === 'mock-server') {
-    window.main.trackAnalyticsEvent({
-      event: AnalyticsEvent.mockDelete,
-    });
-  }
 
   return null;
 }

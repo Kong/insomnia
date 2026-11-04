@@ -15,15 +15,15 @@ export const UnknownFieldsWarningIcon: FC = () => (
       offset={8}
       className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
     >
-      This file includes fields not recognized by this version of Insomnia (i.e. fields that were added by a newer
-      version of Insomnia, or manual file edits). Committing any changes to them from here may break or remove
+      This file includes fields not recognized by this version of Restless (i.e. fields that were added by a newer
+      version of Restless, or manual file edits). Committing any changes to them from here may break or remove
       functionality for your collaborators.
     </Tooltip>
   </TooltipTrigger>
 );
 
 export const UNSUPPORTED_DOC_MESSAGE =
-  'The remote version of this file is not supported by this version of Insomnia. It has been converted to an older format and committing changes will break functionality for your collaborators.';
+  'The remote version of this file is not supported by this version of Restless. It has been converted to an older format and committing changes will break functionality for your collaborators.';
 
 export const UnsupportedDocErrorIcon: FC = () => (
   <TooltipTrigger>

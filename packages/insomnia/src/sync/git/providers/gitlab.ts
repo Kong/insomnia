@@ -349,7 +349,7 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
           const params = new URLSearchParams({ code: url.searchParams.get('code') ?? '', state });
           BrowserWindow.getAllWindows()[0]?.webContents.send(
             'shell:open',
-            `insomnia://oauth/gitlab/authenticate?${params}`,
+            `restless://oauth/gitlab/authenticate?${params}`,
           );
         })
         .catch(error => console.error('GitLab authorization failed:', error));

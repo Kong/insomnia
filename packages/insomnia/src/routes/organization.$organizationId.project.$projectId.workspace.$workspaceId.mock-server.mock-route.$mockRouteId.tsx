@@ -14,7 +14,6 @@ import {
   CONTENT_TYPE_YAML,
   contentTypesMap,
   getMockServiceBinURL,
-  getMockServiceURL,
 } from '~/common/constants';
 import { database as db } from '~/common/database';
 import { upsertMockbin } from '~/common/mock-api';
@@ -22,7 +21,6 @@ import { invariant } from '~/common/utils/invariant';
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -148,7 +146,7 @@ export const MockRouteRoute = () => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
 
   const patchMockRoute = useMockRoutePatcher();
-  const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
+  const mockbinUrl = mockServer.url;
 
   const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -294,13 +292,6 @@ export const MockRouteRoute = () => {
                 mode={mockRoute.mimeType}
                 placeholder="..."
                 noLint={mockRoute.body?.includes('{{') && mockRoute.body?.includes('}}')}
-                updateFilter={filter => {
-                  if (filter) {
-                    window.main.trackAnalyticsEvent({
-                      event: AnalyticsEvent.filterCreatedResponseBody,
-                    });
-                  }
-                }}
               />
             ) : (
               <EmptyStatePane

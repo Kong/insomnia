@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Toolbar } from 'react-aria-components';
 
 import type { McpReadyState } from '~/main/mcp/types';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { PromptButton } from '~/ui/components/base/prompt-button';
 import { useRequestPatcher } from '~/ui/hooks/use-request';
 
@@ -54,7 +53,6 @@ export const McpRootsPanel = ({ request, readyState }: McpRootsPanelProps) => {
           className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise)"
           onClick={() => {
             window.main.mcp.notification.rootListChange({ requestId });
-            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.mcpRequestRootsNotifyClicked });
           }}
           isDisabled={!isConnected}
         >

@@ -2,7 +2,6 @@ import { services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { AnalyticsEvent } from '~/ui/analytics';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
@@ -18,8 +17,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     parentId: workspaceId,
     name,
   });
-
-  window.main.trackAnalyticsEvent({ event: AnalyticsEvent.testSuiteCreate });
 
   return redirect(
     href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId', {

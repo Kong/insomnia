@@ -1,12 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseDeepLinkUrl, resolveImportDeepLink, sanitizeUrlAndExtractOrigin } from '../import-deep-link';
+import { convertInsomniaDeepLink, parseDeepLinkUrl, resolveImportDeepLink, sanitizeUrlAndExtractOrigin } from '../import-deep-link';
+
+describe('convertInsomniaDeepLink', () => {
+  it('converts plugin, theme and import links', () => {
+    expect(convertInsomniaDeepLink('insomnia://plugins/install?name=foo')).toBe('restless://plugins/install?name=foo');
+    expect(convertInsomniaDeepLink('insomnia://plugins/theme?theme=x')).toBe('restless://plugins/theme?theme=x');
+    expect(convertInsomniaDeepLink('insomnia://app/import?uri=x')).toBe('restless://app/import?uri=x');
+  });
+
+  it('rejects every other insomnia link', () => {
+    expect(convertInsomniaDeepLink('insomnia://oauth/github/authenticate?code=x')).toBeNull();
+    expect(convertInsomniaDeepLink('insomnia://app/open-folder?path=/etc')).toBeNull();
+    expect(convertInsomniaDeepLink('restless://app/import')).toBeNull();
+  });
+});
 
 describe('parseDeepLinkUrl', () => {
   it('splits path from decoded params', () => {
-    const parsed = parseDeepLinkUrl('insomnia://app/import?mcp=' + encodeURIComponent('https://example.com/mcp?v=2'));
+    const parsed = parseDeepLinkUrl('restless://app/import?mcp=' + encodeURIComponent('https://example.com/mcp?v=2'));
     expect(parsed).toEqual({
-      urlWithoutParams: 'insomnia://app/import',
+      urlWithoutParams: 'restless://app/import',
       params: { mcp: 'https://example.com/mcp?v=2' },
     });
   });
@@ -15,13 +29,13 @@ describe('parseDeepLinkUrl', () => {
     expect(parseDeepLinkUrl('not-a-url')).toBeNull();
   });
 
-  it('normalizes insomniadev:// only in development', () => {
-    expect(parseDeepLinkUrl('insomniadev://app/import', true)?.urlWithoutParams).toBe('insomnia://app/import');
-    expect(parseDeepLinkUrl('insomniadev://app/import', false)?.urlWithoutParams).toBe('insomniadev://app/import');
+  it('normalizes restlessdev:// only in development', () => {
+    expect(parseDeepLinkUrl('restlessdev://app/import', true)?.urlWithoutParams).toBe('restless://app/import');
+    expect(parseDeepLinkUrl('restlessdev://app/import', false)?.urlWithoutParams).toBe('restlessdev://app/import');
   });
 
   it('preserves param names verbatim', () => {
-    expect(parseDeepLinkUrl('insomnia://app/import?CuRl=x&operationId=listPets&sourceUrl=https://x')?.params).toEqual({
+    expect(parseDeepLinkUrl('restless://app/import?CuRl=x&operationId=listPets&sourceUrl=https://x')?.params).toEqual({
       CuRl: 'x',
       operationId: 'listPets',
       sourceUrl: 'https://x',

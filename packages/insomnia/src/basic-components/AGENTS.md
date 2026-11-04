@@ -1,7 +1,7 @@
 # AGENTS.md — Shared Component Library
 
 This is Insomnia's shared component library (React Aria + Tailwind). See the design/roadmap
-in https://konghq.atlassian.net/wiki/spaces/~712020f987dca73e964e60aafab91ddc862706/pages/5729714608/Insomnia+Shared+Component+Library+Plan
+
 
 ## Conventions
 

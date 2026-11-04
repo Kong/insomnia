@@ -28,9 +28,6 @@ if (typeof window !== 'undefined' && !window.localStorage?.clear) {
   });
 }
 
-process.env.INSOMNIA_API_URL = 'https://api.example.test';
-process.env.INSOMNIA_APP_WEBSITE_URL = 'https://app.example.test';
-process.env.INSOMNIA_MOCK_API_URL = 'https://mock.example.test';
 
 await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
 await initServices(servicesNodeImpl);

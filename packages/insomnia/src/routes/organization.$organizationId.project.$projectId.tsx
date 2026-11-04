@@ -1,5 +1,5 @@
 import { models, services } from 'insomnia-data';
-import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
+import { href, Outlet, redirect, useOutletContext, useRouteLoaderData } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
@@ -59,7 +59,7 @@ export function useProjectLoaderData() {
 }
 
 export interface ProjectRouteContextValue {
-  isKonnectOrganization: boolean;
+  false: boolean;
 }
 
 export function useProjectRouteContext() {
@@ -73,14 +73,7 @@ export function useProjectRouteContext() {
  * project itself.
  */
 const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { organizationId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-  };
-
   const { activeProject } = loaderData;
-
-  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
   const gitRepositoryId =
     activeProject && models.project.isConnectedGitProject(activeProject)
@@ -95,7 +88,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     <GitFileIssuesProvider value={gitFileIssues}>
       <Outlet
         context={{
-          isKonnectOrganization,
         }}
       />
     </GitFileIssuesProvider>

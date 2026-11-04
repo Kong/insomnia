@@ -13,16 +13,6 @@ import { database as db } from '~/common/database';
 // folder-naming logic under test here (and don't play well with the
 // project's lightweight `electron` test mock). Replace it with a no-op that
 // keeps the real, dependency-free `AnalyticsEvent` enum intact.
-vi.mock('~/main/analytics', async () => {
-  const { AnalyticsEvent } = await import('insomnia-analytics');
-  return {
-    AnalyticsEvent,
-    trackAnalyticsEvent: vi.fn(),
-    setCurrentOrganizationId: vi.fn(),
-    trackPageView: vi.fn(),
-  };
-});
-
 // The global test mock stubs isomorphic-git's `clone` as a total no-op (fine
 // for tests that never look inside the result), which leaves no `.git`
 // metadata at all — later calls in the clone flow (setConfig, currentBranch)
