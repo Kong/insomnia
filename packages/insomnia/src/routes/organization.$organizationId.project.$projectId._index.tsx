@@ -325,7 +325,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   </p>
                   {isUserOwner && (
                     <a
-                      href="https://insomnia.rest/pricing/contact"
+                      href="https://github.com/outmanos/insomnium"
                       className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-font) px-4 py-1 text-sm font-semibold text-(--color-bg) ring-1 ring-transparent transition-all hover:bg-(--color-font)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                     >
                       Contact sales

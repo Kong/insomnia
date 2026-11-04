@@ -5,6 +5,6 @@
   "productName": "Insomnium",
   "synopsis": "The local-first API client",
   "githubOrg": "outmanos",
-  "githubRepo": "insomnium-next",
+  "githubRepo": "insomnium",
   "bundlePlugins": [{ "name": "insomnium-plugin-secret-managers" }]
 }

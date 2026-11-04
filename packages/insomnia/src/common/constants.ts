@@ -135,7 +135,7 @@ export const getGitHubGraphQLApiURL = () => env.INSOMNIA_GITHUB_API_URL || `${ge
 export const DEFAULT_BRANCH_NAME = 'master';
 
 // PLUGIN
-export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
+export const PLUGIN_HUB_BASE = 'https://www.npmjs.com/search?q=keywords%3Ainsomnia';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
 
 // UI Stuf

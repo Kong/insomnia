@@ -1376,7 +1376,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               <Dialog className="outline-none">
                 You can now browse Git Sync project files on your local file system and manage changes using your normal
                 Git workflows.{' '}
-                <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                <a href="https://github.com/outmanos/insomnium#readme" className="underline">
                   Learn more ↗
                 </a>
               </Dialog>
@@ -1935,7 +1935,7 @@ const OriginalGitProjectStagingModal: FC<
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
-                        <LearnMoreLink href="https://developer.konghq.com/insomnia/git-sync/#metadata-changes">
+                        <LearnMoreLink href="https://github.com/outmanos/insomnium#readme">
                           Insomnia metadata
                         </LearnMoreLink>
                         , which is determined by the system and cannot be discarded.

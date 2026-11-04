@@ -603,7 +603,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://insomnia.rest/license');
+          shell.openExternal('https://github.com/outmanos/insomnium/blob/main/LICENSE');
         },
       },
     ],

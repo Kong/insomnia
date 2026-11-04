@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Insomnium
+Comment=The local-first API client
+Exec=insomnium %U
+Terminal=false
+Type=Application
+Icon=insomnium
+Categories=Development;
+Keywords=GraphQL;REST;gRPC;SOAP;openAPI;GitOps;
+StartupWMClass=Insomnium

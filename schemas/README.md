@@ -29,7 +29,7 @@ the URL to move forward.
 The schema is published as a raw file on the default branch:
 
 ```
-https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
+https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json
 ```
 
 This is the value of the schema's `$id` and the URL you should reference below. To pin
@@ -57,7 +57,7 @@ and map your Insomnia files to the schema in `.vscode/settings.json`:
 ```jsonc
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json": [
+    "https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json": [
       "**/*.insomnia.yaml",
       ".insomnia/**/*.yml"
     ]
@@ -68,7 +68,7 @@ and map your Insomnia files to the schema in `.vscode/settings.json`:
 You can also point a single file at the schema with an inline modeline comment:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json
 type: collection.insomnia.rest/5.0
 name: My Collection
 ```
@@ -80,7 +80,7 @@ Validate a file with any JSON Schema validator. Example with
 first — e.g. with [`yq`](https://github.com/mikefarah/yq)):
 
 ```bash
-curl -sO https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json
+curl -sO https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json
 yq -o=json '.' my-collection.insomnia.yaml > my-collection.json
 ajv validate --spec=draft2020 -s insomnia.schema.5.1.json -d my-collection.json
 ```
@@ -110,7 +110,7 @@ When asking an agent to author or edit an Insomnia file, give it the schema URL 
 contract to follow and validate against:
 
 > Generate an Insomnia collection that conforms to the JSON Schema at
-> `https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json`.
+> `https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json`.
 > The top-level `type` must be `collection.insomnia.rest/5.0`.
 
 ## Regenerating

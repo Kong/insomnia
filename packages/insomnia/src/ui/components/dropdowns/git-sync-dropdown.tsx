@@ -388,7 +388,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
               capability.{' '}
               <Button
                 className="underline"
-                onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}
+                onPress={() => window.main.openInBrowser('https://github.com/outmanos/insomnium#readme')}
               >
                 Migration Guide
               </Button>

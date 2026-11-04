@@ -469,7 +469,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
               footer={
                 <LearnMoreLink
-                  href={`https://developer.konghq.com/insomnia/storage/${
+                  href={`https://github.com/outmanos/insomnium#readme
                     models.project.isGitProject(project!)
                       ? '#what-happens-if-i-change-a-git-sync-project-into-a-cloud-sync-project'
                       : '#can-i-change-a-local-vault-project-into-a-cloud-sync-project'
@@ -496,7 +496,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               }
               footer={
                 <LearnMoreLink
-                  href={`https://developer.konghq.com/insomnia/storage/${
+                  href={`https://github.com/outmanos/insomnium#readme
                     models.project.isGitProject(project!)
                       ? '#can-i-change-a-git-sync-project-into-a-local-vault-project'
                       : '#can-i-change-a-cloud-sync-project-into-a-local-vault-project'
@@ -516,7 +516,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </Label>
                 <div className="text-xs text-(--hl-xl)">
                   Can be used to manage file changes with git.{' '}
-                  <a href="https://developer.konghq.com/insomnia/git-sync/" className="underline">
+                  <a href="https://github.com/outmanos/insomnium#readme" className="underline">
                     Learn more ↗
                   </a>
                 </div>

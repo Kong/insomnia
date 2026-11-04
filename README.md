@@ -1,6 +1,6 @@
 # Insomnium
 
-[![license](https://img.shields.io/github/license/outmanos/insomnium-next.svg)](LICENSE)
+[![license](https://img.shields.io/github/license/outmanos/insomnium.svg)](LICENSE)
 
 Insomnium is an Unkonged [Insomnia](https://github.com/Kong/insomnia): an offline-first, modern and up to date API client
 for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and Socket.IO. It requires **no account** and has **zero telemetry**.
@@ -30,10 +30,20 @@ The goal is to be feature complete with both Insomnia and Bruno. Progress is tra
 
 Insomnium is an independent fork under the Apache-2.0 license and is not affiliated with Kong.
 
+## Install
+
+### Arch Linux
+
+Install [`insomnium-next-bin`](https://aur.archlinux.org/packages/insomnium-next-bin) from the AUR:
+
+```bash
+yay -S insomnium-next-bin
+```
+
 ## Bugs and Feature Requests
 
 Have a bug or a feature request? First, read the
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/outmanos/insomnium-next/issues).
+[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/outmanos/insomnium/issues).
 
 
 ## Contributing
@@ -82,6 +92,16 @@ sudo apt-get update
 
 # Install font configuration library & support
 sudo apt-get install libfontconfig-dev
+```
+
+</details>
+
+<details>
+<summary>Arch Linux</summary>
+
+```shell
+# Install build tools, libcurl and font configuration library
+sudo pacman -S --needed base-devel curl fontconfig
 ```
 
 </details>

@@ -1,20 +1,20 @@
 {
   "name": "insomnia",
   "version": "13.3.1",
-  "productName": "Insomnia",
+  "productName": "Insomnium",
   "private": true,
   "description": "The Collaborative API Design Tool",
-  "homepage": "https://konghq.com",
+  "homepage": "https://github.com/outmanos/insomnium",
   "bugs": {
-    "url": "https://github.com/outmanos/insomnium-next/issues"
+    "url": "https://github.com/outmanos/insomnium/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/outmanos/insomnium-next.git",
+    "url": "git+https://github.com/outmanos/insomnium.git",
     "directory": "packages/insomnia"
   },
   "license": "Apache-2.0",
-  "author": "Kong <office@konghq.com>",
+  "author": "Outman",
   "main": "src/entry.main.min.js",
   "scripts": {
     "install-x64-native-dependencies": "esr --cache ./scripts/install-x64-native-dependencies.ts",

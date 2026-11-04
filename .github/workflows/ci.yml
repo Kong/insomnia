@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libfontconfig-dev
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test

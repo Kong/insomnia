@@ -288,7 +288,6 @@ export default defineConfig([
       '**/bin/*',
       '**/build/*',
       '**/coverage/*',
-      '**/customSign.js',
       '**/dist/*',
       '**/docker/*',
       '**/electron/index.js',

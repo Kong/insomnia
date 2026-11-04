@@ -113,7 +113,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
         Failed to render. Please report to{' '}
         <button
           className="font-bold underline"
-          onClick={() => window.main.openInBrowser('https://github.com/outmanos/insomnium-next/issues')}
+          onClick={() => window.main.openInBrowser('https://github.com/outmanos/insomnium/issues')}
         >
           our Github Issues
         </button>
@@ -599,7 +599,7 @@ const Root = () => {
                 <>
                   You are running at least one plug-in that may be impacted.{' '}
                   <Button
-                    onClick={() => window.main.openInBrowser('https://github.com/outmanos/insomnium-next/releases')}
+                    onClick={() => window.main.openInBrowser('https://github.com/outmanos/insomnium/releases')}
                     className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
                   >
                     Learn more

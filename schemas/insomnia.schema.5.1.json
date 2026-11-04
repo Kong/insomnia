@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/Kong/insomnia/develop/schemas/insomnia.schema.5.1.json",
+  "$id": "https://raw.githubusercontent.com/outmanos/insomnium/main/schemas/insomnia.schema.5.1.json",
   "title": "Insomnia File",
   "description": "JSON Schema for Insomnia v5.1 files (.insomnia / .yaml). Validates collections, API specs, mock servers, global environments and MCP clients. Generated from the Insomnia source of truth — do not edit by hand.",
   "anyOf": [

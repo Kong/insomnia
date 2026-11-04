@@ -431,7 +431,7 @@ async function _trackStats() {
             status: 'info',
             link: {
               label: "See What's New",
-              url: 'https://insomnia.rest/changelog',
+              url: 'https://github.com/outmanos/insomnium/releases',
               external: true,
             },
           },

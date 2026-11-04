@@ -11,9 +11,9 @@ const config = {
   appId: 'com.insomnium.app',
   protocols: [
     {
-      name: 'Insomnia',
+      name: 'Insomnium',
       role: 'Viewer',
-      schemes: ['insomnia'],
+      schemes: ['insomnium'],
     },
   ],
   files: [
@@ -24,7 +24,7 @@ const config = {
     },
     './package.json',
   ],
-  publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium-next' },
+  publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium' },
   extraResources: [
     {
       from: './bin',
@@ -37,10 +37,7 @@ const config = {
   },
   fileAssociations: [],
   mac: {
-    hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
-    entitlements: './build/static/entitlements.mac.inherit.plist',
-    entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     x64ArchFiles: '*',
     target: [
@@ -57,8 +54,8 @@ const config = {
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
       NSLocalNetworkUsageDescription:
-        'Insomnia needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
-      // Allow Finder "Open With → Insomnia" on folders so they can be opened as Git projects.
+        'Insomnium needs permission to connect to local APIs and development servers such as localhost, 127.0.0.1, or other LAN hosts.',
+      // Allow Finder "Open With → Insomnium" on folders so they can be opened as Git projects.
       CFBundleDocumentTypes: [
         {
           CFBundleTypeName: 'Folder',
@@ -68,8 +65,7 @@ const config = {
         },
       ],
     },
-    // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
-    notarize: true,
+    notarize: false,
     asarUnpack: [
       'node_modules/node-libcurl',
       'node_modules/@node-llama-cpp/mac-arm64-metal',
@@ -119,15 +115,8 @@ const config = {
         target: 'nsis',
         arch: ['x64'],
       },
-      {
-        target: 'squirrel',
-      },
     ],
-    signtoolOptions: {
-      sign: './customSign.js',
-      signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
-    },
-    publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium-next' },
+    publish: { provider: 'github', owner: 'outmanos', repo: 'insomnium' },
     generateUpdatesFilesForAllChannels: true,
   },
   nsis: {
@@ -145,23 +134,19 @@ const config = {
     shortcutName: 'Insomnium',
     deleteAppDataOnUninstall: false,
   },
-  squirrelWindows: {
-    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl: 'https://raw.githubusercontent.com/outmanos/insomnium-next/develop/packages/insomnia/src/icons/icon.ico',
-  },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
   },
   linux: {
     // artifactName: `${BINARY_PREFIX}-\${version}-\${arch}.\${ext}`, // TODO-ARM64 - Re-enable when we have ARM64 build from insomnia-ee
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    executableName: 'insomnia',
-    synopsis: 'The Collaborative API Client and Design Tool',
+    executableName: 'insomnium',
+    synopsis: 'The local-first API client',
     category: 'Development',
     desktop: {
       entry: {
-        Name: 'Insomnia',
-        Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
+        Name: 'Insomnium',
+        Comment: 'The local-first API client',
         Categories: 'Development',
         Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
       },

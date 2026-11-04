@@ -5,7 +5,7 @@ Please follow the [Kind Communication Guidelines](CODE_OF_CONDUCT.md).
 
 ## Using the issue tracker
 
-Use [GitHub Issues](https://github.com/outmanos/insomnium-next/issues) for bugs and feature requests. Search existing
+Use [GitHub Issues](https://github.com/outmanos/insomnium/issues) for bugs and feature requests. Search existing
 and closed issues first. Do not report bugs in this fork to Kong, or bugs in Kong's Insomnia here.
 
 Report security problems privately, as described in the [security policy](SECURITY.md).

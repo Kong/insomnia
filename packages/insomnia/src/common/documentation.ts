@@ -1,5 +1,5 @@
-const insomniaDocs = (slug: string) => `https://docs.insomnia.rest${slug}`;
-const newInsomniaDocs = (slug: string) => `https://developer.konghq.com/insomnia${slug}`;
+const insomniaDocs = (slug: string) => `https://github.com/outmanos/insomnium#readme`;
+const newInsomniaDocs = (slug: string) => `https://github.com/outmanos/insomnium#readme`;
 
 export const docsBase = insomniaDocs('/');
 export const docsGitSync = insomniaDocs('/insomnia/git-sync');

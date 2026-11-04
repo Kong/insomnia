@@ -70,7 +70,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
         <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
         {msg}
         &nbsp;&nbsp;
-        <Link button className="btn btn--clicky margin-top-sm" href="https://insomnia.rest/support">
+        <Link button className="btn btn--clicky margin-top-sm" href="https://github.com/outmanos/insomnium/issues">
           Contact Support
         </Link>
       </div>

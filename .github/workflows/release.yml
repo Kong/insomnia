@@ -1,0 +1,109 @@
+name: Release
+
+# Merging to main publishes a release when the version in packages/insomnia/package.json has no tag yet.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.version.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+      - id: version
+        run: |
+          version="$(node -p "require('./packages/insomnia/package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            targets: --linux tar.gz AppImage deb rpm
+          - os: windows-latest
+            targets: --win nsis --x64
+          - os: macos-latest
+            targets: --mac dmg zip --arm64 -c.mac.identity=null
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libfontconfig-dev rpm
+      - run: npm ci
+      - run: npm run build -w insomnia
+      - run: npx electron-builder build --config electron-builder.config.js ${{ matrix.targets }} --publish never
+        working-directory: packages/insomnia
+        env:
+          USE_HARD_LINKS: 'false'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ runner.os }}
+          if-no-files-found: error
+          path: |
+            packages/insomnia/dist/Insomnium.Core-*
+            packages/insomnia/dist/latest*.yml
+
+  publish:
+    needs: [version, build]
+    if: ${{ !cancelled() && needs.version.outputs.release == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish the platforms that built
+        run: |
+          test -n "$(ls dist)"
+          gh release create "v$VERSION" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+
+  aur:
+    needs: [version, publish]
+    if: ${{ !cancelled() && needs.publish.result == 'success' && vars.PUBLISH_AUR == 'true' }}
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to the AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          pacman -Syu --noconfirm --needed git openssh pacman-contrib
+          useradd -m builder
+          install -d -m 700 -o builder -g builder /home/builder/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > /home/builder/.ssh/aur
+          printf 'Host aur.archlinux.org\n  User aur\n  IdentityFile ~/.ssh/aur\n  StrictHostKeyChecking accept-new\n' > /home/builder/.ssh/config
+          chown builder:builder /home/builder/.ssh/aur /home/builder/.ssh/config
+          chmod 600 /home/builder/.ssh/aur
+          sudo -u builder git config --global user.name 'Outman'
+          sudo -u builder git config --global user.email '23385633+outmanos@users.noreply.github.com'
+          sudo -u builder bash packaging/aur/publish.sh "$VERSION"

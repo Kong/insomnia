@@ -731,7 +731,7 @@ export const NewWorkspaceModal = ({
                         <Icon icon="info-circle" />
                         <span>
                           To learn more about self hosting{' '}
-                          <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className="underline">
+                          <Link href="https://github.com/outmanos/insomnium#readme" className="underline">
                             click here
                           </Link>
                         </span>

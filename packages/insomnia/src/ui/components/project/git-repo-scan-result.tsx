@@ -86,7 +86,7 @@ export const GitRepoScanResult: FC<Props> = ({ initCloneGitRepositoryFetcher, in
             <>
               There are out of date Insomnia project files in the selected repo. By cloning this project, outdated files
               will automatically be migrated to the latest version.{' '}
-              <LearnMoreLink href="https://developer.konghq.com/insomnia/storage/#what-happens-if-my-git-repository-contains-legacy-insomnia-content-when-i-create-a-git-sync-project" />
+              <LearnMoreLink href="https://github.com/outmanos/insomnium#readme" />
             </>
           }
           title="Migrate legacy files?"

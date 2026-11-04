@@ -4,15 +4,15 @@
   "version": "13.3.1",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnium",
-  "author": "Kong <office@konghq.com>",
+  "author": "Outman",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/outmanos/insomnium-next.git",
+    "url": "git+https://github.com/outmanos/insomnium.git",
     "directory": "packages/insomnia-inso"
   },
   "bugs": {
-    "url": "https://github.com/outmanos/insomnium-next/issues"
+    "url": "https://github.com/outmanos/insomnium/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,6 @@
   },
   "pkg": {
     "scripts": [
-      "../../node_modules/@kong/**/*.json",
       "../../node_modules/@kong/**/*.js"
     ]
   },

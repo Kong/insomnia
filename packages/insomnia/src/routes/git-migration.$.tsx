@@ -99,7 +99,7 @@ const MigrationView = () => {
               <p className="text-sm">We hit an unexpected error while updating your file system. Please try again.</p>
               <p className="text-sm text-[#828282]">
                 Having trouble and need to contact us, or back up to an old version? See our{' '}
-                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/upgrade/insomnia-12.6/">
+                <ExternalLink className="underline" href="https://github.com/outmanos/insomnium#readme">
                   docs.
                 </ExternalLink>
               </p>
@@ -112,7 +112,7 @@ const MigrationView = () => {
               </p>
               <p className="text-sm">
                 Note: This change is backwards compatible, but we strongly recommend{' '}
-                <ExternalLink className="underline" href="https://developer.konghq.com/insomnia/upgrade/insomnia-12.6/">
+                <ExternalLink className="underline" href="https://github.com/outmanos/insomnium#readme">
                   following these best practices
                 </ExternalLink>{' '}
                 when returning to an earlier version of Insomnia.

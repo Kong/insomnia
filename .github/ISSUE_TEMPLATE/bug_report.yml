@@ -30,7 +30,7 @@ body:
     attributes:
       label: Is there an existing issue for this?
       options:
-        - label: I have searched the [issue tracker](https://github.com/outmanos/insomnium-next/issues) for this problem.
+        - label: I have searched the [issue tracker](https://github.com/outmanos/insomnium/issues) for this problem.
           required: true
   - type: checkboxes
     attributes:
