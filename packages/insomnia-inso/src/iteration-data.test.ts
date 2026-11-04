@@ -40,6 +40,16 @@ describe('getListFromFileOrUrl()', () => {
     );
   });
 
+  it('throws on structural errors like unterminated quotes', () => {
+    expect(() => getListFromFileOrUrl('a,b\n1,"2\n3,4', 'csv')).toThrow('CSV file can not be parsed');
+  });
+
+  it('keeps __proto__ as an own property', () => {
+    const [row] = getListFromFileOrUrl('__proto__,b\n1,2', 'csv');
+    expect(Object.keys(row)).toEqual(['__proto__', 'b']);
+    expect(row.__proto__).toBe('1');
+  });
+
   it('throws for unsupported file types', () => {
     expect(() => getListFromFileOrUrl('anything', 'yaml')).toThrow('Uploaded file is unsupported yaml');
   });
