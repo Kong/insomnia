@@ -23,7 +23,6 @@ import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import { getOrInheritHeaders } from '../../../network/network';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
 import {
   type GrpcRequestLoaderData,
   useRequestLoaderData,
@@ -31,6 +30,7 @@ import {
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useGitVCSVersion } from '../../hooks/use-vcs-version';
+import type { GrpcRequestState } from '../../utils/grpc';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
