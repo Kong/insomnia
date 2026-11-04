@@ -3,7 +3,7 @@ import type * as InsomniaData from 'insomnia-data';
 import type { BaseModel, ChangeBufferEvent, CollectionWorkspaceChildren, OrganizationData } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { organizationDataKeys, untrackedProjectsKeys, workspaceChildrenKeys } from '~/common/app-data';
+import { localFilesKeys, organizationDataKeys, untrackedProjectsKeys, workspaceChildrenKeys } from '~/common/app-data';
 
 vi.mock('insomnia-data', async () => {
   const actual = await vi.importActual<typeof InsomniaData>('insomnia-data');
@@ -216,6 +216,31 @@ describe('updateAppDataOnDbChanges', () => {
     queryClient.setQueryData(key, { untrackedProjects: [], untrackedWorkspaces: [] });
     updateAppDataOnDbChanges(queryClient, [change('remove', fakeDoc('Workspace', { parentId: 'proj_1' }))]);
     expect(isInvalidated()).toBe(true);
+  });
+
+  it.each<BaseModel['type']>(['Workspace', 'WorkspaceMeta', 'ApiSpec', 'MockServer', 'GitRepository'])(
+    'invalidates every cached local files list when a %s changes',
+    type => {
+      const keys = [localFilesKeys.byProjectId('proj_1'), localFilesKeys.byProjectId('proj_2')];
+      keys.forEach(key => queryClient.setQueryData(key, []));
+
+      updateAppDataOnDbChanges(queryClient, [change('update', fakeDoc(type, { parentId: 'wrk_1' }))]);
+
+      keys.forEach(key => expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true));
+    },
+  );
+
+  it('does not invalidate local files for doc types the project page does not read', () => {
+    const key = localFilesKeys.byProjectId('proj_1');
+    queryClient.setQueryData(key, []);
+
+    updateAppDataOnDbChanges(queryClient, [
+      change('update', fakeDoc('Project', { parentId: 'org_1' })),
+      change('update', fakeDoc('Request', { parentId: 'wrk_1' })),
+      change('update', fakeDoc('Environment', { parentId: 'wrk_1' })),
+    ]);
+
+    expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false);
   });
 
   it('ignores doc types it does not monitor', () => {

@@ -22,6 +22,7 @@ import {
 import { useFetchers, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { localFilesQuery } from '~/common/app-data';
 import {
   DASHBOARD_SORT_ORDERS,
   type DashboardSortOrder,
@@ -29,11 +30,11 @@ import {
   getAppWebsiteBaseURL,
 } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getAllLocalFiles } from '~/common/project';
+import type { InsomniaFile } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
-import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
+import { useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
@@ -51,13 +52,16 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { UnsyncedFileDeleteButton } from '~/ui/components/unsynced-file-delete-button';
+import { dbQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { useActiveProject } from '~/ui/hooks/use-active-project';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useDBQuery } from '~/ui/hooks/use-query';
 import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
@@ -69,22 +73,26 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(projectId, 'Project ID is required');
   invariant(organizationId, 'Organization ID is required');
 
-  const localFiles = await getAllLocalFiles({ projectId });
+  // `fetchQuery` rather than `ensureQueryData`: it serves the cache only while it is fresh, so coming
+  // back to the page after `db.changes` marked the list stale (e.g. edits inside a workspace) waits
+  // for the new list instead of flashing the old one. Not `prefetchQuery` either, which would swallow
+  // a read failure and render the project as empty instead of hitting the error boundary.
+  await dbQueryClient.fetchQuery(localFilesQuery(projectId));
 
-  return {
-    localFiles,
-  };
+  return null;
 }
 
-const Component = ({ loaderData }: Route.ComponentProps) => {
-  const { localFiles } = loaderData;
-  const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
+const noLocalFiles: InsomniaFile[] = [];
+
+const Component = () => {
+  const { activeProject, activeProjectGitRepository } = useActiveProject()!;
   const { isKonnectOrganization } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
   };
   const { projects } = useOrganizationData(organizationId);
+  const { data: localFiles = noLocalFiles } = useDBQuery(localFilesQuery(projectId));
 
   const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId, localFiles);
 

@@ -66,7 +66,7 @@ describe('getInitialEntry', () => {
     const entry = await getInitialEntry();
 
     expect(getKonnectOrganizationEscapeRoute).toHaveBeenCalledWith(KONNECT_ORGANIZATION_ID);
-    expect(entry).toMatchObject({ pathname: `/organization/${REAL_ORGANIZATION_ID}` });
+    expect(entry).toBe(`/organization/${REAL_ORGANIZATION_ID}`);
     // Must not have tried to resolve a route *inside* the now-invisible organization.
     expect(services.project.get).not.toHaveBeenCalled();
   });
@@ -77,7 +77,7 @@ describe('getInitialEntry', () => {
     const entry = await getInitialEntry();
 
     expect(getKonnectOrganizationEscapeRoute).toHaveBeenCalledWith(KONNECT_ORGANIZATION_ID);
-    expect(entry).toMatchObject({ pathname: `/organization/${KONNECT_ORGANIZATION_ID}/project` });
+    expect(entry).toBe(`/organization/${KONNECT_ORGANIZATION_ID}/project`);
   });
 
   it('never consults the escape route for a real organization', async () => {
@@ -90,6 +90,6 @@ describe('getInitialEntry', () => {
     const entry = await getInitialEntry();
 
     expect(getKonnectOrganizationEscapeRoute).not.toHaveBeenCalled();
-    expect(entry).toMatchObject({ pathname: `/organization/${REAL_ORGANIZATION_ID}/project` });
+    expect(entry).toBe(`/organization/${REAL_ORGANIZATION_ID}/project`);
   });
 });
