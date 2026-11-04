@@ -14,20 +14,4 @@ export class TemplateTagPage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

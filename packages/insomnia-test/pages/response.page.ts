@@ -39,7 +39,6 @@ export class ResponsePage extends BasePage {
   }
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
 
-
   /**
    * Assembles the full response state currently shown in the response
    * pane — status bar, preview, headers, console log, streamed events and
@@ -141,9 +140,6 @@ export class ResponsePage extends BasePage {
     return events;
   }
 
-
-
-
   /**
    * Reads all response headers listed on the "headers" tab.
    */
@@ -176,9 +172,6 @@ export class ResponsePage extends BasePage {
     }
     return results;
   }
-
-
-
 
   /**
    * Reads the response's HTTP status tag and splits it into a numeric
@@ -225,10 +218,6 @@ export class ResponsePage extends BasePage {
       throw new Error((await dialog.innerText()).trim());
     }
   }
-
-
-
-
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {
     const tabLocator = this.viewer.tabs.tab(tab);

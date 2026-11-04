@@ -8,8 +8,6 @@ export class CommandPalettePage extends BasePage {
   // The results listbox is a Popover portaled outside the dialog's own DOM
   // subtree, so it can't be scoped under DIALOG.
 
-
-
   /**
    * Waits for the command palette dialog to become visible, confirming
    * it has been opened.
@@ -19,8 +17,4 @@ export class CommandPalettePage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
-
-
-
 }

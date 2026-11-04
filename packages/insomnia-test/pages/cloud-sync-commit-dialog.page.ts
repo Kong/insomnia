@@ -35,7 +35,6 @@ export class CloudSyncCommitDialogPage extends BasePage {
     });
   }
 
-
   /**
    * Stages `name`, fills the commit message, and commits + pushes in one
    * action. Requires `openCommitDialog()` to have been called first.
@@ -49,21 +48,4 @@ export class CloudSyncCommitDialogPage extends BasePage {
       .getByRole("button", { name: "Commit and push" })
       .click();
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

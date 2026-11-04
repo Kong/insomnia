@@ -11,11 +11,7 @@ export class SearchFieldComponent extends BaseComponent {
     return new SearchFieldComponent(page, page.getByRole("searchbox", { name }));
   }
 
-
   async search(text: string): Promise<void> {
     await this.root.fill(text);
   }
-
-
-
 }

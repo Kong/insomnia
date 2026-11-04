@@ -23,6 +23,4 @@ export class GitHistoryDialogPage extends BasePage {
   async navigate(): Promise<void> {
     await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
 }

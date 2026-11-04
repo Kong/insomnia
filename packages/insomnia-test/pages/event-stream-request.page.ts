@@ -1,10 +1,7 @@
-
 import { RequestPage } from "./request.page";
 
 export class EventStreamRequestPage extends RequestPage {
   protected readonly urlBarId = "request-url-bar";
-
-
 
   /**
    * Navigates to the event-stream request pane, then installs a
@@ -31,6 +28,4 @@ export class EventStreamRequestPage extends RequestPage {
       );
     });
   }
-
-
 }

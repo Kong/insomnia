@@ -13,8 +13,6 @@ import { BaseComponent } from "./base.component";
  * `menuitemradio`; both are matched.
  */
 export class DropdownComponent extends BaseComponent {
-
-
   get menu(): Locator {
     return this.page.getByRole("menu");
   }
@@ -34,15 +32,9 @@ export class DropdownComponent extends BaseComponent {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
-
-
   /** Opens the menu and clicks the item called `name`. */
   async select(name: string | RegExp, exact = true): Promise<void> {
     await this.open();
     await this.item(name, exact).click();
   }
-
-
-
-
 }

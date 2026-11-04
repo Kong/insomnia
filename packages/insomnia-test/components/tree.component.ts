@@ -20,8 +20,6 @@ export class TreeComponent extends BaseComponent {
     return this.page.getByTestId("project-navigation-tree-container");
   }
 
-
-
   /**
    * The row for `key` looked up inside the scroll container (the form
    * `WorkspacePage` has always used), rather than inside the grid.
@@ -67,14 +65,4 @@ export class TreeComponent extends BaseComponent {
     await this.pressOnRow(key, "ArrowRight");
     await this.waitForExpanded(key, name, true);
   }
-
-
-
-
-
-
-
-
-
-
 }

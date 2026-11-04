@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
-
 export class InvitePage extends BasePage {
   private readonly dialog = this.page.getByRole("dialog", {
     name: "Invite collaborators",
@@ -20,15 +19,4 @@ export class InvitePage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
-
-
-
-
-
-
-
-
-
-
 }

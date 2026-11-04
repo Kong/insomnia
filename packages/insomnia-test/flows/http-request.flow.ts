@@ -35,7 +35,6 @@ export class HttpRequestFlow extends BaseFlow {
     return this.assertCreated(await this.get(request.name), request.name);
   }
 
-
   /**
    * Reads back an existing request's fields by name or identity, looking
    * it up in the standalone project tree.
@@ -78,10 +77,6 @@ export class HttpRequestFlow extends BaseFlow {
     const data = await responsePage.get();
     return data;
   }
-
-
-
-
 
   private async applyRequestFields(
     page: HttpRequestPage,
@@ -126,5 +121,4 @@ export class HttpRequestFlow extends BaseFlow {
     }
     await this.applyAuthentication(page.auth, authentication);
   }
-
 }

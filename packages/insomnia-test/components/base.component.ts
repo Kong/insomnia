@@ -16,11 +16,7 @@ export abstract class BaseComponent {
     readonly root: Locator,
   ) {}
 
-
-
-
   protected async waitForRendererIdle(): Promise<void> {
     await waitForRendererIdle(this.page);
   }
-
 }

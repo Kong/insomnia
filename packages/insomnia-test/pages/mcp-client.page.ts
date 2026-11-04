@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
 
-
 export class McpClientPage extends RequestPage {
   private readonly FILTER_INPUT =
     'input[aria-label="Server Capability filter"]';
@@ -32,9 +31,6 @@ export class McpClientPage extends RequestPage {
     });
   }
 
-
-
-
   /**
    * Confirms the MCP client request pane has loaded by waiting for the
    * server capability filter input to become visible.
@@ -44,23 +40,4 @@ export class McpClientPage extends RequestPage {
       timeout: DEFAULT_TIMEOUT,
     });
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

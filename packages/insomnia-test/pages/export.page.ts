@@ -12,7 +12,6 @@ export class ExportPage extends BasePage {
     .getByRole("dialog")
     .filter({ hasText: "Select Export Type" });
 
-
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
    * has appeared, whichever this export scope opens first — a Collection
@@ -24,9 +23,4 @@ export class ExportPage extends BasePage {
       this.exportRequestsDialog.or(this.selectExportTypeDialog),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
 }

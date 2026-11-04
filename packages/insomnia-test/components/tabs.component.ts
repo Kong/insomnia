@@ -12,11 +12,4 @@ export class TabsComponent extends BaseComponent {
   tab(key: string): Locator {
     return this.root.locator(`[data-key="${key}"][role="tab"]`);
   }
-
-
-
-
-
-
-
 }

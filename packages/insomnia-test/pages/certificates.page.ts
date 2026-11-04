@@ -25,14 +25,4 @@ export class CertificatesPage extends BasePage {
   async navigate(): Promise<void> {
     await expect(this.dialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
 }

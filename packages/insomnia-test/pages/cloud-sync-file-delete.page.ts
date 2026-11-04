@@ -36,18 +36,12 @@ export class CloudSyncFileDeletePage extends BasePage {
     return this.page.getByTestId("workspace-grid").getByRole("row", { name });
   }
 
-
-
-
   /**
    * Hovers a project dashboard card by its file/collection name.
    */
   async hoverFile(name: string): Promise<void> {
     await this.fileCard(name).hover();
   }
-
-
-
 
   /**
    * Whether `name`'s dashboard card is currently listed at all — true for
@@ -77,7 +71,6 @@ export class CloudSyncFileDeletePage extends BasePage {
   async getFileDeleteDialogText(): Promise<string> {
     return this.deleteFileDialog.innerText();
   }
-
 
   /**
    * Confirms the open "Delete file" dialog, permanently archiving the

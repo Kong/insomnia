@@ -18,15 +18,4 @@ export class CloudSyncBranchesDialogPage extends BasePage {
   async navigate(): Promise<void> {
     await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
-
 }

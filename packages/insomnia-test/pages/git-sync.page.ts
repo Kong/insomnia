@@ -25,14 +25,4 @@ export class GitSyncPage extends BasePage {
       .or(this.syncDropdownButton)
       .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
   }
-
-
-
-
-
-
-
-
-
-
 }

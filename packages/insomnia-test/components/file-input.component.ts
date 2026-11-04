@@ -16,5 +16,4 @@ export class FileInputComponent extends BaseComponent {
   async choose(): Promise<void> {
     await this.button.click();
   }
-
 }

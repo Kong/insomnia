@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
 
-
 export class GrpcRequestPage extends RequestPage {
   private readonly GRPC_METHOD_BUTTON = `${this.PANE} button[aria-label="Select gRPC method"]`;
   private readonly METHOD_SELECT = `${this.PANE} [data-testid="hidden-select-container"] select`;
@@ -19,18 +18,12 @@ export class GrpcRequestPage extends RequestPage {
   protected readonly hasTrailingBlankRow = false;
   protected readonly persistedRowPaths = ["metadata"];
 
-
-
-
-
-
   /**
    * Reads the currently selected gRPC method.
    */
   async getMethod(): Promise<string> {
     return this.page.locator(this.METHOD_SELECT).inputValue();
   }
-
 
   /**
    * Selects a gRPC method from the method picker dropdown, waiting for the
@@ -47,6 +40,4 @@ export class GrpcRequestPage extends RequestPage {
       .dispatchEvent("click");
     await expect(this.page.locator(this.METHOD_SELECT)).toHaveValue(method);
   }
-
-
 }

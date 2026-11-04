@@ -24,7 +24,6 @@ interface KeyValuePair {
   disabled?: boolean;
 }
 
-
 export abstract class RequestPage extends TabPanelPage {
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
@@ -92,8 +91,6 @@ export abstract class RequestPage extends TabPanelPage {
     return `${this.PANE} #${this.urlBarId} + .CodeMirror`;
   }
 
-
-
   /**
    * Clicks the Connect/Disconnect button to open a connection (for
    * streaming request types) and waits for it to flip to "Disconnect".
@@ -146,12 +143,6 @@ export abstract class RequestPage extends TabPanelPage {
     });
   }
 
-
-
-
-
-
-
   /**
    * Reads the currently selected request method from the method button.
    */
@@ -182,8 +173,6 @@ export abstract class RequestPage extends TabPanelPage {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     return urlBar.evaluate((el) => (el as any).CodeMirror.getValue());
   }
-
-
 
   /**
    * Reads back all key/value pairs currently shown on the given tab,
@@ -219,7 +208,6 @@ export abstract class RequestPage extends TabPanelPage {
   async send(): Promise<void> {
     await this.sendButtonLocator.click();
   }
-
 
   /**
    * Sets the request's headers.
@@ -443,7 +431,6 @@ export abstract class RequestPage extends TabPanelPage {
     await this.setKeyValuePairs("params", params);
   }
 
-
   /**
    * Sets the request URL by writing into the URL bar's CodeMirror editor.
    * `setCodeMirrorValue()` itself now handles retrying past a revert
@@ -460,11 +447,4 @@ export abstract class RequestPage extends TabPanelPage {
   async setUrl(url: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.URL_BAR), url);
   }
-
-
-
-
-
-
-
 }

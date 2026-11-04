@@ -46,7 +46,6 @@ export class EnvironmentFlow extends BaseFlow {
     return Object.assign(created, { containerName: environment.name });
   }
 
-
   /**
    * Finds an environment by name/id and reads its variables back.
    */
@@ -108,11 +107,6 @@ export class EnvironmentFlow extends BaseFlow {
       environment.name,
     );
   }
-
-
-
-
-
 
   private async applyVariables(environment: Environment): Promise<Environment> {
     const environmentPage = this.pageManager.environmentPage;

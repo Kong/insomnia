@@ -1,4 +1,3 @@
-
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type {
@@ -20,7 +19,6 @@ const LABEL_TYPES = Object.fromEntries(
   Object.entries(TYPE_LABELS).map(([type, label]) => [label, type]),
 ) as Record<string, EnvironmentKvPairDataType>;
 
-
 export class EnvironmentPage extends BasePage {
   private readonly DELETE_ALL_BUTTON =
     '#pane-one button[aria-label="Delete All"]';
@@ -36,10 +34,6 @@ export class EnvironmentPage extends BasePage {
     'button[aria-label="Select a Project Environment"]';
   // Formerly "Select a Collection Environment".
 
-
-
-
-
   /**
    * Clicks "Delete All" to remove every key/value pair row, but only if
    * the button is enabled (it's disabled when the list is already
@@ -53,9 +47,6 @@ export class EnvironmentPage extends BasePage {
       await button.click();
     }
   }
-
-
-
 
   /**
    * Looks up an environment's stable `data-key` identifier from its
@@ -132,15 +123,6 @@ export class EnvironmentPage extends BasePage {
     await listbox.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
   }
 
-
-
-
-
-
-
-
-
-
   /**
    * Waits for the environment key/value pair listbox to become visible,
    * confirming the environment page is ready for interaction.
@@ -195,7 +177,6 @@ export class EnvironmentPage extends BasePage {
       .click();
   }
 
-
   /**
    * Replaces the entire key/value pair list: deletes all existing rows,
    * then adds each of the given variables one at a time. New rows are
@@ -224,9 +205,6 @@ export class EnvironmentPage extends BasePage {
       }
     }
   }
-
-
-
 
   /**
    * Polls the on-disk environment documents until one lists `variable` in
@@ -262,13 +240,4 @@ export class EnvironmentPage extends BasePage {
       .getByRole("menuitemradio", { name: TYPE_LABELS[type] })
       .click();
   }
-
-
-
-
-
-
-
-
-
 }

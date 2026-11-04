@@ -83,8 +83,4 @@ export class ScriptTabComponent extends TabPanelPage {
       await this.setCodeMirrorValue(editor, value);
     }).toPass({ timeout: 45_000 });
   }
-
-
-
-
 }

@@ -14,7 +14,6 @@ import { BaseComponent } from "./base.component";
  * instead of keystrokes, which is both faster and immune to autocomplete.
  */
 export class CodeEditorComponent extends BaseComponent {
-
   private directCodeMirror?: Locator;
 
   /**
@@ -75,10 +74,6 @@ export class CodeEditorComponent extends BaseComponent {
     }
     return true;
   }
-
-
-
-
 
   /** Types through the keyboard; use only when the key events matter. */
   async type(text: string): Promise<void> {
