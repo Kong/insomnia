@@ -1,6 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { WorkspaceScope } from 'insomnia-data';
-import { models } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -53,6 +52,7 @@ import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
@@ -72,6 +72,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { localFiles } = loaderData;
   const { activeProject, activeProjectGitRepository } = useProjectLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const { isKonnectOrganization } = useProjectRouteContext();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
@@ -235,13 +236,17 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         action: () => createNewCollection('navbar'),
         scope: 'collection',
       },
-      {
-        id: 'new-mcp-client',
-        name: 'MCP Client',
-        scope: 'mcp',
-        icon: ['fac', 'mcp'] as unknown as IconProp,
-        action: () => createNewMcpClient('navbar'),
-      },
+      ...(settings.aiFeatures
+        ? [
+            {
+              id: 'new-mcp-client',
+              name: 'MCP Client',
+              scope: 'mcp' as WorkspaceScope,
+              icon: ['fac', 'mcp'] as unknown as IconProp,
+              action: () => createNewMcpClient('navbar'),
+            },
+          ]
+        : []),
       ...(canCreateMockServer
         ? [
             {
@@ -261,20 +266,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
         scope: 'environment',
       },
     ],
-    [canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
+    [settings.aiFeatures, canCreateMockServer, createNewCollection, createNewGlobalEnvironment, createNewMcpClient, createNewMockServer],
   );
 
-  const isRemoteProjectInconsistent =
-    activeProject && models.project.isRemoteProject(activeProject) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent =
-    activeProject &&
-    !models.project.isRemoteProject(activeProject) &&
-    !models.project.isGitProject(activeProject) &&
-    !storageRules.enableLocalVault;
-  const isGitSyncProjectInconsistent =
-    activeProject && models.project.isGitProject(activeProject) && !storageRules.enableGitSync;
-  const isProjectInconsistent =
-    isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
   return (
     <ErrorBoundary>
@@ -352,23 +346,6 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                 </div>
               </div>
             ) : null}
-            {isProjectInconsistent && (
-              <div className="p-(--padding-md) pb-0">
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-solid border-(--hl-md) bg-(--color-warning)/50 p-(--padding-sm) text-(--color-font-warning)">
-                  <p className="text-base">
-                    <Icon icon="exclamation-triangle" className="mr-2" />
-                    The organization owner mandates that projects must be created and stored using{' '}
-                    {models.project.getProjectStorageTypeLabel(storageRules)}.
-                  </p>
-                  <Button
-                    onPress={() => setIsUpdateProjectModalOpen(true)}
-                    className="flex items-center justify-center rounded-xs border border-solid border-white px-2 py-1"
-                  >
-                    Update
-                  </Button>
-                </div>
-              </div>
-            )}
             {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
             {(filesWithPresence.length > 0 || workspaceListFilter) && (
               <div className="flex w-full max-w-xl justify-between gap-2 p-(--padding-md)">

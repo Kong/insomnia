@@ -1,15 +1,12 @@
 import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useParams } from 'react-router';
 
-import { AI_PLUGIN_NAME } from '~/common/constants';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
-import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -47,18 +44,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const { userSession, settings } = useRootLoaderData()!;
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
-  const { organizationId } = useParams() as { organizationId?: string };
-
-  const [shouldShowAiSettingsTab, setShouldShowAiSettingsTab] = useState(false);
-
-  useEffect(() => {
-    const checkFeatures = async () => {
-      const plugins = await pluginsBridge.getBundlePlugins();
-      const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
-      setShouldShowAiSettingsTab(!!aiPlugin);
-    };
-    checkFeatures();
-  }, [userSession.id, organizationId]);
 
   useImperativeHandle(
     ref,
@@ -156,14 +141,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             >
               Scripting
             </Tab>
-            {shouldShowAiSettingsTab && (
-              <Tab
-                className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
-                id="ai"
-              >
-                AI Settings
-              </Tab>
-            )}
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="ai"
+            >
+              AI
+            </Tab>
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
@@ -232,11 +215,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="scripting">
             <ScriptingSettings />
           </TabPanel>
-          {shouldShowAiSettingsTab && (
-            <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
-              <AISettings />
-            </TabPanel>
-          )}
+          <TabPanel className="relative h-full w-full overflow-y-auto p-4" id="ai">
+            <AISettings />
+          </TabPanel>
         </Tabs>
       </ModalBody>
     </Modal>

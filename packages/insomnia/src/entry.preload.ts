@@ -487,7 +487,6 @@ const env: Window['env'] = {
   ALLOW_UPDATES_IN_DEV: process.env.ALLOW_UPDATES_IN_DEV,
   // OAuth flow URL overrides for dev/staging environments
   OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL,
-  OAUTH_RELAY_URL: process.env.OAUTH_RELAY_URL,
   // Service URL overrides: allow dev/CI to target local or staging backends
   INSOMNIA_API_URL: process.env.INSOMNIA_API_URL,
   INSOMNIA_MOCK_API_URL: process.env.INSOMNIA_MOCK_API_URL,

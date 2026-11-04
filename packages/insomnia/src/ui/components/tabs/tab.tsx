@@ -171,7 +171,7 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
     <GridListItem
       textValue={`tab-${tab.name}`}
       id={tab.id}
-      className="outline-hidden hover:bg-(--hl-xs) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)"
+      className="outline-hidden hover:bg-(--hl-xs) aria-selected:bg-(--color-bg) aria-selected:text-(--color-font) aria-selected:shadow-[inset_0_2px_0_var(--color-surprise)]"
       ref={scrollIntoView}
     >
       {({ isSelected, isHovered }) => (

@@ -132,7 +132,7 @@ export const FirstRequestCreation = ({
     organizationId: string;
     projectId: string;
   };
-  const { userSession } = useRootLoaderData()!;
+  const { settings, userSession } = useRootLoaderData()!;
   // Onboarding state from the backend (standalone resource), loaded on mount.
   // null until a successful fetch resolves it (logged out / failed fetches leave it null).
   // Whether the onboarding fetch has settled (resolved or failed), independent of
@@ -446,12 +446,16 @@ export const FirstRequestCreation = ({
   ];
 
   const exampleItems: QuickStartItem[] = [
-    {
-      id: 'mcp-server',
-      label: 'Connect to Notion MCP',
-      icon: <Icon icon={['fac', 'mcp'] as unknown as IconProp} />,
-      onClick: handleCreateNotionMcpWorkspace,
-    },
+    ...(settings.aiFeatures
+      ? [
+          {
+            id: 'mcp-server',
+            label: 'Connect to Notion MCP',
+            icon: <Icon icon={['fac', 'mcp'] as unknown as IconProp} />,
+            onClick: handleCreateNotionMcpWorkspace,
+          },
+        ]
+      : []),
     {
       id: 'pokemon',
       label: 'List a pokemon',

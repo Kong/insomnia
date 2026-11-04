@@ -160,12 +160,6 @@ export function cannotAccessPathError(accessingPath: string): string {
     : `Insomnia cannot access the file ‘${accessingPath}’. You must specify which directories Insomnia can access with one or more "--dataFolders <directory>".`;
 }
 
-export type DefaultBrowserRedirectParam =
-  | {
-      redirectUrl: string;
-    }
-  | {
-      encryptedRedirectUrl: string;
-      encryptedKey: string;
-      iv: string;
-    };
+export interface DefaultBrowserRedirectParam {
+  redirectUrl: string;
+}

@@ -7,6 +7,8 @@ import { GitHubProvider } from '../github';
 // vitest.config.ts aliases 'electron/main' to 'electron', so both `import { shell }
 // from 'electron'` and `import { net } from 'electron/main'` resolve to this one mock.
 vi.mock('electron', () => ({
+  BrowserWindow: { getAllWindows: () => [] },
+  clipboard: { writeText: vi.fn() },
   shell: { openExternal: vi.fn(() => Promise.resolve()) },
   net: { fetch: vi.fn() },
 }));
@@ -17,6 +19,7 @@ vi.mock('insomnia-data', async importOriginal => {
     ...actual,
     services: {
       ...actual.services,
+      settings: { get: vi.fn(async () => ({ gitHubClientId: 'client-id' })) },
       gitCredentials: {
         getById: vi.fn(),
         create: vi.fn(),
@@ -32,7 +35,16 @@ function mockGithubApi(email = 'user@example.com') {
   return vi.fn((input: unknown) => {
     const url = String(input);
 
-    if (url.includes('/v1/oauth/github-app')) {
+    if (url.includes('/login/device/code')) {
+      return jsonResponse({
+        device_code: 'device',
+        user_code: 'ABCD-1234',
+        verification_uri: 'https://github.com/login/device',
+        expires_in: 900,
+        interval: 0,
+      });
+    }
+    if (url.includes('/login/oauth/access_token')) {
       return jsonResponse({ access_token: 'access-token' });
     }
     if (url.endsWith('/user/emails')) {

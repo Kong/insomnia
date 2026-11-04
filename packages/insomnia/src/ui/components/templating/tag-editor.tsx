@@ -6,7 +6,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
-import { getAppBundlePlugins } from '~/common/constants';
+import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import { shouldShowRevealToggle } from '~/common/templating/confidential-value-policy';
 import { localTemplateTags } from '~/common/templating/local-template-tags';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templating/types';
@@ -31,10 +31,6 @@ const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 const cloudCredentialModelType = models.cloudCredential.type;
-const vaultPluginName =
-  getAppBundlePlugins()
-    .map(p => p.name)
-    .find(name => name.includes('insomnia-plugin-external-vault')) || '@kong/insomnia-plugin-external-vault';
 
 interface Props {
   defaultValue: string;
@@ -123,12 +119,12 @@ export const TagEditor: FC<Props> = props => {
       (requestDocs || []).concat(requestGroupDocs || []),
       props.workspace._id,
     );
-    const vaultPluginData = await services.pluginData.all(vaultPluginName);
+    const vaultPluginData = await services.pluginData.all(EXTERNAL_VAULT_PLUGIN_NAME);
     setState(state => ({ ...state, allDocs, vaultPluginData, loadingDocs: false }));
   }, [props.workspace]);
 
   const refreshVaultPluginData = useCallback(async () => {
-    const vaultPluginData = await services.pluginData.all(vaultPluginName);
+    const vaultPluginData = await services.pluginData.all(EXTERNAL_VAULT_PLUGIN_NAME);
     setState(state => ({ ...state, vaultPluginData }));
   }, []);
 
@@ -220,7 +216,7 @@ export const TagEditor: FC<Props> = props => {
     const tagUniqueId = templateUtils.generateExternalVaultTagId();
     updateArg(tagUniqueId, argIndex);
     return services.pluginData
-      .upsertByKey(vaultPluginName, tagUniqueId, legacyCredentialId)
+      .upsertByKey(EXTERNAL_VAULT_PLUGIN_NAME, tagUniqueId, legacyCredentialId)
       .then(refreshVaultPluginData);
   }
 
@@ -505,7 +501,7 @@ export const TagEditor: FC<Props> = props => {
                     }
                     // Update the link between the unique id and the selected cloud credential id in pluginData
                     return services.pluginData
-                      .upsertByKey(vaultPluginName, strValue, selectedCredentialId)
+                      .upsertByKey(EXTERNAL_VAULT_PLUGIN_NAME, strValue, selectedCredentialId)
                       .then(refreshVaultPluginData)
                       .then(() => updateArg(strValue, argIndex));
                   }

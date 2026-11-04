@@ -147,6 +147,10 @@ export interface Settings {
   fontSize: number;
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
+  aiFeatures: boolean;
+  gitProviderSignIn: boolean;
+  gitHubClientId: string;
+  gitLabClientId: string;
   hasKonnectPat: boolean;
   hideSecretValuesInPreviewAndConsole: boolean;
   konnectOrganizationId: string | null;

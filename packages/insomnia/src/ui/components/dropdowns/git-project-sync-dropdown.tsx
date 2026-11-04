@@ -112,9 +112,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const isNonOriginBranch = branchRemoteInfo ? !branchRemoteInfo.isOrigin : false;
 
-  // Only fetch the repo status if we have a repo uri and we don't have the status already
+  // A folder opened locally has no uri until a remote is added
+  const hasRepository = Boolean(gitRepository?.uri || gitRepository?.directory);
+
+  // Only fetch the repo status if we have a repo and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(
-    gitRepository?.uri &&
+    hasRepository &&
       gitRepository?._id &&
       gitStatusFetcher.state === 'idle' &&
       !gitStatusFetcher.data &&
@@ -343,8 +346,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
 
   const isGitSyncDropdownDisabled = isSyncing || isPulling || isPushing;
 
-  const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
-  const isLoadingGitRepo = Boolean(gitRepository?.uri && !gitRepoDataFetcher.data);
+  const isSynced = Boolean(hasRepository && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
+  const isLoadingGitRepo = Boolean(hasRepository && !gitRepoDataFetcher.data);
 
   const { branches, branch: currentBranch } =
     gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data
@@ -672,7 +675,11 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
       }))
     : [];
 
-  const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
+  const REMOTE_ACTION_IDS = new Set(['pull', 'push', 'fetch']);
+  const visibleBranchActions = gitRepository?.uri
+    ? currentBranchActions
+    : currentBranchActions.filter(action => !REMOTE_ACTION_IDS.has(action.id));
+  const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...visibleBranchActions];
 
   const pendingChangesCount = status?.localChanges ?? 0;
 
@@ -824,7 +831,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                 </Collection>
               </MenuSection>
               <MenuSection>
-                <Collection items={currentBranchActions}>
+                <Collection items={visibleBranchActions}>
                   {item => (
                     <MenuItem
                       className={

@@ -13,7 +13,6 @@ import { GitCredentialSelect } from '~/ui/components/git-credentials/git-credent
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
-import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import {
   getLastCloneParentDir,
   type ProjectData,
@@ -265,11 +264,6 @@ export const ProjectCreateForm: FC<Props> = ({
               storageRules={storageRules}
               value={storageType}
               onChange={v => setStorageType(v as ProjectType)}
-            />
-            <ProjectTypeWarning
-              isGitSyncEnabled={isGitSyncEnabled}
-              storageType={storageType}
-              storageRules={storageRules}
             />
           </Form>
           {storageType === 'git' && isGitSyncEnabled && (

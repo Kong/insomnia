@@ -519,23 +519,27 @@ export const SpecView = ({
           workspaceId,
         }),
     },
-    {
-      id: 'generate-mock-server',
-      name: 'Mock Server',
-      icon: (
-        <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-warning) text-(--color-font-warning)">
-          <Icon className="w-3" icon="server" />
-        </span>
-      ),
-      badge: <Badge icon="sparkles" color="surprise" label="AI" style={{ marginLeft: 'auto', marginRight: '0' }} />,
-      isDisabled: !apiSpec?.contents || !isGenerateMockServersWithAIEnabled,
-      action: () => {
-        window.main.trackAnalyticsEvent({
-          event: AnalyticsEvent.designerGenerateMockClicked,
-        });
-        setNewMockServerModalOpen(true);
-      },
-    },
+    ...(settings.aiFeatures
+      ? [
+          {
+            id: 'generate-mock-server',
+            name: 'Mock Server',
+            icon: (
+              <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-(--color-warning) text-(--color-font-warning)">
+                <Icon className="w-3" icon="server" />
+              </span>
+            ),
+            badge: <Badge icon="sparkles" color="surprise" label="AI" style={{ marginLeft: 'auto', marginRight: '0' }} />,
+            isDisabled: !apiSpec?.contents || !isGenerateMockServersWithAIEnabled,
+            action: () => {
+              window.main.trackAnalyticsEvent({
+                event: AnalyticsEvent.designerGenerateMockClicked,
+              });
+              setNewMockServerModalOpen(true);
+            },
+          },
+        ]
+      : []),
   ];
 
   const specFormatActionList: SpecActionItem[] = [

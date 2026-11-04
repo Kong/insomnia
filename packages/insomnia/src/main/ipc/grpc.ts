@@ -27,11 +27,11 @@ import type {
 } from '@grpc/proto-loader';
 import * as protoLoader from '@grpc/proto-loader';
 import electron, { type IpcMainEvent } from 'electron';
-import * as grpcReflection from 'grpc-reflection-js';
 import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
 import { invariant } from '~/common/utils/invariant';
+import { createReflectionClient } from '~/main/grpc-reflection-client';
 
 import { version } from '../../../package.json';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
@@ -243,9 +243,10 @@ const getMethodsFromReflection = async (
   if (reflectionApi.enabled) {
     return getMethodsFromReflectionServer(reflectionApi, disableUserAgentHeader);
   }
-  const { url } = parseGrpcUrl(host);
-  const client = new grpcReflection.Client(
+  const { url, path } = parseGrpcUrl(host);
+  const client = createReflectionClient(
     url,
+    path,
     getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
     grpcOptions,
     filterDisabledOrInvalidMetaData(metadata),

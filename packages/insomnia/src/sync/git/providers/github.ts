@@ -1,11 +1,10 @@
-import { shell } from 'electron';
+import { BrowserWindow, clipboard, shell } from 'electron';
 import { net } from 'electron/main';
 import type { GitCredentials, GitCredentialsV2 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, PLAYWRIGHT_TEST } from '~/common/constants';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
@@ -26,7 +25,10 @@ const { isGitCredentialsV2 } = models.gitCredentials;
  * Stores states that are generated for the OAuth flow to verify callback legitimacy,
  * mapped to the credential ID being reauthorized (undefined when adding a fresh credential).
  */
-const githubStatesCache = new Map<string, string | undefined>();
+const GITHUB_OAUTH_SCOPES = 'repo read:user user:email';
+const GITHUB_OAUTH_HEADERS = { 'Content-Type': 'application/json', Accept: 'application/json' };
+
+const githubStatesCache = new Map<string, { credentialId?: string; token: Promise<GitHubDeviceToken> }>();
 
 type GitHubCredentialV2 = Extract<GitCredentialsV2, { provider: 'github' }>;
 
@@ -61,8 +63,20 @@ interface GitHubUserApiResponse {
   avatar_url: string;
 }
 
+type GitHubDeviceToken = GitHubOAuthTokenResponse & { access_token: string };
+
+interface GitHubDeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  expires_in: number;
+  interval: number;
+}
+
 interface GitHubOAuthTokenResponse {
-  access_token: string;
+  access_token?: string;
+  error?: string;
+  error_description?: string;
   /** Seconds until access token expires — only present if the token issuer returns it (not always for GitHub). */
   expires_in?: number;
 }
@@ -261,25 +275,49 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
 
   /**
    * Initiate OAuth flow
-   * Opens the browser to GitHub OAuth page and manages state for security
+   * Uses the device flow, which needs no client secret or redirect
    */
   async initiateOAuth(credentialId?: string): Promise<OAuthInitResult> {
     try {
-      if (!getAppWebsiteBaseURL()) {
-        throw new Error('GitHub sign-in is not configured. Use a personal access token instead.');
+      const { gitHubClientId: clientId } = await services.settings.get();
+      if (!clientId) {
+        throw new Error(
+          'GitHub sign-in needs a client ID. Add one in Preferences > Credentials, or use a personal access token.',
+        );
       }
+
+      const response = await net.fetch(`${this.config.webUrl}/login/device/code`, {
+        method: 'POST',
+        body: JSON.stringify({ client_id: clientId, scope: GITHUB_OAUTH_SCOPES }),
+        headers: GITHUB_OAUTH_HEADERS,
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+      const device = (await response.json()) as GitHubDeviceCodeResponse;
+
       const state = v4();
-      githubStatesCache.set(state, credentialId);
-      const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');
+      const token = this.pollForDeviceToken(clientId, device);
+      githubStatesCache.set(state, { credentialId, token });
+      token
+        .then(() => {
+          const params = new URLSearchParams({ code: 'device', state });
+          BrowserWindow.getAllWindows()[0]?.webContents.send(
+            'shell:open',
+            `insomnia://oauth/github/authenticate?${params}`,
+          );
+        })
+        .catch(error => {
+          githubStatesCache.delete(state);
+          console.error('GitHub authorization failed:', error);
+        });
 
-      url.search = new URLSearchParams({
-        state,
-      }).toString();
-
-      await shell.openExternal(url.toString());
+      clipboard.writeText(device.user_code);
+      BrowserWindow.getAllWindows()[0]?.webContents.send('git-device-code', device.user_code);
+      await shell.openExternal(device.verification_uri);
 
       return {
-        authUrl: url.toString(),
+        authUrl: device.verification_uri,
         state,
       };
     } catch (error) {
@@ -289,34 +327,47 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
     }
   }
 
-  /**
-   * Complete OAuth flow
-   * Exchanges code for token and creates/updates credential in database
-   */
-  async completeOAuth(code: string, state: string): Promise<OAuthCompleteResult> {
-    try {
-      // Validate state for security (CSRF protection)
-      if (!PLAYWRIGHT_TEST && !githubStatesCache.has(state)) {
-        throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
-      }
-      const reauthorizingCredentialId = githubStatesCache.get(state);
+  private async pollForDeviceToken(clientId: string, device: GitHubDeviceCodeResponse) {
+    const deadline = Date.now() + device.expires_in * 1000;
+    let intervalMs = device.interval * 1000;
 
-      // Exchange code for access token via Insomnia backend
-      const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
+    while (Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, intervalMs));
+      const response = await net.fetch(`${this.config.webUrl}/login/oauth/access_token`, {
         method: 'POST',
         body: JSON.stringify({
-          code,
+          client_id: clientId,
+          device_code: device.device_code,
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: GITHUB_OAUTH_HEADERS,
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to exchange code for token: ${response.statusText}`);
-      }
-
       const data = (await response.json()) as GitHubOAuthTokenResponse;
+      if (data.access_token) {
+        return data as GitHubDeviceToken;
+      }
+      if (data.error === 'slow_down') {
+        intervalMs += 5000;
+      } else if (data.error !== 'authorization_pending') {
+        throw new Error(data.error_description || data.error || 'Authorization failed');
+      }
+    }
+    throw new Error('The GitHub device code expired');
+  }
+
+  /**
+   * Complete OAuth flow
+   * Reads the device flow token and creates/updates credential in database
+   */
+  async completeOAuth(_code: string, state: string): Promise<OAuthCompleteResult> {
+    try {
+      // Validate state for security (CSRF protection)
+      const pending = githubStatesCache.get(state);
+      if (!pending) {
+        throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
+      }
+      const reauthorizingCredentialId = pending.credentialId;
+      const data = await pending.token;
       const accessTokenExpiresAt = expiresAtFromOAuthExpiresIn(data.expires_in);
       githubStatesCache.delete(state);
 

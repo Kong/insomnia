@@ -6,12 +6,14 @@ import { Icon } from '~/basic-components/icon';
 import type { GitProviderOption } from '~/sync/git/providers/types';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { GitCredentialModal } from '~/ui/components/settings/credentials';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 interface Props {
   providers: GitProviderOption[];
 }
 
 export const GitCredentialSetup = ({ providers }: Props) => {
+  const { settings } = useRootLoaderData()!;
   const [showOAuthModal, setShowOAuthModal] = useState(false);
   const [provider, setProvider] = useState<GitProviderOption>();
   const [showCustomCredentialForm, setShowCustomCredentialForm] = useState(false);
@@ -37,14 +39,16 @@ export const GitCredentialSetup = ({ providers }: Props) => {
         <div className="w-[330px] text-xs font-normal">
           {'Credentials added here will be saved locally and can be managed later in Preferences > Credentials.'}
         </div>
-        <div className="flex gap-2">
-          <Button className="text-xs" onPress={startGithubOAuth} icon={<Icon icon={['fab', 'github']} />}>
-            Login with Github
-          </Button>
-          <Button className="text-xs" onPress={startGitlabOAuth} icon={<Icon icon={['fab', 'gitlab']} />}>
-            Login with Gitlab
-          </Button>
-        </div>
+        {settings.gitProviderSignIn && (
+          <div className="flex gap-2">
+            <Button className="text-xs" onPress={startGithubOAuth} icon={<Icon icon={['fab', 'github']} />}>
+              Login with Github
+            </Button>
+            <Button className="text-xs" onPress={startGitlabOAuth} icon={<Icon icon={['fab', 'gitlab']} />}>
+              Login with Gitlab
+            </Button>
+          </div>
+        )}
         <Button
           variant="text"
           className="text-xs"

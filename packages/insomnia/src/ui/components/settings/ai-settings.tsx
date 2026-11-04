@@ -3,17 +3,19 @@ import { Button, Switch } from 'react-aria-components';
 
 import type { AIFeatureNames, LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Badge } from '~/ui/components/base/badge';
+import { BooleanSetting } from '~/ui/components/settings/boolean-setting';
 import { Claude } from '~/ui/components/settings/llms/claude';
 import { Gemini } from '~/ui/components/settings/llms/gemini';
-import { GGUF } from '~/ui/components/settings/llms/gguf';
 import { OpenAI } from '~/ui/components/settings/llms/openai';
 import { Url } from '~/ui/components/settings/llms/url';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const AISettings = () => {
+  const { settings } = useRootLoaderData()!;
   const { features } = useOrganizationPermissions();
   const [currentLLM, setCurrentLLM] = useState<LLMConfig | null>(null);
-  const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('gguf');
+  const [selectedBackend, setSelectedBackend] = useState<LLMBackend>('claude');
   const [configuredLLMs, setConfiguredLLMs] = useState<LLMConfig[]>([]);
   const [aiFeatures, setAIFeatures] = useState<Record<AIFeatureNames, boolean>>({
     aiMockServers: false,
@@ -101,8 +103,21 @@ export const AISettings = () => {
     }`;
   };
 
+  const enableToggle = (
+    <BooleanSetting
+      label="Enable AI features"
+      setting="aiFeatures"
+      help="Off by default. Turns on Smart commits, AI mock servers and the MCP client."
+    />
+  );
+
+  if (!settings.aiFeatures) {
+    return enableToggle;
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {enableToggle}
       <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-4">
         <div className="flex flex-col gap-4">
           <div>
@@ -226,12 +241,6 @@ export const AISettings = () => {
                 {currentLLM?.backend === 'url' && activeBadge}
               </span>
             </Button>
-            <Button className={getNavStyle('gguf')} onClick={() => setSelectedBackend('gguf')}>
-              <span className="flex items-center gap-2">
-                Local LLM
-                {currentLLM?.backend === 'gguf' && activeBadge}
-              </span>
-            </Button>
           </div>
           {selectedBackend === 'claude' && (
             <Claude
@@ -263,14 +272,6 @@ export const AISettings = () => {
               saveLLMSettings={saveLLMSettings}
               deactivateCurrentLLM={deactivateCurrentLLM}
               configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'url')}
-            />
-          )}
-          {selectedBackend === 'gguf' && (
-            <GGUF
-              currentLLM={currentLLM}
-              saveLLMSettings={saveLLMSettings}
-              deactivateCurrentLLM={deactivateCurrentLLM}
-              configuredLLMs={configuredLLMs.filter(llm => llm.backend === 'gguf')}
             />
           )}
         </div>

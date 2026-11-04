@@ -44,6 +44,7 @@ export const start = async () => {
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
+  await copyFiles('../src/main/ai-provider.mjs', path.join(buildFolder, 'main/ai-provider.mjs'));
   // copy utility process scripts
   await copyFiles(
     '../src/main/mock-generation-process.mjs',

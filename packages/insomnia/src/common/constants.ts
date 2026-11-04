@@ -96,8 +96,9 @@ export enum EditorKeyMap {
 export const MNEMONIC_SYM = isMac ? '' : '&';
 
 // Oauth redirect URL
-export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
-export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
+// Fixed so it can be registered with OAuth providers
+export const OAUTH_LOOPBACK_PORT = 53_682;
+export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || `http://127.0.0.1:${OAUTH_LOOPBACK_PORT}/callback`;
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || '';
@@ -340,8 +341,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   'type-asc': 'Requests First',
 };
 
-export const EXTERNAL_VAULT_PLUGIN_NAME = '@kong/insomnia-plugin-external-vault';
-export const AI_PLUGIN_NAME = '@kong/insomnia-plugin-ai';
+export const EXTERNAL_VAULT_PLUGIN_NAME = 'insomnium-plugin-secret-managers';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 

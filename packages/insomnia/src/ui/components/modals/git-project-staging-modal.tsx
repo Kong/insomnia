@@ -65,6 +65,7 @@ import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { WarningBanner } from '~/ui/components/warning-banner';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { DiffEditor } from '../diff-view-editor';
@@ -1051,7 +1052,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               Commit
             </Button>
 
-            {isNonOriginBranch ? (
+            {!gitRepository?.uri ? null : isNonOriginBranch ? (
               <TooltipTrigger>
                 <Button
                   name="push"
@@ -1567,6 +1568,7 @@ const OriginalGitProjectStagingModal: FC<
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
   const diffChangesFetcherLoad = diffChangesFetcher.load;
 
+  const { settings } = useRootLoaderData()!;
   const { isGenerateCommitMessagesWithAIEnabled } = useAIFeatureStatus();
 
   const [fileToDiff, setFileToDiff] = useState<{ path: string; staged: boolean } | null>(null);
@@ -1814,7 +1816,7 @@ const OriginalGitProjectStagingModal: FC<
                         </Button>
                       </div>
                     )}
-                    {!isGenerateCommitMessagesWithAIEnabled && (
+                    {settings.aiFeatures && !isGenerateCommitMessagesWithAIEnabled && (
                       <div className="flex flex-col gap-3 rounded-sm border border-solid border-(--hl-md) p-3">
                         <h3 className="font-semibold">
                           <Badge icon="sparkles" color="surprise" label="AI" />

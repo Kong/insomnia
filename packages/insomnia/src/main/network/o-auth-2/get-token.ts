@@ -28,8 +28,7 @@ import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
 import { getElectronStorage as getSharedElectronStorage } from '~/main/electron-storage';
 
-import { getOauthRedirectUrl, getOauthRelayUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
-import { type DefaultBrowserRedirectParam } from '../../../common/misc';
+import { getOauthRedirectUrl, OAUTH_WINDOW_SESSION_ID_KEY } from '../../../common/constants';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../../network/authentication';
 import { getBasicAuthHeader } from '../../../network/basic-auth/get-header';
 import {
@@ -111,48 +110,6 @@ export function getOAuthSession(): string {
   return token || initNewOAuthSession();
 }
 
-export const encryptOAuthUrl = (authCodeUrlStr: string) => {
-  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 3072,
-    publicKeyEncoding: { type: 'spki', format: 'pem' },
-    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-  });
-
-  const relayUrl = `${getOauthRelayUrl()}?authCodeUrl=${encodeURIComponent(authCodeUrlStr)}&publicKey=${encodeURIComponent(publicKey)}`;
-
-  const decryptOAuthResult = (result: DefaultBrowserRedirectParam): string => {
-    if ('redirectUrl' in result) {
-      return result.redirectUrl;
-    }
-
-    const { encryptedRedirectUrl, encryptedKey, iv } = result;
-    const aesKey = crypto.privateDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256',
-      },
-      Buffer.from(encryptedKey, 'base64'),
-    );
-    const encryptedBuf = Buffer.from(encryptedRedirectUrl, 'base64');
-    const authTag = encryptedBuf.slice(-16);
-    const ciphertext = encryptedBuf.slice(0, -16);
-    // nosemgrep: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
-    const decipher = crypto.createDecipheriv('aes-256-gcm', aesKey, Buffer.from(iv, 'base64'), {
-      authTagLength: 16,
-    });
-    decipher.setAuthTag(authTag);
-
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
-    return decrypted;
-  };
-
-  return {
-    relayUrl,
-    decryptOAuthResult,
-  };
-};
-
 export interface OAuth2TokenResult {
   token?: OAuth2Token;
   timeline: ResponseTimelineEntry[];
@@ -207,7 +164,11 @@ export const getOAuth2Token = async (
         { name: 'client_id', value: authentication.clientId },
         ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
         ...insertAuthKeyIf('scope', authentication.scope),
-        ...insertAuthKeyIf('state', authentication.state),
+        // The loopback listener rejects callbacks without the matching state
+        ...insertAuthKeyIf(
+          'state',
+          authentication.state || (authentication.useDefaultBrowser ? crypto.randomUUID() : undefined),
+        ),
         ...insertAuthKeyIf('audience', authentication.audience),
         ...(hasNonce
           ? [
@@ -293,14 +254,13 @@ export const getOAuth2Token = async (
       if (authentication.useDefaultBrowser) {
         timeline.push(logEntry(`Opening default browser for authorization: ${authCodeUrl.toString()}`));
         const authCodeUrlStr = authCodeUrl.toString();
-        const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authCodeUrlStr);
 
-        showOAuthAuthorizationModal(relayUrl);
+        showOAuthAuthorizationModal(authCodeUrlStr);
         try {
           const result = await authorizeUserInDefaultBrowser({
-            url: relayUrl,
+            url: authCodeUrlStr,
           });
-          redirectedTo = decryptOAuthResult(result);
+          redirectedTo = result.redirectUrl;
         } catch (err) {
           timeline.push(logEntry(`Default browser authorization error: ${err.message}`));
           throw err;

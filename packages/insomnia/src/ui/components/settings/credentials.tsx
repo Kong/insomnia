@@ -23,6 +23,7 @@ import {
 
 import { Button as BasicButton } from '~/basic-components/button';
 import { Icon } from '~/basic-components/icon';
+import { getOauthRedirectUrl } from '~/common/constants';
 import { useGitCredentialsLoaderFetcher } from '~/routes/git-credentials';
 import { useGitCredentialsDeleteActionFetcher } from '~/routes/git-credentials.$id.delete';
 import { useRelatedProjectsByGitCredentialsIdLoaderFetcher } from '~/routes/git-credentials.$id.related-projects';
@@ -36,7 +37,10 @@ import { Input } from '~/ui/components/base/input';
 import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-custom-credential-form';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { BooleanSetting } from '~/ui/components/settings/boolean-setting';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
+import { TextSetting } from '~/ui/components/settings/text-setting';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -479,6 +483,7 @@ export const GitCredentialModal = ({
 };
 
 const GitCredentialsList = () => {
+  const { settings } = useRootLoaderData()!;
   const [gitCredentialToEdit, setGitCredentialToEdit] = useState<GitCredentialsV2 | null>(null);
   const credentialsFetcher = useGitCredentialsLoaderFetcher();
   const deleteCredentialFetcher = useGitCredentialsDeleteActionFetcher();
@@ -594,7 +599,9 @@ const GitCredentialsList = () => {
                   setIsCredentialModalOpen(true);
                 }
               }}
-              items={(credentialsFetcher.data?.providers || []).filter(p => p.type !== 'native')}
+              items={(credentialsFetcher.data?.providers || []).filter(
+                p => p.type !== 'native' && (settings.gitProviderSignIn || !p.supportsOAuth),
+              )}
               className="max-h-[85vh] min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
             >
               {item => (
@@ -703,9 +710,30 @@ const GitCredentialsList = () => {
 };
 
 export const CredentialsSettings = () => {
+  const { settings } = useRootLoaderData()!;
+
   return (
     <div data-testid="credentials-settings-tab">
       <GitCredentialsList />
+      <BooleanSetting
+        label="Enable GitHub and GitLab sign-in"
+        setting="gitProviderSignIn"
+        help="Off by default. Local Git and access tokens work without it."
+      />
+      {settings.gitProviderSignIn && (
+        <div className="form-row">
+          <TextSetting
+            label="GitHub OAuth client ID"
+            setting="gitHubClientId"
+            help="From your own GitHub OAuth app with device flow enabled. No client secret is needed."
+          />
+          <TextSetting
+            label="GitLab application ID"
+            setting="gitLabClientId"
+            help={`From your own GitLab application, marked non-confidential, with ${getOauthRedirectUrl()} as its redirect URI.`}
+          />
+        </div>
+      )}
       <CloudServiceCredentialList />
     </div>
   );

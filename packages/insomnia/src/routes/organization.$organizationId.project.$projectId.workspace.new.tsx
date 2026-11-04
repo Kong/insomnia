@@ -67,7 +67,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
         const isFeatureEnabled = await window.main.llm.getAIFeatureEnabled('aiMockServers');
         invariant(
           isFeatureEnabled,
-          'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.',
+          'Enable generating mock servers with AI in Preferences → AI to use this feature.',
         );
 
         const validationError = validateMockServerSpec(workspaceData);

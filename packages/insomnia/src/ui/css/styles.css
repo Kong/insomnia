@@ -89,7 +89,7 @@ html {
 
 .grid-template-app-layout {
   grid-template:
-    'Header' 32px
+    'Header' 35px
     'Content' minmax(0, 1fr)
     / minmax(0, 1fr);
 }
@@ -438,9 +438,6 @@ body {
     background: var(--hl-lg) content-box;
   }
 
-  .modal .modal__backdrop {
-    backdrop-filter: blur(2px);
-  }
   .modal .modal__content {
     gap: 14px;
     padding: 20px;

@@ -2540,6 +2540,11 @@ export const commitAndPushToGitRepoAction = async ({
     return { errors: [message] };
   }
 
+  // A local-only repository has nowhere to push
+  if (!repo.uri) {
+    return {};
+  }
+
   let canPush = false;
   try {
     canPush = await GitVCS.canPush(repo.credentialsId);

@@ -22,7 +22,6 @@ import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
-import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
@@ -275,7 +274,6 @@ const Root = () => {
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
-  const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
     key: GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   });
@@ -326,6 +324,15 @@ const Root = () => {
       unsubClearResponseHistory();
     };
   }, [latestInSubmission, revalidate, navigate]);
+
+  useEffect(() => {
+    return window.main.on('git-device-code', (_: IpcRendererEvent, code: string) => {
+      showModal(AlertModal, {
+        title: 'Authorize on GitHub',
+        message: `Enter code ${code} in the browser. It has been copied to your clipboard.`,
+      });
+    });
+  }, []);
 
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
@@ -480,21 +487,6 @@ const Root = () => {
           provider: 'gitlab',
         });
       }
-      if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
-        const { url: redirectUrl, encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
-        if (redirectUrl) {
-          return redirectToDefaultBrowserSubmit({
-            redirectUrl,
-          });
-        } else if (encryptedRedirectUrl && encryptedKey && iv) {
-          return redirectToDefaultBrowserSubmit({
-            encryptedRedirectUrl,
-            encryptedKey,
-            iv,
-          });
-        }
-        return;
-      }
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
@@ -581,8 +573,7 @@ const Root = () => {
     openFolderSubmit,
     organizationId,
     projectId,
-    redirectToDefaultBrowserSubmit,
-  ]);
+    ]);
 
   // Surface failures from adopting an OS-opened folder (e.g. unreadable folder or
   // a collision with an existing project).

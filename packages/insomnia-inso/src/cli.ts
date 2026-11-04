@@ -320,10 +320,10 @@ export const go = (args?: string[]) => {
   program
     .version(version, '-v, --version')
     .description(
-      `A CLI for Insomnia!
-  With this tool you can test, lint, and export your Insomnia data.
-  Inso will try to detect your locally installed Insomnia data.
-  You can also point it at a git repository folder, or an Insomnia export file.
+      `A CLI for Insomnium!
+  With this tool you can test, lint, and export your Insomnium data.
+  Inso will try to detect your locally installed Insomnium data.
+  You can also point it at a git repository folder, or an Insomnium export file.
 
   Examples:
   $ inso run collection

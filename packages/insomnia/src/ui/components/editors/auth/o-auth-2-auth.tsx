@@ -149,7 +149,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       label="Redirect URL"
       property="redirectUrl"
       key="redirectUrl"
-      help={'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'}
+      help={'The callback URL is provided by the app and cannot be modified when authorizing via the default browser.'}
       disabled
       overrideValueWhenDisabled={getOauthRedirectUrl()}
       copyBtn
@@ -161,7 +161,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
       label="Using default browser"
       property="useDefaultBrowser"
       key="useDefaultBrowser"
-      help="You must use the redirect URL provided by Insomnia when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Insomnia."
+      help="You must use the redirect URL provided by the app when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Insomnia."
       onTitle="Click to use built-in browser"
       offTitle="Click to use default browser"
     />

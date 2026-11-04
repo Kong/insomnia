@@ -13,7 +13,6 @@ import { getOauthRedirectUrl } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import type { ConnectionContext } from '~/main/mcp/common';
-import { encryptOAuthUrl } from '~/main/network/o-auth-2/get-token';
 
 export class MCPAuthError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -51,8 +50,8 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
       token_endpoint_auth_method: 'none',
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],
-      client_name: 'Insomnia MCP Client',
-      client_uri: 'https://github.com/Kong/insomnia',
+      client_name: 'Insomnium MCP Client',
+      client_uri: 'https://github.com/outmanos/insomnium-next',
       scope: 'scope' in this.authentication ? this.authentication.scope : undefined,
     };
   }
@@ -170,20 +169,19 @@ export class McpOAuthClientProvider implements OAuthClientProvider {
     if (this.context.abortController.signal.aborted) {
       throw new Error('MCP Connection aborted');
     }
-    const { relayUrl, decryptOAuthResult } = encryptOAuthUrl(authorizationUrl.toString());
+    const url = authorizationUrl.toString();
     BrowserWindow.getAllWindows().forEach(window => {
-      window.webContents.send('show-oauth-authorization-modal', relayUrl);
+      window.webContents.send('show-oauth-authorization-modal', url);
     });
     const shouldOpenDefaultBrowser =
       'grantType' in this.authentication && this.authentication.grantType === 'mcp_auth_flow'
         ? !this.authentication.launchBrowserManually
         : true;
     const redirectedResult = await authorizeUserInDefaultBrowser({
-      url: relayUrl,
+      url,
       openDefaultBrowser: shouldOpenDefaultBrowser,
     });
-    const redirectedTo = decryptOAuthResult(redirectedResult);
-    const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
+    const redirectParams = Object.fromEntries(new URL(redirectedResult.redirectUrl).searchParams);
     const { code: authorizationCode, error, error_description, error_uri } = redirectParams;
     if (error) {
       throw new Error(JSON.stringify({ error, error_description, error_uri }));

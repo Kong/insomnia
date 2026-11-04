@@ -7,8 +7,13 @@ import { GitLabProvider } from '../gitlab';
 // vitest.config.ts aliases 'electron/main' to 'electron', so both `import { shell }
 // from 'electron'` and `import { net } from 'electron/main'` resolve to this one mock.
 vi.mock('electron', () => ({
+  BrowserWindow: { getAllWindows: () => [] },
   shell: { openExternal: vi.fn(() => Promise.resolve()) },
   net: { fetch: vi.fn() },
+}));
+
+vi.mock('~/main/authorize-user-in-default-browser', () => ({
+  authorizeUserInDefaultBrowser: vi.fn(() => new Promise(() => {})),
 }));
 
 vi.mock('insomnia-data', async importOriginal => {
@@ -17,6 +22,7 @@ vi.mock('insomnia-data', async importOriginal => {
     ...actual,
     services: {
       ...actual.services,
+      settings: { get: vi.fn(async () => ({ gitLabClientId: 'client-id' })) },
       gitCredentials: {
         getById: vi.fn(),
         create: vi.fn(),

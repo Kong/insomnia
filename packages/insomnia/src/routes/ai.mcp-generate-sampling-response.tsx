@@ -25,7 +25,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
 
     if (!isFeatureEnabled || !hasActiveLLM) {
       return {
-        error: 'Enable MCP LLM integration with AI in Insomnia Preferences → AI Settings to use this feature.',
+        error: 'Enable MCP LLM integration with AI in Preferences → AI to use this feature.',
       };
     }
 

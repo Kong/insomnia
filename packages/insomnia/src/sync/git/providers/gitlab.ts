@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { shell } from 'electron';
+import { BrowserWindow } from 'electron';
 import { net } from 'electron/main';
 import type { BaseGitCredentialsV2, GitCredentials, GitCredentialsV2 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
@@ -8,11 +8,12 @@ import type { GitAuth } from 'isomorphic-git';
 import { v4 } from 'uuid';
 
 import {
-  getApiBaseURL,
+  getOauthRedirectUrl,
   INSOMNIA_GITLAB_CLIENT_ID,
   INSOMNIA_GITLAB_REDIRECT_URI,
   PLAYWRIGHT_TEST,
 } from '~/common/constants';
+import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { expiresAtFromOAuthExpiresIn } from '~/sync/git/utils';
 
 import type {
@@ -48,40 +49,18 @@ const MAX_RENEWAL_ATTEMPTS = 3;
 const RENEWAL_COOLDOWN_MS = 60_000; // 1 minute cooldown between renewal attempts
 
 /**
- * Get GitLab OAuth configuration
+ * Get GitLab OAuth configuration from a user-registered application
  */
 async function getGitLabConfig() {
-  // Validate and use the environment variables if provided
-  if (
-    (INSOMNIA_GITLAB_REDIRECT_URI && !INSOMNIA_GITLAB_CLIENT_ID) ||
-    (!INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID)
-  ) {
-    throw new Error('GitLab Client ID and Redirect URI must both be set.');
+  const { gitLabClientId } = await services.settings.get();
+  const clientId = gitLabClientId || INSOMNIA_GITLAB_CLIENT_ID;
+  if (!clientId) {
+    throw new Error(
+      'GitLab sign-in needs an application ID. Add one in Preferences > Credentials, or use a personal access token.',
+    );
   }
 
-  if (INSOMNIA_GITLAB_REDIRECT_URI && INSOMNIA_GITLAB_CLIENT_ID) {
-    return {
-      clientId: INSOMNIA_GITLAB_CLIENT_ID,
-      redirectUri: INSOMNIA_GITLAB_REDIRECT_URI,
-    };
-  }
-
-  if (!getApiBaseURL()) {
-    throw new Error('GitLab sign-in is not configured. Use a personal access token instead.');
-  }
-  const configResponse = await net.fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
-    method: 'GET',
-  });
-
-  const { applicationId: clientId, redirectUri } = (await configResponse.json()) as {
-    applicationId: string;
-    redirectUri: string;
-  };
-
-  return {
-    clientId,
-    redirectUri,
-  };
+  return { clientId, redirectUri: INSOMNIA_GITLAB_REDIRECT_URI || getOauthRedirectUrl() };
 }
 
 /**
@@ -364,7 +343,16 @@ export class GitLabProvider implements GitRemoteProvider<GitLabProviderConfig> {
         code_challenge_method: 'S256',
       }).toString();
 
-      await shell.openExternal(gitlabURL.toString());
+      authorizeUserInDefaultBrowser({ url: gitlabURL.toString() })
+        .then(({ redirectUrl }) => {
+          const url = new URL(redirectUrl);
+          const params = new URLSearchParams({ code: url.searchParams.get('code') ?? '', state });
+          BrowserWindow.getAllWindows()[0]?.webContents.send(
+            'shell:open',
+            `insomnia://oauth/gitlab/authenticate?${params}`,
+          );
+        })
+        .catch(error => console.error('GitLab authorization failed:', error));
 
       return {
         authUrl: gitlabURL.toString(),

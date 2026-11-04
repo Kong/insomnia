@@ -127,6 +127,10 @@ export const getCurrentConfig = async (): Promise<LLMConfig | null> => {
 };
 
 export const getAIFeatureEnabled = async (feature: AIFeatureNames): Promise<boolean> => {
+  const { aiFeatures } = await services.settings.get();
+  if (!aiFeatures) {
+    return false;
+  }
   const data = await services.pluginData.getByKey(LLM_PLUGIN_NAME, `feature.${feature}`);
   return data?.value === 'true';
 };

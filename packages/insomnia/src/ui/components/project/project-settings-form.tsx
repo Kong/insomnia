@@ -33,7 +33,6 @@ import { GitOauthAuthBanner } from '~/ui/components/git/git-oauth-auth-banner';
 import { GitRepoForm } from '~/ui/components/project/git-repo-form';
 import { GitRepoScanResult } from '~/ui/components/project/git-repo-scan-result';
 import { ProjectTypeSelect } from '~/ui/components/project/project-type-select';
-import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning';
 import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
@@ -452,11 +451,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 onChange={v => setStorageType(v as 'local' | 'remote' | 'git')}
               />
             )}
-            <ProjectTypeWarning
-              isGitSyncEnabled={isGitSyncEnabled}
-              storageType={storageType}
-              storageRules={storageRules}
-            />
           </Form>
 
           {showSwitchBanner && storageType === 'remote' && (

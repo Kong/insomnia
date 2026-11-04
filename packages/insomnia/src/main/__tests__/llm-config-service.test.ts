@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearActiveBackend,
   getActiveBackend,
+  getAIFeatureEnabled,
   getAllConfigurations,
   getBackendConfig,
   setActiveBackend,
@@ -13,6 +14,7 @@ import {
 vi.mock('insomnia-data', async () => {
   return {
     services: {
+      settings: { get: vi.fn(async () => ({ aiFeatures: true })) },
       pluginData: {
         getByKey: vi.fn(),
         upsertByKey: vi.fn(),
@@ -36,6 +38,13 @@ vi.mock('electron', () => ({
 const mockPluginData = (key: string, value: string) => ({ key, value }) as any;
 
 describe('llm-config-service', () => {
+  it('reports every AI feature as off while the master switch is off', async () => {
+    vi.mocked(services.settings.get).mockResolvedValueOnce({ aiFeatures: false } as never);
+
+    await expect(getAIFeatureEnabled('aiCommitMessages')).resolves.toBe(false);
+    expect(services.pluginData.getByKey).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(services.pluginData.all).mockResolvedValue([]);

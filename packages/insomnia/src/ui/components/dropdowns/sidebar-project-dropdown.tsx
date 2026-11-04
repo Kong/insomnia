@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
-import { models, services } from 'insomnia-data';
+import { services } from 'insomnia-data';
 import React, { type FC, Fragment, useState } from 'react';
 import {
   Button,
@@ -12,8 +12,6 @@ import {
   MenuTrigger,
   Popover,
   SubmenuTrigger,
-  Tooltip,
-  TooltipTrigger,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
@@ -26,6 +24,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { exportProjectToFile } from '~/ui/components/settings/import-export';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { Icon } from '../icon';
 import { ProjectModal } from '../modals/project-modal';
@@ -83,13 +82,9 @@ export const ProjectDropdown: FC<Props> = ({
     isOpen: false,
   });
   const { workspaceId } = useParams() as { workspaceId?: string };
+  const { settings } = useRootLoaderData()!;
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
 
-  const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent =
-    !models.project.isRemoteProject(project) && !models.project.isGitProject(project) && !storageRules.enableLocalVault;
-  const isGitProjectInconsistent = models.project.isGitProject(project) && !storageRules.enableGitSync;
-  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
   const createNewCollection = () =>
     setNewWorkspaceModalState({ scope: 'collection', isOpen: true, source: 'sidebar-dropdown' });
@@ -164,6 +159,7 @@ export const ProjectDropdown: FC<Props> = ({
     createMockServer: createNewMockServer,
     createEnvironment: createNewGlobalEnvironment,
     canCreateMockServer: Boolean(canCreateMockServer),
+    canCreateMcpClient: settings.aiFeatures,
   });
 
   const projectDropdownActions: {
@@ -196,23 +192,6 @@ export const ProjectDropdown: FC<Props> = ({
 
   return (
     <Fragment>
-      {isProjectInconsistent && (
-        <TooltipTrigger>
-          <Button
-            onPress={() => setIsProjectSettingsModalOpen(true)}
-            className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-80 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
-          >
-            <Icon icon="triangle-exclamation" color="var(--color-warning)" />
-          </Button>
-          <Tooltip
-            placement="top"
-            offset={4}
-            className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-          >
-            {`This project type is not allowed by the organization owner. You can manually convert it to use ${models.project.getProjectStorageTypeLabel(storageRules)}.`}
-          </Tooltip>
-        </TooltipTrigger>
-      )}
       {project.hasUncommittedOrUnpushedChanges && (
         <div className="flex aspect-square h-6 shrink-0 items-center justify-center">
           <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />

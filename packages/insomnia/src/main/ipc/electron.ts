@@ -288,6 +288,7 @@ export type RendererOnChannels =
   | 'grpc.start'
   | 'grpc.status'
   | 'loggedIn'
+  | 'git-device-code'
   | 'mainWindowFocusChange'
   | 'nunjucks-context-menu-command'
   | 'nunjucks-context-menu-command'

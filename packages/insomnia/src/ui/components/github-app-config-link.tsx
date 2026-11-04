@@ -2,8 +2,6 @@ import type { GitRepository } from 'insomnia-data';
 
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
 
-import { getAppWebsiteBaseURL } from '../../common/constants';
-
 interface ConfigLinkProps {
   small?: boolean;
   gitRepository?: GitRepository | null;
@@ -29,7 +27,7 @@ export const ConfigLink = ({ small = false, gitRepository = null, errors = [] }:
     show && (
       <p className={`text-${small ? 'sm' : 'md'}`}>
         You may need to{' '}
-        <a className="text-purple-500 underline" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>
+        <a className="text-purple-500 underline" href="https://github.com/settings/applications">
           Configure the App <i className="fa-solid fa-up-right-from-square" />
         </a>
       </p>

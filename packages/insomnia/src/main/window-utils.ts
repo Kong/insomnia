@@ -22,6 +22,7 @@ import { isLinux, isMac } from 'insomnia-data/common';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
 
+import appConfig from '../../config/config.json';
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { docsBase } from '../common/documentation';
@@ -33,7 +34,7 @@ import { hasTitleBarOverlay, setAppMenu } from './title-bar';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
-const TITLE_BAR_HEIGHT = 32;
+const TITLE_BAR_HEIGHT = 35;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -332,20 +333,43 @@ export function createWindow(): ElectronBrowserWindow {
     mainBrowserWindow.webContents.send('mainWindowFocusChange', false);
   });
 
+  const openFolderItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Open Folder…`,
+    click: async () => {
+      const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
+      const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        title: 'Open Folder',
+        buttonLabel: 'Open',
+        properties: ['openDirectory', 'createDirectory'],
+      });
+      if (!canceled && filePaths[0]) {
+        window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
+      }
+    },
+  };
+
+  const preferencesItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Preferences`,
+    click: () => {
+      trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
+      mainBrowserWindow.webContents?.send('toggle-preferences');
+    },
+  };
+  const changelogItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Changelog`,
+    click: () => shell.openExternal(`https://github.com/${appConfig.githubOrg}/${appConfig.githubRepo}/releases`),
+  };
+  const quitItem: MenuItemConstructorOptions = {
+    label: `${MNEMONIC_SYM}Quit`,
+    accelerator: 'CmdOrCtrl+Q',
+    click: () => app.quit(),
+  };
+
   const applicationMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
-      {
-        label: `${MNEMONIC_SYM}Preferences`,
-        click: () => {
-          trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
-          mainBrowserWindow.webContents?.send('toggle-preferences');
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Changelog`,
-        click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
-      },
+      preferencesItem,
+      changelogItem,
       {
         type: 'separator',
       },
@@ -359,11 +383,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         type: 'separator',
       },
-      {
-        label: `${MNEMONIC_SYM}Quit`,
-        accelerator: 'CmdOrCtrl+Q',
-        click: () => app.quit(),
-      },
+      quitItem,
     ],
   };
 
@@ -729,26 +749,6 @@ export function createWindow(): ElectronBrowserWindow {
           pluginWindow ? destroyPluginWindow() : createPluginWindow();
         },
       },
-      {
-        // Simulates the OS "Open folder in Insomnia" flow without a packaged build
-        // (Finder association / protocol handler only register for an installed app).
-        label: `${MNEMONIC_SYM}Open folder in Insomnia…`,
-        click: async () => {
-          const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
-          if (!window) {
-            return;
-          }
-          const { canceled, filePaths } = await dialog.showOpenDialog(window, {
-            title: 'Open folder in Insomnia',
-            buttonLabel: 'Open',
-            properties: ['openDirectory'],
-          });
-          if (canceled || !filePaths[0]) {
-            return;
-          }
-          window.webContents.send('shell:open', `insomnia://app/open-folder?path=${encodeURIComponent(filePaths[0])}`);
-        },
-      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {
@@ -782,7 +782,7 @@ export function createWindow(): ElectronBrowserWindow {
   };
   const template: MenuItemConstructorOptions[] = [];
   template.push(
-    applicationMenu,
+    ...(isMac ? [applicationMenu] : []),
     {
       label: `${MNEMONIC_SYM}File`,
       submenu: [
@@ -792,6 +792,11 @@ export function createWindow(): ElectronBrowserWindow {
             createWindow();
           },
         },
+        openFolderItem,
+        // macOS keeps these in the application menu
+        ...(isMac
+          ? []
+          : [{ type: 'separator' } as const, preferencesItem, changelogItem, { type: 'separator' } as const, quitItem]),
       ],
     },
     editMenu,

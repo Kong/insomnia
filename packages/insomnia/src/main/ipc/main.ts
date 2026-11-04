@@ -2,6 +2,7 @@ import fs, { mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import { pathToFileURL } from 'node:url';
 import zlib from 'node:zlib';
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
@@ -23,7 +24,7 @@ import { services } from 'insomnia-data';
 import { runTests } from 'insomnia-testing/src/run/run';
 
 import * as crypt from '~/common/account/crypt';
-import { AI_PLUGIN_NAME, type UpdateStatus } from '~/common/constants';
+import type { UpdateStatus } from '~/common/constants';
 import { cannotAccessPathError } from '~/common/misc';
 import type { PluginsBridgeAPI } from '~/common/plugins/bridge-types';
 import type {
@@ -102,6 +103,8 @@ export const openInBrowser = (href: string) => {
     shell.openExternal(href);
   }
 };
+
+const getAiProviderUrl = () => pathToFileURL(path.join(__dirname, 'main/ai-provider.mjs')).href;
 
 const sanitizeModelConfigForRequest = (modelConfig: ModelConfig | null | undefined): ModelConfig | null => {
   if (!modelConfig) {
@@ -784,7 +787,7 @@ export function registerMainHandlers() {
           modelConfig: sanitizeModelConfigForRequest(modelConfig as ModelConfig),
           useDynamicMockResponses,
           mockServerAdditionalFiles,
-          aiPluginName: AI_PLUGIN_NAME,
+          aiPluginName: getAiProviderUrl(),
         });
       });
     },
@@ -834,7 +837,7 @@ export function registerMainHandlers() {
       process.postMessage({
         input,
         modelConfig: sanitizeModelConfigForRequest(modelConfig),
-        aiPluginName: AI_PLUGIN_NAME,
+        aiPluginName: getAiProviderUrl(),
       });
     });
   });
@@ -896,7 +899,7 @@ export function registerMainHandlers() {
         messages,
         systemPrompt,
         modelConfig: sanitizeModelConfigForRequest(mergedModelConfig as ModelConfig),
-        aiPluginName: AI_PLUGIN_NAME,
+        aiPluginName: getAiProviderUrl(),
       });
     });
   });

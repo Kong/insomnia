@@ -124,16 +124,6 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                   }
                   setError(null);
                   setSubmitting(true);
-                  const parsedUrl = new URL(url);
-                  const params = Object.fromEntries(parsedUrl.searchParams);
-                  const { encryptedUrl: encryptedRedirectUrl, encryptedKey, iv } = params;
-                  if (encryptedRedirectUrl && encryptedKey && iv) {
-                    return redirectToDefaultBrowserSubmit({
-                      encryptedRedirectUrl,
-                      encryptedKey,
-                      iv,
-                    });
-                  }
                   return redirectToDefaultBrowserSubmit({
                     redirectUrl: url,
                   });

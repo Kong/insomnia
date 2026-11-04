@@ -26,21 +26,14 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
       type: 'local',
       icon: 'laptop',
       name: 'Local Vault',
-      description: 'For working alone with data stored on your machine.',
+      description: 'Stored in the app on this machine.',
       isDisabled: !storageRules.enableLocalVault,
-    },
-    {
-      type: 'remote',
-      icon: 'globe',
-      name: 'Cloud Sync',
-      description: 'Out of the box collaboration with data stored securely to the cloud.',
-      isDisabled: !storageRules.enableCloudSync,
     },
     {
       type: 'git',
       icon: ['fab', 'git-alt'],
       name: 'Git Sync',
-      description: 'Collaborate with others securely using your existing git provider.',
+      description: 'Plain files in a folder you control. Adding a remote is optional.',
       isDisabled: !storageRules.enableGitSync,
     },
   ];

@@ -28,6 +28,7 @@ import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizatio
 import { Badge } from '~/ui/components/base/badge';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { AnalyticsEvent } from '../../analytics';
@@ -75,6 +76,7 @@ export const NewWorkspaceModal = ({
   const isSelfHostedMockDisabled = !storageRules.enableLocalVault && !storageRules.enableGitSync;
   const isCloudMockDisabled = !project.remoteId || !storageRules.enableCloudSync;
 
+  const { settings } = useRootLoaderData()!;
   const { isGenerateMockServersWithAIEnabled } = useAIFeatureStatus();
 
   const [workspaceData, setWorkspaceData] = useState<{
@@ -412,23 +414,25 @@ export const NewWorkspaceModal = ({
                                 : 'Create an empty mock server.'}
                             </p>
                           </Radio>
-                          <Radio
-                            value="ai"
-                            isDisabled={!isGenerateMockServersWithAIEnabled}
-                            className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Heading className="text-lg font-bold">
-                                <Badge color="surprise" icon="sparkles" label="AI" />
-                                <span>Auto Generate</span>
-                              </Heading>
-                            </div>
-                            <p className="pt-2">
-                              {!isGenerateMockServersWithAIEnabled
-                                ? 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'
-                                : 'Automatically generate a mock server from an OpenAPI spec.'}
-                            </p>
-                          </Radio>
+                          {settings.aiFeatures && (
+                            <Radio
+                              value="ai"
+                              isDisabled={!isGenerateMockServersWithAIEnabled}
+                              className="flex-1 rounded-sm border border-solid border-(--hl-md) p-4 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-disabled:opacity-25 data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Heading className="text-lg font-bold">
+                                  <Badge color="surprise" icon="sparkles" label="AI" />
+                                  <span>Auto Generate</span>
+                                </Heading>
+                              </div>
+                              <p className="pt-2">
+                                {!isGenerateMockServersWithAIEnabled
+                                  ? 'Enable generating mock servers with AI in Insomnia Preferences → AI Settings to use this feature.'
+                                  : 'Automatically generate a mock server from an OpenAPI spec.'}
+                              </p>
+                            </Radio>
+                          )}
                         </div>
                       </RadioGroup>
 

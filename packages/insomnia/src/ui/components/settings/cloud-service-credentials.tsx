@@ -39,11 +39,6 @@ const createCredentialItemList: createCredentialItemType[] = [
     name: getProviderDisplayName('hashicorp'),
     icon: <SvgIcon icon="hashicorp" className="ml-1" />,
   },
-  {
-    id: 'azure',
-    name: getProviderDisplayName('azure'),
-    icon: <SvgIcon icon="azure-logo" className="ml-1" />,
-  },
 ];
 const buttonClassName =
   'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-(--hl-sm) rounded-xs text-(--color-font) hover:bg-(--hl-xs) transition-all text-sm py-1 px-2';

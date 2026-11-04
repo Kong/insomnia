@@ -3,7 +3,7 @@
   "name": "insomnia-inso",
   "version": "13.3.1",
   "homepage": "https://insomnia.rest",
-  "description": "A CLI for Insomnia - The Collaborative API Design Tool",
+  "description": "A CLI for Insomnium",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {

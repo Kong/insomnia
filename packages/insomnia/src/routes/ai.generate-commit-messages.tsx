@@ -15,7 +15,7 @@ export async function clientAction(args: Route.ClientActionArgs) {
 
     if (!isFeatureEnabled || !hasActiveLLM) {
       return {
-        error: 'Enable generating commit messages with AI in Insomnia Preferences → AI Settings to use this feature.',
+        error: 'Enable generating commit messages with AI in Preferences → AI to use this feature.',
       };
     }
 

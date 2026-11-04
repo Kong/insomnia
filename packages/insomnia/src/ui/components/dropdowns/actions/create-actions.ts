@@ -17,12 +17,14 @@ export const createWorkspaceActionItems = ({
   createMockServer,
   createEnvironment,
   canCreateMockServer,
+  canCreateMcpClient,
 }: {
   createCollection: () => void;
   createMcpClient: () => void;
   createMockServer: () => void;
   createEnvironment: () => void;
   canCreateMockServer: boolean;
+  canCreateMcpClient: boolean;
 }): ActionItem[] => {
   return [
     {
@@ -32,13 +34,17 @@ export const createWorkspaceActionItems = ({
       icon: 'bars',
       action: createCollection,
     },
-    {
-      id: 'new-mcp-client',
-      name: 'MCP Client',
-      scope: 'mcp',
-      icon: ['fac', 'mcp'] as unknown as IconProp,
-      action: createMcpClient,
-    },
+    ...(canCreateMcpClient
+      ? [
+          {
+            id: 'new-mcp-client',
+            name: 'MCP Client',
+            scope: 'mcp' as WorkspaceScope,
+            icon: ['fac', 'mcp'] as unknown as IconProp,
+            action: createMcpClient,
+          },
+        ]
+      : []),
     ...(canCreateMockServer
       ? [
           {

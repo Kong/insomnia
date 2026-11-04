@@ -321,7 +321,7 @@ describe('getPluginCommonContext', () => {
 });
 
 describe('executePluginMainAction', () => {
-  const bundlePluginName = '@kong/insomnia-plugin-external-vault';
+  const bundlePluginName = 'insomnium-plugin-secret-managers';
 
   afterEach(() => {
     vi.clearAllMocks();
