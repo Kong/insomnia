@@ -1,4 +1,5 @@
 import { ResponseViewerComponent } from '@package/components/response-viewer.component';
+import { TabsComponent } from "@package/components/tabs.component";
 import { RequestState } from '@package/enums/request-state';
 import type { ResponseExportOption } from '@package/enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
@@ -285,7 +286,7 @@ export class ResponsePage extends BasePage {
    * wait on `RequestPage.send()`.
    */
   async navigate(): Promise<void> {
-    const previewTab = this.page.locator(`${this.PANE} [data-key="timeline"][role="tab"]`);
+    const previewTab = new TabsComponent(this.page, this.page.locator(this.PANE)).tab("timeline");
     const dialog = this.page.getByRole('dialog').first();
     await previewTab.or(dialog).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     if (await dialog.isVisible()) {

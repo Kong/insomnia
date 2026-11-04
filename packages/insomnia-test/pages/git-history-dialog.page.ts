@@ -1,5 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
@@ -11,17 +11,15 @@ import { BasePage } from "./base.page";
 export class GitHistoryDialogPage extends BasePage {
   // A getter, not a field: `AppFlow.restart()` swaps `this.page` on the
   // retained page object, so the locator must follow the current window.
-  private get historyDialog(): Locator {
-    return this.page
-      .getByRole("dialog")
-      .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  private get historyModal(): ModalComponent {
+    return ModalComponent.byTitle(this.page, "History");
   }
 
   /**
    * Waits for the History modal to be visible.
    */
   async navigate(): Promise<void> {
-    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.historyModal.waitForVisible();
   }
 
   /**
@@ -42,7 +40,7 @@ export class GitHistoryDialogPage extends BasePage {
   async getLatestCommit(): Promise<
     { id: string; message: string } | undefined
   > {
-    const row = this.historyDialog.locator('[role="row"][data-key]').first();
+    const row = this.historyModal.root.locator('[role="row"][data-key]').first();
     try {
       await expect(row).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     } catch {
@@ -58,7 +56,6 @@ export class GitHistoryDialogPage extends BasePage {
    * Closes the History modal via Escape.
    */
   async closeHistory(): Promise<void> {
-    await this.page.keyboard.press("Escape");
-    await expect(this.historyDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.historyModal.closeWithEscape();
   }
 }

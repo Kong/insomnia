@@ -1,3 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import { GitChangeList } from "@package/enums/git-change-list";
 import { GitDiffView } from "@package/enums/git-diff-view";
 import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
@@ -11,18 +13,20 @@ import { BasePage } from "./base.page";
  * dropdown via `GitSyncPage.openCommitDialog()`.
  */
 export class GitCommitDialogPage extends BasePage {
-  private readonly commitDialog = this.page.getByRole("dialog", {
-    name: "Commit Changes",
-  });
-  private readonly stageAllPrompt = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Stage All Changes" });
+  private readonly commitModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Commit Changes" }),
+  );
+  private readonly stageAllModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Stage All Changes" }),
+  );
 
   private readonly changeRow = (
     list: "Staged changes" | "Unstaged changes",
     fileName: string,
   ) =>
-    this.commitDialog
+    this.commitModal.root
       .getByRole("grid", { name: list, exact: true })
       .locator('[role="row"][data-key]')
       .filter({ hasText: fileName });
@@ -31,7 +35,7 @@ export class GitCommitDialogPage extends BasePage {
    * Waits for the Commit modal to be visible.
    */
   async navigate(): Promise<void> {
-    await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.waitForVisible();
   }
 
   /**
@@ -45,14 +49,15 @@ export class GitCommitDialogPage extends BasePage {
    * returning. Requires `openCommitDialog()` to have been called first.
    */
   private async stageAllChanges(): Promise<void> {
-    await this.commitDialog
-      .getByRole("grid", { name: "Unstaged changes" })
-      .getByRole("row")
-      .first()
+    await new TableComponent(
+      this.page,
+      this.commitModal.root.getByRole("grid", { name: "Unstaged changes" }),
+    )
+      .rows.first()
       .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    await this.commitDialog.locator('button[name="Stage all changes"]').click();
+    await this.commitModal.root.locator('button[name="Stage all changes"]').click();
     await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes [1-9]/ }),
+      this.commitModal.root.getByRole("heading", { name: /^Staged changes [1-9]/ }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -62,13 +67,13 @@ export class GitCommitDialogPage extends BasePage {
    */
   async commit(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("textbox", { name: "Message" })
       .fill(message);
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("button", { name: "Commit", exact: true })
       .click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.waitForHidden();
   }
 
   /**
@@ -81,13 +86,13 @@ export class GitCommitDialogPage extends BasePage {
    */
   async commitAndPush(message: string): Promise<void> {
     await this.stageAllChanges();
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("textbox", { name: "Message" })
       .fill(message);
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("button", { name: "Commit and push" })
       .click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.waitForHidden();
     await expect(
       this.page.getByText("Changes committed and pushed"),
     ).toBeVisible({
@@ -104,10 +109,10 @@ export class GitCommitDialogPage extends BasePage {
    */
   async closeCommitDialog(): Promise<void> {
     await expect(async () => {
-      if (await this.commitDialog.isVisible()) {
-        await this.commitDialog.locator('[data-icon="x"]').click();
+      if (await this.commitModal.root.isVisible()) {
+        await this.commitModal.root.locator('[data-icon="x"]').click();
       }
-      await expect(this.commitDialog).toBeHidden({ timeout: 3000 });
+      await expect(this.commitModal.root).toBeHidden({ timeout: 3000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -161,9 +166,9 @@ export class GitCommitDialogPage extends BasePage {
    * `openCommitDialog()` to have been called first.
    */
   async unstageAllChanges(): Promise<void> {
-    await this.commitDialog.locator('button[name="Unstage all changes"]').click();
+    await this.commitModal.root.locator('button[name="Unstage all changes"]').click();
     await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
+      this.commitModal.root.getByRole("heading", { name: /^Staged changes 0/ }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -189,10 +194,10 @@ export class GitCommitDialogPage extends BasePage {
    * to have been called first.
    */
   async commitStaged(message?: string): Promise<void> {
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("textbox", { name: "Message" })
       .fill(message ?? "");
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole("button", { name: "Commit", exact: true })
       .click();
   }
@@ -201,7 +206,7 @@ export class GitCommitDialogPage extends BasePage {
    * Whether the Commit modal is currently open.
    */
   async isCommitDialogOpen(): Promise<boolean> {
-    return this.commitDialog.isVisible();
+    return this.commitModal.root.isVisible();
   }
 
   /**
@@ -209,8 +214,8 @@ export class GitCommitDialogPage extends BasePage {
    * when Commit is clicked with nothing staged. Waits for it to appear.
    */
   async getStageAllPromptText(): Promise<string> {
-    await expect(this.stageAllPrompt).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await this.stageAllPrompt.innerText()).replaceAll("\n", " ");
+    await this.stageAllModal.waitForVisible();
+    return (await this.stageAllModal.root.innerText()).replaceAll("\n", " ");
   }
 
   /**
@@ -218,8 +223,8 @@ export class GitCommitDialogPage extends BasePage {
    * Commit modal open and nothing committed.
    */
   async cancelStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByRole("button", { name: "Cancel" }).click();
-    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.stageAllModal.root.getByRole("button", { name: "Cancel" }).click();
+    await this.stageAllModal.waitForHidden();
   }
 
   /**
@@ -227,8 +232,8 @@ export class GitCommitDialogPage extends BasePage {
    * change and commits it, then waits for the Commit modal to close.
    */
   async confirmStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByTestId("stage-all-and-commit-confirm-button").click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.stageAllModal.root.getByTestId("stage-all-and-commit-confirm-button").click();
+    await this.commitModal.waitForHidden();
   }
 
   /**
@@ -236,7 +241,7 @@ export class GitCommitDialogPage extends BasePage {
    */
   async waitForNothingStaged(): Promise<void> {
     await expect(
-      this.commitDialog.getByRole("heading", { name: /^Staged changes 0/ }),
+      this.commitModal.root.getByRole("heading", { name: /^Staged changes 0/ }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -247,48 +252,45 @@ export class GitCommitDialogPage extends BasePage {
    * been discarded.
    */
   async discardAllChanges(): Promise<void> {
-    await this.commitDialog
-      .getByRole("grid", { name: "Unstaged changes" })
-      .getByRole("row")
-      .first()
+    await new TableComponent(
+      this.page,
+      this.commitModal.root.getByRole("grid", { name: "Unstaged changes" }),
+    )
+      .rows.first()
       .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
-    await this.commitDialog
+    await this.commitModal.root
       .locator('button[name="Discard all changes"]')
       .click();
     await this.page.getByTestId("discard-changes-confirm-button").click();
-    await expect(this.commitDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.waitForHidden();
   }
 
   private async readChangeRows(
     list: "Staged changes" | "Unstaged changes",
   ): Promise<string[]> {
-    const rows = this.commitDialog
+    const rows = this.commitModal.root
       .getByRole("grid", { name: list, exact: true })
       .locator('[role="row"][data-key]');
     const texts = await rows.allInnerTexts();
     return texts.map((text) => text.split("\n")[0].trim());
   }
 
-  private readonly discardDialog = this.page
-    .getByRole('dialog')
-    .filter({ has: this.page.getByRole('heading', { name: 'Discard Changes' }) });
+  private readonly discardModal = ModalComponent.byTitle(this.page, 'Discard Changes');
 
   private readonly undiscardableWarning = this.page.getByText(
     'This change is only Insomnia internally reformatting the file',
   );
 
-  private readonly unknownFieldsConfirmDialog = this.page
-    .getByRole('dialog')
-    .filter({ has: this.page.getByRole('heading', { name: 'Unrecognized Fields' }) });
+  private readonly unknownFieldsConfirmModal = ModalComponent.byTitle(this.page, 'Unrecognized Fields');
 
   private readonly entityCard = (entityName: string, typeLabel?: string) => {
-    const card = this.commitDialog
+    const card = this.commitModal.root
       .getByTestId('diff-entity-card')
       .filter({ has: this.page.getByTestId('diff-entity-name').getByText(entityName, { exact: true }) });
     return typeLabel ? card.filter({ has: this.page.getByText(typeLabel, { exact: true }) }) : card;
   };
 
-  private readonly visualDiffNotice = this.commitDialog.getByTestId('visual-diff-notice');
+  private readonly visualDiffNotice = this.commitModal.root.getByTestId('visual-diff-notice');
 
   /**
    * Clicks a file's row in the open Commit modal to open its diff, and
@@ -300,7 +302,7 @@ export class GitCommitDialogPage extends BasePage {
   async openChangeDiff(list: GitChangeList, fileName: string): Promise<void> {
     await this.changeRow(list, fileName).click();
     await expect(
-      this.commitDialog.getByRole('button', {
+      this.commitModal.root.getByRole('button', {
         name: list === GitChangeList.Staged ? 'Unstage this file' : 'Stage this file',
       }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -311,7 +313,7 @@ export class GitCommitDialogPage extends BasePage {
    * (Beta) views. Requires `openChangeDiff()` to have been called first.
    */
   async switchDiffView(view: GitDiffView): Promise<void> {
-    await this.commitDialog.getByRole('button', { name: view, exact: true }).click();
+    await this.commitModal.root.getByRole('button', { name: view, exact: true }).click();
   }
 
   /**
@@ -319,7 +321,7 @@ export class GitCommitDialogPage extends BasePage {
    * from the view switch's highlighted button.
    */
   async getDiffView(): Promise<GitDiffView> {
-    const selected = await this.commitDialog.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('data-selected');
+    const selected = await this.commitModal.root.getByRole('button', { name: GitDiffView.Visual, exact: true }).getAttribute('data-selected');
     return selected === 'true' ? GitDiffView.Visual : GitDiffView.Text;
   }
 
@@ -327,7 +329,7 @@ export class GitCommitDialogPage extends BasePage {
    * Reads whether the diff pane's view switch offers a given view.
    */
   async hasDiffViewOption(view: GitDiffView): Promise<boolean> {
-    return this.commitDialog.getByRole('button', { name: view, exact: true }).isVisible();
+    return this.commitModal.root.getByRole('button', { name: view, exact: true }).isVisible();
   }
 
   /**
@@ -336,12 +338,12 @@ export class GitCommitDialogPage extends BasePage {
    * view to be showing.
    */
   async getEntityCardNames(): Promise<string[]> {
-    await this.commitDialog
+    await this.commitModal.root
       .getByTestId('diff-entity-card')
       .first()
       .or(this.visualDiffNotice)
       .waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-    const cards = this.commitDialog.getByTestId('diff-entity-card');
+    const cards = this.commitModal.root.getByTestId('diff-entity-card');
     const count = await cards.count();
     const result: string[] = [];
     for (let i = 0; i < count; i++) {
@@ -445,7 +447,7 @@ export class GitCommitDialogPage extends BasePage {
    * Reads the Visual view's "N entities changed" summary line.
    */
   async getEntitySummary(): Promise<string> {
-    return (await this.commitDialog.getByText(/^\d+ (entity|entities) changed$/).innerText()).trim();
+    return (await this.commitModal.root.getByText(/^\d+ (entity|entities) changed$/).innerText()).trim();
   }
 
   /**
@@ -472,7 +474,7 @@ export class GitCommitDialogPage extends BasePage {
    * pending.
    */
   async stageEntitiesInQuickSuccession(entityNames: string[]): Promise<void> {
-    await this.commitDialog.evaluate((root, names) => {
+    await this.commitModal.root.evaluate((root, names) => {
       for (const name of names) {
         const card = [...root.querySelectorAll('[data-testid="diff-entity-card"]')].find(candidate =>
           [...candidate.querySelectorAll('[data-testid="diff-entity-name"]')].some(span => span.textContent?.trim() === name),
@@ -489,7 +491,7 @@ export class GitCommitDialogPage extends BasePage {
    * still pending.
    */
   async stageEntityThenFileInQuickSuccession(entityName: string): Promise<void> {
-    await this.commitDialog.evaluate((root, name) => {
+    await this.commitModal.root.evaluate((root, name) => {
       const card = [...root.querySelectorAll('[data-testid="diff-entity-card"]')].find(candidate =>
         [...candidate.querySelectorAll('[data-testid="diff-entity-name"]')].some(span => span.textContent?.trim() === name),
       );
@@ -571,7 +573,7 @@ export class GitCommitDialogPage extends BasePage {
    * render, so this waits for the warning to appear.
    */
   async getVisualDiffFormatWarning(): Promise<string> {
-    const warning = this.commitDialog.getByTestId('visual-diff-format-warning');
+    const warning = this.commitModal.root.getByTestId('visual-diff-format-warning');
     await expect(warning).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     return (await warning.innerText()).replaceAll('\n', ' ').trim();
   }
@@ -580,7 +582,7 @@ export class GitCommitDialogPage extends BasePage {
    * Clicks the "Open the Text view" link in the Visual view's format warning.
    */
   async openTextViewFromWarning(): Promise<void> {
-    await this.commitDialog.getByTestId('visual-diff-format-warning').getByRole('button', { name: 'Open the Text view' }).click();
+    await this.commitModal.root.getByTestId('visual-diff-format-warning').getByRole('button', { name: 'Open the Text view' }).click();
   }
 
   /**
@@ -589,14 +591,14 @@ export class GitCommitDialogPage extends BasePage {
    * a notice to be showing.
    */
   async isVisualDiffFormatWarningAbsent(): Promise<boolean> {
-    return !(await this.commitDialog.getByTestId('visual-diff-format-warning').isVisible());
+    return !(await this.commitModal.root.getByTestId('visual-diff-format-warning').isVisible());
   }
 
   /**
    * Clicks the "Open the Text view" link in a Visual view notice.
    */
   async openTextViewFromNotice(): Promise<void> {
-    await this.commitDialog.getByRole('button', { name: 'Open the Text view' }).click();
+    await this.commitModal.root.getByRole('button', { name: 'Open the Text view' }).click();
   }
 
   /**
@@ -614,7 +616,7 @@ export class GitCommitDialogPage extends BasePage {
    * discarded" warning. Requires `openChangeDiff()` to have been called.
    */
   async isUndiscardableWarningVisible(): Promise<boolean> {
-    return this.commitDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
+    return this.commitModal.root.getByText('This change is only Insomnia internally reformatting the file').isVisible();
   }
 
   /**
@@ -625,7 +627,7 @@ export class GitCommitDialogPage extends BasePage {
     const row = this.changeRow(GitChangeList.Unstaged, fileName);
     await row.hover();
     await row.locator('button[name="Discard change"]').click();
-    await expect(this.discardDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.discardModal.waitForVisible();
   }
 
   /**
@@ -634,15 +636,15 @@ export class GitCommitDialogPage extends BasePage {
    * `openCommitDialog()` to have been called.
    */
   async openDiscardAllConfirmation(): Promise<void> {
-    await this.commitDialog.locator('button[name="Discard all changes"]').click();
-    await expect(this.discardDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.root.locator('button[name="Discard all changes"]').click();
+    await this.discardModal.waitForVisible();
   }
 
   /**
    * Reads the open Discard confirmation dialog's body text.
    */
   async getDiscardConfirmationText(): Promise<string> {
-    return (await this.discardDialog.innerText()).trim();
+    return (await this.discardModal.root.innerText()).trim();
   }
 
   /**
@@ -650,7 +652,7 @@ export class GitCommitDialogPage extends BasePage {
    * discarded" warning.
    */
   async isUndiscardableWarningVisibleInDiscardDialog(): Promise<boolean> {
-    return this.discardDialog.getByText('This change is only Insomnia internally reformatting the file').isVisible();
+    return this.discardModal.root.getByText('This change is only Insomnia internally reformatting the file').isVisible();
   }
 
   /**
@@ -658,14 +660,14 @@ export class GitCommitDialogPage extends BasePage {
    * fields banner. Requires `openChangeDiff()` to have been called.
    */
   async isUnknownFieldsDiffWarningVisible(): Promise<boolean> {
-    return this.commitDialog.getByTestId('unknown-fields-diff-warning').isVisible();
+    return this.commitModal.root.getByTestId('unknown-fields-diff-warning').isVisible();
   }
 
   /**
    * Reads the unknown fields banner's text from the open Commit modal's diff pane.
    */
   async getUnknownFieldsDiffWarningText(): Promise<string> {
-    const banner = this.commitDialog.getByTestId('unknown-fields-diff-warning');
+    const banner = this.commitModal.root.getByTestId('unknown-fields-diff-warning');
     return (await banner.isVisible()) ? (await banner.innerText()).trim() : '';
   }
 
@@ -678,7 +680,7 @@ export class GitCommitDialogPage extends BasePage {
    * `openChangeDiff()` to have been called.
    */
   async getUnknownFieldHighlightCount(): Promise<number> {
-    return this.commitDialog.locator('.unknown-field-line-bg').count();
+    return this.commitModal.root.locator('.unknown-field-line-bg').count();
   }
 
   /**
@@ -693,7 +695,7 @@ export class GitCommitDialogPage extends BasePage {
    * called.
    */
   async getUnknownFieldHighlightCountAcrossDiff(): Promise<number> {
-    const diffEditor = this.commitDialog.locator('.monaco-diff-editor').first();
+    const diffEditor = this.commitModal.root.locator('.monaco-diff-editor').first();
     const viewLines = diffEditor.locator('.view-lines');
     await diffEditor.hover();
     await this.page.mouse.wheel(0, -100_000);
@@ -747,15 +749,15 @@ export class GitCommitDialogPage extends BasePage {
    * when committing a file whose committed version has unknown fields.
    */
   async isUnknownFieldsConfirmationVisible(): Promise<boolean> {
-    return this.unknownFieldsConfirmDialog.isVisible();
+    return this.unknownFieldsConfirmModal.root.isVisible();
   }
 
   /**
    * Waits for the "Unrecognized Fields" confirmation and reads its text.
    */
   async getUnknownFieldsConfirmationText(): Promise<string> {
-    await expect(this.unknownFieldsConfirmDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await this.unknownFieldsConfirmDialog.innerText()).trim();
+    await this.unknownFieldsConfirmModal.waitForVisible();
+    return (await this.unknownFieldsConfirmModal.root.innerText()).trim();
   }
 
   /**
@@ -763,8 +765,8 @@ export class GitCommitDialogPage extends BasePage {
    * commit not created.
    */
   async cancelUnknownFieldsConfirmation(): Promise<void> {
-    await this.unknownFieldsConfirmDialog.getByRole('button', { name: 'Cancel' }).click();
-    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.unknownFieldsConfirmModal.root.getByRole('button', { name: 'Cancel' }).click();
+    await this.unknownFieldsConfirmModal.waitForHidden();
   }
 
   /**
@@ -773,7 +775,7 @@ export class GitCommitDialogPage extends BasePage {
    */
   async confirmUnknownFieldsCommit(): Promise<void> {
     await this.page.getByTestId('unknown-fields-commit-confirm-button').click();
-    await expect(this.unknownFieldsConfirmDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.unknownFieldsConfirmModal.waitForHidden();
   }
 
   /**
@@ -782,15 +784,15 @@ export class GitCommitDialogPage extends BasePage {
    */
   async confirmDiscard(): Promise<void> {
     await this.page.getByTestId('discard-changes-confirm-button').click();
-    await expect(this.discardDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.discardModal.waitForHidden();
   }
 
   /**
    * Cancels the open Discard confirmation dialog.
    */
   async cancelDiscard(): Promise<void> {
-    await this.discardDialog.getByRole('button', { name: 'Cancel' }).click();
-    await expect(this.discardDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.discardModal.root.getByRole('button', { name: 'Cancel' }).click();
+    await this.discardModal.waitForHidden();
   }
 
   /**
@@ -801,8 +803,8 @@ export class GitCommitDialogPage extends BasePage {
    * `openCommitDialog()` to have been called first.
    */
   async commitStagedAndPush(message: string): Promise<void> {
-    await this.commitDialog.getByRole('textbox', { name: 'Message' }).fill(message);
-    await this.commitDialog.getByRole('button', { name: 'Commit and push' }).click();
+    await this.commitModal.root.getByRole('textbox', { name: 'Message' }).fill(message);
+    await this.commitModal.root.getByRole('button', { name: 'Commit and push' }).click();
   }
 
   /**
@@ -812,8 +814,8 @@ export class GitCommitDialogPage extends BasePage {
    * staged. Requires `openCommitDialog()` to have been called first.
    */
   async generateCommits(): Promise<void> {
-    await this.commitDialog.getByRole('button', { name: 'Generate Commits' }).click();
-    await expect(this.commitDialog.getByRole('button', { name: 'Back to manual commits' })).toBeVisible({
+    await this.commitModal.root.getByRole('button', { name: 'Generate Commits' }).click();
+    await expect(this.commitModal.root.getByRole('button', { name: 'Back to manual commits' })).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -824,7 +826,7 @@ export class GitCommitDialogPage extends BasePage {
    * click can be handled by the caller. Requires `generateCommits()` first.
    */
   async submitGeneratedCommits(push = false): Promise<void> {
-    await this.commitDialog
+    await this.commitModal.root
       .getByRole('button', { name: push ? 'Commit and push' : 'Commit', exact: true })
       .click();
   }
@@ -835,8 +837,8 @@ export class GitCommitDialogPage extends BasePage {
    * fields) follows and keeps the modal open.
    */
   async acceptStageAllPrompt(): Promise<void> {
-    await this.stageAllPrompt.getByTestId('stage-all-and-commit-confirm-button').click();
-    await expect(this.stageAllPrompt).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.stageAllModal.root.getByTestId('stage-all-and-commit-confirm-button').click();
+    await this.stageAllModal.waitForHidden();
   }
 
   /**
@@ -848,10 +850,10 @@ export class GitCommitDialogPage extends BasePage {
    */
   async waitForCommitToFinish(): Promise<void> {
     await expect(async () => {
-      const isClosed = !(await this.commitDialog.isVisible());
-      const isStagedEmpty = await this.commitDialog.getByRole('heading', { name: /^Staged changes 0/ }).isVisible();
+      const isClosed = !(await this.commitModal.root.isVisible());
+      const isStagedEmpty = await this.commitModal.root.getByRole('heading', { name: /^Staged changes 0/ }).isVisible();
       expect(isClosed || isStagedEmpty).toBe(true);
     }).toPass({ timeout: DEFAULT_TIMEOUT });
-    await this.commitDialog.waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT / 2 }).catch(() => {});
+    await this.commitModal.root.waitFor({ state: 'hidden', timeout: DEFAULT_TIMEOUT / 2 }).catch(() => {});
   }
 }
