@@ -5,13 +5,8 @@ import { DEFAULT_TIMEOUT } from '@package/misc/constants';
 import { step } from "@package/misc/step";
 import { Collection } from '@package/models/collection';
 import { Environment } from '@package/models/environment';
-import type { EventStreamRequest } from '@package/models/event-stream-request';
-import type { GraphQLRequest } from '@package/models/graphql-request';
-import type { GrpcRequest } from '@package/models/grpc-request';
 import type { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
-import type { SocketIORequest } from '@package/models/socket-io-request';
-import type { WebSocketRequest } from '@package/models/websocket-request';
 import type { PageManager } from '@package/pages/page-manager';
 
 import { BaseFlow } from './base.flow';
@@ -29,21 +24,10 @@ interface RequestLookup<T> {
  * from forming an import cycle with `WorkspaceFlow`.
  */
 export interface RequestFlows {
-  readonly graphqlRequestFlow: RequestLookup<GraphQLRequest>;
-  readonly grpcRequestFlow: RequestLookup<GrpcRequest>;
-  readonly eventStreamRequestFlow: RequestLookup<EventStreamRequest>;
-  readonly socketIoRequestFlow: RequestLookup<SocketIORequest>;
-  readonly webSocketRequestFlow: RequestLookup<WebSocketRequest>;
   readonly httpRequestFlow: RequestLookup<HttpRequest>;
 }
 
-type RequestItem =
-  | HttpRequest
-  | GraphQLRequest
-  | GrpcRequest
-  | EventStreamRequest
-  | SocketIORequest
-  | WebSocketRequest;
+type RequestItem = HttpRequest;
 
 export class WorkspaceFlow extends BaseFlow {
   constructor(
@@ -136,7 +120,7 @@ export class WorkspaceFlow extends BaseFlow {
    */
   @step()
   async pin(
-    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
+    request: HttpRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Pin);
   }
@@ -147,13 +131,13 @@ export class WorkspaceFlow extends BaseFlow {
    */
   @step()
   async unpin(
-    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
+    request: HttpRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Unpin);
   }
 
   private async togglePin(
-    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
+    request: HttpRequest,
     action: ContextMenuItem.Pin | ContextMenuItem.Unpin,
   ): Promise<void> {
     const { workspacePage } = this.pageManager;
