@@ -116,6 +116,7 @@ export interface PluginConfig {
 export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
+  accentColor: string;
   autoDetectColorScheme: boolean;
   autoHideMenuBar: boolean;
   autocompleteDelay: number;

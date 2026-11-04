@@ -3,7 +3,7 @@ import type { ThemeSettings } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { getAppDefaultTheme } from 'insomnia-data/common';
 
-import type { PluginTheme, ThemeBlock } from '~/common/plugins/bridge-types';
+import type { PluginTheme, ThemeBlock, ThemeColor } from '~/common/plugins/bridge-types';
 import type { ColorScheme } from '~/common/plugins/types';
 
 import { plugins } from './renderer-bridge';
@@ -70,6 +70,54 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
       check(['styles', style, rootPath]);
     });
   });
+};
+
+// A dark accent gets white text, a light one gets black
+const accentBlock = (block: ThemeBlock | undefined, color: Color) => {
+  if (!block) {
+    return block;
+  }
+  const surprise = color.hex() as ThemeColor;
+  return {
+    ...block,
+    ...(block.background?.surprise ? { background: { ...block.background, surprise } } : {}),
+    ...(block.foreground?.surprise
+      ? { foreground: { ...block.foreground, surprise: color.isDark() ? ('#fff' as const) : ('#000' as const) } }
+      : {}),
+  };
+};
+
+export const applyAccentColor = (pluginTheme: PluginTheme, accentColor?: string): PluginTheme => {
+  if (!accentColor) {
+    return pluginTheme;
+  }
+
+  let color: Color;
+  try {
+    color = Color(accentColor);
+  } catch {
+    console.log('[theme] Failed to parse accent color', accentColor);
+    return pluginTheme;
+  }
+
+  const { theme } = pluginTheme;
+  const styles = Object.fromEntries(
+    Object.entries(theme.styles ?? {}).map(([name, block]) => [name, accentBlock(block, color)]),
+  );
+  return {
+    ...pluginTheme,
+    theme: {
+      ...theme,
+      ...accentBlock(
+        {
+          background: { ...baseTheme.background, ...theme.background },
+          foreground: { ...baseTheme.foreground, ...theme.foreground },
+        },
+        color,
+      ),
+      styles,
+    },
+  };
 };
 
 export const generateThemeCSS = (pluginTheme: PluginTheme) => {
@@ -216,7 +264,7 @@ function wrapStyles(selector: string, styles: string) {
   return `${selector} {\n${styles}\n}\n\n`;
 }
 
-export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorScheme {
+export function getColorScheme({ autoDetectColorScheme }: Omit<ThemeSettings, 'accentColor'>): ColorScheme {
   if (!autoDetectColorScheme) {
     return 'default';
   }
@@ -237,17 +285,17 @@ export function applyColorScheme(settings: ThemeSettings) {
 
   switch (scheme) {
     case 'light': {
-      setTheme(settings.lightTheme);
+      setTheme(settings.lightTheme, settings.accentColor);
       break;
     }
 
     case 'dark': {
-      setTheme(settings.darkTheme);
+      setTheme(settings.darkTheme, settings.accentColor);
       break;
     }
 
     case 'default': {
-      setTheme(settings.theme);
+      setTheme(settings.theme, settings.accentColor);
       break;
     }
 
@@ -257,12 +305,15 @@ export function applyColorScheme(settings: ThemeSettings) {
   }
 }
 const themeStyleSheets = new Map<string, CSSStyleSheet>();
+let latestThemeRequest = 0;
 
-export async function setTheme(themeName: string) {
+export async function setTheme(themeName: string, accentColor?: string) {
   if (!document || !('adoptedStyleSheets' in document)) {
     return;
   }
 
+  latestThemeRequest += 1;
+  const themeRequest = latestThemeRequest;
   const themes = await plugins.getThemes();
   let selectedTheme = themes.find(t => t.theme.name === themeName);
 
@@ -274,13 +325,8 @@ export async function setTheme(themeName: string) {
     selectedTheme = fallbackTheme;
   }
 
-  // Clear existing theme stylesheets
-  document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-    sheet => !Array.from(themeStyleSheets.values()).includes(sheet),
-  );
-
   // Only inject the selected theme
-  let themeCSS = generateThemeCSS(selectedTheme.theme);
+  let themeCSS = generateThemeCSS(applyAccentColor(selectedTheme.theme, accentColor));
   const { rawCss } = selectedTheme.theme.theme;
 
   if (typeof rawCss === 'string') {
@@ -289,6 +335,16 @@ export async function setTheme(themeName: string) {
 
   const styleSheet = new CSSStyleSheet();
   await styleSheet.replace(themeCSS);
+
+  // A newer call, such as from dragging the accent picker, supersedes this one
+  if (themeRequest !== latestThemeRequest) {
+    return;
+  }
+
+  // Clear existing theme stylesheets
+  document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+    sheet => !Array.from(themeStyleSheets.values()).includes(sheet),
+  );
   themeStyleSheets.set(themeName, styleSheet);
 
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];

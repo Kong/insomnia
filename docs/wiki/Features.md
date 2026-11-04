@@ -49,4 +49,4 @@ Commits, branches, history, diffs and merge conflict handling, with or without a
 
 ## Customization
 
-Themes, keyboard shortcuts, fonts and [plugins](Plugins-and-Themes).
+Themes, accent colors, keyboard shortcuts, fonts and [plugins](Plugins-and-Themes).

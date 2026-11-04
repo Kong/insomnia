@@ -12,7 +12,7 @@ import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
   const { settings } = useRootLoaderData()!;
-  const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
+  const { accentColor, lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
@@ -40,6 +40,7 @@ export const useThemes = () => {
   const apply = useCallback(
     async (patch: Partial<ThemeSettings>) => {
       applyColorScheme({
+        accentColor,
         theme,
         autoDetectColorScheme,
         darkTheme,
@@ -48,8 +49,10 @@ export const useThemes = () => {
       });
       patchSettings(patch);
     },
-    [autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme],
+    [accentColor, autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme],
   );
+
+  const changeAccentColor = useCallback((accentColor: string) => apply({ accentColor }), [apply]);
 
   const changeAutoDetect = useCallback((autoDetectColorScheme: boolean) => apply({ autoDetectColorScheme }), [apply]);
 
@@ -89,6 +92,8 @@ export const useThemes = () => {
     activate,
     changeAutoDetect,
     autoDetectColorScheme,
+    accentColor,
+    changeAccentColor,
   };
 };
 

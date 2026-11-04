@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 
-import { containsTemplateSyntax, validateTheme, validateThemeName } from './misc';
+import { applyAccentColor, containsTemplateSyntax, generateThemeCSS, validateTheme, validateThemeName } from './misc';
 
 describe('containsTemplateSyntax', () => {
   it('will return true if the value contains nunjucks without', () => {
@@ -104,5 +104,51 @@ describe('validateThemeName', () => {
     const validName = validateThemeName(name);
     expect(name).not.toEqual(validName);
     expect(validName).toEqual('default-dark');
+  });
+});
+
+const accentTheme: PluginTheme = {
+  name: 'test-theme',
+  displayName: 'Test Theme',
+  theme: {
+    background: { default: '#111', surprise: '#7c6cf0' },
+    foreground: { default: '#eee', surprise: '#fff' },
+    styles: {
+      sidebar: { background: { default: '#111', surprise: '#6d5ae6' }, foreground: { default: '#eee', surprise: '#000' } },
+      dialog: { background: { default: '#222' } },
+    },
+  },
+};
+
+describe('applyAccentColor', () => {
+  it('leaves the theme alone without an accent', () => {
+    expect(applyAccentColor(accentTheme, '')).toBe(accentTheme);
+  });
+
+  it('leaves the theme alone with an invalid accent', () => {
+    expect(applyAccentColor(accentTheme, 'red; } body { display: none')).toBe(accentTheme);
+  });
+
+  it('replaces the accent at every level that sets one', () => {
+    const { theme: result } = applyAccentColor(accentTheme, '#e5484d');
+    expect(result.background?.surprise).toBe('#E5484D');
+    expect(result.styles?.sidebar?.background?.surprise).toBe('#E5484D');
+  });
+
+  it('keeps blocks that set no accent unchanged', () => {
+    const { theme: result } = applyAccentColor(accentTheme, '#e5484d');
+    expect(result.styles?.dialog).toEqual({ background: { default: '#222' } });
+    expect(result.background?.default).toBe('#111');
+  });
+
+  it('picks readable text for the accent', () => {
+    expect(applyAccentColor(accentTheme, '#ffee00').theme.foreground?.surprise).toBe('#000');
+    expect(applyAccentColor(accentTheme, '#1a1a6e').theme.styles?.sidebar?.foreground?.surprise).toBe('#fff');
+  });
+
+  it('reaches the generated CSS', () => {
+    const css = generateThemeCSS(applyAccentColor(accentTheme, '#e5484d'));
+    expect(css).toContain('--color-surprise: rgb(229, 72, 77)');
+    expect(css).not.toContain('rgb(124, 108, 240)');
   });
 });
