@@ -1,3 +1,4 @@
+import { TabsComponent } from "@package/components/tabs.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
@@ -21,6 +22,10 @@ export abstract class PreferencesTabComponent extends BaseComponent {
 
   protected get dialog(): Locator {
     return this.root;
+  }
+
+  protected get tabs(): TabsComponent {
+    return new TabsComponent(this.page, this.dialog);
   }
 
   /**

@@ -38,7 +38,7 @@ export class PreferencesPluginsComponent extends PreferencesTabComponent {
    * are installed, generated, and reloaded from disk.
    */
   async openPluginsTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Plugins" }).click();
+    await this.tabs.tabByName("Plugins").click();
   }
 
   /**
@@ -46,7 +46,7 @@ export class PreferencesPluginsComponent extends PreferencesTabComponent {
    * template-tag sandbox toggle and per-rule-group sandbox switches live.
    */
   async openScriptingTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Scripting" }).click();
+    await this.tabs.tabByName("Scripting").click();
   }
 
   /**

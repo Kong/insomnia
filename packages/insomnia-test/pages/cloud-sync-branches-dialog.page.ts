@@ -1,3 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -8,18 +10,20 @@ import { BasePage } from "./base.page";
  * can open. Opened via `CloudSyncPage.openBranchesDialog()`.
  */
 export class CloudSyncBranchesDialogPage extends BasePage {
-  private readonly branchesDialog = this.page.getByRole("dialog", {
-    name: "Branches",
-  });
-  private readonly mergeConflictsDialog = this.page.getByRole("dialog", {
-    name: "Resolve conflicts",
-  });
+  private readonly branchesModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Branches" }),
+  );
+  private readonly mergeConflictsModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Resolve conflicts" }),
+  );
 
   /**
    * Waits for the Branches modal to be visible.
    */
   async navigate(): Promise<void> {
-    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.branchesModal.waitForVisible();
   }
 
   /**
@@ -28,7 +32,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * `openBranchesDialog()` to have been called first.
    */
   async fetchRemoteBranch(branch: string): Promise<void> {
-    await this.branchesDialog
+    await this.branchesModal.root
       .getByLabel("Remote Branches list", { exact: true })
       .getByLabel(branch, { exact: true })
       .getByRole("button", { name: "Fetch" })
@@ -41,7 +45,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * first.
    */
   async checkoutLocalBranch(branch: string): Promise<void> {
-    await this.branchesDialog
+    await this.branchesModal.root
       .getByLabel("Branches list", { exact: true })
       .getByLabel(branch, { exact: true })
       .getByRole("button", { name: "Checkout" })
@@ -54,7 +58,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * `openBranchesDialog()` to have been called first.
    */
   async deleteLocalBranch(branch: string): Promise<void> {
-    const row = this.branchesDialog
+    const row = this.branchesModal.root
       .getByLabel("Branches list", { exact: true })
       .getByLabel(branch, { exact: true });
     await row.getByRole("button", { name: "Delete" }).click();
@@ -69,7 +73,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * Requires `openBranchesDialog()` to have been called first.
    */
   async isLocalBranchDeleteDisabled(branch: string): Promise<boolean> {
-    return this.branchesDialog
+    return this.branchesModal.root
       .getByLabel("Branches list", { exact: true })
       .getByLabel(branch, { exact: true })
       .getByRole("button", { name: "Delete" })
@@ -83,7 +87,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * to have been called first.
    */
   async mergeBranch(branch: string): Promise<void> {
-    const row = this.branchesDialog
+    const row = this.branchesModal.root
       .getByLabel("Branches list", { exact: true })
       .getByLabel(branch, { exact: true });
     await row.getByRole("button", { name: "Merge" }).click();
@@ -98,7 +102,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * first.
    */
   async isLocalBranchListed(branch: string): Promise<boolean> {
-    const list = this.branchesDialog.getByLabel("Branches list", {
+    const list = this.branchesModal.root.getByLabel("Branches list", {
       exact: true,
     });
     await expect(list).toBeVisible({ timeout: DEFAULT_TIMEOUT });
@@ -123,7 +127,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    */
   async waitForLocalBranchRemoved(branch: string): Promise<void> {
     await expect(
-      this.branchesDialog
+      this.branchesModal.root
         .getByLabel("Branches list", { exact: true })
         .getByLabel(branch, { exact: true }),
     ).toHaveCount(0, { timeout: DEFAULT_TIMEOUT });
@@ -135,10 +139,10 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * first.
    */
   async createBranch(branch: string): Promise<void> {
-    await this.branchesDialog
+    await this.branchesModal.root
       .getByRole("textbox", { name: "Branch name" })
       .fill(branch);
-    await this.branchesDialog
+    await this.branchesModal.root
       .getByRole("button", { name: "Create", exact: true })
       .click();
   }
@@ -151,7 +155,7 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    */
   async waitForBranchCreationError(message: string): Promise<void> {
     await expect(
-      this.branchesDialog.getByText(message, { exact: true }),
+      this.branchesModal.root.getByText(message, { exact: true }),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -163,12 +167,11 @@ export class CloudSyncBranchesDialogPage extends BasePage {
   async resolveMergeConflicts(
     version: "Current" | "Incoming",
   ): Promise<string[]> {
-    await expect(this.mergeConflictsDialog).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-    const rows = this.mergeConflictsDialog
-      .getByRole("grid", { name: "Conflicted changes" })
-      .getByRole("row");
+    await this.mergeConflictsModal.waitForVisible();
+    const rows = new TableComponent(
+      this.page,
+      this.mergeConflictsModal.root.getByRole("grid", { name: "Conflicted changes" }),
+    ).rows;
     const count = await rows.count();
     const names: string[] = [];
     for (let i = 0; i < count; i++) {
@@ -180,12 +183,10 @@ export class CloudSyncBranchesDialogPage extends BasePage {
         .getByTestId(`merge-conflict-choice-${version.toLowerCase()}`)
         .click();
     }
-    await this.mergeConflictsDialog
+    await this.mergeConflictsModal.root
       .getByRole("button", { name: "Resolve conflicts" })
       .click();
-    await expect(this.mergeConflictsDialog).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await this.mergeConflictsModal.waitForHidden();
     return names;
   }
 
@@ -193,7 +194,6 @@ export class CloudSyncBranchesDialogPage extends BasePage {
    * Closes the Branches modal.
    */
   async closeBranchesDialog(): Promise<void> {
-    await this.branchesDialog.locator('[data-icon="x"]').click();
-    await expect(this.branchesDialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await this.branchesModal.close();
   }
 }

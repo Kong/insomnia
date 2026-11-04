@@ -4,6 +4,8 @@ import { KeyValueEditorComponent } from "@package/components/key-value-editor.co
 import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { SelectComponent } from "@package/components/select.component";
 import { TabPanelComponent } from "@package/components/tab-panel.component";
+import { TabsComponent } from "@package/components/tabs.component";
+import { PressedToggleComponent } from "@package/components/toggle.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
@@ -424,7 +426,10 @@ export abstract class RequestPage extends BasePage {
       );
       await setValue();
       if (pair.disabled) {
-        await row.locator('button[aria-pressed="true"]').click();
+        await new PressedToggleComponent(
+          this.page,
+          row.locator("button[aria-pressed]"),
+        ).set(false);
       }
       await this.waitForPairPersisted(pair, {
         reapply: async () => {
@@ -534,8 +539,7 @@ export abstract class RequestPage extends BasePage {
   ): Promise<void> {
     const toggle = row.locator("button[aria-pressed]");
     if ((await toggle.count()) === 0) return;
-    const enabled = (await toggle.getAttribute("aria-pressed")) === "true";
-    if (enabled === Boolean(pair.disabled)) await toggle.click();
+    await new PressedToggleComponent(this.page, toggle).set(!pair.disabled);
   }
 
   /**
@@ -667,8 +671,8 @@ export abstract class RequestPage extends BasePage {
    */
   async setDocsMode(mode: "write" | "preview"): Promise<void> {
     await this.switchTab("docs");
-    await this.page
-      .locator(`${this.TABPANEL} [data-key="${mode}"][role="tab"]`)
+    await new TabsComponent(this.page, this.page.locator(this.TABPANEL))
+      .tab(mode)
       .click();
   }
 
