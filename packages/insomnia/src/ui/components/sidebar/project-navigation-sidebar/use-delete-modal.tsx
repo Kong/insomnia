@@ -27,10 +27,6 @@ export const useDeleteModal = ({ onDeleteProject, onWorkspaceDeleted }: Options)
   const showDeleteModal = (item: DeleteTargetItem) => {
     if (item.kind === 'project') {
       const { doc: project } = item;
-      // The scratchpad can't be deleted
-      if (project._id === models.project.SCRATCHPAD_PROJECT_ID) {
-        return;
-      }
       const projectName = project.name;
       let title = 'Delete Project';
       let message = `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`;

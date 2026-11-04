@@ -38,7 +38,6 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown
 import { showModal } from './modals';
 import { AlertModal } from './modals/alert-modal';
 import { GenerateCodeModal } from './modals/generate-code-modal';
-import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
@@ -61,7 +60,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
     const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
     const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
-    const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
     const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
     const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
 
@@ -534,18 +532,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               variableName.startsWith(`${models.environment.vaultEnvironmentRuntimePath}.`),
             ) && (
               <div className="mt-4">
-                <p>
-                  These are secret environment variables. However, the required vault key has not been provided yet.
-                </p>
-                <Button
-                  className="cursor- py-1 text-(--color-info) underline ring-1 ring-transparent focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  onPress={() => {
-                    setShowInputVaultKeyModal(true);
-                    setShowEnvVariableMissingModal(false);
-                  }}
-                >
-                  Click to input vault key
-                </Button>
+                <p>These are secret environment variables. Generate a vault key in Preferences to use them.</p>
                 <div className="flex max-h-80 flex-wrap gap-2 overflow-y-auto">
                   {undefinedEnvironmentVariableList
                     ?.filter(variableName =>
@@ -565,7 +552,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
               </div>
             )}
         </VariableMissingErrorModal>
-        {showInputVaultKeyModal && <InputVaultKeyModal onClose={() => setShowInputVaultKeyModal(false)} />}
       </div>
     );
   },

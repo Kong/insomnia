@@ -3,13 +3,13 @@ import path from 'node:path';
 import type { Change } from 'diff';
 import { diffLines } from 'diff';
 import type { GitAuthor, GitRemoteConfig } from 'insomnia-data';
-import { type AutoResolvedConflict, type MergeConflict } from 'insomnia-vcs';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
 import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import type { BlockedWrite } from '~/sync/git/fs-client';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import { type AutoResolvedConflict, type MergeConflict } from '~/sync/git/merge-types';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 

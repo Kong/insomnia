@@ -30,7 +30,6 @@ import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import grpcReflectionApi from './grpc-reflection-api';
-import insomniaApi from './insomnia-api';
 import { mtlsRouter } from './mtls';
 import { oauthRoutes } from './oauth';
 import simpleCrud from './simple-crud';
@@ -114,7 +113,6 @@ app.use(grpcReflectionApi);
 
 githubApi(app);
 gitlabApi(app);
-insomniaApi(app);
 simpleCrud(app);
 cloudSyncApi(app);
 

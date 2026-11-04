@@ -1,14 +1,11 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { getOnboardingState, type UserOnboarding } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
-import { services } from 'insomnia-data';
 import { setDefaultProtocol } from 'insomnia-data/common';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { Button } from '~/basic-components/button';
 import { SelectPopover } from '~/basic-components/select-popover';
-import { getCurrentSessionId } from '~/common/account/session';
 import { METHOD_GET } from '~/common/constants';
 import { isCurlCommand } from '~/common/utils/curl';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -18,7 +15,6 @@ import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
-import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import {
   FIRST_REQUEST_EXPERIMENT_NAME,
   type FirstRequestTreatment,
@@ -139,17 +135,16 @@ export const FirstRequestCreation = ({
   const { userSession } = useRootLoaderData()!;
   // Onboarding state from the backend (standalone resource), loaded on mount.
   // null until a successful fetch resolves it (logged out / failed fetches leave it null).
-  const [onboarding, setOnboarding] = useState<UserOnboarding | null>(null);
   // Whether the onboarding fetch has settled (resolved or failed), independent of
   // whether it actually produced a value — used to know when to fall back.
-  const [onboardingLoaded, setOnboardingLoaded] = useState(false);
+  const onboardingLoaded = true;
   // Server-computed treatment (the backend is authoritative for assignment).
-  const backendTreatment = getOnboardingTreatment(onboarding);
+  const backendTreatment = getOnboardingTreatment(null);
   // Whether this user is part of the experiment population (a genuine new sign-up),
   // per the server. Only participants emit assignment analytics; everyone else gets B.
   // A missing onboarding resource (not yet loaded / fetch failed) means "not a
   // confirmed participant".
-  const isParticipant = onboarding?.is_new_signup === true;
+  const isParticipant = false;
   // Last-known treatment for this account, used as an offline fallback.
   const [cachedTreatment] = useState(() => readCachedFirstRequestTreatment(userSession.accountId || ''));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -162,7 +157,6 @@ export const FirstRequestCreation = ({
   const [errorText, setErrorText] = useState<string | null>(null);
   const [selectOpen, setSelectOpen] = useState(false);
   // null while stats are loading; treatment is derived once we know the created-request count.
-  const [createdRequests, setCreatedRequests] = useState<number | null>(null);
   const trimmedInput = requestInput.trim();
   const isCreatingRequest = createRequestFetcher.state !== 'idle';
 
@@ -311,59 +305,6 @@ export const FirstRequestCreation = ({
   useEffect(() => {
     inputRef.current?.focus();
   }, [projectId]);
-
-  // Load the lifetime created-request count, used to decide when to latch the
-  // server-side graduation threshold (see maybeLatchRequestThreshold for how the
-  // device-wide count is scoped back down to this account).
-  useEffect(() => {
-    let isActive = true;
-
-    services.stats.get().then(stats => {
-      if (isActive) {
-        setCreatedRequests(stats.createdRequests);
-      }
-    });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  // Load the backend onboarding state (authoritative treatment + participant flag).
-  // Settle to null when logged out or on failure so the resolver stops waiting and
-  // falls back to the cached value / safe default.
-  useEffect(() => {
-    let isActive = true;
-
-    const loadOnboardingState = async () => {
-      let state: UserOnboarding | null = null;
-      try {
-        const sessionId = await getCurrentSessionId();
-        state = sessionId ? await getOnboardingState({ sessionId }) : null;
-      } catch (error) {
-        console.error('Failed to load onboarding state', error);
-      }
-      if (isActive) {
-        setOnboarding(state);
-        setOnboardingLoaded(true);
-      }
-    };
-    loadOnboardingState();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
-
-  // Self-heal the graduation latch: if this account has already crossed the
-  // threshold (e.g. the crossing creation's latch call was dropped), retry it.
-  // maybeLatchRequestThreshold scopes the device-wide createdRequests count back
-  // down to this account before deciding whether to latch.
-  useEffect(() => {
-    if (createdRequests !== null) {
-      maybeLatchRequestThreshold(createdRequests);
-    }
-  }, [createdRequests]);
 
   // On a *confident* treatment result, emit the initial assignment analytics event —
   // only the very first observed assignment for this account (nothing cached yet).

@@ -1,4 +1,3 @@
-import type { StorageRules } from 'insomnia-api';
 import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { useEffect, useRef, useState } from 'react';
@@ -23,6 +22,7 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { Badge } from '~/ui/components/base/badge';

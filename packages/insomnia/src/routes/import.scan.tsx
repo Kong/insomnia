@@ -133,7 +133,7 @@ export const scanImportResources = async (data: {
   } else {
     // from clipboard
     contentList.push({
-      contentStr: window.clipboard.readText(),
+      contentStr: await window.clipboard.readText(),
       oriFileName: 'clipboard',
     });
   }

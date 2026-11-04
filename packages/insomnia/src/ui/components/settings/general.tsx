@@ -1,4 +1,4 @@
-import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
+import { type HttpVersion, HttpVersions, isMac, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
@@ -44,8 +44,7 @@ const onHideConfidentialValuesToggled = (isHiding: boolean) => {
 };
 
 export const General: FC = () => {
-  const { settings, userSession } = useRootLoaderData()!;
-  const isLoggedIn = Boolean(userSession.id);
+  const { settings } = useRootLoaderData()!;
 
   return (
     <div className="relative p-4">
@@ -67,7 +66,6 @@ export const General: FC = () => {
         </div>
         <div>
           <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
           <BooleanSetting
             label="Sidebar focus for collections"
@@ -266,7 +264,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      {isLoggedIn && <VaultKeyPanel />}
+      <VaultKeyPanel />
 
       <div className="form-row pad-top-sm">
         <TextArraySetting
@@ -317,22 +315,6 @@ export const General: FC = () => {
         help="Add a custom path to direct Insomnia to a different plugin directory."
         placeholder="~/.insomnia:/other/path"
       />
-
-      {!isLoggedIn && (
-        <>
-          <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Network Activity</h2>
-          <BooleanSetting label="Send Anonymous Usage Statistics" setting="enableAnalytics" disabled={isLoggedIn} />
-          <div className="py-2 pl-5 text-sm opacity-50">
-            Help Kong improve its products by sending anonymous data about features and plugins used, hardware and
-            software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()},{' '}
-            {strings.document.plural.toLowerCase()}, etc.
-          </div>
-          <div className="py-2 pl-5 text-sm opacity-50">
-            Please note that this will not include personal data or any sensitive information, such as request data,
-            names, etc.
-          </div>
-        </>
-      )}
     </div>
   );
 };

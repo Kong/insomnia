@@ -17,6 +17,7 @@ import { localTemplateTags } from 'insomnia/src/common/templating/local-template
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
 import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { invariant } from '~/common/utils/invariant';
+import { getAppMenu, hasTitleBarOverlay } from '~/main/title-bar';
 
 import { fnOrString } from '../../common/misc';
 
@@ -104,7 +105,6 @@ export type HandleChannels =
   | 'grpc.loadMethodsFromReflection'
   | 'grpc.writeProtoFile'
   | 'grpc.validateProtoFile'
-  | 'initializeWorkspaceBackendProject'
   | 'insecureReadFile'
   | 'insecureReadFileWithEncoding'
   | 'installPlugin'
@@ -178,7 +178,6 @@ export type HandleChannels =
   | 'showSaveDialog'
   | 'socketIO.event.findMany'
   | 'socketIO.event.send'
-  | 'syncNewWorkspaceIfNeeded'
   | 'sync.invoke'
   | 'sync.invokeGlobal'
   | 'sync.pullRemoteBackendProject'
@@ -211,18 +210,23 @@ export type HandleChannels =
   | 'cookies.toString'
   | 'cookies.getCookiesForUrl'
   | 'cookies.addSetCookies'
-  | 'cookies.getResponseCookiesFromHeaders';
+  | 'cookies.getResponseCookiesFromHeaders'
+  | 'clear'
+  | 'getAppMenuLabels'
+  | 'readText'
+  | 'writeText';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
   listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
+  | 'setTitleBarColors'
+  | 'showAppMenu'
   | 'addExecutionStep'
   | 'analytics.setOrganizationId'
   | 'applyUpdateAndRestart'
   | 'cancelCurlRequest'
-  | 'clear'
   | 'completeExecutionStep'
   | 'curl.close'
   | 'curl.closeAll'
@@ -242,12 +246,10 @@ export type MainOnChannels =
   | 'path.dirname'
   | 'path.join'
   | 'path.resolve'
-  | 'readText'
   | 'restart'
   | 'plugins.invokeResult'
   | 'plugins.windowReady'
   | 'set-hidden-window-busy-status'
-  | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
   | 'showContextMenu'
   | 'showItemInFolder'
@@ -270,7 +272,7 @@ export type MainOnChannels =
   | 'sync.resolveConflict'
   | 'mcp.sendMCPRequest'
   | 'ui.promptResult'
-  | 'writeText';
+
 
 export type RendererOnChannels =
   | 'contextMenuCommand'
@@ -442,15 +444,6 @@ export function registerElectronHandlers() {
       }
     },
   );
-  ipcMainOn('setMenuBarVisibility', (_, visible: boolean) => {
-    BrowserWindow.getAllWindows().forEach(window => {
-      // the `setMenuBarVisibility` signature uses `visible` semantics
-      window.setMenuBarVisibility(visible);
-      // the `setAutoHideMenu` signature uses `hide` semantics
-      const hide = !visible;
-      window.setAutoHideMenuBar(hide);
-    });
-  });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
     // Playwright test hook: consume queued responses set via `electronApp.evaluate`
     // instead of opening the native dialog. See packages/insomnia-smoke-test.
@@ -478,17 +471,27 @@ export function registerElectronHandlers() {
     return shell.openPath(name);
   });
 
-  ipcMainOn('readText', event => {
-    event.returnValue = clipboard.readText();
+  ipcMainHandle('getAppMenuLabels', () => {
+    return getAppMenu()?.items.filter(item => item.visible).map(item => item.label.replace(/&/g, '')) ?? [];
   });
+  ipcMainOn('showAppMenu', (event, { label, x, y }: { label: string; x: number; y: number }) => {
+    const item = getAppMenu()?.items.find(item => item.label.replace(/&/g, '') === label);
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+      const zoom = event.sender.getZoomFactor();
+      item?.submenu?.popup({ window: win, x: Math.round(x * zoom), y: Math.round(y * zoom) });
+    }
+  });
+  ipcMainOn('setTitleBarColors', (event, { color, symbolColor }: { color: string; symbolColor: string }) => {
+    if (hasTitleBarOverlay()) {
+      BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay({ color, symbolColor });
+    }
+  });
+  ipcMainHandle('readText', () => clipboard.readText());
 
-  ipcMainOn('writeText', (_, text: string) => {
-    clipboard.writeText(text);
-  });
+  ipcMainHandle('writeText', (_, text: string) => clipboard.writeText(text));
 
-  ipcMainOn('clear', () => {
-    clipboard.clear();
-  });
+  ipcMainHandle('clear', () => clipboard.clear());
 
   ipcMainOn('getPath', (event, name: Parameters<(typeof Electron.app)['getPath']>[0]) => {
     event.returnValue = app.getPath(name);

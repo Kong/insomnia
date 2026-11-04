@@ -5,6 +5,10 @@ import path from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
+import { isValid } from 'date-fns';
+import electron from 'electron';
+import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
+import { setDefaultProtocol } from 'insomnia-data/common';
 import {
   Curl,
   CurlAuth,
@@ -15,11 +19,7 @@ import {
   CurlNetrc,
   CurlProxy,
   CurlSslOpt,
-} from '@getinsomnia/node-libcurl';
-import { isValid } from 'date-fns';
-import electron from 'electron';
-import type { ClientCertificate, RequestHeader, ResponseHeader, ResponseTimelineEntry } from 'insomnia-data';
-import { setDefaultProtocol } from 'insomnia-data/common';
+} from 'node-libcurl';
 import { v4 as uuidv4 } from 'uuid';
 
 import { invariant } from '~/common/utils/invariant';

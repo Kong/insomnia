@@ -33,7 +33,7 @@
   },
   "include": ["types/global.d.ts", "**/*", ".react-router/types/**/*"],
   "exclude": [
-    "./src/__mocks__/@getinsomnia/node-libcurl.ts",
+    "./src/__mocks__/node-libcurl.ts",
     "**/__mocks__",
     "**/__snapshots__",
     "**/*.min.js",

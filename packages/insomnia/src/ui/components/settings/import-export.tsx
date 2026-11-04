@@ -14,7 +14,7 @@ import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
 import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
-import type { Organization } from 'insomnia-api';
+import type { Organization } from 'insomnia-data';
 import type { BaseModel, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
@@ -29,10 +29,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
-import { usePlanData } from '~/ui/hooks/use-plan';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const VALUE_YAML = 'yaml';
 const VALUE_JSON = 'json';
@@ -709,11 +706,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     projectId: string;
     workspaceId?: string;
   };
-  const organizations = useOrganizations();
+  const organizations = [models.organization.LOCAL_ORGANIZATION];
 
   const { features } = useOrganizationPermissions();
-  const { isEnterprisePlan } = usePlanData();
-
+  
   const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
 
   useEffect(() => {
@@ -728,7 +724,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
 
   const workspaceData = useWorkspaceLoaderData();
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const { userSession } = useRootLoaderData()!;
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [workspaceCount, setWorkspaceCount] = useState(0);
 
@@ -770,57 +765,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-  const isLoggedIn = userSession.id || organizationId || activeProject;
   const isScratchPadWorkspace = models.workspace.isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
   const showImportButtons =
-    !isScratchPadWorkspace && (activeProject || features.bulkImport?.enabled || isEnterprisePlan);
-  if (!isScratchPadWorkspace && !isLoggedIn) {
-    return (
-      <Button
-        className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-        onPress={async () => {
-          const { filePaths, canceled } = await window.dialog.showOpenDialog({
-            properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-            buttonLabel: 'Select',
-            title: 'Export All Insomnia Data',
-          });
-
-          if (canceled) {
-            return;
-          }
-
-          const [dirPath] = filePaths;
-
-          try {
-            dirPath &&
-              (await exportAllData({
-                dirPath,
-              }));
-          } catch (e) {
-            showModal(AlertModal, {
-              title: 'Export Failed',
-              message: 'An error occurred while exporting data. Please try again.',
-            });
-            console.error(e);
-          }
-
-          showModal(AlertModal, {
-            title: 'Export Complete',
-            message: 'All your data have been successfully exported',
-          });
-          window.main.trackAnalyticsEvent({
-            event: AnalyticsEvent.exportAllCollections,
-          });
-        }}
-        aria-label="Export all data"
-      >
-        <Icon icon="file-export" />
-        <span>Export all data {`(${workspaceCount} files)`}</span>
-      </Button>
-    );
-  }
+    !isScratchPadWorkspace && (activeProject || features.bulkImport?.enabled);
 
   return (
     <Fragment>
@@ -888,15 +837,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               <Icon icon="file-export" />
               <span>Export all data {`(${workspaceCount} files)`}</span>
             </Button>
-
-            <Button
-              className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-              isDisabled={!userSession.id}
-              onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
-            >
-              <i className="fa fa-file-import" />
-              Create Run Button
-            </Button>
           </div>
         </div>
         {showImportButtons && (
@@ -928,15 +868,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   <Icon icon="file-import" />
                   {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
                 </Button>
-              ) : isEnterprisePlan ? (
-                <p className="text-sm">
-                  Need to import many projects at once? Reach out to{' '}
-                  <a className="text-(--color-surprise)" href="mailto:support@insomnia.rest">
-                    support@insomnia.rest
-                  </a>{' '}
-                  to have multi-project import enabled.
-                </p>
-              ) : null}
+              ): null}
             </div>
           </div>
         )}

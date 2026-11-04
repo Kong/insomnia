@@ -8,11 +8,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/insomnium-next.git",
     "directory": "packages/insomnia-inso"
   },
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -68,8 +68,5 @@
     "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
-  },
-  "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.1.5"
   }
 }

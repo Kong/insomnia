@@ -2,39 +2,9 @@ import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import electron from 'electron';
-import { services } from 'insomnia-data';
-
-import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
-import { getClientString } from '../common/constants';
 import { assertPathWithinDir } from './safe-fs-write';
-
-export async function backupIfNewerVersionAvailable() {
-  try {
-    const settings = await services.settings.get();
-    console.log('[main] Checking for newer version than', version);
-    const url = getUpdateUrl(settings.updateChannel);
-    if (!url) {
-      console.log('[main] Update URL not found, skipping backup check');
-      return;
-    }
-    const response = await electron.net.fetch(url, {
-      method: 'GET',
-      headers: new Headers({
-        'X-Insomnia-Client': getClientString(),
-      }),
-    });
-    if (response) {
-      console.log('[main] Found newer version');
-      await backup();
-      return;
-    }
-    console.log('[main] No newer version');
-  } catch (err) {
-    console.log('[main] Error checking for newer version', err);
-  }
-}
 
 export async function backup() {
   try {

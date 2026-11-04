@@ -41,7 +41,17 @@ export async function launchInsomnia(
   const app = await playwright._electron.launch({
     cwd,
     executablePath,
-    args: bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath],
+    args: [
+      // The headless backend reports no pointer, which disables Tailwind's hover styles
+      ...(process.env.HEADLESS
+        ? [
+            '--ozone-platform=headless',
+            '--ozone-override-screen-size=1920,1200',
+            '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4',
+          ]
+        : []),
+      ...(bundleType() === 'package' ? ['--no-sandbox'] : ['--no-sandbox', mainPath]),
+    ],
     env: {
       ...launchEnv,
       ...envOptions,

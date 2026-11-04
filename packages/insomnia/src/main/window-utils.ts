@@ -29,8 +29,11 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { hasTitleBarOverlay, setAppMenu } from './title-bar';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
+
+const TITLE_BAR_HEIGHT = 32;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -229,7 +232,15 @@ export function createWindow(): ElectronBrowserWindow {
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
     // Other options
-    backgroundColor: '#2C2C2C',
+    backgroundColor: '#1f1f1f',
+    ...(isMac
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 10, y: 9 } }
+      : {
+          titleBarStyle: 'hidden' as const,
+          ...(hasTitleBarOverlay()
+            ? { titleBarOverlay: { color: '#181818', symbolColor: '#cccccc', height: TITLE_BAR_HEIGHT } }
+            : {}),
+        }),
     fullscreen: fullscreen,
     fullscreenable: true,
     title: `${getProductName()} ${getAppVersion()}`,
@@ -249,6 +260,9 @@ export function createWindow(): ElectronBrowserWindow {
       ...MAIN_WINDOW_SECURITY,
     },
   });
+  if (!isMac) {
+    mainBrowserWindow.setMenuBarVisibility(false);
+  }
   browserWindows.set('Insomnia', mainBrowserWindow);
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
@@ -791,6 +805,7 @@ export function createWindow(): ElectronBrowserWindow {
   }
 
   const menu = Menu.buildFromTemplate(template);
+  setAppMenu(menu);
   if (isMac) {
     Menu.setApplicationMenu(menu);
   } else {

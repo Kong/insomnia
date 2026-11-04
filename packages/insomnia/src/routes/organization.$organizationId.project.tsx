@@ -1,15 +1,9 @@
-import { getLearningFeature } from 'insomnia-api';
-import { models } from 'insomnia-data';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Heading } from 'react-aria-components';
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Outlet, useParams, useSearchParams } from 'react-router';
-import * as reactUse from 'react-use';
 
-import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
-import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import {
   ProjectNavigationSidebar,
   type ProjectNavigationSidebarHandle,
@@ -17,8 +11,6 @@ import {
 import { SyncBar } from '~/ui/components/sidebar/sync-bar';
 import { useSidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-import { useServerQuery } from '~/ui/hooks/use-query';
-import { useRemoteBackendProjectsInvalidation } from '~/ui/hooks/use-remote-files';
 
 /**
  * Shared layout for everything under `/organization/:organizationId/project` — both the index
@@ -42,18 +34,7 @@ const Component = () => {
 
   const [searchParams] = useSearchParams();
 
-  const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = reactUse.useLocalStorage(
-    'learning-feature-dismissed',
-    '',
-  );
   const storageRules = useOrganizationStorageRule(organizationId);
-  const { data: learningFeature } = useServerQuery({
-    queryKey: ['learning-feature'],
-    queryFn: getLearningFeature,
-    enabled: !isLearningFeatureDismissed,
-    staleTime: 1000 * 60 * 60 * 24, // 1 day
-    refetchOnWindowFocus: true,
-  });
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
   const { isSidebarCollapsed } = useSidebarContext();
 
@@ -67,9 +48,6 @@ const Component = () => {
     }
   }, [isSidebarCollapsed]);
 
-  // Only the id is needed here, so this stays correct without waiting on the project loader.
-  const isScratchPad = projectId ? models.project.isScratchpadProject({ _id: projectId }) : false;
-
   const navigationSidebarRef = useRef<ProjectNavigationSidebarHandle>(null);
 
   useEffect(() => {
@@ -78,8 +56,6 @@ const Component = () => {
       navigationSidebarRef.current.expandProject(projectId);
     }
   }, [searchParams, projectId]);
-
-  useRemoteBackendProjectsInvalidation(organizationId);
 
   return (
     <>
@@ -104,29 +80,6 @@ const Component = () => {
               onCreateProject={() => setIsNewProjectModalOpen(true)}
               ref={navigationSidebarRef}
             />
-            {isScratchPad && <ScratchPadTutorialPanel />}
-            {!isLearningFeatureDismissed && learningFeature?.active && (
-              <div className="flex shrink-0 flex-col gap-2 p-(--padding-sm)">
-                <div className="flex items-center justify-between gap-2">
-                  <Heading className="text-base">
-                    <Icon icon="graduation-cap" />
-                    <span className="ml-2">{learningFeature.title}</span>
-                  </Heading>
-                  <Button
-                    onPress={() => {
-                      setIsLearningFeatureDismissed('true');
-                    }}
-                  >
-                    <Icon icon="close" />
-                  </Button>
-                </div>
-                <p className="text-sm text-(--hl)">{learningFeature.message}</p>
-                <a href={learningFeature.url} className="flex items-center gap-2 text-sm underline">
-                  {learningFeature.cta}
-                  <Icon icon="arrow-up-right-from-square" />
-                </a>
-              </div>
-            )}
             <SyncBar />
           </div>
         </Panel>

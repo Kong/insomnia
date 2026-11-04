@@ -29,11 +29,9 @@ import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
 import { sortMethodMap } from '~/common/sorting';
 import type { FileIssueKind } from '~/sync/git/repo-file-watcher';
-import { pushSnapshotOnInitialize } from '~/sync/vcs/initialize-backend-project';
 import { Icon } from '~/ui/components/icon';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
-import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -277,24 +275,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     return collection;
   }
 
-  const userSession = await services.userSession.get();
-  const isLoggedInIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
-  let vcsVersion = null;
-  if (isLoggedInIsCloudProjectAndIsNotGitRepo) {
-    try {
-      await window.main.sync.switchAndCreateBackendProjectIfNotExist(workspaceId, workspaceId, activeWorkspace.name);
-      if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-        await pushSnapshotOnInitialize({
-          vcs: syncVCSLikeForWorkspace(workspaceId),
-          workspace: activeWorkspace,
-          project: activeProject,
-        });
-      }
-      vcsVersion = await window.main.sync.getVersion(workspaceId);
-    } catch (err) {
-      console.warn('Failed to initialize VCS', err);
-    }
-  }
+  const vcsVersion = null;
 
   const workspaces = await services.workspace.listByParentId(projectId);
 

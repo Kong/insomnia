@@ -5,11 +5,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/insomnium-next.git",
     "directory": "packages/insomnia-smoke-test"
   },
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
   "version": "13.3.1",
   "scripts": {
@@ -44,7 +44,7 @@
     "yaml": "^2.7.1"
   },
   "description": "[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)",
-  "homepage": "https://github.com/Kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/insomnium-next#readme",
   "main": ".eslintrc.js",
   "directories": {
     "doc": "docs",

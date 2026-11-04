@@ -6,7 +6,7 @@ import { PreferencesDataTab } from './data-tab';
 type PreferencesTab = 'Data' | 'General' | 'Themes' | 'Credentials' | 'Plugins' | 'Other';
 
 /**
- * Page Object for **Insomnia Preferences** modal.
+ * Page Object for **Insomnium Preferences** modal.
  *
  * Composes preference tabs:
  * - Data tab (import/export)

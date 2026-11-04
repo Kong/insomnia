@@ -1,0 +1,10 @@
+{
+  "name": "lodash.set",
+  "version": "4.3.3",
+  "description": "Replaces the unmaintained lodash.set with the patched lodash implementation.",
+  "license": "MIT",
+  "main": "index.js",
+  "dependencies": {
+    "lodash": "^4.18.1"
+  }
+}

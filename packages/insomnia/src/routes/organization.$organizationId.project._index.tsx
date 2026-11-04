@@ -1,10 +1,9 @@
 import { models, services } from 'insomnia-data';
 import type { LoaderFunctionArgs } from 'react-router';
-import { href, redirect, useParams } from 'react-router';
+import { redirect, useParams } from 'react-router';
 
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
-import { logout } from '~/ui/account/session';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { NoProjectView } from '~/ui/components/panes/no-project-view';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
@@ -27,12 +26,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
-  const { id: sessionId, accountId } = await services.userSession.get();
-
-  if (!sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
+  const { accountId } = await services.userSession.get();
 
   const organizationProjects = await getProjectsWithGitRepositories({ organizationId });
   const projects = models.project.sortProjects(organizationProjects);

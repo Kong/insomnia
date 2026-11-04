@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { Curl } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
 import { services } from 'insomnia-data';
+import { Curl } from 'node-libcurl';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerCurlHandlers } from './curl';

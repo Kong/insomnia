@@ -4,11 +4,33 @@ import { vi } from 'vitest';
 
 // eslint-disable-next-line no-restricted-imports
 import { v4Mock } from '../insomnia-data/__mocks__/uuid';
-import { nodeLibcurlMock } from './src/__mocks__/@getinsomnia/node-libcurl';
 import { electronMock } from './src/__mocks__/electron';
+import { nodeLibcurlMock } from './src/__mocks__/node-libcurl';
 import { mainDatabase } from './src/main/database.main';
 import { initRuntime } from './src/runtimes';
 import { nodeRuntime } from './src/runtimes/runtime.node';
+
+// Node 26 ships a global localStorage stub that shadows jsdom's implementation.
+if (typeof window !== 'undefined' && !window.localStorage?.clear) {
+  const store = new Map<string, string>();
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, String(value)),
+      removeItem: (key: string) => store.delete(key),
+      clear: () => store.clear(),
+      key: (index: number) => [...store.keys()][index] ?? null,
+      get length() {
+        return store.size;
+      },
+    },
+  });
+}
+
+process.env.INSOMNIA_API_URL = 'https://api.example.test';
+process.env.INSOMNIA_APP_WEBSITE_URL = 'https://app.example.test';
+process.env.INSOMNIA_MOCK_API_URL = 'https://mock.example.test';
 
 await initDatabase(mainDatabase, { inMemoryOnly: true }, true);
 await initServices(servicesNodeImpl);
@@ -20,7 +42,7 @@ vi.mock('electron', () => ({ default: electronMock, ...electronMock }));
 vi.mock('uuid', () => ({
   v4: () => v4Mock(),
 }));
-vi.mock('@getinsomnia/node-libcurl', () => nodeLibcurlMock);
+vi.mock('node-libcurl', () => nodeLibcurlMock);
 
 vi.mock('isomorphic-git', async importOriginal => {
   const actual = await importOriginal();

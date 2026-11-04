@@ -1,4 +1,5 @@
 import classnames from 'classnames';
+import { models } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
@@ -15,7 +16,6 @@ import { Modal, type ModalHandle } from '~/ui/components/base/modal';
 import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { showModal } from '..';
@@ -503,7 +503,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
     modalRef.current?.show();
   }, []);
 
-  const organizations = useOrganizations();
+  const organizations = [models.organization.LOCAL_ORGANIZATION];
   const organizationName =
     organizations.find(org => org.id === organizationId)?.name || 'Organization';
 

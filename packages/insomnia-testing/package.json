@@ -6,11 +6,11 @@
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/insomnium-next.git",
     "directory": "packages/insomnia-testing"
   },
   "bugs": {
-    "url": "https://github.com/Kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -20,6 +20,6 @@
   "dependencies": {
     "chai-json-schema": "1.5.1"
   },
-  "homepage": "https://github.com/Kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/insomnium-next#readme",
   "description": ""
 }

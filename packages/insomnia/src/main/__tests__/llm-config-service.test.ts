@@ -32,11 +32,6 @@ vi.mock('electron', () => ({
   },
 }));
 
-vi.mock('@sentry/electron/main', () => ({
-  init: vi.fn(),
-  captureException: vi.fn(),
-  captureMessage: vi.fn(),
-}));
 
 const mockPluginData = (key: string, value: string) => ({ key, value }) as any;
 

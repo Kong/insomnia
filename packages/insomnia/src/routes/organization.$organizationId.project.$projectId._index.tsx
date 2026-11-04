@@ -19,7 +19,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetchers, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import {
@@ -32,11 +32,9 @@ import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common
 import { getAllLocalFiles } from '~/common/project';
 import { sortMethodMap } from '~/common/sorting';
 import { invariant } from '~/common/utils/invariant';
-import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useProjectLoaderData, useProjectRouteContext } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 import { AnalyticsEvent, trackOnceDaily } from '~/ui/analytics';
-import { AvatarGroup } from '~/ui/components/avatar';
 import { WorkspaceCardDropdown } from '~/ui/components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '~/ui/components/error-boundary';
 import { FirstRequestCreation } from '~/ui/components/first-request-creation';
@@ -50,16 +48,11 @@ import { ProjectEmptyView } from '~/ui/components/project/project-empty-view';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { TimeFromNow } from '~/ui/components/time-from-now';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
-import { UnsyncedFileDeleteButton } from '~/ui/components/unsynced-file-delete-button';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
@@ -86,20 +79,8 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   };
   const { projects } = useOrganizationData(organizationId);
 
-  const remoteFiles = useUnsyncedFilesForProject(organizationId, projectId, localFiles);
+  const allFiles = localFiles;
 
-  const allFiles = useMemo(() => [...localFiles, ...remoteFiles], [localFiles, remoteFiles]);
-
-  const { userSession } = useRootLoaderData()!;
-  const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
-  const loadingBackendProjects = useFetchers()
-    .filter(
-      fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-    )
-    .map(f => f.formData?.get('backendProjectId'));
-
-  const organizations = useOrganizations();
-  const { presence } = useInsomniaEventStreamContext();
   const { issuesByWorkspaceId } = useGitFileIssues();
   const storageRules = useOrganizationStorageRule(organizationId);
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
@@ -121,8 +102,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = Boolean(organization?.is_owner);
+  const isUserOwner = true;
   const collectionItems = useMemo(
     () =>
       localFiles
@@ -171,43 +151,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
     .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
   const filesWithPresence = filteredFiles
-    .map(file => {
-      const workspacePresence = presence
-        .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
-        .filter(p => p.acct !== userSession.accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        });
-      return {
-        ...file,
-        fileIssue: file.workspace ? issuesByWorkspaceId[file.workspace._id] : undefined,
-        loading:
-          loadingBackendProjects.includes(file.remoteId) ||
-          (pullFileFetcher.formData?.get('backendProjectId') &&
-            pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
-        presence: workspacePresence,
-      };
-    })
     .map(file => ({
       ...file,
+      fileIssue: file.workspace ? issuesByWorkspaceId[file.workspace._id] : undefined,
+      loading: false,
       action: (withTab?: boolean) => {
-        // hack to workaround gridlist not have access to workspace scope
-        if (file.scope === 'unsynced') {
-          if (activeProject?.remoteId && file.remoteId) {
-            return pullFileFetcher.submit({
-              backendProjectId: file.remoteId,
-              remoteId: activeProject.remoteId,
-              organizationId,
-            });
-          }
-
-          return;
-        }
-
         if (!activeProject || !file.workspace) {
           showResourceNotFoundToast('Workspace not found');
           return;
@@ -613,21 +561,13 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                           <span>{item.label}</span>
                         </div>
                         <span className="flex-1" />
-                        {item.presence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={item.presence} />}
-                        {activeProject && item.scope !== 'unsynced' && item.workspace && (
+                        {activeProject && item.workspace && (
                           <WorkspaceCardDropdown
                             workspace={item.workspace}
                             mockServer={item.mockServer}
                             gitFilePath={item.gitFilePath || undefined}
                             apiSpec={item.apiSpec}
                             project={activeProject}
-                          />
-                        )}
-                        {item.scope === 'unsynced' && item.remoteId && (
-                          <UnsyncedFileDeleteButton
-                            organizationId={organizationId}
-                            backendProjectId={item.remoteId}
-                            name={item.name}
                           />
                         )}
                       </div>

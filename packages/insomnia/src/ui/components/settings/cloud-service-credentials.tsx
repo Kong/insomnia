@@ -8,14 +8,12 @@ import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
-import { usePlanData } from '../../hooks/use-plan';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
 import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
-import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
 
 const { getProviderDisplayName } = models.cloudCredential;
@@ -51,7 +49,6 @@ const buttonClassName =
   'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-(--hl-sm) rounded-xs text-(--color-font) hover:bg-(--hl-xs) transition-all text-sm py-1 px-2';
 
 export const CloudServiceCredentialList = () => {
-  const { isOwner, isEnterprisePlan } = usePlanData();
   const { cloudCredentials } = useRootLoaderData()!;
   const [modalState, setModalState] = useState<{
     show: boolean;
@@ -117,9 +114,6 @@ export const CloudServiceCredentialList = () => {
     }
   };
 
-  if (!isEnterprisePlan) {
-    return <UpgradeNotice isOwner={isOwner} featureName="Cloud Credentials feature" newPlan="enterprise" />;
-  }
   if (!isVaultPluginInstalled) {
     return (
       <div className="notice pad info flex flex-col items-center justify-center gap-2">

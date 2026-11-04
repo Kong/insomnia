@@ -1,4 +1,3 @@
-import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { platform } from 'insomnia-data/common';
@@ -23,6 +22,7 @@ import { useParams } from 'react-router';
 import { Banner } from '~/basic-components/banner';
 import { Divider } from '~/basic-components/divider';
 import { LearnMoreLink } from '~/basic-components/link';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useGitProjectRelocateActionFetcher } from '~/routes/git.relocate';
 import { useGitValidateCredentialsFetcher } from '~/routes/git.validate-credentials';

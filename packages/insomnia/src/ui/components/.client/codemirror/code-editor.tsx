@@ -33,12 +33,10 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '~/ui/comp
 import { FilterHelpModal } from '~/ui/components/modals/filter-help-modal';
 import { showModal } from '~/ui/components/modals/index';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
-import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { useNunjucks, type UseNunjucksOptions } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
-import { usePlanData } from '~/ui/hooks/use-plan';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
@@ -274,7 +272,6 @@ export const CodeEditor = memo(
       const [originalCode, setOriginalCode] = useState('');
       const [jsonFilterMatchCount, setJsonFilterMatchCount] = useState<number | null>(null);
       const { settings } = useRootLoaderData()!;
-      const { isOwner, isEnterprisePlan } = usePlanData();
       const indentSize = settings.editorIndentSize;
       const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
       const indentChars = indentWithTabs ? '\t' : Array.from({ length: (indentSize || TAB_SIZE) + 1 }).join(' ');
@@ -754,17 +751,8 @@ export const CodeEditor = memo(
       useEffect(() => {
         const unsubscribe = window.main.on(
           'nunjucks-context-menu-command',
-          (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
+          (_, { key, tag, nunjucksTag }) => {
             if (id === key) {
-              if (needsEnterprisePlan && !isEnterprisePlan) {
-                // show modal if current user is not an enterprise user and the command is an enterprise feature
-                showModal(UpgradeModal, {
-                  newPlan: 'enterprise',
-                  featureName: displayName,
-                  isOwner,
-                });
-                return;
-              }
               if (nunjucksTag) {
                 const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
                 if (type === 'edit') {
@@ -790,7 +778,7 @@ export const CodeEditor = memo(
         return () => {
           unsubscribe();
         };
-      }, [id, isEnterprisePlan, isOwner]);
+      }, [id]);
       useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
       useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
       useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);

@@ -40,7 +40,7 @@ test.describe('Dashboard', () => {
     await page.getByRole('button', { name: 'Delete' }).click();
 
     // After deleting project, return to default Insomnia Dashboard
-    await expect.soft(page.locator('.app')).toContainText('Personal Workspace');
+    await expect.soft(page.locator('.app')).toContainText('My Project');
     await expect.soft(page.locator('.app')).not.toContainText('My Project123');
     await expect.soft(page.locator('.app')).toContainText('Enter API Spec');
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');

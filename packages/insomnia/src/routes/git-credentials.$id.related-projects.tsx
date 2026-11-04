@@ -1,4 +1,4 @@
-import type { Organization } from 'insomnia-api';
+import type { Organization } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
@@ -32,11 +32,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     };
   }
 
-  const currentUserOrganizationIds = new Set([
-    ...organizations.map(o => o.id),
-    models.organization.SCRATCHPAD_ORGANIZATION_ID,
-    models.organization.getKonnectOrganizationId(accountId),
-  ]);
+  const currentUserOrganizationIds = new Set([models.organization.LOCAL_ORGANIZATION_ID]);
 
   const currentUserProjects = relatedProjects.filter(p => currentUserOrganizationIds.has(p.parentId));
 

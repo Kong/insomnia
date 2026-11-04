@@ -1,4 +1,4 @@
-import type { CurlInfoDebug } from '@getinsomnia/node-libcurl';
+import type { CurlInfoDebug } from 'node-libcurl';
 
 import type { BaseModel } from './base-types';
 import type { RequestTestResult } from './runner-test-result';

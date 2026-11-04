@@ -79,32 +79,3 @@ describe('update()', () => {
     );
   });
 });
-
-describe('syncTeamProjects()', () => {
-  it('clears sync flags when a remote project is removed', async () => {
-    const { project, workspace } = await createProjectWorkspace({
-      remoteId: 'proj_remote',
-      parentId: 'org_test',
-    });
-    const workspaceMeta = await services.workspaceMeta.create({
-      parentId: workspace._id,
-      hasUncommittedChanges: true,
-      hasUnpushedChanges: true,
-    });
-
-    await services.project.syncTeamProjects({ organizationId: 'org_test', teamProjects: [] });
-
-    expect(await services.project.getById(project._id)).toEqual(
-      expect.objectContaining({
-        remoteId: null,
-      }),
-    );
-    expect(await services.workspaceMeta.getByParentId(workspace._id)).toEqual(
-      expect.objectContaining({
-        hasUncommittedChanges: false,
-        hasUnpushedChanges: false,
-        modified: workspaceMeta.modified,
-      }),
-    );
-  });
-});

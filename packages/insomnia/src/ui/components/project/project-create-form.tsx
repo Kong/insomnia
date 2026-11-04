@@ -1,10 +1,10 @@
-import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials } from 'insomnia-data';
 import type { FC } from 'react';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Button, Form, Input, Label, TextField } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
 import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 import type { GitProviderOption } from '~/sync/git/providers/types';

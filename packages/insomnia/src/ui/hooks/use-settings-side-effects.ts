@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
@@ -25,7 +25,4 @@ export const useSettingsSideEffects = () => {
     updateFontStyle('font-size', `${settings.fontSize}px`);
   }, [settings.fontSize]);
 
-  useEffect(() => {
-    window.main.setMenuBarVisibility(!settings.autoHideMenuBar);
-  }, [settings.autoHideMenuBar]);
 };

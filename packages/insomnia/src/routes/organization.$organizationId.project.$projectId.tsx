@@ -2,7 +2,6 @@ import { models, services } from 'insomnia-data';
 import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
-import { logout } from '~/ui/account/session';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId';
@@ -13,12 +12,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   invariant(organizationId, 'Organization ID is required');
 
   const userSession = await services.userSession.get();
-  const { id: sessionId, accountId } = userSession;
-
-  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
-    await logout();
-    throw redirect(href('/auth/login'));
-  }
+  const { accountId } = userSession;
 
   const project = await services.project.getById(projectId);
 

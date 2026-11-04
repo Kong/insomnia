@@ -49,7 +49,7 @@ test('can send requests', async ({ page, insomnia }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
-  await expect.soft(responseBody).toContainText('Connected to 127.0.0.1');
+  await expect.soft(responseBody).toContainText('127.0.0.1');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Disconnect' }).click();
 
   await insomnia.navigationSidebar.clickRequestOrFolder('sends dummy.csv request and shows rich response');

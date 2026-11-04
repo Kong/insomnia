@@ -33,11 +33,7 @@ window.dialog = {
 };
 
 window.clipboard = {
-  readText: () => ipcRenderer.sendSync('readText') as string,
-  writeText: (text: string) => {
-    ipcRenderer.send('writeText', text);
-  },
-  clear: () => {
-    ipcRenderer.send('clear');
-  },
+  readText: () => ipcRenderer.invoke('readText'),
+  writeText: (text: string) => ipcRenderer.invoke('writeText', text),
+  clear: () => ipcRenderer.invoke('clear'),
 };

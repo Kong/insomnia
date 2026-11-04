@@ -41,18 +41,11 @@ export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
-export const getAppBundlePlugins = () => appConfig.bundlePlugins;
+export const getAppBundlePlugins = () => appConfig.bundlePlugins as { name: string }[];
 // Must specify full `process.env.INSOMNIA_ENV` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppEnvironment = () => env.INSOMNIA_ENV || process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
 export const allowUpdatesInDev = () => Boolean(env.ALLOW_UPDATES_IN_DEV);
-export const getSegmentWriteKey = () =>
-  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'];
-export const getSentryDsn = () => appConfig.sentryDsn;
-export const getCioWriteKey = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].writeKey;
-export const getCioSiteId = () =>
-  appConfig.cio[isDevelopment() || env.PLAYWRIGHT_TEST ? 'development' : 'production'].siteId;
 // Must specify full `process.env.BUILD_DATE` here because esbuild define is a build-time replacement and won't inject to runtime
 export const getAppBuildDate = () => new Date((env.BUILD_DATE || process.env.BUILD_DATE) ?? '').toLocaleDateString();
 
@@ -107,8 +100,8 @@ export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.
 export const getOauthRelayUrl = () => env.OAUTH_RELAY_URL || 'https://app.insomnia.rest/oauth/relay';
 
 // API
-export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
+export const getApiBaseURL = () => env.INSOMNIA_API_URL || '';
+export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || '';
 
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {
@@ -120,10 +113,8 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   return url.origin + path;
 };
 
-export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
-// Customer.io CDP (analytics/in-app messaging) — see ui/hooks/use-cio.tsx
-export const getCioCdnUrl = () => 'https://cdp-eu.customer.io';
-export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
+export const getAIServiceURL = () => env.INSOMNIA_AI_URL || '';
+export const getKonnectApiUrl = () => env.KONNECT_API_URL || '';
 export const getKonnectApiRegions = (): string[] => {
   const regions = (env.KONNECT_API_REGIONS ?? '')
     .split(',')
@@ -133,7 +124,7 @@ export const getKonnectApiRegions = (): string[] => {
 };
 
 // App website
-export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
+export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || '';
 
 // GitHub API
 export const getGitHubRestApiUrl = () => env.INSOMNIA_GITHUB_REST_API_URL || 'https://api.github.com';
@@ -151,7 +142,7 @@ export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
-export const DEFAULT_SIDEBAR_SIZE = 25;
+export const DEFAULT_SIDEBAR_SIZE = 20;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';

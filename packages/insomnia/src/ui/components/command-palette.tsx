@@ -21,20 +21,14 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
-import { useRemoteFilesLoaderFetcher } from '~/routes/remote-files';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { AvatarGroup } from '~/ui/components/avatar';
 import { Icon } from '~/ui/components/icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
-import { showModal } from '~/ui/components/modals';
-import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useCommandSearch } from '~/ui/hooks/use-command-search';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
@@ -108,16 +102,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   };
 
   const { userSession } = useRootLoaderData()!;
-  const { presence } = useInsomniaEventStreamContext();
-  const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
 
-  const navigate = useNavigate();
   const tabNavigate = useTabNavigate();
 
   const accountId = userSession.accountId;
 
-  const remoteFilesLoader = useRemoteFilesLoaderFetcher();
 
   const {
     results: searchResults,
@@ -137,13 +127,8 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     close();
   }, [abort, close]);
 
-  useEffect(() => {
-    if (!remoteFilesLoader.data && remoteFilesLoader.state === 'idle') {
-      remoteFilesLoader.load();
-    }
-  }, [remoteFilesLoader]);
 
-  const isLoadingComboboxItems = isSearching || remoteFilesLoader.state !== 'idle';
+  const isLoadingComboboxItems = isSearching;
 
   type CommandRequest = CommandSearchResult['current']['requests'][number];
 
@@ -240,38 +225,14 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       ...getRequestHandlers(request),
     })) || [];
 
-  const remoteFiles = remoteFilesLoader.data?.files || [];
-  const remoteFileMatchesFilter = (file: { name: string }) =>
-    !inputValue || file.name.toLowerCase().includes(inputValue.toLowerCase());
-
   const currentFilesData = searchResults?.current.files || [];
-  const currentRemoteFilesData = remoteFiles
-    .filter(file => file.item.teamProjectLocalId === projectId)
-    .filter(file => !currentFilesData.some(f => f.id === file.item.id))
-    .filter(remoteFileMatchesFilter);
-
   const currentLocalFiles =
     currentFilesData?.map(file => ({
       ...file,
       ...getFileHandlers(file),
     })) || [];
 
-  const currentRemoteFiles =
-    currentRemoteFilesData?.map(file => ({
-      ...file,
-      action: async () => {
-        await pullFileFetcher.submit({
-          backendProjectId: file.item.projectId,
-          remoteId: file.item.teamProjectId,
-          organizationId: file.item.organizationId,
-        });
-
-        navigate(file.url);
-        closeWithAbort();
-      },
-    })) || [];
-
-  const currentFiles = [...currentLocalFiles, ...currentRemoteFiles];
+  const currentFiles = currentLocalFiles;
 
   const currentEnvironments =
     searchResults?.current.environments.map(environment => ({
@@ -294,33 +255,13 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     })) || [];
 
   const otherFilesData = searchResults?.other.files || [];
-  const otherRemoteFilesData = remoteFiles
-    .filter(file => file.item.teamProjectLocalId !== projectId)
-    .filter(file => !otherFilesData.some(f => f.id === file.item.id))
-    .filter(remoteFileMatchesFilter);
-
   const otherLocalFiles =
     otherFilesData.map(file => ({
       ...file,
       ...getFileHandlers(file),
     })) || [];
 
-  const otherRemoteFiles =
-    otherRemoteFilesData.map(file => ({
-      ...file,
-      action: async () => {
-        await pullFileFetcher.submit({
-          backendProjectId: file.item.projectId,
-          remoteId: file.item.teamProjectId,
-          organizationId: file.item.organizationId,
-        });
-
-        navigate(file.url);
-        closeWithAbort();
-      },
-    })) || [];
-
-  const otherFiles = [...otherLocalFiles, ...otherRemoteFiles];
+  const otherFiles = otherLocalFiles;
 
   currentRequests.length > 0 &&
     comboboxSections.push({
@@ -385,16 +326,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           </span>
         ),
         textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
-        presence: presence
-          .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
-          .filter(p => p.acct !== accountId)
-          .map(user => {
-            return {
-              key: user.acct,
-              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-              src: user.avatar,
-            };
-          }),
+        presence: [],
         openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
         action: file.action,
       })),
@@ -501,36 +433,12 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           </span>
         ),
         textValue: file.name + ' ' + scopeToLabelMap[file.item.scope],
-        presence: presence
-          .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
-          .filter(p => p.acct !== accountId)
-          .map(user => {
-            return {
-              key: user.acct,
-              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-              src: user.avatar,
-            };
-          }),
+        presence: [],
         openInNewTab: 'openInNewTab' in file ? file.openInNewTab : undefined,
         action: file.action,
       })),
     });
 
-  const prevPullFetcherState = useRef(pullFileFetcher.state);
-  useEffect(() => {
-    if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
-      if (pullFileFetcher.data?.error) {
-        showModal(AlertModal, {
-          title: 'Error',
-          message: pullFileFetcher.data.error,
-        });
-      }
-
-      closeWithAbort();
-    }
-
-    prevPullFetcherState.current = pullFileFetcher.state;
-  }, [closeWithAbort, pullFileFetcher]);
 
   // Close the dialog when the environment is set
   // If we close the dialog when fetcher.submit() is done then the dialog will close before the environment is set
@@ -544,15 +452,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     prevEnvFetcherState.current = setActiveEnvironmentFetcher.state;
   }, [closeWithAbort, setActiveEnvironmentFetcher.state]);
 
-  const isPullingFile = pullFileFetcher.state !== 'idle';
-  const pullingFileBackedProjectId = pullFileFetcher.formData?.get('backendProjectId');
-  const pullingFile = remoteFiles.find(file => file.item.projectId === pullingFileBackedProjectId);
 
   return (
     <ComboBox
       aria-label="Quick switcher"
       className="group overflow-hidden"
-      isDisabled={isPullingFile}
       autoFocus
       allowsCustomValue={false}
       menuTrigger="focus"
@@ -587,18 +491,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         return (
           <>
             <Label aria-label="Filter" className="group relative flex flex-1 items-center pt-0">
-              {isPullingFile ? (
-                <>
-                  <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
-                  <div
-                    slot="input"
-                    className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
-                  >
-                    Pulling: {pullingFile?.name}
-                  </div>
-                </>
-              ) : (
-                <>
+              <>
                   {isLoadingComboboxItems ? (
                     <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />
                   ) : (
@@ -610,7 +503,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                     className="w-full rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-3 pr-7 pl-10 text-(--color-font) transition-none group-data-open:rounded-b-none"
                   />
                 </>
-              )}
             </Label>
             <Popover
               offset={0}
@@ -644,11 +536,6 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                             <Text className="shrink-0 truncate px-1" slot="label">
                               {item.name}
                             </Text>
-                            {item.presence.length > 0 && (
-                              <span className="w-[70px]">
-                                <AvatarGroup size="small" maxAvatars={3} items={item.presence} />
-                              </span>
-                            )}
                             <Text className="flex-1 truncate px-1 text-sm text-(--hl-md)" slot="description">
                               {item.description}
                             </Text>

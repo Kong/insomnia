@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 
-import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
 import type { Response } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
+import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from 'node-libcurl';
 import { v4 as uuidV4 } from 'uuid';
 
 import { REALTIME_EVENTS_CHANNELS } from '~/common/constants';
@@ -275,6 +275,15 @@ const openCurlConnection = async (
     CurlConnections.get(requestId)?.on(
       'stream',
       async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
+        // node-libcurl only completes a transfer if the stream is flowing from the start, so
+        // listen before any await and buffer until the event log is ready.
+        const pendingChunks: Buffer[] = [];
+        let onChunk: (chunk: Buffer) => unknown = chunk => pendingChunks.push(chunk);
+        const streamFinished = new Promise<void>((resolve, reject) => {
+          stream.on('data', (chunk: Buffer) => onChunk(chunk));
+          stream.once('end', resolve);
+          stream.once('error', reject);
+        });
         for (const window of BrowserWindow.getAllWindows()) {
           window.webContents.send(readyStateChannel, true);
         }
@@ -328,7 +337,7 @@ const openCurlConnection = async (
         timeline.forEach(t => writeTimelineEntry(requestId, t));
 
         invariant(eventLogFileStreams.get(requestId), 'writableStream should be defined');
-        for await (const chunk of stream) {
+        const writeChunk = (chunk: Buffer) => {
           const messageEvent: CurlMessageEvent = {
             _id: uuidV4(),
             requestId,
@@ -338,7 +347,10 @@ const openCurlConnection = async (
             direction: 'INCOMING',
           };
           writeCurlEventLog(requestId, messageEvent);
-        }
+        };
+        pendingChunks.forEach(writeChunk);
+        onChunk = writeChunk;
+        await streamFinished;
 
         // NOTE: when stream is closed by remote server
         const closeEvent: CurlCloseEvent = {
@@ -351,13 +363,14 @@ const openCurlConnection = async (
           code: 0,
           wasClean: true,
         };
-        CurlConnections.get(requestId)?.close();
         deleteRequestMaps(requestId, 'Closing connection', closeEvent);
         for (const window of BrowserWindow.getAllWindows()) {
           window.webContents.send(readyStateChannel, false);
         }
       },
     );
+    // node-libcurl resets the handle after the stream ends, so it can only be closed on 'end'.
+    curl.once('end', () => curl.isOpen && curl.close());
     curl.perform();
   } catch (e) {
     console.error('unhandled error:', e);

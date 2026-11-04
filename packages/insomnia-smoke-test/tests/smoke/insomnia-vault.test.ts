@@ -10,58 +10,11 @@ const tesSrpSecret = 'b424e8700ef89f77a6cffc648b9c6d42bb7de58914d88cd79966684ffe
 
 test('Check vault key generation', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.locator('text=Insomnium Preferences').first().click();
   // generate vault key
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
   const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
   expect.soft(vaultKeyValue.length).toBeGreaterThan(0);
-});
-
-test.describe('Vault key actions', () => {
-  test.use({
-    userConfig: async ({ userConfig }, use) => {
-      await use({
-        ...userConfig,
-        vaultSalt: testVaultSalt,
-        vaultSrpSecret: tesSrpSecret,
-      });
-    },
-  });
-
-  test('check reset and validate vault key', async ({ page }) => {
-    // check vault key validation
-    await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
-    // validate vault key
-    await page.getByRole('button', { name: 'Enter Vault Key' }).click();
-    const modal = page.getByTestId('input-vault-key-modal');
-    await expect.soft(modal).toBeVisible();
-    // fill the input with aria label test with valid and invalid vault key
-    await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
-    await page.getByRole('button', { name: 'Unlock' }).click();
-    await modal.getByText('Invalid vault key, please check and input again').click();
-    // test reset vault key
-    await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
-    await expect.soft(modal).toBeVisible();
-    const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
-    await page.getByText('OK', { exact: true }).click();
-    const vaultKeyValue = page.getByTestId('VaultKeyDisplayPanel');
-    await expect.soft(vaultKeyValue).toHaveText(vaultKeyValueInModal);
-  });
-
-  test('check reset vault key in private environment', async ({ page, app }) => {
-    // import global environment
-    const vaultEnvText = await loadFixture('vault-environment.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByRole('dialog').getByText('Reset Vault Key').dblclick();
-    const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
-  });
 });
 
 test.describe('Check vault used in environment', () => {
@@ -183,7 +136,7 @@ test.describe('Check vault used in environment', () => {
 
     // allow vault to be accessed by the request
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
+    await page.locator('text=Insomnium Preferences').first().click();
     await page.locator('text=Enable vault in scripts').click();
     await page.locator('.app').press('Escape');
 

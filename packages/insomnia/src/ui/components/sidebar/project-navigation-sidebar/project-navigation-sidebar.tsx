@@ -1,5 +1,4 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { StorageRules } from 'insomnia-api';
 import type { CollectionWorkspaceChildren, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
@@ -22,7 +21,7 @@ import { workspaceChildrenKeys } from '~/common/app-data';
 import { filterCollection, flattenCollectionChildren } from '~/common/collection';
 import type { SortOrder } from '~/common/constants';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
-import { getUnsyncedRemoteWorkspaces } from '~/common/project';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { sortMethodMap } from '~/common/sorting';
 import { useProjectDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.delete';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -34,25 +33,15 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { NewProjectButton, SidebarSearchField } from '~/ui/components/sidebar/project-navigation-sidebar/components';
 import { EmptyNode } from '~/ui/components/sidebar/project-navigation-sidebar/empty-node';
-import { KonnectEnvOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-env-onboarding';
-import { KonnectSyncIntro } from '~/ui/components/sidebar/project-navigation-sidebar/konnect-sync-intro/konnect-sync-intro';
 import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding';
-import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
-import {
-  KonnectSyncActionsRow,
-  KonnectSyncProgressLine,
-  KonnectSyncResultPanel,
-  useKonnectSyncBar,
-} from './konnect-sync-bar';
 import { getSidebarGridListItemId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
@@ -122,7 +111,6 @@ const ProjectNavigationSidebarInner = (
     [],
   );
   const deleteProjectFetcher = useProjectDeleteActionFetcher();
-  const isKonnectOrganization = models.organization.isKonnectOrganizationId(organizationId);
 
   const {
     organizationProjects,
@@ -159,14 +147,9 @@ const ProjectNavigationSidebarInner = (
   reactUse.useDebounce(() => setProjectNavigationSidebarFilter(filterInputValue), 300, [filterInputValue]);
   const activeFilter = (projectNavigationSidebarFilter || '').trim();
 
-  const isScratchPad = activeProjectId === models.project.SCRATCHPAD_PROJECT_ID;
-  // The active project can't answer this while no project is selected, so gate the create-project
-  // affordance on the organization instead — the Scratch Pad organization never accepts new ones.
-  const isScratchPadOrganization = models.organization.isScratchpadOrganizationId(organizationId);
 
   // Unsynced remote files grouped by projectId, sourced from a shared server-data query
   // (deduped with the project view). Refresh is handled inside the hook via CLOUD_SYNC_FILE_CHANGE.
-  const unsyncedFilesByProjectId = useRemoteFilesByProjectId(organizationId, organizationProjects);
 
   useEffect(() => {
     if (projectNavigationSidebarFilter) {
@@ -209,10 +192,7 @@ const ProjectNavigationSidebarInner = (
           sortedWorkspaces = [...workspaces].sort((a, b) => sortMethodMap[workspaceOrder](a, b));
         }
 
-        const unsyncedWorkspaces = models.project.isRemoteProject(project)
-          ? getUnsyncedRemoteWorkspaces(unsyncedFilesByProjectId.get(projectId) || [], sortedWorkspaces)
-          : [];
-        const allWorkspaces = [...sortedWorkspaces, ...unsyncedWorkspaces];
+        const allWorkspaces = sortedWorkspaces;
         // If there is no workspace under the project, show an empty workspace if no active filter
         if (allWorkspaces.length === 0 && !activeFilter) {
           items.push({
@@ -225,29 +205,7 @@ const ProjectNavigationSidebarInner = (
         }
 
         for (const workspace of allWorkspaces) {
-          if (workspace.scope === 'unsynced') {
-            // When a filter is active, show the unsynced workspace only if its name matches the filter.
-            const unsyncedWorkspaceMatchesFilter =
-              !activeFilter ||
-              Boolean(
-                fuzzyMatchAll(activeFilterLower, [workspace.name?.toLowerCase() || ''], {
-                  splitSpace: true,
-                  loose: true,
-                })?.indexes,
-              );
-            items.push({
-              kind: 'unsyncedWorkspace',
-              organizationId,
-              project: project,
-              doc: {
-                // ensure _id is present in doc for unsynced workspace flat item
-                _id: workspace.id,
-                ...workspace,
-              },
-              collapsed: false,
-              hidden: activeFilter ? !unsyncedWorkspaceMatchesFilter : isProjectCollapsed,
-            });
-          } else {
+          {
             const { scope, _id: workspaceId } = workspace as Workspace;
             const isCollection = scope === 'collection' || scope === 'design';
             // Only collection workspace has nested children
@@ -431,7 +389,6 @@ const ProjectNavigationSidebarInner = (
     organizationWorkspaces,
     pendingCollectionWorkspaceIds,
     projectWorkspaceSortOrder,
-    unsyncedFilesByProjectId,
     workspaceMetas,
   ]);
 
@@ -760,10 +717,6 @@ const ProjectNavigationSidebarInner = (
 
   useKeyboardShortcuts(() => parentRef.current!, {
     sidebar_showCreateDropdown: event => {
-      if (isKonnectOrganization) {
-        return;
-      }
-
       const { focusedItem, selectedFlatItem } = getFocusedItem();
       // If the user has a row focused, use that as the target item; otherwise, use the selected item.
       const targetItem = focusedItem ?? selectedFlatItem;
@@ -839,21 +792,6 @@ const ProjectNavigationSidebarInner = (
     },
   });
 
-  const { hasKonnectPat } = settings;
-  const showKonnectSyncIntro = isKonnectOrganization && !hasKonnectPat;
-  const [onboardingEnvWorkspaceId, setOnboardingEnvWorkspaceId] = useState<string | null>(null);
-  const [envOnboardingNode, setEnvOnboardingNode] = useState<HTMLDivElement | null>(null);
-
-  const dismissEnvOnboarding = useCallback(() => {
-    setOnboardingEnvWorkspaceId(null);
-  }, []);
-
-  const konnectSyncBar = useKonnectSyncBar({
-    organizationId,
-    hasProjects: organizationProjects.length > 0,
-    onFirstSyncEnvWorkspace: setOnboardingEnvWorkspaceId,
-    setExpandedProjectAndWorkspaceIds,
-  });
 
   // One-time nudge explaining collection focus mode, anchored to the "back to
   // all projects" arrow (only rendered while a collection is actually focused).
@@ -867,10 +805,7 @@ const ProjectNavigationSidebarInner = (
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden" data-testid="global-navigation-sidebar">
-      {showKonnectSyncIntro ? (
-        <KonnectSyncIntro onConfigure={() => konnectSyncBar.setShowKonnectConfigModal(true)} />
-      ) : (
-        <>
+      <>
           {focusedWorkspaceId ? (
             <div className={focusTransition === 'in' ? 'animate-[sidebar-focus-in_200ms_ease-out]' : ''}>
               <div
@@ -949,15 +884,9 @@ const ProjectNavigationSidebarInner = (
                 isDisabled={organizationProjects.length === 0}
                 onChange={setFilterInputValue}
               />
-              {isKonnectOrganization ? (
-                <KonnectSyncActionsRow {...konnectSyncBar} />
-              ) : (
-                !isScratchPadOrganization && <NewProjectButton onPress={onCreateProject} />
-              )}
+              <NewProjectButton onPress={onCreateProject} />
             </div>
           )}
-
-          {isKonnectOrganization && <KonnectSyncProgressLine {...konnectSyncBar} />}
 
           <div
             ref={parentRef}
@@ -1078,12 +1007,11 @@ const ProjectNavigationSidebarInner = (
                           if (routeInfo?.resourceId === docId) {
                             toggleProjectOrWorkspace(docId);
                           } else {
-                            !isScratchPad &&
-                              window.main.trackAnalyticsEvent({
+                            window.main.trackAnalyticsEvent({
                                 event: AnalyticsEvent.projectSwitched,
                                 properties: { project_id: docId },
                               });
-                            !isScratchPad && navigate(`/organization/${organizationId}/project/${docId}`);
+                            navigate(`/organization/${organizationId}/project/${docId}`);
                           }
                         } else if (item.kind === 'workspace') {
                           if (item.doc.scope === 'collection' && enableCollectionFocus) {
@@ -1115,9 +1043,6 @@ const ProjectNavigationSidebarInner = (
                             );
                           }
                           // Dismiss onboarding when user navigates to the highlighted environment
-                          if (docId === onboardingEnvWorkspaceId) {
-                            dismissEnvOnboarding();
-                          }
                         } else if (item.kind === 'emptyCollection') {
                           const emptyCollectionWorkspace = item.workspace;
                           if (emptyCollectionWorkspace) {
@@ -1196,8 +1121,6 @@ const ProjectNavigationSidebarInner = (
                               });
                             }
                           }}
-                          highlighted={item.doc._id === onboardingEnvWorkspaceId}
-                          nodeRef={item.doc._id === onboardingEnvWorkspaceId ? setEnvOnboardingNode : undefined}
                           onRename={() => showRenameModal(item)}
                           onDelete={() => showDeleteModal(item)}
                         />
@@ -1214,8 +1137,6 @@ const ProjectNavigationSidebarInner = (
                           onDelete={() => showDeleteModal(item)}
                         />
                       )}
-
-                      {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
 
                       {item.kind === 'emptyProject' ||
                       item.kind === 'emptyCollection' ||
@@ -1253,18 +1174,7 @@ const ProjectNavigationSidebarInner = (
               }}
             />
           )}
-        </>
-      )}
-
-      {/* Outside the branch above on purpose: this hosts the Konnect settings modal, and the
-          intro branch's "Configure" button is what opens it. Nesting it in the else branch made
-          that button set state nothing rendered, which is unrecoverable for an organization that
-          has Konnect projects but no PAT. */}
-      {isKonnectOrganization && <KonnectSyncResultPanel {...konnectSyncBar} />}
-
-      {onboardingEnvWorkspaceId && envOnboardingNode && (
-        <KonnectEnvOnboarding triggerElement={envOnboardingNode} onDismiss={dismissEnvOnboarding} />
-      )}
+      </>
       {showSidebarFocusOnboarding && focusedWorkspaceHeaderNode && (
         <SidebarFocusOnboarding triggerElement={focusedWorkspaceHeaderNode} onDismiss={dismissSidebarFocusOnboarding} />
       )}

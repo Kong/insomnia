@@ -1,4 +1,10 @@
-import type { StorageRules } from 'insomnia-api';
+export interface StorageRules {
+  enableCloudSync: boolean;
+  enableLocalVault: boolean;
+  enableGitSync: boolean;
+  isOverridden: boolean;
+}
+
 import { generateId } from 'insomnia-data/common';
 
 import type { BaseModel } from './base-types';
@@ -9,7 +15,6 @@ export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
 // This is used to identify Git Projects that are not connected to a remote yet
 export const EMPTY_GIT_PROJECT_ID = 'empty';
@@ -77,7 +82,7 @@ export function isConnectedGitProject(project: Project): project is GitProject {
   return isGitProject(project) && getEffectiveRepoId(project) !== null;
 }
 
-export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
+export const isScratchpadProject = (_project: Pick<Project, '_id'>) => false;
 export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject =>
   project.remoteId === null;
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>

@@ -1,4 +1,3 @@
-import type { StorageRules } from 'insomnia-api';
 import type { Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { RefObject } from 'react';
@@ -6,6 +5,7 @@ import { useState } from 'react';
 import { Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import type { CreateRequestType } from '~/ui/hooks/use-request';

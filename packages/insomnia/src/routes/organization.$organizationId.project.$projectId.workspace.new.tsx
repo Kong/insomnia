@@ -1,18 +1,15 @@
-import { upsertMockbin } from 'insomnia-api';
 import type { MockRoute, MockServer, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { getMockServiceURL, METHOD_GET } from '~/common/constants';
 import { database } from '~/common/database';
+import { upsertMockbin } from '~/common/mock-api';
 import type { MockRouteData } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
-import { trackCioEvent } from '~/ui/hooks/use-cio';
-import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
-import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
@@ -159,21 +156,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     // Create default env, cookie jar, and meta
     await services.environment.getOrCreateForParentId(workspace._id);
     await services.cookieJar.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
 
-    const { id } = await services.userSession.get();
-    if (
-      id &&
-      !workspaceMeta.gitRepositoryId &&
-      !models.project.isGitProject(project) &&
-      !models.project.isLocalProject(project)
-    ) {
-      await window.main.initializeWorkspaceBackendProject({
-        workspaceId: workspace._id,
-      });
-    }
 
     let event = AnalyticsEvent.documentCreate;
     let environmentType: string | undefined;
@@ -196,9 +182,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       },
     });
 
-    if (event === AnalyticsEvent.documentCreate) {
-      recordAction('document_created');
-    }
 
     if (workspaceData.withRequest) {
       const activeRequestId = (
@@ -211,9 +194,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       )._id;
 
       services.stats.incrementCreatedRequests();
-      // Keep graduation in sync with requests created via this path too (fire-and-forget,
-      // idempotent — see maybeLatchRequestThreshold).
-      services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
 
       const requestCreatedProperties = {
         requestType: 'HTTP',
@@ -227,9 +207,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
       // Send to Customer.io directly so the event is tied to the identified
       // user's email-bearing profile (only fires when logged in). See INS-2678.
-      trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
-
-      recordAction('request_created');
 
       if (!redirectAfterCreate) {
         return {
@@ -315,14 +292,14 @@ async function createMockServer(
     };
 
     if (mockServerType === 'cloud') {
-      mockServerPatch.useInsomniaCloud = true;
+      mockServerPatch.useInsomniaCloud = false;
     } else {
       mockServerPatch.useInsomniaCloud = false;
       mockServerPatch.url = workspaceData.mockServerUrl!.trim().replace(/\/+$/, '');
     }
 
     await services.environment.getOrCreateForParentId(workspace._id);
-    const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await services.workspaceMeta.getOrCreateByParentId(workspace._id);
     const mockServer = await services.mockServer.getOrCreateForParentId(workspace._id, mockServerPatch);
 
     const mockServerUrl = `${href('/organization/:organizationId/project/:projectId/workspace/:workspaceId', {
@@ -377,20 +354,13 @@ async function createMockServer(
         return result.error;
       }
 
-      const { id: sessionId } = await services.userSession.get();
-      await createMockRoutes(result.routes, mockServer, sessionId, organizationId);
+      await createMockRoutes(result.routes, mockServer);
     }
 
     await database.flushChanges(flushId);
 
     const generationDurationMs = Date.now() - generationStartTime;
 
-    const { id } = await services.userSession.get();
-    if (id && !workspaceMeta.gitRepositoryId) {
-      await window.main.initializeWorkspaceBackendProject({
-        workspaceId: workspace._id,
-      });
-    }
 
     window.main.trackAnalyticsEvent({
       event: AnalyticsEvent.mockCreate,
@@ -459,12 +429,7 @@ function validateMockServerSpec(workspaceData: NewWorkspaceData) {
   return null;
 }
 
-async function createMockRoutes(
-  routes: MockRouteData[],
-  mockServer: MockServer,
-  sessionId: string,
-  organizationId: string,
-) {
+async function createMockRoutes(routes: MockRouteData[], mockServer: MockServer) {
   for (const route of routes) {
     const mockRouteCreateData: Partial<MockRoute> = {
       parentId: mockServer._id,
@@ -485,12 +450,10 @@ async function createMockRoutes(
       const compoundId = mockRoute.parentId + mockRoute.name;
       const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
-      if (mockbinUrl && sessionId) {
+      if (mockbinUrl) {
         await upsertMockbin({
           mockbinUrl,
           compoundId,
-          organizationId,
-          sessionId,
           method: route.method,
           data: await mockRouteToHar({
             statusCode: mockRoute.statusCode,

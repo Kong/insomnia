@@ -3,18 +3,10 @@ import { models, services } from 'insomnia-data';
 import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
 
 import {
-  getAIServiceURL,
-  getApiBaseURL,
-  getAppWebsiteBaseURL,
-  getCioCdnUrl,
   getGitHubRestApiUrl,
-  getKonnectApiUrl,
-  getMockServiceURL,
-  getSentryDsn,
 } from '~/common/constants';
 
 import { type ChangeBufferEvent, database as db } from '../common/database';
-import { getUpdatesBaseURL } from './updates';
 
 // Insomnia's own first-party integrations — fixed hosts, not user-configured targets like a
 // self-hosted GitLab or MCP server. Bypassed unless `proxyScope` is 'all' (see below), so a
@@ -22,17 +14,6 @@ import { getUpdatesBaseURL } from './updates';
 // route to these, matching how this traffic behaved before the app's proxy setting covered it.
 function insomniaIntegrationHosts() {
   const urls = [
-    // Insomnia's own backend/CDN
-    getApiBaseURL(),
-    getAppWebsiteBaseURL(),
-    getMockServiceURL(),
-    getAIServiceURL(),
-    getUpdatesBaseURL,
-    'https://static.insomnia.rest',
-
-    // Kong Konnect
-    getKonnectApiUrl(),
-
     // GitHub REST API — OAuth/repo listing (main/sync/git/providers/github.ts). This is the app
     // talking to GitHub on the user's behalf, so it's safe to bypass unconditionally.
     //
@@ -41,19 +22,6 @@ function insomniaIntegrationHosts() {
     // git-sync traffic uniformly under `proxyScope` via its own dedicated direct session,
     // scoped to just those requests rather than this session-wide bypass list.
     getGitHubRestApiUrl(),
-
-    // Analytics & error monitoring — main/analytics.ts (Segment, via net.fetch),
-    // main/sentry.ts (Sentry, via @sentry/electron's own net.request-based transport)
-    'https://api.segment.io',
-    getSentryDsn(),
-
-    // Customer.io — ui/hooks/use-cio.tsx's CDP client, plus the in-app messaging ("Gist")
-    // widget iframe and the Google Fonts it loads (see main/api.protocol.ts)
-    getCioCdnUrl(),
-    'https://renderer.gist.build',
-    'https://code.gist.build',
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com',
   ];
   return urls.flatMap(url => {
     try {

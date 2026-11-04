@@ -1,4 +1,3 @@
-import type { Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
@@ -45,7 +44,6 @@ export const importScannedResources = async ({
       })
     : importResourcesToProject({
         projectId: project._id,
-        syncNewWorkspaceIfNeeded,
       }));
 };
 
@@ -120,6 +118,3 @@ export const useImportResourcesFetcher = createFetcherSubmitHook(
   clientAction,
 );
 
-export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
-  return window.main.syncNewWorkspaceIfNeeded({ workspaceId: newWorkspace._id });
-}

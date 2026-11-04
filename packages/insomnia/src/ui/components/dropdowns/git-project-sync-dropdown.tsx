@@ -1,6 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitProject, GitRepository } from 'insomnia-data';
-import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -23,6 +22,7 @@ import { useGitProjectPushActionFetcher } from '~/routes/git.push';
 import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import type { MergeConflict } from '~/sync/git/merge-types';
 import type { FileProblemsChangedPayload } from '~/sync/git/repo-file-watcher';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ProjectModal } from '~/ui/components/modals/project-modal';

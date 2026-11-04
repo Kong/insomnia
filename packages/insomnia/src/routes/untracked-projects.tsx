@@ -1,4 +1,3 @@
-import type { Organization } from 'insomnia-api';
 import type { Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
@@ -12,13 +11,7 @@ export interface UntrackedProjectsLoaderData {
 }
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
-  const { accountId } = await services.userSession.get();
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:spaces`) || '[]') as Organization[];
-  const listOfOrganizationIds = [
-    ...organizations.map(o => o.id),
-    models.organization.SCRATCHPAD_ORGANIZATION_ID,
-    models.organization.getKonnectOrganizationId(accountId),
-  ];
+  const listOfOrganizationIds = [models.organization.LOCAL_ORGANIZATION_ID];
 
   const projects = await services.project.list({
     parentId: { $nin: listOfOrganizationIds },

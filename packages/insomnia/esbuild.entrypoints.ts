@@ -140,7 +140,7 @@ export default async function build(options: Options) {
     },
     external: [
       'electron',
-      '@getinsomnia/node-libcurl',
+      'node-libcurl',
       // QuickJS loads its .wasm relative to its own __dirname; bundling it breaks that path
       // resolution. Keep it external so it's required from node_modules at runtime (like node-libcurl).
       'quickjs-emscripten',

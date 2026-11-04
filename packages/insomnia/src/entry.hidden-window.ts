@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/electron/renderer';
-import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import { initServices } from 'insomnia-data';
 
 import type { RequestContext } from '../../insomnia-scripting-environment/src/objects';
@@ -15,10 +13,6 @@ export interface HiddenBrowserWindowBridgeAPI {
     securityPolicy?: ScriptSecurityPolicy;
   }) => Promise<RequestContext>;
 }
-
-Sentry.init({
-  ...SENTRY_OPTIONS,
-});
 
 // Initialize services for hidden renderer process
 if (!window._dataServices) {
@@ -56,11 +50,6 @@ window.bridge.onmessage(
         : String(error);
       const fullErrMessage = `${errMessage}\n\n${error.stack ? `Stack: ${error.stack}` : ''}`;
       console.log('[hidden-window] script error:', errMessage);
-      Sentry.captureException(errMessage, {
-        tags: {
-          source: 'hidden-window',
-        },
-      });
       callback({ error: fullErrMessage });
     } finally {
       window.bridge.setBusy(false);

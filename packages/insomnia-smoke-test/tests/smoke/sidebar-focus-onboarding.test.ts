@@ -46,7 +46,7 @@ test.describe('sidebar focus mode onboarding', () => {
 
   test('does not show when the setting is turned off', async ({ page, insomnia }) => {
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
+    await page.locator('text=Insomnium Preferences').first().click();
     await page.locator('text=Sidebar focus for collections').click();
     await page.locator('.app').press('Escape');
 

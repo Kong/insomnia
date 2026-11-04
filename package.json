@@ -5,22 +5,20 @@
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
   "license": "Apache-2.0",
-  "repository": "https://github.com/kong/insomnia",
+  "repository": "https://github.com/outmanos/insomnium-next",
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
-  "homepage": "https://github.com/kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/insomnium-next#readme",
   "engines": {
-    "node": ">=24.18.0",
-    "npm": ">=11"
+    "node": ">=26.13.0",
+    "npm": ">=12.0.0"
   },
   "workspaces": [
     "packages/insomnia-testing",
     "packages/insomnia",
     "packages/insomnia-data",
-    "packages/insomnia-vcs",
     "packages/insomnia-analytics",
-    "packages/insomnia-api",
     "packages/insomnia-inso",
     "packages/insomnia-smoke-test",
     "packages/insomnia-scripting-environment"
@@ -32,8 +30,8 @@
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "clean": "git clean -dfX",
-    "install-libcurl-electron": "node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=electron --target=43.2.0",
-    "install-libcurl-node": "node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=node --target=24.18.0",
+    "install-libcurl-electron": "electron-rebuild -f -w node-libcurl -m packages/insomnia",
+    "install-libcurl-node": "npm rebuild node-libcurl --build-from-source",
     "inso-start": "npm start -w insomnia-inso",
     "inso-package": "npm run build -w insomnia-inso && npm run package -w insomnia-inso",
     "watch:app": "npm run build:electron-entrypoints -w insomnia && npm run start:dev-server -w insomnia",
@@ -44,7 +42,7 @@
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
     "test:crit:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Critical",
-    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia && npm run install-libcurl-electron",
+    "postinstall": "patch-package && npm run install-libcurl-electron",
     "check-cycle-references": "node scripts/circular-references/check-cycle-references.mjs",
     "check-cycle-references:baseline": "node scripts/circular-references/check-cycle-references.mjs --update-baseline"
   },
@@ -75,7 +73,8 @@
     "type-fest": "^4.15.0",
     "typescript": "5.8.3",
     "typescript-eslint": "^8.29.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@electron/rebuild": "^4.0.0"
   },
   "overrides": {
     "ajv-draft-04": {
@@ -83,21 +82,30 @@
     },
     "jshint": {
       "lodash": "4.18.1"
-    }
+    },
+    "lodash.set": "file:./scripts/shims/lodash.set",
+    "node-abi": "^4.40.0",
+    "form-data": "^4.0.6",
+    "minimatch@<4": "^3.1.5",
+    "minimatch@>=5 <6": "^5.1.9",
+    "minimatch@>=7 <8": "^7.4.9",
+    "minimatch@>=8 <9": "^8.0.7",
+    "minimatch@>=9 <10": "^9.0.9",
+    "minimatch@>=10 <11": "^10.1.1",
+    "serialize-javascript": "^7.1.3"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "3.3.0",
-    "ajv": "^8.20.0"
+    "ajv": "^8.20.0",
+    "node-libcurl": "5.1.2"
   },
   "allowScripts": {
-    "@getinsomnia/node-libcurl@3.3.0": true,
     "@scarf/scarf@1.4.0": true,
     "electron-winstaller@5.4.0": true,
     "esbuild@0.25.12": true,
     "esbuild@0.27.5": true,
     "fsevents@2.3.2": true,
     "fsevents@2.3.3": true,
-    "node-llama-cpp@3.18.1": true,
-    "protobufjs@7.6.6": true
+    "protobufjs@7.6.6": true,
+    "node-libcurl": true
   }
 }

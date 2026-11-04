@@ -1,5 +1,4 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { type FC, Fragment, useState } from 'react';
@@ -22,6 +21,7 @@ import * as reactUse from 'react-use';
 import type { SORT_ORDERS } from '~/common/constants';
 import { sortOrderName } from '~/common/constants';
 import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-label';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';

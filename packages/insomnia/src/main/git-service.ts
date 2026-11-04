@@ -29,12 +29,12 @@ import type {
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { slugify } from 'insomnia-data/common';
-import type { AutoResolvedConflict, MergeConflict } from 'insomnia-vcs';
 import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import YAML, { parse } from 'yaml';
 
 import { invariant } from '~/common/utils/invariant';
 import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
+import type { AutoResolvedConflict, MergeConflict } from '~/sync/git/merge-types';
 import {
   gitRemoteProviderRegistry,
   initializeGitRemoteProviders,
@@ -1298,7 +1298,10 @@ export async function importLegacyInsomniaFolder({
     }
 
     // Remove the legacy folder
-    await fsClient.promises.rmdir(GIT_INSOMNIA_DIR_NAME, { recursive: true });
+    await (fsClient.promises as unknown as typeof fs.promises).rm(GIT_INSOMNIA_DIR_NAME, {
+      recursive: true,
+      force: true,
+    });
 
     return {
       changes,

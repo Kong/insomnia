@@ -1,6 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentKvPairDataType, EnvironmentType, models, services } from 'insomnia-data';
+import { EnvironmentType, models, services } from 'insomnia-data';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -40,7 +40,6 @@ import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-val
 import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
-import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { Tooltip } from '~/ui/components/tooltip';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
@@ -114,12 +113,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
   }, [selectedEnvironmentId, activeEnvironment._id, allEnvironment]);
   const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
   const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
-  // Check if there's any environment contains secret item
-  const containsSecret = allEnvironment.some(
-    env => env.isPrivate && env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET),
-  );
-  const shouldShowVaultKeyModal = containsSecret && !loaderData.vaultKey;
-  const [showInputVaultKeyModal, setShowModal] = useState(shouldShowVaultKeyModal);
 
   const environmentActionsList: {
     id: string;
@@ -289,9 +282,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
 
-  const handleInputVaultKeyModalClose = () => {
-    setShowModal(false);
-  };
 
   return (
     <div className="flex h-full flex-col">
@@ -545,9 +535,6 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                 onChange={handleKVPairChange}
                 vaultKey={vaultKey}
               />
-            )}
-            {showInputVaultKeyModal && (
-              <InputVaultKeyModal onClose={handleInputVaultKeyModalClose} allowClose={false} />
             )}
           </div>
         </Panel>

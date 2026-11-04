@@ -15,10 +15,8 @@ import { invariant } from '~/common/utils/invariant';
 import { invokeWithNormalizedError } from '~/main/ipc/invoke';
 import type { LLMBackend, LLMConfig, LLMConfigServiceAPI } from '~/main/llm-config-service';
 import type { PluginInvokeMethod } from '~/plugins/invoke-method';
-import { isUserAbortResolveMergeConflictError, UserAbortResolveMergeConflictError } from '~/sync/vcs/utils';
 import { servicesProxy } from '~/ui/renderer-services-proxy';
 
-import type { SyncBridgeAPI } from './main/cloud-sync/ipc';
 import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
@@ -150,59 +148,9 @@ const electronStorage: electronStorageBridgeAPI = {
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
 };
 
-const invokeSyncMethod = async <T>(workspaceId: string, methodName: string, ...args: unknown[]) => {
-  try {
-    return (await invokeWithNormalizedError('sync.invoke', workspaceId, methodName, ...args)) as T;
-  } catch (error) {
-    if (isUserAbortResolveMergeConflictError(error)) {
-      throw new UserAbortResolveMergeConflictError(
-        'message' in error && typeof error.message === 'string' ? error.message : undefined,
-      );
-    }
-
-    throw error;
-  }
-};
-
-const invokeGlobalSyncMethod = async <T>(methodName: string, ...args: unknown[]) => {
-  return (await invokeWithNormalizedError('sync.invokeGlobal', methodName, ...args)) as T;
-};
-
-const sync: SyncBridgeAPI = {
-  archiveProject: workspaceId => invokeSyncMethod(workspaceId, 'archiveProject'),
-  checkout: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'checkout', ...args),
-  compareRemoteBranch: workspaceId => invokeSyncMethod(workspaceId, 'compareRemoteBranch'),
-  fork: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'fork', ...args),
-  getActiveBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'getActiveBackendProject'),
-  getBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getBranchNames'),
-  getCurrentBranchName: workspaceId => invokeSyncMethod(workspaceId, 'getCurrentBranchName'),
-  getHistory: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'getHistory', ...args),
-  getHistoryCount: workspaceId => invokeSyncMethod(workspaceId, 'getHistoryCount'),
-  getRemoteBranchNames: workspaceId => invokeSyncMethod(workspaceId, 'getRemoteBranchNames'),
-  getVersion: workspaceId => invokeSyncMethod(workspaceId, 'getVersion'),
-  hasBackendProject: workspaceId => invokeSyncMethod(workspaceId, 'hasBackendProject'),
-  localBackendProjects: () => invokeGlobalSyncMethod('localBackendProjects'),
-  merge: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'merge', ...args),
-  pull: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'pull', ...args),
-  pullRemoteBackendProject: options => invokeWithNormalizedError('sync.pullRemoteBackendProject', options),
-  push: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'push', ...args),
-  remoteBackendProjects: (...args) => invokeGlobalSyncMethod('remoteBackendProjects', ...args),
-  remoteBackendProjectsOfTeam: (...args) => invokeGlobalSyncMethod('remoteBackendProjectsOfTeam', ...args),
-  hasBackendProjectForRootDocument: (...args) => invokeGlobalSyncMethod('hasBackendProjectForRootDocument', ...args),
-  removeBackendProjectsForRoot: (...args) => invokeGlobalSyncMethod('removeBackendProjectsForRoot', ...args),
-  archiveBackendProject: (...args) => invokeGlobalSyncMethod('archiveBackendProject', ...args),
-  removeBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeBranch', ...args),
-  removeRemoteBranch: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'removeRemoteBranch', ...args),
-  rollback: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollback', ...args),
-  rollbackToLatest: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'rollbackToLatest', ...args),
-  resolveConflict: options => ipcRenderer.send('sync.resolveConflict', options),
-  cancelConflict: options => ipcRenderer.send('sync.cancelConflict', options),
-  stage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'stage', ...args),
-  status: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'status', ...args),
-  switchAndCreateBackendProjectIfNotExist: (workspaceId, ...args) =>
-    invokeSyncMethod(workspaceId, 'switchAndCreateBackendProjectIfNotExist', ...args),
-  takeSnapshot: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'takeSnapshot', ...args),
-  unstage: (workspaceId, ...args) => invokeSyncMethod(workspaceId, 'unstage', ...args),
+const sync = {
+  resolveConflict: (options: unknown) => ipcRenderer.send('sync.resolveConflict', options),
+  cancelConflict: (options: unknown) => ipcRenderer.send('sync.cancelConflict', options),
 };
 
 const git: GitServiceAPI = {
@@ -289,6 +237,9 @@ const main: Window['main'] = {
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   applyUpdateAndRestart: () => ipcRenderer.send('applyUpdateAndRestart'),
   getUpdateStatus: () => ipcRenderer.sendSync('getUpdateStatus'),
+  getAppMenuLabels: () => ipcRenderer.invoke('getAppMenuLabels'),
+  showAppMenu: options => ipcRenderer.send('showAppMenu', options),
+  setTitleBarColors: options => ipcRenderer.send('setTitleBarColors', options),
   backup: () => invokeWithNormalizedError('backup'),
   restoreBackup: options => invokeWithNormalizedError('restoreBackup', options),
   authorizeUserInWindow: options => invokeWithNormalizedError('authorizeUserInWindow', options),
@@ -296,12 +247,10 @@ const main: Window['main'] = {
   onDefaultBrowserOAuthRedirect: options => invokeWithNormalizedError('onDefaultBrowserOAuthRedirect', options),
   cancelAuthorizationInDefaultBrowser: options =>
     invokeWithNormalizedError('cancelAuthorizationInDefaultBrowser', options),
-  setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   multipartBufferToArray: options => invokeWithNormalizedError('multipartBufferToArray', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     invokeWithNormalizedError('installPlugin', lookupName, allowScopedPackageNames),
   createPlugin: options => invokeWithNormalizedError('createPlugin', options),
-  initializeWorkspaceBackendProject: options => invokeWithNormalizedError('initializeWorkspaceBackendProject', options),
   runTests: src => invokeWithNormalizedError('run-tests', src),
   curlRequest: options => invokeWithNormalizedError('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
@@ -406,7 +355,6 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     invokeWithNormalizedError('extractJsonFileFromPostmanDataDumpArchive', archivePath),
-  syncNewWorkspaceIfNeeded: options => invokeWithNormalizedError('syncNewWorkspaceIfNeeded', options),
   getLocalStorageDataFromFileOrigin: () => invokeWithNormalizedError('getLocalStorageDataFromFileOrigin'),
   generateMockRouteDataFromSpec: (
     openApiSpec: string | undefined,
@@ -502,9 +450,9 @@ const shell: Window['shell'] = {
   openPath: options => invokeWithNormalizedError('openPath', options),
 };
 const clipboard: Window['clipboard'] = {
-  readText: () => ipcRenderer.sendSync('readText'),
-  writeText: options => ipcRenderer.send('writeText', options),
-  clear: () => ipcRenderer.send('clear'),
+  readText: () => ipcRenderer.invoke('readText'),
+  writeText: options => ipcRenderer.invoke('writeText', options),
+  clear: () => ipcRenderer.invoke('clear'),
 };
 const webUtils: Window['webUtils'] = {
   getPathForFile: (file: File) => webUtilities.getPathForFile(file),

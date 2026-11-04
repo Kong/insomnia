@@ -78,7 +78,7 @@ test.describe('paste cURL import', () => {
     // The app auto-redirects to the first project while one exists, so reach
     // the genuine no-project state by deleting the only project.
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      projectName: 'Personal Workspace',
+      projectName: 'My Project',
       actionName: 'Delete',
     });
     await insomnia.page.getByRole('button', { name: 'Delete' }).click();
@@ -90,29 +90,5 @@ test.describe('paste cURL import', () => {
     // Without a project in context the form defaults to creating a new one.
     await expect.soft(insomnia.page.getByLabel('Select Project')).toHaveValue('');
     await expect.soft(insomnia.page.getByRole('dialog').getByPlaceholder('Enter project name')).toBeVisible();
-  });
-
-  // skipOnboarding seeds hasUserLoggedInBefore, so the session-less app opens
-  // on the login screen; 'Use local Scratch Pad' there enters the real
-  // scratchpad context.
-  const scratchpadTest = test.extend({
-    userConfig: async ({ userConfig }, use) => {
-      await use({ ...userConfig, session: undefined });
-    },
-  });
-
-  scratchpadTest('pasting inside the Scratchpad does not trigger the import flow', async ({ app, insomnia }) => {
-    await insomnia.page.getByRole('button', { name: 'Use local Scratch Pad' }).click();
-    await insomnia.page.waitForURL(/proj_scratchpad/);
-
-    await pasteCurl(app, insomnia.page);
-
-    // The Scratchpad holds a single collection: the import flow must stay out
-    // of it. Negative integration assertion: nothing is emitted when the flow
-    // is disabled, so there is no event to await — poll a bounded window for
-    // the modal's absence instead of sleeping.
-    await expect
-      .poll(() => insomnia.page.getByRole('dialog').count(), { timeout: 2000, intervals: [250, 250, 250, 250] })
-      .toBe(0);
   });
 });

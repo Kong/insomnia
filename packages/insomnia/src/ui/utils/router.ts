@@ -1,12 +1,7 @@
-import type { Organization } from 'insomnia-api';
-import type { GitProject, GitRepository } from 'insomnia-data';
-import { database, models, services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
-import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
-import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
 export const enum AsyncTask {
   MigrateProjects,
@@ -86,97 +81,7 @@ export const getInitialRouteForOrganization = async ({
 };
 
 export const getInitialEntry = async () => {
-  // If the user has not seen the onboarding, then show it
-  // Otherwise if the user is not logged in and has not logged in before, then show the login
-  // Otherwise if the user is logged in, then show the organization
-  try {
-    const allProjects = await services.project.list();
-    const gitRepoIds = (
-      allProjects.filter(
-        (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
-      ) as GitProject[]
-    ).map(p => p.gitRepositoryId);
-
-    if (gitRepoIds.length > 0) {
-      const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
-        _id: { $in: gitRepoIds },
-      });
-
-      const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
-      if (hasPendingMigrations) {
-        console.log('Redirecting to git migration');
-        return href('/git-migration/*', { '*': '' });
-      }
-    }
-
-    const hasSeenOnboarding = Boolean(window.localStorage.getItem(HAS_SEEN_ONBOARDING_KEY));
-
-    if (!hasSeenOnboarding) {
-      return href('/onboarding/*', {
-        '*': '',
-      });
-    }
-
-    const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
-
-    const user = await services.userSession.get();
-    if (user.id) {
-      const organizations = JSON.parse(localStorage.getItem(`${user.accountId}:spaces`) || '[]') as Organization[];
-      // If no organizations are in local storage, go fetch from org index loader
-      if (organizations.length === 0) {
-        return href('/organization');
-      }
-
-      let organizationId = organizations[0].id;
-
-      // Check if the user has a last visited organization
-      try {
-        const lastVisitedOrganizationId = localStorage.getItem('lastVisitedOrganizationId');
-        // The Konnect organization is local-only, so it is never in the cached organization list.
-        const isKnownOrganization =
-          lastVisitedOrganizationId ===
-            (user.accountId && models.organization.getKonnectOrganizationId(user.accountId)) ||
-          organizations.some(o => o.id === lastVisitedOrganizationId);
-        if (lastVisitedOrganizationId && isKnownOrganization) {
-          organizationId = lastVisitedOrganizationId;
-        }
-      } catch {}
-
-      // The Konnect organization may have gone invisible since the previous session (entitlement
-      // revoked server-side, or its last local project removed elsewhere) — `refreshKonnectAccess()`
-      // already re-resolved that immediately before this call, in `entry.client.tsx`. Re-check before
-      // restoring a route into it, otherwise the app lands on a URL for an organization that no
-      // longer appears in the dropdown (this path resolves straight to a leaf route such as
-      // `.../project`, which never runs the org-index loader's own escape-route check).
-      const escapeRoute = models.organization.isKonnectOrganizationId(organizationId)
-        ? await getKonnectOrganizationEscapeRoute(organizationId)
-        : null;
-
-      return {
-        pathname: escapeRoute ?? (await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true })),
-        state: {
-          // async task need to execute when first entry
-          asyncTaskList: [AsyncTask.MigrateProjects, AsyncTask.SyncProjects],
-        },
-      };
-    }
-
-    if (hasUserLoggedInBefore) {
-      return href('/auth/login');
-    }
-
-    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
-      projectId: models.project.SCRATCHPAD_PROJECT_ID,
-      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
-    });
-  } catch {
-    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
-      organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
-      projectId: models.project.SCRATCHPAD_PROJECT_ID,
-      workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
-    });
-  }
+  return href('/organization/:organizationId', { organizationId: models.organization.LOCAL_ORGANIZATION_ID });
 };
 
 type Override<T, R> = Omit<T, keyof R> & R;

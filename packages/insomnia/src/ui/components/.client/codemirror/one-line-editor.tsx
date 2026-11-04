@@ -27,13 +27,11 @@ import {
 import { isCurlCommand } from '~/common/utils/curl';
 import { showModal } from '~/ui/components/modals';
 import { NunjucksModal } from '~/ui/components/modals/nunjucks-modal';
-import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useNunjucks, type UseNunjucksOptions } from '~/ui/context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
-import { usePlanData } from '~/ui/hooks/use-plan';
 import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -134,7 +132,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       type?.toLowerCase() === 'password' ? '' : defaultValue || '',
     );
     const { settings } = useRootLoaderData()!;
-    const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
     const openVariableSource = useOpenVariableSource();
     const isPasswordEditor = type?.toLowerCase() === 'password';
@@ -553,17 +550,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     useEffect(() => {
       const unsubscribe = window.main.on(
         'nunjucks-context-menu-command',
-        (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
+        (_, { key, tag, nunjucksTag }) => {
           if (id === key) {
-            if (needsEnterprisePlan && !isEnterprisePlan) {
-              // show modal if current user is not an enterprise user and the command is an enterprise feature
-              showModal(UpgradeModal, {
-                newPlan: 'enterprise',
-                featureName: displayName,
-                isOwner,
-              });
-              return;
-            }
             if (nunjucksTag) {
               const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
               if (type === 'edit') {
@@ -589,7 +577,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       return () => {
         unsubscribe();
       };
-    }, [id, isEnterprisePlan, isOwner]);
+    }, [id]);
 
     useImperativeHandle(
       ref,

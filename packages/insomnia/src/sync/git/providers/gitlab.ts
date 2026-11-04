@@ -66,6 +66,9 @@ async function getGitLabConfig() {
     };
   }
 
+  if (!getApiBaseURL()) {
+    throw new Error('GitLab sign-in is not configured. Use a personal access token instead.');
+  }
   const configResponse = await net.fetch(getApiBaseURL() + '/v1/oauth/gitlab/config', {
     method: 'GET',
   });

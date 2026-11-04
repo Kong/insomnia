@@ -1,15 +1,11 @@
-import type { StorageRules } from 'insomnia-api';
 import { models } from 'insomnia-data';
 import { useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { ProjectDropdown, type WorkspaceSortOrder } from '~/ui/components/dropdowns/sidebar-project-dropdown';
-import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
-import { AvatarGroup } from '../../avatar';
 import { Icon } from '../../icon';
-import { KonnectProjectIcon } from './konnect-project-icon/konnect-project-icon';
 import { ACTIVE_BORDER_CLASS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import { type ProjectFlatItem } from './types';
 interface ProjectNodeProps {
@@ -30,24 +26,11 @@ export const ProjectNode = ({
   onDelete,
 }: ProjectNodeProps) => {
   const { doc, collapsed, organizationId, showSyncStatus = false } = item;
-  const { userSession } = useRootLoaderData()!;
-  const { presence } = useInsomniaEventStreamContext();
   const { name: projectName, _id: projectId } = doc;
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
   const hasUncommittedOrUnpushedChanges =
     showSyncStatus || doc.gitRepository?.hasUncommittedChanges || doc.gitRepository?.hasUnpushedChanges;
-
-  const projectPresence = presence
-    .filter(p => p.project === doc.remoteId)
-    .filter(p => p.acct !== userSession.accountId)
-    .map(user => {
-      return {
-        key: user.acct,
-        alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-        src: user.avatar,
-      };
-    });
 
   return (
     <div
@@ -69,23 +52,10 @@ export const ProjectNode = ({
         <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} />
       </Button>
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
-        {doc.konnectControlPlaneId ? (
-          <KonnectProjectIcon konnectDeploymentType={doc.konnectDeploymentType} />
-        ) : (
-          <Icon
-            icon={
-              models.project.isRemoteProject(doc)
-                ? 'globe-americas'
-                : models.project.isGitProject(doc)
-                  ? ['fab', 'git-alt']
-                  : 'laptop'
-            }
-          />
-        )}
+        <Icon icon={models.project.isGitProject(doc) ? ['fab', 'git-alt'] : 'laptop'} />
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
-      {projectPresence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={projectPresence} />}
-      {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
+      {projectId && (
         <ProjectDropdown
           organizationId={organizationId}
           project={{

@@ -9,7 +9,6 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
@@ -56,8 +55,8 @@ export const init = (): BaseWorkspace => ({
   scope: WorkspaceScopeKeys.collection,
 });
 
-export function isScratchpad(workspace?: Workspace) {
-  return workspace?._id === SCRATCHPAD_WORKSPACE_ID;
+export function isScratchpad(_workspace?: Workspace) {
+  return false;
 }
 
 export const scopeToActivity = (scope: WorkspaceScope) => {

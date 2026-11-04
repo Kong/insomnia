@@ -1,14 +1,9 @@
-import { type UserOnboarding, UserOnboardingFirstRequestTreatmentEnum } from 'insomnia-api';
-
 export type FirstRequestTreatment = 'A' | 'B';
 
-// The generated SDK type omits `null` for `first_request_treatment` despite the
-// OpenAPI spec marking it nullable — the server sends `null` when the treatment
-// is unknown (see UserOnboarding). Widen it back here so callers can pass the raw
-// server response through without a cast.
-type OnboardingState = Omit<UserOnboarding, 'first_request_treatment'> & {
-  first_request_treatment: UserOnboarding['first_request_treatment'] | null;
-};
+interface OnboardingState {
+  first_request_treatment: string | null;
+  [key: string]: unknown;
+}
 
 /**
  * Number of created requests after which a new sign-up graduates from the
@@ -39,10 +34,10 @@ export const getOnboardingTreatment = (
   onboarding: OnboardingState | null | undefined,
 ): FirstRequestTreatment | undefined => {
   const value = onboarding?.first_request_treatment;
-  if (value === UserOnboardingFirstRequestTreatmentEnum.TreatmentA) {
+  if (value === 'treatment_a') {
     return 'A';
   }
-  if (value === UserOnboardingFirstRequestTreatmentEnum.TreatmentB) {
+  if (value === 'treatment_b') {
     return 'B';
   }
   return undefined;

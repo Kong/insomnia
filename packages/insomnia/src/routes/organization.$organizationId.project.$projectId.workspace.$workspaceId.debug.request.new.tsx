@@ -13,10 +13,7 @@ import { invariant } from '~/common/utils/invariant';
 import type { RequestCreatedMetricsProperties } from '~/ui/analytics';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { focusUrlBarOnNextRequest } from '~/ui/components/request-url-bar-focus';
-import { trackCioEvent } from '~/ui/hooks/use-cio';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
-import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
-import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 // Request types that are edited in the RequestPane / RequestUrlBar and should focus the URL on create.
@@ -123,9 +120,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   services.stats.incrementCreatedRequests();
-  // Once this install has created enough requests, latch the sticky graduation
-  // bit on the server (fire-and-forget, idempotent — see maybeLatchRequestThreshold).
-  services.stats.get().then(stats => maybeLatchRequestThreshold(stats.createdRequests));
 
   const certificates = await services.clientCertificate.findByParentId(workspaceId);
 
@@ -163,9 +157,6 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 
   // Send to Customer.io directly so the event is tied to the identified user's
   // email-bearing profile (only fires when logged in). See INS-2678.
-  trackCioEvent(AnalyticsEvent.requestCreated, requestCreatedProperties);
-
-  recordAction('request_created');
 
   return redirect(
     href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId`, {

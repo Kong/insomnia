@@ -55,7 +55,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
     const checkFeatures = async () => {
       const plugins = await pluginsBridge.getBundlePlugins();
       const aiPlugin = plugins.find(p => p.name === AI_PLUGIN_NAME);
-      setShouldShowAiSettingsTab(!!aiPlugin && !!userSession.id);
+      setShouldShowAiSettingsTab(!!aiPlugin);
     };
     checkFeatures();
   }, [userSession.id, organizationId]);

@@ -1,9 +1,9 @@
-import type { StorageRules } from 'insomnia-api';
 import { models } from 'insomnia-data';
 import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 

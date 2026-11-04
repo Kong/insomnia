@@ -1,4 +1,4 @@
-import type { MergeConflict } from 'insomnia-vcs';
+import type { MergeConflict } from '~/sync/git/merge-types';
 
 import { showModal } from '../components/modals';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';

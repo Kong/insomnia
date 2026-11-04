@@ -1,7 +1,7 @@
-import type { StorageRules } from 'insomnia-api';
 import { useCallback } from 'react';
 import { useParams } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import { useServerQuery } from '~/ui/hooks/use-query';

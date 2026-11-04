@@ -41,7 +41,7 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   // SSL error is expected here — no CA cert yet
-  await expect.soft(page.getByText('Error: SSL peer certificate or SSH remote key was not OK')).toBeVisible({ timeout: RESPONSE_TIMEOUT });
+  await expect.soft(page.getByText('SSL peer certificate or SSH remote key was not OK')).toBeVisible({ timeout: RESPONSE_TIMEOUT });
 
   const fixturePath = getFixturePath('certificates');
 

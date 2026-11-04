@@ -1237,18 +1237,18 @@ html {
   --font-size-xxxl: 1.8461rem;
   --font-size: var(--font-size-md);
   /* Padding */
-  --padding-md: calc(var(--font-size) * 1.2);
-  --padding-sm: calc(var(--font-size) * 0.6);
+  --padding-md: calc(var(--font-size) * 0.9);
+  --padding-sm: calc(var(--font-size) * 0.5);
   --padding-xs: calc(var(--font-size) * 0.4);
   --padding-xxs: calc(var(--font-size) * 0.2);
-  --padding-lg: calc(var(--font-size) * 2.5);
-  --padding-xl: calc(var(--font-size) * 5);
+  --padding-lg: calc(var(--font-size) * 1.8);
+  --padding-xl: calc(var(--font-size) * 3.5);
   /* Wrapper */
-  --line-height-lg: calc(var(--font-size) * 4.5);
-  --line-height-md: calc(var(--font-size) * 3.6);
-  --line-height-sm: calc(var(--font-size) * 2.88);
-  --line-height-xs: calc(var(--font-size) * 2.448);
-  --line-height-xxs: calc(var(--font-size) * 2.08);
+  --line-height-lg: calc(var(--font-size) * 3.2);
+  --line-height-md: calc(var(--font-size) * 2.8);
+  --line-height-sm: calc(var(--font-size) * 2.5);
+  --line-height-xs: calc(var(--font-size) * 2.15);
+  --line-height-xxs: calc(var(--font-size) * 1.8);
   /* Radius */
   --radius-sm: calc(var(--font-size) * 0.2);
   --radius-md: calc(var(--font-size) * 0.3);

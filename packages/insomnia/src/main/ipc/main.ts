@@ -35,8 +35,6 @@ import type {
 import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
-import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
-import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
   exportHarCurrentRequest,
   exportHarRequest,
@@ -231,9 +229,7 @@ export interface RendererToMainBridgeAPI {
   authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
   onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
   cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
-  setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
-  initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Uint8Array | null; contentType: string }) => Promise<Part[]>;
   writeFile: (options: { path: string; content: string | Uint8Array }) => Promise<string>;
@@ -273,7 +269,10 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  sync: SyncBridgeAPI;
+  getAppMenuLabels: () => Promise<string[]>;
+  showAppMenu: (options: { label: string; x: number; y: number }) => void;
+  setTitleBarColors: (options: { color: string; symbolColor: string }) => void;
+  sync: { resolveConflict: (options: unknown) => void; cancelConflict: (options: unknown) => void };
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;
@@ -344,7 +343,6 @@ export interface RendererToMainBridgeAPI {
     | { response: Awaited<ReturnType<GenerateMcpSamplingResponseFunction>>; error: undefined }
     | { response: undefined; error: string }
   >;
-  syncNewWorkspaceIfNeeded: typeof syncNewWorkspaceIfNeeded;
   plugins: PluginsBridgeAPI;
   templatingDb: {
     getAuthToken: () => Promise<string>;
@@ -451,12 +449,6 @@ export function registerMainHandlers() {
   ipcMainHandle('parseImport', async (_, ...args: Parameters<typeof convert>) => {
     return convert(...args);
   });
-  ipcMainHandle(
-    'initializeWorkspaceBackendProject',
-    async (_, options: Parameters<typeof initializeWorkspaceBackendProject>[0]) => {
-      return initializeWorkspaceBackendProject(options);
-    },
-  );
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Uint8Array }) => {
     try {
       const dir = path.dirname(options.path);
@@ -683,9 +675,6 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
-  ipcMainHandle('syncNewWorkspaceIfNeeded', async (_, options: Parameters<typeof syncNewWorkspaceIfNeeded>[0]) => {
-    return syncNewWorkspaceIfNeeded(options);
-  });
 
   ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {
     const tmpDir = app.getPath('userData');

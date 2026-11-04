@@ -4,7 +4,7 @@ import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
 import { BasePage } from '../base-page';
 
 /**
- * Component for the **Data tab** within Insomnia Preferences.
+ * Component for the **Data tab** within Insomnium Preferences.
  *
  * Handles import/export functionality:
  * - Export project files (YAML or HAR)

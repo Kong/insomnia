@@ -7,13 +7,13 @@
   "description": "Insomnia data functionalities",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/insomnium-next.git",
     "directory": "packages/insomnia-data"
   },
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
-  "homepage": "https://github.com/Kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/insomnium-next#readme",
   "exports": {
     ".": {
       "import": "./src/index.ts",
@@ -44,10 +44,10 @@
     "zod": "^3.25.75"
   },
   "devDependencies": {
-    "@getinsomnia/node-libcurl": "3.3.0",
     "@modelcontextprotocol/sdk": "^1.17.5",
     "@types/deep-equal": "^1.0.4",
     "mocha": "^11.7.5",
-    "type-fest": "^4.40.0"
+    "type-fest": "^4.40.0",
+    "node-libcurl": "5.1.2"
   }
 }

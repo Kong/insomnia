@@ -265,6 +265,9 @@ export class GitHubProvider implements GitRemoteProvider<GitHubProviderConfig> {
    */
   async initiateOAuth(credentialId?: string): Promise<OAuthInitResult> {
     try {
+      if (!getAppWebsiteBaseURL()) {
+        throw new Error('GitHub sign-in is not configured. Use a personal access token instead.');
+      }
       const state = v4();
       githubStatesCache.set(state, credentialId);
       const url = new URL(getAppWebsiteBaseURL() + '/oauth/github-app');

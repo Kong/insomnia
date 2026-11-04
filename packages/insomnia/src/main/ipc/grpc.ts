@@ -243,13 +243,12 @@ const getMethodsFromReflection = async (
   if (reflectionApi.enabled) {
     return getMethodsFromReflectionServer(reflectionApi, disableUserAgentHeader);
   }
-  const { url, path } = parseGrpcUrl(host);
+  const { url } = parseGrpcUrl(host);
   const client = new grpcReflection.Client(
     url,
     getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
     grpcOptions,
     filterDisabledOrInvalidMetaData(metadata),
-    path,
   );
   const services = await client.listServices();
   const methodsPromises = services.map(async service => {

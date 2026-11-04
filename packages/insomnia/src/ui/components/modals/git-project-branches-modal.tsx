@@ -1,4 +1,3 @@
-import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useState } from 'react';
 import {
   Button,
@@ -19,6 +18,7 @@ import { useGitProjectDeleteBranchActionFetcher } from '~/routes/git.branch.dele
 import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
+import type { MergeConflict } from '~/sync/git/merge-types';
 import { SyncMergeModal } from '~/ui/components/modals/sync-merge-modal';
 
 import { PromptButton } from '../base/prompt-button';

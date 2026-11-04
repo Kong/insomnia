@@ -3,7 +3,7 @@ import type { ElectronApplication, Locator, Page } from '@playwright/test';
 import { BasePage } from '../base-page';
 
 /**
- * Component for the **Credentials tab** within Insomnia Preferences.
+ * Component for the **Credentials tab** within Insomnium Preferences.
  *
  * Handles credential management functionality:
  * - Add, edit, and remove credentials

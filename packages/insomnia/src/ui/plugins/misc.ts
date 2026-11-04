@@ -291,6 +291,7 @@ export async function setTheme(themeName: string) {
   themeStyleSheets.set(themeName, styleSheet);
 
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
+  syncTitleBarColors();
 }
 
 export const baseTheme: CompleteStyleBlock = {
@@ -322,3 +323,12 @@ export const baseTheme: CompleteStyleBlock = {
     xl: 'rgba(130, 130, 130, 0.8)',
   },
 };
+
+export function syncTitleBarColors() {
+  const probe = document.createElement('div');
+  probe.className = 'theme--app-header';
+  document.body.append(probe);
+  const { backgroundColor: color, color: symbolColor } = getComputedStyle(probe);
+  probe.remove();
+  window.main?.setTitleBarColors({ color, symbolColor });
+}

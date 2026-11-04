@@ -60,11 +60,11 @@ export default defineConfig(({ mode }) => {
       target: 'esnext',
       sourcemap: true,
       rollupOptions: {
-        external: ['@getinsomnia/node-libcurl'],
+        external: ['node-libcurl'],
       },
     },
     optimizeDeps: {
-      exclude: ['@getinsomnia/node-libcurl'],
+      exclude: ['node-libcurl'],
       force: true, // wipe vite cache
       include: [
         'codemirror-graphql/utils/SchemaReference',

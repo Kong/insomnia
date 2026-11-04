@@ -40,7 +40,6 @@ import {
   tryToTransformRequestWithPlugins,
 } from '~/network/network';
 import { AnalyticsEvent, type ImportAttribution, importAttributionKey } from '~/ui/analytics';
-import { recordAction } from '~/ui/utils/record-action';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
@@ -457,8 +456,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
               source: 'request-pane',
             },
           });
-
-          recordAction('request_executed');
 
           const attributionStorageKey = importAttributionKey(requestId);
           const jsonImportAttribution = window.localStorage.getItem(attributionStorageKey);

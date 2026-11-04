@@ -44,18 +44,7 @@ export function useCommandSearch({
         services.helpers.abortCommandSearch(prevRequestId).catch(() => {});
       }
 
-      const cachedOrganizations: { id: string; name: string }[] = JSON.parse(
-        localStorage.getItem(`${accountId}:spaces`) || '[]',
-      );
-      // The Konnect organization is local-only so it is never in the cached list, and search scopes
-      // projects by organization id — without it Konnect projects are unreachable.
-      const allOrganizations = [
-        ...cachedOrganizations,
-        {
-          id: models.organization.getKonnectOrganizationId(accountId),
-          name: models.organization.KONNECT_ORGANIZATION_NAME,
-        },
-      ];
+      const allOrganizations = [models.organization.LOCAL_ORGANIZATION];
 
       try {
         const result = await services.helpers.commandSearch({
@@ -71,7 +60,7 @@ export function useCommandSearch({
           setIsSearching(false);
           hasReceivedResultsRef.current = true;
         } else if (!hasReceivedResultsRef.current) {
-          // Warm baseline — CommandPalette sets defaultFilter={() => true}, so filtering is done server-side via fuzzy match.
+          // Warm baseline — CommandPalette sets defaultFilter={() => true}, so filtering is done server-side via fuy match.
           setResults(result);
           hasReceivedResultsRef.current = true;
         }

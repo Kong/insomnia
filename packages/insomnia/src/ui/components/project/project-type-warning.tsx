@@ -1,15 +1,13 @@
-import type { StorageRules } from 'insomnia-api';
 import { models } from 'insomnia-data';
-import { useParams } from 'react-router';
 
 import { Banner } from '~/basic-components/banner';
 import { Button } from '~/basic-components/button';
 import { LearnMoreLink } from '~/basic-components/link';
 import { getAppWebsiteBaseURL } from '~/common/constants';
 import { docsPricingLearnMoreLink } from '~/common/documentation';
+import type { StorageRules } from '~/common/organization-storage-rules';
 import type { ProjectType } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 interface Props {
   isGitSyncEnabled: boolean;
@@ -20,11 +18,7 @@ export const ProjectTypeWarning = ({ isGitSyncEnabled, storageType, storageRules
   const isLightTheme = useIsLightTheme();
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
-  const organizations = useOrganizations();
-  const { organizationId } = useParams() as { organizationId: string };
-  const organization = organizations.find(o => o.id === organizationId);
-  // TODO: extract to a hook later
-  const isUserOwner = Boolean(organization?.is_owner);
+  const isUserOwner = true;
   return (
     <>
       {storageType === 'git' &&

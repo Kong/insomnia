@@ -369,53 +369,6 @@ describe('search()', () => {
     });
   });
 
-  it('scratchpad org scopes only to its own projects, ignoring allOrganizations', async () => {
-    const scratchpadOrgId = 'org_scratchpad';
-    const otherOrgId = uid('org');
-    const allOrganizations = [
-      { id: scratchpadOrgId, name: 'Scratchpad' },
-      { id: otherOrgId, name: 'Other Org' },
-    ];
-    const scratchProj = await services.project.create({
-      _id: uid('proj'),
-      name: 'ScratchProj',
-      parentId: scratchpadOrgId,
-    });
-    const otherProj = await services.project.create({ _id: uid('proj'), name: 'OtherProj', parentId: otherOrgId });
-    const scratchWs = await services.workspace.create({
-      _id: uid('wrk'),
-      name: 'ScratchWs',
-      parentId: scratchProj._id,
-      scope: 'collection',
-    });
-    const otherWs = await services.workspace.create({
-      _id: uid('wrk'),
-      name: 'OtherWs',
-      parentId: otherProj._id,
-      scope: 'collection',
-    });
-    const scratchReq = await services.request.create({
-      _id: uid('r'),
-      name: 'ScratchReq',
-      parentId: scratchWs._id,
-      url: 'http://scratch.com',
-    });
-    await services.request.create({ _id: uid('r'), name: 'OtherReq', parentId: otherWs._id, url: 'http://other.com' });
-
-    const result = await commandSearch({
-      allOrganizations,
-      organizationId: scratchpadOrgId,
-      projectId: scratchProj._id,
-      workspaceId: scratchWs._id,
-      filter: null,
-      requestId: uid('rid'),
-    });
-
-    expect(result).toMatchObject({
-      current: { requests: [{ id: scratchReq._id }] },
-      other: { requests: [] },
-    });
-  });
 });
 
 describe('abort()', () => {

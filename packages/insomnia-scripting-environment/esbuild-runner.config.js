@@ -1,5 +1,5 @@
 module.exports = {
   esbuild: {
-    external: ['@getinsomnia/node-libcurl', 'electron'],
+    external: ['node-libcurl', 'electron'],
   },
 };

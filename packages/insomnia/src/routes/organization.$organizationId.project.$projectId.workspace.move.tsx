@@ -5,7 +5,6 @@ import { href } from 'react-router';
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
 import { invariant } from '~/common/utils/invariant';
-import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.move';
@@ -49,7 +48,6 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
           description: 'Import Insomnia v5 data',
         },
       },
-      syncNewWorkspaceIfNeeded,
     });
     return {
       organizationId: newOrgId,

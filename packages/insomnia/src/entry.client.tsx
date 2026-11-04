@@ -1,42 +1,27 @@
 import './ui/renderer-listeners';
 import './ui/log';
 
-import { configureFetch } from 'insomnia-api';
 import { initDatabase, initServices, services } from 'insomnia-data';
 import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
-import { insomniaFetch } from '~/common/insomnia-fetch';
 import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
-import { migrateKonnectProjectsIfUnambiguous } from '~/konnect/migrate-konnect-organization';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
-import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '~/ui/account/session';
 import { database as clientDatabase } from '~/ui/database.client';
-import { refreshKonnectAccess } from '~/ui/organization-utils';
 import { applyColorScheme } from '~/ui/plugins/misc';
 import { createServicesProxy } from '~/ui/services-proxy';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
-import { configureV3ClientDefaults } from './common/configure-v3-client';
-import {
-  getInsomniaSession,
-  getInsomniaVaultKey,
-  getInsomniaVaultSalt,
-  getSkipOnboarding,
-  HAS_SEEN_ONBOARDING_KEY,
-} from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
 import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
-import { initializeSentry } from './ui/sentry';
 import { registerSyncMergeConflictListener } from './ui/utils/insomnia-sync';
 
-initializeSentry();
 
 // Fetch the templating-db auth token once so it's available for every templating call in this window.
 setTemplatingDbAuthToken(await window.main.templatingDb.getAuthToken());
@@ -56,10 +41,6 @@ if (!dataServices) {
 initServices(dataServices);
 initRuntime(rendererRuntime);
 
-configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
-configureV3ClientDefaults();
-
-await migrateFromLocalStorage();
 registerSyncMergeConflictListener();
 
 try {
@@ -76,73 +57,8 @@ try {
       body: <HtmlElementWrapper el={options?.body} onUnmount={options?.onHide} />,
     });
 
-  // In order to run playwight tests that simulate a logged in user
-  // we need to inject state into localStorage
-  const skipOnboarding = getSkipOnboarding();
-  if (skipOnboarding) {
-    window.localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, skipOnboarding.toString());
-    window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
-  }
 } catch (e) {
-  console.log('[onboarding] Failed to parse session data', e);
-}
-
-// Workaround for iframe redirect issue caused by api.protocol.ts
-// Problem: The https protocol handler (registerInsomniaProtocols) intercepts all https requests
-// to solve CORS issues. However, when an iframe redirects from https://renderer.gist.build to
-// https://code.gist.build, the protocol handler auto-follows the redirect but the iframe's
-// location doesn't update. This causes the Customer.io SDK to fail origin validation.
-//
-// Solution: Intercept postMessage events from renderer.gist.build in the capture phase,
-// stop propagation, and re-dispatch with origin changed to code.gist.build. This makes
-// the SDK think the message came from the expected redirected URL.
-window.addEventListener(
-  'message',
-  (event: MessageEvent) => {
-    // If origin is renderer.gist.build (original URL), stop propagation and dispatch a new event
-    if (event.origin === 'https://renderer.gist.build') {
-      // Stop the original event from reaching other listeners
-      event.stopImmediatePropagation();
-
-      // Create and dispatch a new MessageEvent with modified origin
-      // Note: 'ports' property is read-only and cannot be set, but the SDK doesn't use it
-      const newEvent = new MessageEvent('message', {
-        data: event.data,
-        origin: 'https://code.gist.build',
-        lastEventId: event.lastEventId,
-        source: event.source,
-      });
-
-      window.dispatchEvent(newEvent);
-      return;
-    }
-  },
-  true, // Use capture phase to intercept before other listeners
-);
-
-// Check if there is a Session provided by an env variable and use this
-const insomniaSession = getInsomniaSession();
-const insomniaVaultKey = getInsomniaVaultKey() || '';
-const insomniaVaultSalt = getInsomniaVaultSalt() || '';
-if (insomniaSession) {
-  try {
-    const session = JSON.parse(insomniaSession) as SessionData;
-    await setSessionData(
-      session.id,
-      session.accountId,
-      session.firstName,
-      session.lastName,
-      session.email,
-      session.symmetricKey,
-      session.publicKey,
-      session.encPrivateKey,
-    );
-    if (insomniaVaultSalt || insomniaVaultKey) {
-      await setVaultSessionData(insomniaVaultSalt, insomniaVaultKey);
-    }
-  } catch (e) {
-    console.log('[init] Failed to parse session data', e);
-  }
+  console.log('[init] Failed to register window helpers', e);
 }
 
 const appSettings = await services.settings.getOrCreate();
@@ -152,23 +68,6 @@ if (appSettings.clearOAuth2SessionOnRestart) {
 }
 
 applyColorScheme(appSettings);
-
-// Runs before the router hydrates so every loader can assume Konnect projects already live under
-// the Konnect organization. The ambiguous case is left for the user to resolve in the UI.
-try {
-  const { id: sessionId, accountId } = await services.userSession.get();
-  if (accountId) {
-    try {
-      await migrateKonnectProjectsIfUnambiguous(accountId);
-    } catch (e) {
-      console.log('[konnect] Failed to migrate Konnect projects', e);
-    }
-  }
-  // Resolved here, after the migration, so render-time readers of Konnect access stay synchronous.
-  await refreshKonnectAccess(sessionId, accountId);
-} catch (e) {
-  console.log('[konnect] Failed to resolve Konnect access', e);
-}
 
 const initialEntry = await getInitialEntry();
 

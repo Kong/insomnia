@@ -66,39 +66,6 @@ test.describe('Sidebar Delete shortcut', () => {
     );
   });
 
-  test.describe('cloud sync project', () => {
-    test.beforeAll(async () => {
-      await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ enabled: true }),
-      });
-    });
-
-    test.afterAll(async () => {
-      await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ enabled: false }),
-      });
-    });
-
-    test('workspace, folder and request', async ({ page, insomnia }) => {
-      test.slow();
-      await insomnia.projectPage.importFixture('simple.yaml');
-
-      await runDeleteChecks(
-        page,
-        insomnia,
-        // Remote projects get the dedicated modal; pick permanent deletion
-        async () => {
-          await page.getByRole('heading', { name: 'Delete Permanently' }).click();
-          await page.getByRole('button', { name: 'Delete Workspace' }).click();
-        },
-        { expectConfirmHeading: 'Delete API Collection' },
-      );
-    });
-  });
 
   test.describe('git sync project', () => {
     test.slow();

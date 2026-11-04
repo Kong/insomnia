@@ -1,4 +1,4 @@
-import type { Organization } from 'insomnia-api';
+import type { Organization } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 

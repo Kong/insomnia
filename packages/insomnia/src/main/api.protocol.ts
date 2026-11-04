@@ -2,10 +2,10 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
-import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { services } from 'insomnia-data';
 import { ProxyScopes, setDefaultProtocol } from 'insomnia-data/common';
+import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from 'node-libcurl';
 
 import { getApiBaseURL } from '../common/constants';
 import { parseResolvedProxy, shouldBypassProxyForHost } from './network/libcurl-promise';

@@ -122,7 +122,7 @@ describe('a plugin patching Module.prototype.require', () => {
     // this `external` list remain real, separately-`require()`-able modules at runtime.
     expect(config).toContain("'electron'");
     expect(config).toContain("'quickjs-emscripten'");
-    expect(config).toContain("'@getinsomnia/node-libcurl'");
+    expect(config).toContain("'node-libcurl'");
     // A representative internal module the host dynamically imports (e.g. from
     // `runtimes/network/network-adapter.node.ts`) is never listed as external — confirming it gets
     // inlined at build time rather than reaching `Module.prototype.require` at runtime.

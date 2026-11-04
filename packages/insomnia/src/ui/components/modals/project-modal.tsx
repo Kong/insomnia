@@ -1,9 +1,9 @@
-import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useLocation } from 'react-router';
 
+import type { StorageRules } from '~/common/organization-storage-rules';
 import { useActiveView } from '~/ui/components/project/utils';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';

@@ -7,13 +7,13 @@
   "description": "Shared analytics client for the Insomnia desktop app and CLI",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/outmanos/insomnium-next.git",
     "directory": "packages/insomnia-analytics"
   },
   "bugs": {
-    "url": "https://github.com/kong/insomnia/issues"
+    "url": "https://github.com/outmanos/insomnium-next/issues"
   },
-  "homepage": "https://github.com/Kong/insomnia#readme",
+  "homepage": "https://github.com/outmanos/insomnium-next#readme",
   "sideEffects": false,
   "exports": {
     ".": {
@@ -30,7 +30,5 @@
     "type-check": "tsc --noEmit --project tsconfig.json",
     "test": "vitest run"
   },
-  "dependencies": {
-    "@segment/analytics-node": "2.2.1"
-  }
+  "dependencies": {}
 }

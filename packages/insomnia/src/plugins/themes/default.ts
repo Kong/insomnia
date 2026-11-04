@@ -1,11 +1,11 @@
 const sidebarBackground = {
-  default: '#2C2C2C',
-  success: '#7ecf2b',
-  notice: '#f0e137',
-  warning: '#ff9a1f',
-  danger: '#ff5631',
-  surprise: '#a896ff',
-  info: '#46c1e6',
+  default: '#181818',
+  success: '#3fb950',
+  notice: '#d7ba7d',
+  warning: '#e8964a',
+  danger: '#f14c4c',
+  surprise: '#3b8eea',
+  info: '#4fc1ff',
 };
 
 export default {
@@ -14,31 +14,31 @@ export default {
   theme: {
     background: sidebarBackground,
     foreground: {
-      default: '#ddd',
+      default: '#cccccc',
     },
     styles: {
       transparentOverlay: {
         background: {
-          default: 'rgba(30, 30, 30, 0.8)',
+          default: 'rgba(0, 0, 0, 0.5)',
         },
         foreground: {
-          default: '#ddd',
+          default: '#cccccc',
         },
       },
       dialog: {
         background: {
-          default: '#2a2a2a',
+          default: '#202020',
         },
       },
       appHeader: {
         background: {
-          default: '#2C2C2C',
+          default: '#181818',
         },
       },
       sidebar: {
         background: sidebarBackground,
         foreground: {
-          default: '#e0e0e0',
+          default: '#cccccc',
         },
         highlight: {
           default: '#999',
@@ -46,7 +46,7 @@ export default {
       },
       sidebarHeader: {
         background: {
-          default: '#695eb8',
+          default: '#181818',
         },
         foreground: {
           default: '#fff',
@@ -54,25 +54,25 @@ export default {
       },
       paneHeader: {
         foreground: {
-          default: '#ccc',
+          default: '#cccccc',
         },
         background: {
-          default: '#212121',
+          default: '#1f1f1f',
           success: '#75ba24',
           notice: '#d8c84d',
           warning: '#ec8702',
           danger: '#e15251',
-          surprise: '#8776d5',
+          surprise: '#0078d4',
           info: '#20aed9',
         },
       },
       pane: {
         background: {
           ...sidebarBackground,
-          default: '#292929',
+          default: '#1f1f1f',
         },
         foreground: {
-          default: '#e0e0e0',
+          default: '#cccccc',
         },
         highlight: {
           default: '#999',

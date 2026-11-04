@@ -9,6 +9,7 @@ type FSWraps =
   | typeof fs.promises.unlink
   | typeof fs.promises.readdir
   | typeof fs.promises.mkdir
+  | typeof fs.promises.rm
   | typeof fs.promises.rmdir
   | typeof fs.promises.stat
   | typeof fs.promises.lstat
@@ -188,6 +189,7 @@ export const fsClient = (basePath: string, onBlockedWrite?: BlockedWriteHandler)
       unlink: wrap(fs.promises.unlink),
       readdir: wrap(fs.promises.readdir),
       mkdir: wrap(fs.promises.mkdir),
+      rm: wrap(fs.promises.rm),
       rmdir: wrap(fs.promises.rmdir),
       stat: wrapFollowsLeaf(fs.promises.stat, 'stat'),
       lstat: wrap(fs.promises.lstat),

@@ -1,4 +1,4 @@
-import type { ResolutionSource } from 'insomnia-vcs';
+import type { ResolutionSource } from '~/sync/git/merge-types';
 
 export class UserAbortResolveMergeConflictError extends Error {
   constructor(message = 'User aborted merge') {

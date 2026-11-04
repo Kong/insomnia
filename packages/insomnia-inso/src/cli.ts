@@ -8,13 +8,10 @@ import { cosmiconfig } from 'cosmiconfig';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { Confirm } from 'enquirer';
 import { pick } from 'es-toolkit';
-import { configureV3ClientDefaults } from 'insomnia/src/common/configure-v3-client';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
-import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/network/send-request.node';
 import { initRuntime } from 'insomnia/src/runtimes';
 import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
-import { configureFetch } from 'insomnia-api';
 import type {
   Environment,
   Request,
@@ -69,8 +66,6 @@ if (!isDevelopment()) {
   process.removeAllListeners('warning');
 }
 
-configureFetch(options => insomniaFetch({ ...options }));
-configureV3ClientDefaults();
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {

@@ -6,7 +6,6 @@ import { OverlayContainer } from 'react-aria';
 import { href, useNavigate, useParams } from 'react-router';
 
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
-import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
@@ -26,7 +25,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
     organizationId: string;
     projectId: string;
   };
-  const organizations = useOrganizations();
+  const organizations = [models.organization.LOCAL_ORGANIZATION];
   const [selectedOrgId, setSelectedOrgId] = useState(organizationId);
   const [projectOptions, setProjectOptions] = useState<BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');

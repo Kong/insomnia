@@ -2,7 +2,6 @@ import { models } from 'insomnia-data';
 
 import { useProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { CloudSyncProjectBar } from '~/ui/components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '~/ui/components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '~/ui/components/dropdowns/local-project-bar';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
@@ -28,7 +27,6 @@ export function SyncBar() {
         {activeProject &&
           models.project.isLocalProject(activeProject) &&
           !models.project.isGitProject(activeProject) && <LocalProjectBar />}
-        {activeProject && models.project.isRemoteProject(activeProject) && <CloudSyncProjectBar />}
       </>
     );
   }

@@ -16,12 +16,12 @@ export class StatusbarComponent {
     return this.page.getByTestId('statusbar');
   }
 
-  /** Open Insomnia Preferences via the statusbar preferences button. */
+  /** Open Insomnium Preferences via the statusbar preferences button. */
   async openPreferences() {
-    await this.root.getByTestId('settings-button').click();
+    await this.page.getByTestId('settings-button').click();
   }
 
-  /** Open Insomnia Preferences via keyboard shortcut. */
+  /** Open Insomnium Preferences via keyboard shortcut. */
   async openPreferencesViaShortcut() {
     const modifier = process.platform === 'darwin' ? 'Meta+,' : 'Control+,';
     await this.page.press('body', modifier);

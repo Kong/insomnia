@@ -1,21 +1,16 @@
-import { type Billing, type FeatureList, getOrganizationFeatures } from 'insomnia-api';
-import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router';
 
-import { useServerQuery } from '~/ui/hooks/use-query';
-
-export const fallbackFeatures = Object.freeze<FeatureList>({
-  bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
-  gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-  orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-  aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
-  aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
-  aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+export const fallbackFeatures = Object.freeze({
+  bulkImport: { enabled: true, reason: '' },
+  gitSync: { enabled: true, reason: '' },
+  orgBasicRbac: { enabled: true, reason: '' },
+  aiMockServers: { enabled: true, reason: '' },
+  aiCommitMessages: { enabled: true, reason: '' },
+  aiMcpClient: { enabled: true, reason: '' },
 });
 
 // If network unreachable assume user has paid for the current period
-export const fallbackBilling = Object.freeze<Billing>({
+export const fallbackBilling = Object.freeze({
   isActive: true,
   expirationWarningMessage: '',
   expirationErrorMessage: '',
@@ -31,26 +26,8 @@ export const fallbackBilling = Object.freeze<Billing>({
  * @param organizationIdParam optional explicit organization ID; defaults to the
  * `organizationId` route param.
  */
-export function useOrganizationPermissions(organizationIdParam?: string) {
-  const params = useParams() as { organizationId?: string };
-  const organizationId = organizationIdParam ?? params.organizationId ?? '';
-
-  const isEnabled = !!organizationId && !models.organization.isLocalOrganizationId(organizationId);
-
-  const { data } = useServerQuery({
-    queryKey: ['organization-features', organizationId],
-    queryFn: async () => {
-      const { id: sessionId } = await services.userSession.get();
-      return getOrganizationFeatures({ organizationId, sessionId });
-    },
-    enabled: isEnabled,
-  });
-
-  // Fall back to safe defaults while loading, when disabled (scratchpad/local-only), or on error.
-  return {
-    features: data?.features ?? fallbackFeatures,
-    billing: data?.billing ?? fallbackBilling,
-  };
+export function useOrganizationPermissions(_organizationIdParam?: string) {
+  return { features: fallbackFeatures, billing: fallbackBilling };
 }
 
 /**
