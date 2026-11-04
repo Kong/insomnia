@@ -1,7 +1,9 @@
-# Kong Security Policy
+# Security Policy
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-To report a vulnerability in the Kong gateway, Insomnia or other Kong software, or know of a publicly disclosed security vulnerability, please immediately let us know by emailing <security@konghq.com>.
+Do not open a public issue. Use
+[GitHub's private vulnerability reporting](https://github.com/outmanos/insomnium-next/security/advisories/new) and
+include steps to reproduce the problem.
 
-For more detailed information, please see [Kong's Security Update Process](https://docs.konghq.com/gateway-oss/latest/kong-security-update-process/#reporting-a-vulnerability).
+Fixes go into the latest release only.

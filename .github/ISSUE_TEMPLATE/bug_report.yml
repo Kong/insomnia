@@ -30,7 +30,7 @@ body:
     attributes:
       label: Is there an existing issue for this?
       options:
-        - label: I have searched the [issue tracker](https://www.github.com/Kong/insomnia/issues) for this problem.
+        - label: I have searched the [issue tracker](https://github.com/outmanos/insomnium-next/issues) for this problem.
           required: true
   - type: checkboxes
     attributes:
@@ -76,7 +76,7 @@ body:
     attributes:
       label: Installation method
       description: How did you install Insomnia?
-      placeholder: 'e.g. download from insomnia.rest, homebrew, apt, etc.'
+      placeholder: 'e.g. GitHub release, AUR, built from source, etc.'
     validations:
       required: true
   - type: input

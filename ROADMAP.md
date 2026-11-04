@@ -38,16 +38,22 @@ Only Bruno: see phases 2 to 6.
 
 ## Phase 1: Restore what the rip removed
 
-- [ ] OAuth default-browser flow on a local loopback redirect, replacing `app.insomnia.rest`
-- [ ] GitHub and GitLab sign-in with device flow or user-supplied OAuth apps
-- [ ] gRPC reflection on URLs with a path prefix
-- [ ] Bring-your-own-key AI: OpenAI, Anthropic, OpenAI-compatible and local models
-- [ ] External secret managers: HashiCorp Vault, AWS, Azure, GCP
+- [x] OAuth default-browser flow on a local loopback redirect, replacing `app.insomnia.rest`
+- [x] GitHub device flow and GitLab PKCE sign-in with user-supplied app IDs
+- [ ] Register project GitHub and GitLab OAuth apps and ship their IDs as defaults
+- [x] gRPC reflection on URLs with a path prefix
+- [x] Bring-your-own-key AI: Anthropic, OpenAI, Gemini, OpenAI-compatible URLs
+- [ ] Local model support inside the app
+- [x] Secret managers: HashiCorp Vault, AWS, GCP
+- [ ] Azure Key Vault and AWS SSO credentials
+- [ ] Test each provider against real accounts
 
 ## Phase 2: Files as the source of truth
 
 Largest change here. Do it first, since later features build on the storage model.
 
+- [x] Local-only Git: `File > Open Folder…` keeps collections as YAML in a folder, with commits, branches and history and no account or remote
+- [x] GitHub and GitLab sign-in off by default, enabled in Preferences > Credentials
 - [ ] Store collections as readable files in a user-chosen folder, one file per request
 - [ ] Read and write `.bru` and Bruno's YAML format, using `bruno-lang` and `bruno-filestore`
 - [ ] Watch the folder and reload on external edits
@@ -123,6 +129,7 @@ Largest change here. Do it first, since later features build on the storage mode
 - [ ] Command palette covers every action
 - [ ] Light theme matching the dark palette
 - [ ] Accessibility pass
+- [ ] Reduce startup work: 186 scripts load on launch
 
 ## Open questions
 
