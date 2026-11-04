@@ -120,6 +120,9 @@ jobs:
     name: Shard Matrix
     needs: build
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
     env:
       TESTS_PER_SHARD: 10
       MAX_SHARDS: 200
@@ -143,13 +146,21 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Restore node_modules
+        id: node-modules-cache
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             node_modules
             packages/*/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+
+      # The build job's cache save can lose a reservation race (or be left
+      # reserved by a cancelled run), so fall back to a fresh install.
+      - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - id: matrix
         working-directory: packages/insomnia-test
@@ -219,13 +230,19 @@ jobs:
           done
 
       - name: Restore node_modules
+        id: node-modules-cache
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: |
             node_modules
             packages/*/node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          fail-on-cache-miss: true
+
+      - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Electron system dependencies
         working-directory: packages/insomnia-test
