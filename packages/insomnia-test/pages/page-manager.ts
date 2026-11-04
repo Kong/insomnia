@@ -85,6 +85,30 @@ const pageRegistry = {
     new PreferencesAiComponent(page),
   preferencesVault: (page: Page): PreferencesVaultComponent =>
     new PreferencesVaultComponent(page),
+  importPage: (page: Page): ImportPage =>
+    new ImportPage(page),
+  invitePage: (page: Page): InvitePage =>
+    new InvitePage(page),
+  konnectPage: (page: Page): KonnectPage =>
+    new KonnectPage(page),
+  mcpClientPage: (page: Page): McpClientPage =>
+    new McpClientPage(page),
+  mockServerPage: (page: Page): MockServerPage =>
+    new MockServerPage(page),
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
+  responsePage: (page: Page): ResponsePage =>
+    new ResponsePage(page),
+  runnerPage: (page: Page): RunnerPage =>
+    new RunnerPage(page),
+  socketIoRequestPage: (page: Page): SocketIORequestPage =>
+    new SocketIORequestPage(page),
+  templateTagPage: (page: Page): TemplateTagPage =>
+    new TemplateTagPage(page),
+  variableSourcePage: (page: Page): VariableSourcePage =>
+    new VariableSourcePage(page),
+  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
+    new WebSocketRequestPage(page),
   cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
     new CloudSyncCommitDialogPage(page),
   cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
