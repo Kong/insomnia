@@ -21,6 +21,9 @@ export const dbQueryClient = new QueryClient({
 
 // Subscribe at module level rather than in the provider so the cache stays in sync with the
 // database even before the provider mounts (e.g. while route loaders run ahead of hydration).
+// Writes do land in that window after a loader has already filled the cache: the organization
+// middleware's project migration starts `updateLocalProjectToRemote` without awaiting it, and with
+// `staleTime: Infinity` a missed change would stay stale until the doc changes again.
 if (typeof window !== 'undefined' && window.main?.on) {
   const unsubscribe = window.main.on('db.changes', (_, changes: ChangeBufferEvent[]) => {
     updateAppDataOnDbChanges(dbQueryClient, changes);

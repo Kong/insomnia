@@ -35,7 +35,20 @@ import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useStartupSync } from '~/ui/hooks/use-startup-sync';
 import { useUntrackedProjects } from '~/ui/hooks/use-untracked-projects';
+import { enterOrganization } from '~/ui/landing-route';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
+
+import type { Route } from './+types/organization';
+
+// Runs before the loaders and actions of every route inside an organization, however it was
+// entered: `/organization`, switching organizations, or a deep link opened while the app is still
+// on another screen. Guards the session, so the routes below don't each have to.
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
+  async ({ params }, next) => {
+    await enterOrganization((params as { organizationId?: string }).organizationId);
+    return next();
+  },
+];
 
 interface IndicatorProps {
   asyncTaskStatus: 'error' | 'idle' | 'pending';

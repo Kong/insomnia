@@ -10,7 +10,7 @@ import { useIsRouterIdle } from '~/ui/utils/router';
 // the indicator.
 const LOADING_INDICATOR_DELAY_MS = 200;
 
-const DelayedLoadingIndicator = () => {
+export const DelayedLoadingIndicator = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
