@@ -1,5 +1,3 @@
-import { ModalComponent } from "@package/components/modal.component";
-import { TabsComponent } from "@package/components/tabs.component";
 import { DEFAULT_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
@@ -14,8 +12,6 @@ export interface VariableSourceModal {
 }
 
 export class VariableSourcePage extends BasePage {
-  /** Whichever dialog is open (the tag editor); see `modal` for Manage Environments. */
-  private readonly tagEditorModal = new ModalComponent(this.page);
   private readonly CHIP_HOVER_ATTEMPTS = 5;
   private readonly ENVIRONMENTS_GRID = 'role=grid[name="Environments"]';
   private readonly ENVIRONMENTS_MODAL_NAME = "Manage Environments";
@@ -86,7 +82,7 @@ export class VariableSourcePage extends BasePage {
    * Preview.
    */
   async readVariableModal(): Promise<VariableSourceModal> {
-    const dialog = this.tagEditorModal.root;
+    const dialog = this.page.getByRole("dialog");
     const preview = dialog.getByLabel("Live Preview");
     await expect(preview).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     // The Source row is recomputed asynchronously after every template change,
@@ -126,7 +122,7 @@ export class VariableSourcePage extends BasePage {
    * `expected`, then returns the settled modal state.
    */
   async waitForModalPreview(expected: string): Promise<VariableSourceModal> {
-    await expect(this.tagEditorModal.root.getByLabel("Live Preview")).toHaveValue(
+    await expect(this.page.getByRole("dialog").getByLabel("Live Preview")).toHaveValue(
       expected,
       { timeout: DEFAULT_TIMEOUT * 1.5 },
     );
@@ -138,7 +134,8 @@ export class VariableSourcePage extends BasePage {
    * select, by its option value or visible label.
    */
   async selectModalVariable(option: string | { label: string }): Promise<void> {
-    await this.tagEditorModal.root
+    await this.page
+      .getByRole("dialog")
       .getByLabel("Environment Variable")
       .selectOption(option);
   }
@@ -147,7 +144,8 @@ export class VariableSourcePage extends BasePage {
    * Replaces the open tag editor modal's custom template text.
    */
   async setModalCustomTemplate(template: string): Promise<void> {
-    await this.tagEditorModal.root
+    await this.page
+      .getByRole("dialog")
       .getByTestId("variable-custom-template")
       .fill(template);
   }
@@ -156,7 +154,7 @@ export class VariableSourcePage extends BasePage {
    * Clicks the Source row's "Open" button in the open tag editor modal.
    */
   async clickModalSourceOpen(): Promise<void> {
-    await this.tagEditorModal.root.locator(this.SOURCE_OPEN).click();
+    await this.page.getByRole("dialog").locator(this.SOURCE_OPEN).click();
   }
 
   /**
@@ -281,9 +279,7 @@ export class VariableSourcePage extends BasePage {
    * is selected.
    */
   async isEnvironmentTabSelected(): Promise<boolean> {
-    const tab = new TabsComponent(this.page, this.page.locator("body")).tabByName(
-      "Environment",
-    );
+    const tab = this.page.getByRole("tab", { name: "Environment" });
     try {
       await expect(tab).toHaveAttribute("aria-selected", "true", {
         timeout: DEFAULT_TIMEOUT,

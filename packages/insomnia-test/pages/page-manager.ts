@@ -3,6 +3,7 @@ import { PreferencesComponent } from "@package/components/preferences.component"
 import { PreferencesAiComponent } from "@package/components/preferences-ai.component";
 import { PreferencesCredentialsComponent } from "@package/components/preferences-credentials.component";
 import { PreferencesPluginsComponent } from "@package/components/preferences-plugins.component";
+import { PreferencesVaultComponent } from "@package/components/preferences-vault.component";
 import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
@@ -40,14 +41,16 @@ const pageRegistry = {
     new PreferencesPluginsComponent(page),
   preferencesAi: (page: Page): PreferencesAiComponent =>
     new PreferencesAiComponent(page),
-  importPage: (page: Page): ImportPage =>
-    new ImportPage(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
-  templateTagPage: (page: Page): TemplateTagPage =>
-    new TemplateTagPage(page),
-  variableSourcePage: (page: Page): VariableSourcePage =>
-    new VariableSourcePage(page),
+  preferencesVault: (page: Page): PreferencesVaultComponent =>
+    new PreferencesVaultComponent(page),
+  cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
+    new CloudSyncCommitDialogPage(page),
+  cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
+    new CloudSyncHistoryDialogPage(page),
+  cloudSyncBranchesDialogPage: (page: Page): CloudSyncBranchesDialogPage =>
+    new CloudSyncBranchesDialogPage(page),
+  cloudSyncFileDeletePage: (page: Page): CloudSyncFileDeletePage =>
+    new CloudSyncFileDeletePage(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
   specPage: (page: Page): SpecPage =>
@@ -71,6 +74,18 @@ export class PageManager {
   /** Queries the app's database through the current window. See `findDocs`. */
   findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
     return findDocs(this.page, dbFile, query);
+  }
+
+  /**
+   * Rewires every already-created Page instance (and future ones) onto a
+   * fresh window — called by `AppFlow.restart()`
+   * once the relaunched app's first window is ready.
+   */
+  setWindow(page: Page): void {
+    this.page = page;
+    for (const instance of this.instances.values()) {
+      (instance as BasePage).setContext(page);
+    }
   }
 
   private getOrCreate(name: PageName): unknown {
