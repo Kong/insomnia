@@ -208,7 +208,7 @@ export function createWindow(): ElectronBrowserWindow {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
-  const appLogo = 'static/insomnia-core-logo_16x.png';
+  const appLogo = 'static/app-icon.png';
   let isVisibleOnAnyDisplay = true;
 
   for (const d of screen.getAllDisplays()) {

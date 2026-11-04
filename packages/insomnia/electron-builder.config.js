@@ -142,12 +142,12 @@ const config = {
     uninstallerIcon: './build/icon.ico',
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: 'Insomnia',
+    shortcutName: 'Insomnium',
     deleteAppDataOnUninstall: false,
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+    iconUrl: 'https://raw.githubusercontent.com/outmanos/insomnium-next/develop/packages/insomnia/src/icons/icon.ico',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
+import { AppLogo } from '~/ui/components/app-logo';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link as ExternalLink } from '~/ui/components/base/link';
-import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_migration from '~/ui/images/git-migration/git.png';
 
@@ -195,7 +195,7 @@ const Component = () => {
         ) : (
           <div className="flex h-full min-h-[500px] w-[600px] flex-col items-center justify-center">
             <div className="relative flex w-full flex-col items-center justify-center gap-(--padding-sm) rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs) p-(--padding-lg) pt-12">
-              <InsomniaLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
+              <AppLogo className="absolute top-0 left-1/2 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
               <div className="flex flex-col items-center gap-6 text-(--color-font)">
                 <h1 className="text-center text-xl">What's new in v12.6.0</h1>
                 <div className="relative flex h-96 flex-col gap-4 bg-(--color-bg) p-4 text-left">

@@ -4,10 +4,10 @@ import { href, NavLink, Outlet, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useEditorHistoryTabCleanup } from '~/ui/components/.client/codemirror/editor-history-cleanup';
+import { AppLogo } from '~/ui/components/app-logo';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { Hotkey } from '~/ui/components/hotkey';
 import { Icon } from '~/ui/components/icon';
-import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TitleBarMenu } from '~/ui/components/title-bar-menu';
@@ -61,7 +61,7 @@ const Component = () => {
                     className="flex h-[22px] w-[26px] shrink-0 items-center justify-center rounded-sm hover:bg-(--hl-sm)"
                     to={href('/organization')}
                   >
-                    <InsomniaLogo width={16} height={16} />
+                    <AppLogo width={16} height={16} />
                   </NavLink>
                   <TitleBarMenu />
                 </div>
