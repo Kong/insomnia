@@ -1,7 +1,9 @@
-import { models, services } from 'insomnia-data';
+import type { GitProject, GitRepository } from 'insomnia-data';
+import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
+import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 
 export const enum AsyncTask {
   MigrateProjects,
@@ -81,7 +83,32 @@ export const getInitialRouteForOrganization = async ({
 };
 
 export const getInitialEntry = async () => {
-  return href('/organization/:organizationId', { organizationId: models.organization.LOCAL_ORGANIZATION_ID });
+  const organizationId = models.organization.LOCAL_ORGANIZATION_ID;
+
+  try {
+    const allProjects = await services.project.list();
+    const gitRepoIds = (
+      allProjects.filter(
+        (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
+      ) as GitProject[]
+    ).map(p => p.gitRepositoryId);
+
+    if (gitRepoIds.length > 0) {
+      const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
+        _id: { $in: gitRepoIds },
+      });
+
+      const hasPendingMigrations = gitRepos.some(repo => (repo.repoMigrationVersion ?? 0) < CURRENT_MIGRATION_VERSION);
+      if (hasPendingMigrations) {
+        console.log('Redirecting to git migration');
+        return href('/git-migration/*', { '*': '' });
+      }
+    }
+
+    return await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true });
+  } catch {
+    return href('/organization/:organizationId', { organizationId });
+  }
 };
 
 type Override<T, R> = Omit<T, keyof R> & R;

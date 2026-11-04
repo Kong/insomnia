@@ -1,6 +1,7 @@
 /* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import type { ElectronApplication, PlaywrightWorkerArgs, TraceMode } from '@playwright/test';
@@ -225,6 +226,9 @@ export const test = baseTest.extend<{
     await seedSettings(insomniaDataPath, { sidebarFocusForCollections: false });
 
     await use(insomniaDataPath);
+
+    // Left behind, these fill /tmp, which is a quota limited tmpfs on many Linux systems
+    await fs.rm(insomniaDataPath, { recursive: true, force: true, maxRetries: 3 });
   },
   userConfig: async ({}, use) => {
     await use({

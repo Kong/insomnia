@@ -6,6 +6,8 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { HydratedRouter } from 'react-router/dom';
 
+import { setVaultSessionData } from '~/common/account/session';
+import { getInsomniaVaultKey, getInsomniaVaultSalt, PLAYWRIGHT_TEST } from '~/common/constants';
 import { setTemplatingDbAuthToken } from '~/common/templating/liquid-extension-worker';
 import { initRuntime } from '~/runtimes';
 import { rendererRuntime } from '~/runtimes/runtime.renderer';
@@ -59,6 +61,12 @@ try {
 
 } catch (e) {
   console.log('[init] Failed to register window helpers', e);
+}
+
+// Smoke tests seed a fixed vault key through the environment
+const insomniaVaultKey = getInsomniaVaultKey() || '';
+if (PLAYWRIGHT_TEST && insomniaVaultKey) {
+  await setVaultSessionData(getInsomniaVaultSalt() || '', insomniaVaultKey);
 }
 
 const appSettings = await services.settings.getOrCreate();

@@ -210,6 +210,9 @@ test.describe('pre-request features tests', () => {
   });
 
   test('run test cases', async ({ page, insomnia }) => {
+    // Each case sends a request, so the full list needs more than the local 20s default
+    test.slow();
+
     for (const tc of testCases) {
       console.log(`Running test case: ${tc.name}`);
 

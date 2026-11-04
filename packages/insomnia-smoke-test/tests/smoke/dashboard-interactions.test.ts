@@ -10,7 +10,7 @@ test.describe('Dashboard', () => {
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
     // Create new project
-    const projectName = 'My Project';
+    const projectName = 'Dashboard Project';
     await insomnia.projectPage.createProject(projectName, 'local');
 
     // Check empty project
@@ -21,27 +21,27 @@ test.describe('Dashboard', () => {
       projectName,
       actionName: 'Settings',
     });
-    await page.getByPlaceholder(projectName).click();
-    await page.getByPlaceholder(projectName).fill('My Project123');
+    await page.getByRole('textbox', { name: 'Project name' }).click();
+    await page.getByRole('textbox', { name: 'Project name' }).fill('Dashboard Project123');
     await page.getByRole('button', { name: 'Update' }).click();
 
     // Check that the project name is updated on modal
-    await expect.soft(page.locator('.app')).toContainText('My Project123');
+    await expect.soft(page.locator('.app')).toContainText('Dashboard Project123');
 
     // Close project settings modal
     await page.locator('.app').press('Escape');
-    await expect.soft(page.locator('.app')).toContainText('My Project123');
+    await expect.soft(page.locator('.app')).toContainText('Dashboard Project123');
 
     // Delete project
     await insomnia.navigationSidebar.selectProjectDropdownOption({
-      projectName: 'My Project123',
+      projectName: 'Dashboard Project123',
       actionName: 'Delete',
     });
     await page.getByRole('button', { name: 'Delete' }).click();
 
     // After deleting project, return to default Insomnia Dashboard
     await expect.soft(page.locator('.app')).toContainText('My Project');
-    await expect.soft(page.locator('.app')).not.toContainText('My Project123');
+    await expect.soft(page.locator('.app')).not.toContainText('Dashboard Project123');
     await expect.soft(page.locator('.app')).toContainText('Enter API Spec');
     await expect.soft(page.locator('.app')).not.toContainText('Setup Git Sync');
 
