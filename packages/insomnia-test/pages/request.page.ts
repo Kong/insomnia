@@ -4,6 +4,7 @@ import { KeyValueEditorComponent } from "@package/components/key-value-editor.co
 import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { SelectComponent } from "@package/components/select.component";
 import { TabPanelComponent } from "@package/components/tab-panel.component";
+import { TabsComponent } from "@package/components/tabs.component";
 import { PressedToggleComponent } from "@package/components/toggle.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -669,8 +670,8 @@ export abstract class RequestPage extends BasePage {
    */
   async setDocsMode(mode: "write" | "preview"): Promise<void> {
     await this.switchTab("docs");
-    await this.page
-      .locator(`${this.TABPANEL} [data-key="${mode}"][role="tab"]`)
+    await new TabsComponent(this.page, this.page.locator(this.TABPANEL))
+      .tab(mode)
       .click();
   }
 

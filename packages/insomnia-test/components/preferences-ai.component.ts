@@ -1,3 +1,4 @@
+import { SwitchComponent } from "@package/components/toggle.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -190,10 +191,12 @@ export class PreferencesAiComponent extends PreferencesTabComponent {
    * is active. Must be called with `openAiSettingsTab()` already open.
    */
   async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
-    const smartCommitsSwitch = this.dialog
-      .getByTestId("toggle-smart-commits")
-      .getByRole("switch");
-    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
+    const smartCommits = new SwitchComponent(
+      this.page,
+      this.dialog.getByTestId("toggle-smart-commits"),
+    );
+    const smartCommitsSwitch = smartCommits.control;
+    if ((await smartCommits.isOn()) !== enabled) {
       await smartCommitsSwitch.click();
     }
     await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });

@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 
+import { DropdownComponent } from "@package/components/dropdown.component";
 import { ContentType } from "@package/enums/content-type";
 import type { HttpMethod } from "@package/enums/http-method";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -151,10 +152,9 @@ export class GraphQLRequestPage extends RequestPage {
     });
     const explorerButton = this.page.getByTestId("graphql-explorer-close");
     await expect(async () => {
-      await this.page.getByRole("button", { name: /schema/i }).click();
-      await this.page
-        .getByRole("menuitem", { name: /Show Documentation/i })
-        .click();
+      const schemaMenu = DropdownComponent.byLabel(this.page, /schema/i);
+      await schemaMenu.root.click();
+      await schemaMenu.item(/Show Documentation/i, false).click();
       await expect(explorerButton).toBeVisible({ timeout: 1000 });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
 

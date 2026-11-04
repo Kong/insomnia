@@ -1,3 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
+import { TabsComponent } from "@package/components/tabs.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Cookie } from "@package/models/cookie";
 import type { Locator } from "@playwright/test";
@@ -30,19 +32,23 @@ function parseCookieLine(line: string): Cookie {
 const RETRY_CHECK_TIMEOUT = 2000;
 
 export class CookiePage extends BasePage {
-  private readonly editDialog = this.page.getByRole("dialog", {
-    name: "Manage Cookies",
-  });
-  private readonly listDialog = this.page.getByRole("dialog", {
-    name: "Cookies Modal",
-  });
+  private readonly editModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Manage Cookies" }),
+  );
+  private readonly listModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Cookies Modal" }),
+  );
+  private readonly editDialog = this.editModal.root;
+  private readonly listDialog = this.listModal.root;
 
   /**
    * Closes the cookie list dialog via its "Done" button and waits for it
    * to disappear.
    */
   async close(): Promise<void> {
-    await this.listDialog.getByRole("button", { name: "Done" }).click();
+    await this.listModal.clickButton("Done", false);
     await this.listDialog.waitFor({
       state: "hidden",
       timeout: DEFAULT_TIMEOUT,
@@ -133,7 +139,7 @@ export class CookiePage extends BasePage {
     const saved: Cookie[] = [];
     for (const cookie of cookies) {
       const countBeforeAdd = await this.rows().count();
-      await this.listDialog.getByRole("button", { name: "Add Cookie" }).click();
+      await this.listModal.clickButton("Add Cookie", false);
       await expect(this.rows()).toHaveCount(countBeforeAdd + 1, {
         timeout: DEFAULT_TIMEOUT,
       });
@@ -183,12 +189,14 @@ export class CookiePage extends BasePage {
         timeout: DEFAULT_TIMEOUT,
       });
 
-      await this.editDialog.getByRole("tab", { name: "Raw" }).click();
+      await new TabsComponent(this.page, this.editDialog)
+        .tabByName("Raw")
+        .click();
       await this.editDialog
         .getByLabel("Raw Cookie String")
         .fill(rawCookieString);
 
-      await this.editDialog.getByRole("button", { name: "Done" }).click();
+      await this.editModal.clickButton("Done", false);
       await this.editDialog.waitFor({
         state: "hidden",
         timeout: DEFAULT_TIMEOUT,
@@ -241,7 +249,7 @@ export class CookiePage extends BasePage {
           .check();
       }
 
-      await this.editDialog.getByRole("button", { name: "Done" }).click();
+      await this.editModal.clickButton("Done", false);
       await this.editDialog.waitFor({
         state: "hidden",
         timeout: DEFAULT_TIMEOUT,

@@ -1,3 +1,4 @@
+import { BreadcrumbComponent } from "@package/components/breadcrumb.component";
 import { DropdownComponent } from "@package/components/dropdown.component";
 import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
@@ -246,8 +247,8 @@ export class WorkspacePage extends BasePage {
     const rows = this.tabBar.rows;
     const before = await rows.count();
     await this.tabBar.openAddMenu();
-    await this.page
-      .getByRole("menuitem", { name: "Add request to current collection" })
+    await new DropdownComponent(this.page, this.page.locator("body"))
+      .item("Add request to current collection", false)
       .click();
     await expect(rows).toHaveCount(before + 1, { timeout: DEFAULT_TIMEOUT });
   }
@@ -369,7 +370,7 @@ export class WorkspacePage extends BasePage {
    * further steps afterward.
    */
   async closeDialog(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await dialog.getByRole("button", { name: "Ok" }).click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
@@ -382,7 +383,7 @@ export class WorkspacePage extends BasePage {
    * no accessible name at all).
    */
   async closeModal(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await this.page.keyboard.press("Escape");
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
@@ -392,7 +393,7 @@ export class WorkspacePage extends BasePage {
    * dialog and waits for the dialog to close.
    */
   async clickDelete(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     const deleteButton = dialog.getByRole("button", { name: /^Delete/ });
     // The dialog can re-render right as it opens, swallowing the first
     // click; press again while the button is still there.
@@ -406,7 +407,7 @@ export class WorkspacePage extends BasePage {
    * Clicks the "Duplicate" button and waits for the dialog to close.
    */
   async clickDuplicate(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await this.page
       .getByRole("button", { name: "Duplicate", exact: true })
       .click();
@@ -425,9 +426,15 @@ export class WorkspacePage extends BasePage {
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
-  private readonly generateCodeDialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Generate Client Code" });
+  private readonly generateCodeDialog = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Generate Client Code" }),
+  ).root;
+
+  private readonly anyMenu = new DropdownComponent(
+    this.page,
+    this.page.locator("body"),
+  );
 
   private readonly generateCodeCodeMirror = this.generateCodeDialog.locator(
     '[data-testid="CodeEditor"] .CodeMirror',
@@ -464,10 +471,9 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click();
-    await this.page
-      .getByRole("menuitem", { name: target, exact: true })
-      .click();
+    const trigger = dropdown.getByRole("button");
+    await trigger.click();
+    await new DropdownComponent(this.page, trigger).item(target).click();
     await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
       timeout: DEFAULT_TIMEOUT,
     });
@@ -494,10 +500,9 @@ export class WorkspacePage extends BasePage {
       return;
     }
     const before = await this.readCodeMirror(this.generateCodeCodeMirror);
-    await dropdown.getByRole("button").click();
-    await this.page
-      .getByRole("menuitem", { name: client, exact: true })
-      .click();
+    const trigger = dropdown.getByRole("button");
+    await trigger.click();
+    await new DropdownComponent(this.page, trigger).item(client).click();
     await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
       timeout: DEFAULT_TIMEOUT,
     });
@@ -591,7 +596,7 @@ export class WorkspacePage extends BasePage {
     // `page.keyboard.press()` goes to whatever holds focus — which can
     // have moved into the main pane after the click opened the item's tab.
     await this.treeNav.containerRow(node._id).press("ControlOrMeta+n");
-    await expect(this.page.getByRole("menu")).toBeVisible({
+    await expect(this.anyMenu.menu).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -616,7 +621,7 @@ export class WorkspacePage extends BasePage {
    * open at a time in this app.
    */
   async isCreateShortcutShown(): Promise<boolean> {
-    return (await this.page.getByRole("menu").count()) > 0;
+    return (await this.anyMenu.menu.count()) > 0;
   }
 
   /**
@@ -627,9 +632,10 @@ export class WorkspacePage extends BasePage {
    */
   async isFocusModePromptShown(): Promise<boolean> {
     return (
-      (await this.page
-        .getByRole("dialog", { name: "Sidebar focus mode onboarding" })
-        .count()) > 0
+      (await new ModalComponent(
+        this.page,
+        this.page.getByRole("dialog", { name: "Sidebar focus mode onboarding" }),
+      ).root.count()) > 0
     );
   }
 
@@ -639,9 +645,10 @@ export class WorkspacePage extends BasePage {
    * across reloads/re-focusing.
    */
   async dismissFocusModePrompt(): Promise<void> {
-    const onboarding = this.page.getByRole("dialog", {
-      name: "Sidebar focus mode onboarding",
-    });
+    const onboarding = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", { name: "Sidebar focus mode onboarding" }),
+    ).root;
     await onboarding.getByRole("button", { name: "Got It" }).click();
     await expect(onboarding).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
@@ -808,9 +815,7 @@ export class WorkspacePage extends BasePage {
    * stripped so callers only see the label.
    */
   async getBreadcrumb(): Promise<string[]> {
-    const labels = await this.page
-      .locator('[data-testid^="workspace-breadcrumb-level-"]')
-      .allInnerTexts();
+    const labels = await new BreadcrumbComponent(this.page).labels();
     return labels.map((label) => label.replace(/^[A-Z]+\n/, ""));
   }
 
@@ -892,10 +897,10 @@ export class WorkspacePage extends BasePage {
    */
   async isModalOpen(headingText: string): Promise<boolean> {
     return (
-      (await this.page
-        .getByRole("dialog")
-        .filter({ hasText: headingText })
-        .count()) > 0
+      (await new ModalComponent(
+        this.page,
+        this.page.getByRole("dialog").filter({ hasText: headingText }),
+      ).root.count()) > 0
     );
   }
 
@@ -1207,9 +1212,9 @@ export class WorkspacePage extends BasePage {
    * "(current)".
    */
   async selectDuplicateProject(projectName?: string): Promise<void> {
-    const select = this.page
-      .getByRole("dialog")
-      .locator('select[name="projectId"]');
+    const select = new ModalComponent(this.page).root.locator(
+      'select[name="projectId"]',
+    );
     const options = await select.locator("option").allTextContents();
     const label = projectName
       ? options.find((o) => o.startsWith(projectName))
@@ -1227,7 +1232,7 @@ export class WorkspacePage extends BasePage {
    * stuck.
    */
   async setDuplicateName(name: string): Promise<void> {
-    const input = this.page.getByRole("dialog").locator('input[name="name"]');
+    const input = new ModalComponent(this.page).root.locator('input[name="name"]');
     await input.fill(name);
     await expect(input).toHaveValue(name);
   }
