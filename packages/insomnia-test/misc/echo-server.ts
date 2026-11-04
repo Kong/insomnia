@@ -97,11 +97,10 @@ const MAX_REPLY_DELAY_MS = 60_000;
 
 function delayResponse(req: IncomingMessage) {
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
-  if (!Number.isSafeInteger(requestedDelayMs)) return Promise.resolve();
-  if (requestedDelayMs < MIN_REPLY_DELAY_MS || requestedDelayMs > MAX_REPLY_DELAY_MS) {
-    return Promise.resolve();
+  if (Number.isSafeInteger(requestedDelayMs) && requestedDelayMs >= MIN_REPLY_DELAY_MS && requestedDelayMs <= MAX_REPLY_DELAY_MS) {
+    return new Promise(resolve => setTimeout(resolve, requestedDelayMs));
   }
-  return new Promise(resolve => setTimeout(resolve, Math.min(requestedDelayMs, MAX_REPLY_DELAY_MS)));
+  return Promise.resolve();
 }
 
 function parseCookies(header?: string) {
