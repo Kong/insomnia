@@ -1,3 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import { SyncStatus } from "@package/enums/sync-status";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
@@ -23,15 +25,15 @@ export class CloudSyncPage extends BasePage {
   private readonly syncDropdownButton = this.page.getByTestId("git-dropdown");
 
   private readonly syncMenu = this.page.getByRole("menu", { name: "Git Sync" });
-  private readonly commitDialog = this.page.getByRole("dialog", {
-    name: "Commit changes",
-  });
-  private readonly branchesDialog = this.page.getByRole("dialog", {
-    name: "Branches",
-  });
-  private readonly historyDialog = this.page
-    .getByRole("dialog")
-    .filter({ has: this.page.getByRole("heading", { name: "History" }) });
+  private readonly commitModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Commit changes" }),
+  );
+  private readonly branchesModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Branches" }),
+  );
+  private readonly historyModal = ModalComponent.byTitle(this.page, "History");
 
   /**
    * Waits for the project dashboard's file/collection grid to finish its
@@ -42,7 +44,7 @@ export class CloudSyncPage extends BasePage {
    */
   async waitForDashboardLoaded(): Promise<void> {
     await expect(
-      this.page.getByTestId("workspace-grid").getByRole("row").first(),
+      new TableComponent(this.page, this.page.getByTestId("workspace-grid")).rows.first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -165,7 +167,7 @@ export class CloudSyncPage extends BasePage {
     await this.syncMenu
       .getByRole("menuitemradio", { name: "Commit", exact: true })
       .click({ delay: 500 });
-    await expect(this.commitDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.commitModal.waitForVisible();
   }
 
   /**
@@ -197,7 +199,7 @@ export class CloudSyncPage extends BasePage {
       timeout: DEFAULT_TIMEOUT,
     });
     await historyButton.click();
-    await expect(this.historyDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.historyModal.waitForVisible();
   }
 
   /**
@@ -208,7 +210,7 @@ export class CloudSyncPage extends BasePage {
     await this.syncMenu
       .getByRole("menuitemradio", { name: "Branches", exact: true })
       .click();
-    await expect(this.branchesDialog).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    await this.branchesModal.waitForVisible();
   }
 
   /**

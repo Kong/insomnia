@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format";
 import type { ExportFormat } from "@package/enums/export-format";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -7,17 +8,26 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {
-  private readonly exportRequestsDialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Export requests" });
+  private readonly exportRequestsModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
+  );
 
-  private readonly selectExportTypeDialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Select Export Type" });
+  private readonly selectExportTypeModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
+  );
 
-  private readonly selectSpecFormatDialog = this.page
-    .getByRole("dialog")
-    .filter({ hasText: "Select Specification Format" });
+  private readonly selectSpecFormatModal = new ModalComponent(
+    this.page,
+    this.page
+      .getByRole("dialog")
+      .filter({ hasText: "Select Specification Format" }),
+  );
+
+  private readonly exportRequestsDialog = this.exportRequestsModal.root;
+  private readonly selectExportTypeDialog = this.selectExportTypeModal.root;
+  private readonly selectSpecFormatDialog = this.selectSpecFormatModal.root;
 
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
@@ -40,9 +50,7 @@ export class ExportPage extends BasePage {
    */
   async confirmRequestSelection(): Promise<void> {
     if (!(await this.exportRequestsDialog.isVisible())) return;
-    await this.exportRequestsDialog
-      .getByRole("button", { name: "Export", exact: true })
-      .click();
+    await this.exportRequestsModal.clickButton("Export");
     await expect(this.selectExportTypeDialog).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -62,9 +70,7 @@ export class ExportPage extends BasePage {
    * file via the stubbed native save/open dialog.
    */
   async confirmFormat(): Promise<void> {
-    await this.selectExportTypeDialog
-      .getByRole("button", { name: "Done" })
-      .click();
+    await this.selectExportTypeModal.clickButton("Done", false);
     await expect(this.selectExportTypeDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -89,9 +95,7 @@ export class ExportPage extends BasePage {
     await this.selectSpecFormatDialog
       .getByTestId("select-modal-select")
       .selectOption({ label: format });
-    await this.selectSpecFormatDialog
-      .getByRole("button", { name: "Done" })
-      .click();
+    await this.selectSpecFormatModal.clickButton("Done", false);
     await expect(this.selectSpecFormatDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
@@ -103,15 +107,17 @@ export class ExportPage extends BasePage {
    * not consistently, so this polls briefly rather than requiring it.
    */
   async dismissCompletionIfShown(): Promise<void> {
-    const completeDialog = this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Export Complete" });
+    const completeModal = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ hasText: "Export Complete" }),
+    );
+    const completeDialog = completeModal.root;
     if (
       await completeDialog
         .isVisible({ timeout: 2000 })
         .catch(() => false)
     ) {
-      await completeDialog.getByRole("button", { name: "Ok" }).click();
+      await completeModal.clickButton("Ok", false);
     }
   }
 }

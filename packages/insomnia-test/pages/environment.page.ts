@@ -1,6 +1,11 @@
 import { isDeepStrictEqual } from "node:util";
 
+import { DropdownComponent } from "@package/components/dropdown.component";
+import { EnvironmentPickerComponent } from "@package/components/environment-picker.component";
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
+import { TooltipComponent } from "@package/components/tooltip.component";
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type {
   EnvironmentKvPairData} from "@package/models/environment";
@@ -20,12 +25,6 @@ const TYPE_LABELS: Record<EnvironmentKvPairDataType, string> = {
 const LABEL_TYPES = Object.fromEntries(
   Object.entries(TYPE_LABELS).map(([type, label]) => [label, type]),
 ) as Record<string, EnvironmentKvPairDataType>;
-
-function pickerLabel(picker: "project" | "collection"): string {
-  return picker === "project"
-    ? "Select a Project Environment"
-    : "Select an API Collection Environment";
-}
 
 export class EnvironmentPage extends BasePage {
   private readonly ADD_SUB_ENVIRONMENT_BUTTON =
@@ -67,7 +66,9 @@ export class EnvironmentPage extends BasePage {
     // The button's tooltip stays open while the cursor rests on it and can
     // overlap the new row's name, intercepting the rename double-click.
     await this.page.mouse.move(0, 0);
-    await expect(this.page.locator('[role="tooltip"]')).toBeHidden({
+    await expect(
+      new TooltipComponent(this.page, this.page.locator("body")).tooltip,
+    ).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -217,9 +218,7 @@ export class EnvironmentPage extends BasePage {
       environmentName === "Base Environment" ? containerName : environmentName;
     const trigger = this.page.locator(this.PROJECT_ENVIRONMENT_TRIGGER);
     await trigger.click();
-    const listbox = this.page.getByRole("listbox", {
-      name: "Select a Project Environment",
-    });
+    const listbox = this.environmentPicker.listbox("project");
     await listbox.getByRole("option", { name: optionName }).click();
     await expect(trigger).toContainText(optionName);
 
@@ -236,8 +235,8 @@ export class EnvironmentPage extends BasePage {
       picker === "project" ? this.PROJECT_ENVIRONMENT_TRIGGER : this.COLLECTION_ENVIRONMENT_TRIGGER,
     );
     await trigger.click();
-    await this.page
-      .getByRole("listbox", { name: pickerLabel(picker) })
+    await this.environmentPicker
+      .listbox(picker)
       .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
   }
 
@@ -247,7 +246,7 @@ export class EnvironmentPage extends BasePage {
   async getOpenEnvironmentPickers(): Promise<("project" | "collection")[]> {
     const open: ("project" | "collection")[] = [];
     for (const picker of ["project", "collection"] as const) {
-      const listbox = this.page.getByRole("listbox", { name: pickerLabel(picker) });
+      const listbox = this.environmentPicker.listbox(picker);
       if (await listbox.isVisible()) open.push(picker);
     }
     return open;
@@ -260,8 +259,8 @@ export class EnvironmentPage extends BasePage {
   async closeEnvironmentPicker(): Promise<void> {
     await this.page.keyboard.press("Escape");
     for (const picker of ["project", "collection"] as const) {
-      await this.page
-        .getByRole("listbox", { name: pickerLabel(picker) })
+      await this.environmentPicker
+        .listbox(picker)
         .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
     }
   }
@@ -277,9 +276,10 @@ export class EnvironmentPage extends BasePage {
     await this.page.getByLabel("Add Project Environment").click();
     await this.page.getByPlaceholder("Enter a name for your Environment").fill(name);
     await this.page.getByRole("button", { name: "Create", exact: true }).click();
-    await this.page
-      .getByRole("dialog", { name: "Create or update dialog" })
-      .waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+    await new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", { name: "Create or update dialog" }),
+    ).waitForHidden();
     await this.page.keyboard.press("Escape");
   }
 
@@ -291,8 +291,8 @@ export class EnvironmentPage extends BasePage {
     const selected = ((await this.page.locator(this.PROJECT_ENVIRONMENT_TRIGGER).innerText()) ?? "").trim();
     await this.openEnvironmentPicker("project");
     const options = (
-      await this.page
-        .getByRole("listbox", { name: pickerLabel("project") })
+      await this.environmentPicker
+        .listbox("project")
         .getByRole("option")
         .allInnerTexts()
     ).map((text) => text.trim());
@@ -307,9 +307,7 @@ export class EnvironmentPage extends BasePage {
   async openCollectionEnvironmentManager(): Promise<void> {
     await this.openEnvironmentPicker("collection");
     await this.page.getByRole("button", { name: "Manage API collection environments" }).click();
-    await this.page
-      .getByRole("dialog", { name: "Manage Environments" })
-      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    await this.manageEnvironmentsModal.waitForVisible();
   }
 
   /**
@@ -317,9 +315,8 @@ export class EnvironmentPage extends BasePage {
    * popover that opened it.
    */
   async closeCollectionEnvironmentManager(): Promise<void> {
-    const dialog = this.page.getByRole("dialog", { name: "Manage Environments" });
-    await dialog.getByRole("button", { name: "Close", exact: true }).click();
-    await dialog.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
+    await this.manageEnvironmentsModal.clickButton("Close");
+    await this.manageEnvironmentsModal.waitForHidden();
     await this.page.keyboard.press("Escape");
   }
 
@@ -346,9 +343,7 @@ export class EnvironmentPage extends BasePage {
   async selectCollectionEnvironment(name: string): Promise<void> {
     const trigger = this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER);
     await trigger.click();
-    const listbox = this.page.getByRole("listbox", {
-      name: "Select an API Collection Environment",
-    });
+    const listbox = this.environmentPicker.listbox("collection");
     await listbox.getByRole("option", { name }).click();
     await expect(trigger).toContainText(name);
 
@@ -530,15 +525,24 @@ export class EnvironmentPage extends BasePage {
     row: Locator,
     type: EnvironmentKvPairDataType,
   ): Promise<void> {
-    await row.locator('button[aria-label="Type Selection"]').click();
-    await this.page
-      .getByRole("menuitemradio", { name: TYPE_LABELS[type] })
+    const typeButton = row.locator('button[aria-label="Type Selection"]');
+    await typeButton.click();
+    await new DropdownComponent(this.page, typeButton)
+      .item(TYPE_LABELS[type], false)
       .click();
   }
 
-  private readonly collectionEnvironmentDialog = this.page.getByRole("dialog", {
-    name: "Manage Environments",
-  });
+  private readonly environmentPicker = new EnvironmentPickerComponent(
+    this.page,
+    this.page.locator("body"),
+  );
+
+  private readonly manageEnvironmentsModal = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog", { name: "Manage Environments" }),
+  );
+
+  private readonly collectionEnvironmentDialog = this.manageEnvironmentsModal.root;
 
   /**
    * Opens the current workspace's own "Manage API collection environments"
@@ -604,8 +608,8 @@ export class EnvironmentPage extends BasePage {
    * Clicks an environment's row inside the open "Manage Environments" dialog.
    */
   async selectEnvironmentInDialog(name: string): Promise<void> {
-    await this.collectionEnvironmentDialog
-      .getByRole("row", { name })
+    await new TableComponent(this.page, this.collectionEnvironmentDialog)
+      .row(name)
       .click();
   }
 
@@ -620,7 +624,7 @@ export class EnvironmentPage extends BasePage {
       ? this.collectionEnvironmentDialog
       : this.page.getByRole("grid", { name: "Environments" });
     return (
-      (await root.getByRole("row", { name }).first().getAttribute("aria-selected")) ===
+      (await new TableComponent(this.page, root).row(name).first().getAttribute("aria-selected")) ===
       "true"
     );
   }
@@ -650,15 +654,11 @@ export class EnvironmentPage extends BasePage {
     const row = listbox.locator(`[role="option"][data-key="${key}"]`);
     await this.keyValue.nameEditor(row).setValue(variable.name);
     await this.keyValue.valueEditor(row).setValue(variable.value);
-    await this.collectionEnvironmentDialog
-      .getByRole("button", { name: "Close", exact: true })
-      .click();
+    await this.manageEnvironmentsModal.clickButton("Close");
     await expect(this.collectionEnvironmentDialog).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
-    const picker = this.page.getByRole("listbox", {
-      name: "Select an API Collection Environment",
-    });
+    const picker = this.environmentPicker.listbox("collection");
     await expect(async () => {
       if (await picker.isVisible()) {
         await this.page.keyboard.press("Escape");

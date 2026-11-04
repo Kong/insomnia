@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import type { ImportSource } from "@package/enums/import-sources";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
@@ -5,6 +6,8 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {
+  private readonly modal = new ModalComponent(this.page);
+
   // Formerly "Select Collection".
   private readonly COLLECTION_SELECT =
     '[role="dialog"] select[aria-label="Select API Collection"]';
@@ -21,14 +24,14 @@ export class ImportPage extends BasePage {
   private readonly URL_INPUT = '[role="dialog"] input[name="uri"]';
 
   async clickImport(): Promise<void> {
-    await this.page.getByRole("dialog").getByRole("button", { name: "Import" }).click();
+    await this.modal.clickButton("Import", false);
     await expect(this.page.locator(this.DIALOG)).toBeHidden({
       timeout: DEFAULT_TIMEOUT,
     });
   }
 
   async clickScan(): Promise<void> {
-    await this.page.getByRole("dialog").getByRole("button", { name: "Scan" }).click();
+    await this.modal.clickButton("Scan", false);
     await expect(this.page.locator(this.PROJECT_SELECT)).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });

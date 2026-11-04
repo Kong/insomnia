@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { DigestEncoding, HashAlgorithm } from "@package/models/template-tag";
 import type { Locator } from "@playwright/test";
@@ -7,15 +8,14 @@ import { BasePage } from "./base.page";
 
 export class TemplateTagPage extends BasePage {
   private readonly MODAL = '[role="dialog"]';
+  private readonly modal = new ModalComponent(this.page);
   private readonly LIVE_PREVIEW = `${this.MODAL} textarea[aria-label="Live Preview"]`;
 
   /**
    * Waits for the tag-editor modal ("Edit Tag") to become visible.
    */
   async navigate(): Promise<void> {
-    await expect(this.page.locator(this.MODAL)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await this.modal.expectOpen();
   }
 
   /**
@@ -169,13 +169,7 @@ export class TemplateTagPage extends BasePage {
    * into the field it was opened from, and waits for the modal to close.
    */
   async done(): Promise<void> {
-    await this.page
-      .locator(this.MODAL)
-      .getByRole("button", { name: "Done", exact: true })
-      .click();
-    await expect(this.page.locator(this.MODAL)).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await this.modal.confirm("Done");
   }
 
   /**
@@ -184,10 +178,7 @@ export class TemplateTagPage extends BasePage {
    * settle.
    */
   async clearCachedValue(): Promise<void> {
-    await this.page
-      .locator(this.MODAL)
-      .getByRole("button", { name: "Clear" })
-      .click();
+    await this.modal.clickButton("Clear", false);
     await this.waitForPreviewSettled();
   }
 
@@ -209,12 +200,16 @@ export class TemplateTagPage extends BasePage {
    * text), reads its input's `type`, fills in `value` and submits.
    */
   async answerPrompt(label: string, value: string): Promise<string> {
-    const dialog = this.page.getByRole("dialog").filter({ hasText: label });
+    const promptModal = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ hasText: label }),
+    );
+    const dialog = promptModal.root;
     await dialog.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
     const input = dialog.locator("#prompt-input");
     const inputType = (await input.getAttribute("type")) ?? "";
     await input.fill(value);
-    await dialog.getByRole("button", { name: "Submit" }).click();
+    await promptModal.clickButton("Submit", false);
     await dialog.waitFor({ state: "hidden", timeout: DEFAULT_TIMEOUT });
     return inputType;
   }

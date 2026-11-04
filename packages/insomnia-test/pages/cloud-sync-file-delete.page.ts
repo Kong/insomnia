@@ -1,3 +1,5 @@
+import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import { ToastComponent } from "@package/components/toast.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
@@ -23,9 +25,10 @@ export class CloudSyncFileDeletePage extends BasePage {
     });
   }
 
-  private readonly deleteFileDialog = this.page
-    .getByRole("dialog")
-    .filter({ has: this.page.getByRole("heading", { name: "Delete file" }) });
+  private readonly deleteFileModal = ModalComponent.byTitle(
+    this.page,
+    "Delete file",
+  );
 
   /**
    * A project dashboard's own grid card for `name` (a react-aria
@@ -38,7 +41,10 @@ export class CloudSyncFileDeletePage extends BasePage {
    * violation once the sidebar tree is showing that row too.
    */
   private fileCard(name: string) {
-    return this.page.getByTestId("workspace-grid").getByRole("row", { name });
+    return new TableComponent(
+      this.page,
+      this.page.getByTestId("workspace-grid"),
+    ).row(name);
   }
 
   /**
@@ -156,9 +162,7 @@ export class CloudSyncFileDeletePage extends BasePage {
   async openFileDeleteDialog(name: string): Promise<void> {
     await this.hoverFile(name);
     await this.fileCard(name).getByLabel("Delete unsynced file").click();
-    await expect(this.deleteFileDialog).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await this.deleteFileModal.waitForVisible();
   }
 
   /**
@@ -166,7 +170,7 @@ export class CloudSyncFileDeletePage extends BasePage {
    * body). Requires `openFileDeleteDialog()` to have been called first.
    */
   async getFileDeleteDialogText(): Promise<string> {
-    return this.deleteFileDialog.innerText();
+    return this.deleteFileModal.root.innerText();
   }
 
   /**
@@ -176,7 +180,7 @@ export class CloudSyncFileDeletePage extends BasePage {
   async dismissFileDeleteDialog(method: DialogDismissMethod): Promise<void> {
     switch (method) {
       case DialogDismissMethod.XButton: {
-        await this.deleteFileDialog.locator('[data-icon="x"]').click();
+        await this.deleteFileModal.root.locator('[data-icon="x"]').click();
         break;
       }
       case DialogDismissMethod.Escape: {
@@ -191,9 +195,7 @@ export class CloudSyncFileDeletePage extends BasePage {
         throw new Error(`Unhandled DialogDismissMethod: ${method}`);
       }
     }
-    await expect(this.deleteFileDialog).toBeHidden({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await this.deleteFileModal.waitForHidden();
   }
 
   /**
@@ -205,7 +207,7 @@ export class CloudSyncFileDeletePage extends BasePage {
    * `waitForFileDeleteFailureToast()` afterward.
    */
   async confirmFileDelete(): Promise<void> {
-    await this.deleteFileDialog
+    await this.deleteFileModal.root
       .getByRole("button", { name: "Delete unsynced file permanently" })
       .click();
   }
