@@ -3,7 +3,10 @@ import { useParams } from 'react-router';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CopyButton } from '../base/copy-button';
+import { Link } from '../base/link';
 import { Icon } from '../icon';
+
+export const INSO_CLI_DOCS_URL = 'https://developer.konghq.com/inso-cli/';
 
 function generateCommandArgumentsForRequests(
   workspaceId: string,
@@ -104,7 +107,10 @@ export const CLIPreviewModal = ({
                   </div>
                 </div>
               </div>
-              <div className="mt-2 flex justify-end">
+              <div className="mt-2 flex items-center justify-between">
+                <Link href={INSO_CLI_DOCS_URL} className="underline">
+                  Learn more about Inso CLI
+                </Link>
                 <Button
                   className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--hl) transition-colors hover:no-underline"
                   onPress={close}

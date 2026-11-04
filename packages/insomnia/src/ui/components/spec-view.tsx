@@ -51,6 +51,7 @@ import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { LintCLIModal } from '~/ui/components/modals/lint-cli-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
@@ -149,6 +150,7 @@ export const SpecView = ({
   const { settings } = useRootLoaderData()!;
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
+  const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
   const storageRules = useOrganizationStorageRule(organizationId);
@@ -876,6 +878,15 @@ export const SpecView = ({
       </div>
       <span className="flex-1" />
       <div className="flex items-center gap-2">
+        {apiSpec?.contents && (
+          <Button
+            data-testid="lint-via-cli"
+            className="underline"
+            onPress={() => setIsLintCLIModalOpen(true)}
+          >
+            Lint via CLI
+          </Button>
+        )}
         {lintErrors.length > 0 && (
           <div className="flex items-center gap-2 select-none">
             <Icon icon="circle-xmark" className="text-(--color-danger)" />
@@ -1336,6 +1347,9 @@ export const SpecView = ({
               source="design-view"
               onOpenChange={setNewMockServerModalOpen}
             />
+          )}
+          {isLintCLIModalOpen && (
+            <LintCLIModal onClose={() => setIsLintCLIModalOpen(false)} workspaceId={workspaceId} />
           )}
           {isViewRulesetModalOpen && (
             <ModalOverlay
