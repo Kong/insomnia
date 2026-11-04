@@ -15,11 +15,16 @@ import {
   type TraceSummaryBreakdown,
 } from '~/konnect/debug-trace-helper';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
+import { StatusTag } from '~/ui/components/tags/status-tag';
+import { TimeTag } from '~/ui/components/tags/time-tag';
 import { useKonnectDebuggerSession, useKonnectDebuggerSessionTrace } from '~/ui/hooks/use-konnect-debugger-session';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useKonnectSyncEnabled } from '~/ui/organization-utils';
+import { METHOD_PILL_CLASSES } from '~/ui/utils/method-colors';
 
+import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
+import { Tooltip } from '../tooltip';
 
 const captureDurations: { id: number; name: string }[] = [
   { id: 15, name: '15 seconds' },
@@ -209,7 +214,7 @@ export const KonnectDebuggerPane = ({ project, konnectRouteKey }: Props) => {
         <div className="flex flex-1 items-center justify-center p-6 text-center text-(--hl)">
           {isLoadingDebugSession
             ? 'Loading data for existing debugger session…'
-            : 'Start a debugger session to capture live traffic this control plane.'}
+            : 'Start a debugger session to observe live traffic on this control plane.'}
         </div>
       ) : (
         <div className="flex min-h-0 flex-1">
@@ -366,27 +371,48 @@ const TraceList = ({
     {traces.map(trace => {
       const isMatch = matching.has(trace.traceId);
       const isSelected = trace.traceId === selectedId;
+      const upperTraceMethod = (trace.method || '').toUpperCase();
       return (
-        <Button
+        <div
           key={trace.traceId}
-          onPress={() => onSelect(trace.traceId)}
-          aria-label={`Trace ${trace.traceId}`}
           className={classnames(
-            'flex flex-col items-start gap-0.5 border-l-2 border-solid px-3 py-2 text-left ring-1 ring-transparent transition-colors focus:ring-(--hl-md) focus:ring-inset',
+            'group relative flex border-l-2 border-solid ring-1 ring-transparent transition-colors focus-within:ring-(--hl-md) focus-within:ring-inset',
             isSelected ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)',
             isMatch ? 'border-l-(--color-surprise)' : 'border-l-transparent',
             !isMatch && 'text-(--hl)',
           )}
         >
-          <span className="font-mono text-xs">{trace.traceId.slice(0, 12)}…</span>
-          <span className="truncate text-xs">
-            {trace.method ?? ''} {getTracePath(trace) ?? ''}
-          </span>
-          <div className="flex w-full items-center justify-between text-xs text-(--hl)">
-            <span>{formatMs(trace.durationMs)}</span>
-            {isMatch && <span className="text-(--color-surprise)">this request</span>}
-          </div>
-        </Button>
+          <Button
+            onPress={() => onSelect(trace.traceId)}
+            aria-label={`Trace ${trace.traceId}`}
+            className="flex min-w-0 flex-1 flex-col items-start gap-1 px-3 py-2.5 text-left whitespace-normal outline-hidden"
+          >
+            <Tooltip message={trace.traceId} position="right" selectable>
+              <span className="pr-6 font-mono text-xs">{trace.traceId.slice(0, 12)}…</span>
+            </Tooltip>
+            <div className="flex w-full min-w-0 items-start gap-2 text-xs">
+              <span
+                className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] ${METHOD_PILL_CLASSES[upperTraceMethod] || 'bg-(--hl-md) text-(--color-font)'}`}
+              >
+                {upperTraceMethod}
+              </span>
+              <div className="min-w-0 break-all">{getTracePath(trace) ?? ''}</div>
+            </div>
+            <div className="flex w-full items-center justify-between text-xs text-(--hl)">
+              <span>{formatMs(trace.durationMs)}</span>
+              {isMatch && <span className="text-(--color-surprise)">this request</span>}
+            </div>
+          </Button>
+          <CopyButton
+            size="small"
+            content={trace.traceId}
+            title="Copy trace ID"
+            confirmMessage=""
+            className="absolute top-3 right-2.5 h-5! border-0! bg-transparent! px-1.5! opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+          >
+            <i className="fa fa-copy" />
+          </CopyButton>
+        </div>
       );
     })}
   </div>
@@ -425,16 +451,11 @@ const TraceDetail = ({
     return next;
   };
 
-  const statusColor = trace.statusCode && trace.statusCode >= 400 ? 'text-(--color-danger)' : 'text-(--color-success)';
-
   return (
     <div className="flex flex-col gap-3 p-4">
-      <div className="flex items-baseline gap-2 font-mono">
-        <span className="font-bold">
-          {trace.method ?? ''} {getTracePath(trace) ?? trace.rootTraceName ?? ''}
-        </span>
-        {trace.statusCode !== null && <span className={statusColor}>{trace.statusCode}</span>}
-        <span className="text-(--hl)">Total: {formatMs(summary?.totalMs ?? tree?.totalMs ?? trace.durationMs)}</span>
+      <div className="flex items-stretch gap-2 font-mono">
+        {trace.statusCode !== null && <StatusTag statusCode={trace.statusCode} small />}
+        <TimeTag milliseconds={summary?.totalMs ?? tree?.totalMs ?? trace.durationMs} small />
       </div>
 
       {errorKind ? (
