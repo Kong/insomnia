@@ -38,10 +38,21 @@ interface RequestLookup<T> {
  * from forming an import cycle with `WorkspaceFlow`.
  */
 export interface RequestFlows {
+  readonly graphqlRequestFlow: RequestLookup<GraphQLRequest>;
+  readonly grpcRequestFlow: RequestLookup<GrpcRequest>;
+  readonly eventStreamRequestFlow: RequestLookup<EventStreamRequest>;
+  readonly socketIoRequestFlow: RequestLookup<SocketIORequest>;
+  readonly webSocketRequestFlow: RequestLookup<WebSocketRequest>;
   readonly httpRequestFlow: RequestLookup<HttpRequest>;
 }
 
-type RequestItem = HttpRequest;
+type RequestItem =
+  | HttpRequest
+  | GraphQLRequest
+  | GrpcRequest
+  | EventStreamRequest
+  | SocketIORequest
+  | WebSocketRequest;
 
 export type WorkspaceItem =
   | (Project & { kind: 'project' })
@@ -419,7 +430,7 @@ export class WorkspaceFlow extends BaseFlow {
    */
   @step()
   async pin(
-    request: HttpRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Pin);
   }
@@ -430,13 +441,13 @@ export class WorkspaceFlow extends BaseFlow {
    */
   @step()
   async unpin(
-    request: HttpRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
   ): Promise<void> {
     await this.togglePin(request, ContextMenuItem.Unpin);
   }
 
   private async togglePin(
-    request: HttpRequest,
+    request: HttpRequest | GraphQLRequest | GrpcRequest | EventStreamRequest | SocketIORequest | WebSocketRequest,
     action: ContextMenuItem.Pin | ContextMenuItem.Unpin,
   ): Promise<void> {
     const { workspacePage } = this.pageManager;

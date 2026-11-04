@@ -5,8 +5,14 @@ import {
   Environment,
   ENVIRONMENT_TYPE,
 } from "@package/models/environment";
+import type { EventStreamRequest } from "@package/models/event-stream-request";
+import type { GraphQLRequest } from "@package/models/graphql-request";
+import type { GrpcRequest } from "@package/models/grpc-request";
 import type { HttpRequest } from "@package/models/http-request";
+import type { McpClient } from "@package/models/mcp-client";
 import type { Project } from "@package/models/project";
+import type { SocketIORequest } from "@package/models/socket-io-request";
+import type { WebSocketRequest } from "@package/models/websocket-request";
 import type { PageManager } from "@package/pages/page-manager";
 
 import { BaseFlow } from "./base.flow";
@@ -89,7 +95,15 @@ export class EnvironmentFlow extends BaseFlow {
    */
   @step()
   async link(
-    item: Collection | HttpRequest,
+    item:
+      | Collection
+      | McpClient
+      | HttpRequest
+      | EventStreamRequest
+      | GraphQLRequest
+      | GrpcRequest
+      | SocketIORequest
+      | WebSocketRequest,
     environment: Environment,
   ): Promise<void> {
     if (!environment.containerName) {
