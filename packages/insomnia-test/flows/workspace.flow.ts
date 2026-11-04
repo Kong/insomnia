@@ -71,23 +71,6 @@ export interface UnitTestRunResult {
   rows: UnitTestResultRow[];
 }
 
-export type WorkspaceItem =
-  | (Project & { kind: 'project' })
-  | (Collection & { kind: 'collection' })
-  | (McpClient & { kind: 'mcpClient' })
-  | (HttpRequest & { kind: 'http' })
-  | (GraphQLRequest & { kind: 'graphql' })
-  | (GrpcRequest & { kind: 'grpc' })
-  | (EventStreamRequest & { kind: 'eventStream' })
-  | (SocketIORequest & { kind: 'socketIO' })
-  | (WebSocketRequest & { kind: 'webSocket' });
-
-/** The settled outcome of `WorkspaceFlow.runAllTests()`. */
-export interface UnitTestRunResult {
-  summary: string;
-  rows: UnitTestResultRow[];
-}
-
 export class WorkspaceFlow extends BaseFlow {
   constructor(
     context: FlowContext,
