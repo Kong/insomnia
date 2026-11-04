@@ -490,9 +490,9 @@ export const FirstRequestCreation = ({
 
   return (
     <>
-      <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
-        <div className="flex w-full flex-col gap-2 rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-5 pt-4 pb-2">
-          <h2 className="text-lg font-semibold">New request</h2>
+      <div className="rounded-md border border-solid border-(--hl-sm) bg-(--hl-xs)">
+        <div className="flex w-full flex-col gap-2 p-3">
+          <h2 className="text-[13px] font-semibold">New request</h2>
           <div className="flex h-(--line-height-sm) items-center gap-1.5 rounded-md border border-(--hl-md) bg-(--color-bg) p-1 focus-within:shadow-[0_0_0_4px_#0044F433]">
             <MethodSelector method={method} onChange={setMethod} className="h-full" placement="bottom start" />
             <input

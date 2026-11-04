@@ -1250,8 +1250,9 @@ html {
   --line-height-xs: calc(var(--font-size) * 2.15);
   --line-height-xxs: calc(var(--font-size) * 1.8);
   /* Radius */
-  --radius-sm: calc(var(--font-size) * 0.2);
-  --radius-md: calc(var(--font-size) * 0.3);
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
   /* Scrollbars */
   --scrollbar-width: calc(var(--font-size) * 0.6);
   /* Modals */
@@ -1283,9 +1284,9 @@ html {
   font-size: var(--font-size-xxl) !important;
 }
 html {
-  --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace, 'Droid Sans Fallback';
+  --font-monospace: 'JetBrains Mono Variable', Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace, 'Droid Sans Fallback';
   --font-default:
-    -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans',
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans',
     sans-serif;
   --font-ligatures: normal;
 }

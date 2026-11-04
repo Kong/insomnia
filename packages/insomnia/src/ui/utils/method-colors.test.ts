@@ -9,22 +9,15 @@ import { getMethodPillClasses, getMethodTextClasses } from './method-colors';
 
 describe('method-colors', () => {
   describe('getMethodPillClasses', () => {
-    it('maps a known method to its theme background + font colour', () => {
-      expect(getMethodPillClasses(METHOD_POST)).toContain('bg-(--color-success)');
-      expect(getMethodPillClasses(METHOD_POST)).toContain('text-(--color-font-success)');
+    it('maps a known method to a tint of its theme colour', () => {
+      expect(getMethodPillClasses(METHOD_POST)).toContain('var(--color-success)');
+      expect(getMethodPillClasses(METHOD_POST)).toContain('text-(--color-success)');
+      expect(getMethodPillClasses(METHOD_GET)).toContain('text-(--color-surprise)');
+      expect(getMethodPillClasses(METHOD_DELETE)).toContain('text-(--color-danger)');
     });
 
-    it('uses the bespoke GET colour with no darkening overlay', () => {
-      expect(getMethodPillClasses(METHOD_GET)).toBe('bg-[#6B6296] text-white');
-      expect(getMethodPillClasses(METHOD_GET)).not.toContain('linear-gradient');
-    });
-
-    it('darkens every themed non-GET method with a 40% black overlay', () => {
-      expect(getMethodPillClasses(METHOD_DELETE)).toContain('linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4))');
-    });
-
-    it('falls back to the neutral grey pill for unknown/custom methods (e.g. LINK)', () => {
-      expect(getMethodPillClasses('LINK')).toBe('bg-[#424242] text-white');
+    it('falls back to the neutral pill for unknown/custom methods (e.g. LINK)', () => {
+      expect(getMethodPillClasses('LINK')).toBe('bg-(--hl-sm) text-(--color-font)');
     });
   });
 

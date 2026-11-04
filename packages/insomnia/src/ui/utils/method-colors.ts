@@ -17,26 +17,20 @@ import {
  * a neutral highlight so any string is renderable.
  */
 
-// Tailwind classes for a filled "pill" button: solid background + matching font.
-// The themed methods use the existing theme colour families (so they recolour
-// with the active theme); in the default theme they render as the design hexes:
-// POST #7ECF2B, PUT #FF9A1F, PATCH #F0E137, DELETE #FF5631, OPTIONS/HEAD #46C1E6.
+// Tailwind classes for a soft "pill" button: a light tint of the method colour behind coloured text.
 const METHOD_PILL_CLASSES: Record<string, string> = {
-  [METHOD_POST]: 'bg-(--color-success) text-(--color-font-success)',
-  [METHOD_PUT]: 'bg-(--color-warning) text-(--color-font-warning)',
-  [METHOD_PATCH]: 'bg-(--color-notice) text-(--color-font-notice)',
-  [METHOD_DELETE]: 'bg-(--color-danger) text-(--color-font-danger)',
-  [METHOD_OPTIONS]: 'bg-(--color-info) text-(--color-font-info)',
-  [METHOD_HEAD]: 'bg-(--color-info) text-(--color-font-info)',
-  [METHOD_QUERY]: 'bg-(--color-surprise) text-(--color-font-surprise)',
+  [METHOD_GET]: 'bg-[color-mix(in_srgb,var(--color-surprise)_18%,transparent)] text-(--color-surprise)',
+  [METHOD_POST]: 'bg-[color-mix(in_srgb,var(--color-success)_16%,transparent)] text-(--color-success)',
+  [METHOD_PUT]: 'bg-[color-mix(in_srgb,var(--color-warning)_16%,transparent)] text-(--color-warning)',
+  [METHOD_PATCH]: 'bg-[color-mix(in_srgb,var(--color-notice)_16%,transparent)] text-(--color-notice)',
+  [METHOD_DELETE]: 'bg-[color-mix(in_srgb,var(--color-danger)_16%,transparent)] text-(--color-danger)',
+  [METHOD_OPTIONS]: 'bg-[color-mix(in_srgb,var(--color-info)_16%,transparent)] text-(--color-info)',
+  [METHOD_HEAD]: 'bg-[color-mix(in_srgb,var(--color-info)_16%,transparent)] text-(--color-info)',
+  [METHOD_QUERY]: 'bg-[color-mix(in_srgb,var(--color-surprise)_18%,transparent)] text-(--color-surprise)',
 };
 
-// GET uses a bespoke darker purple (#6B6296), not the raw surprise theme colour,
-// and — unlike every other method — is not darkened by the overlay.
-const GET_PILL_CLASSES = 'bg-[#6B6296] text-white';
-
-// Custom/unknown methods (e.g. LINK) use a neutral grey (#424242).
-const NEUTRAL_PILL_CLASSES = 'bg-[#424242] text-white';
+// Custom/unknown methods (e.g. LINK) stay neutral.
+const NEUTRAL_PILL_CLASSES = 'bg-(--hl-sm) text-(--color-font)';
 
 // Tailwind classes for the method name rendered as coloured text (no background).
 const METHOD_TEXT_CLASSES: Record<string, string> = {
@@ -52,26 +46,11 @@ const METHOD_TEXT_CLASSES: Record<string, string> = {
 
 const NEUTRAL_TEXT_CLASSES = 'text-(--color-font)';
 
-// A translucent black overlay (#00000066 → rgba(0,0,0,0.4)) layered on top of the
-// background colour to darken it. Applied to every themed method so the palette
-// reads as a cohesive set of related shades. GET and the neutral fallback are
-// exempt (they already use their final bespoke colour).
-const DARKEN_OVERLAY_CLASS = '[background-image:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4))]';
-
 /**
- * Classes for a filled method pill/button (background + font colour). Themed
- * methods get the darkening overlay; GET and custom/unknown methods use their
- * bespoke colour as-is.
+ * Classes for a soft method pill/button. Custom/unknown methods stay neutral.
  */
 export const getMethodPillClasses = (method: string): string => {
-  if (method === METHOD_GET) {
-    return GET_PILL_CLASSES;
-  }
-  const base = METHOD_PILL_CLASSES[method];
-  if (!base) {
-    return NEUTRAL_PILL_CLASSES;
-  }
-  return `${base} ${DARKEN_OVERLAY_CLASS}`;
+  return METHOD_PILL_CLASSES[method] || NEUTRAL_PILL_CLASSES;
 };
 
 /**

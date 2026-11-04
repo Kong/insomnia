@@ -51,6 +51,7 @@ import {
   invalidateCompiledRulesetCache,
   writeCompiledRuleset,
 } from '~/main/spectral-ruleset-cache';
+import type { AppMenuItem } from '~/main/title-bar';
 import { keyPair as sealedboxKeyPair, open as sealedboxOpen } from '~/main/utils/sealedbox';
 import { getSendRequestCallback } from '~/network/unit-test-feature';
 
@@ -269,8 +270,8 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  getAppMenuLabels: () => Promise<string[]>;
-  showAppMenu: (options: { label: string; x: number; y: number }) => void;
+  getAppMenu: () => Promise<AppMenuItem[]>;
+  clickAppMenuItem: (path: number[]) => void;
   setTitleBarColors: (options: { color: string; symbolColor: string }) => void;
   sync: { resolveConflict: (options: unknown) => void; cancelConflict: (options: unknown) => void };
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;

@@ -3,6 +3,7 @@ import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react
 
 import { type ProjectScopeKeys, scopeToLabelMap } from '~/common/get-workspace-label';
 import { isApiSpecScanResult, type ScanResult } from '~/common/import';
+import { AppLogo } from '~/ui/components/app-logo';
 
 export const validImportExtensions = [
   'sh',
@@ -26,40 +27,6 @@ const Pill: FC<PropsWithChildren> = ({ children }) => (
     {children}
   </div>
 );
-
-const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 32 32" fill="none" {...props}>
-      <path
-        d="M16 31.186c8.387 0 15.186-6.799 15.186-15.186S24.387.814 16 .814.814 7.613.814 16 7.613 31.186 16 31.186z"
-        fill="var(--color-bg)"
-      />
-      <path
-        d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 1.627c7.938 0 14.373 6.435 14.373 14.373S23.938 30.373 16 30.373 1.627 23.938 1.627 16 8.062 1.627 16 1.627z"
-        fill="var(--color-font)"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M16.18 4.61c6.291 0 11.39 5.1 11.39 11.39 0 6.29-5.099 11.39-11.39 11.39-6.29 0-11.39-5.1-11.39-11.39 0-1.537.305-3.004.858-4.342a4.43 4.43 0 106.192-6.192 11.357 11.357 0 014.34-.856z"
-        fill="var(--color-font)"
-      />
-      <defs>
-        <linearGradient
-          id="paint0_linear"
-          x1={16.1807}
-          y1={27.3898}
-          x2={16.1807}
-          y2={4.610_17}
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#7400E1" />
-          <stop offset={1} stopColor="#4000BF" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-};
 
 const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
@@ -150,7 +117,7 @@ export const SupportedFormats = () => {
       <div className="pb-(--padding-sm)">Supported Formats</div>
       <div className="flex flex-wrap gap-(--padding-sm)">
         <Pill>
-          <InsomniaIcon />
+          <AppLogo />
           Insomnia
         </Pill>
         <Pill>
@@ -326,7 +293,7 @@ function getImporterSign(scanResult: ScanResult) {
   if (scanResult.type?.id) {
     const id = scanResult.type.id;
     if (id.includes('insomnia')) {
-      icon = <InsomniaIcon width={24} height={24} />;
+      icon = <AppLogo width={24} height={24} />;
       name = 'Insomnia';
     } else if (id.includes('postman')) {
       icon = <i className="fa-regular fa-file fa-lg" />;

@@ -32,6 +32,8 @@ Only Bruno: see phases 2 to 6.
 - [ ] Add Apache notices for changed files
 - [ ] Remove Kong docs links, dead cloud branches and no-op telemetry calls
 - [ ] Rename the `insomnia://` scheme and hide the cloud mock option
+- [ ] Replace remaining Insomnia names in app text
+- [ ] Remove the leftover Google Fonts and Customer.io exception in `api.protocol.ts`
 - [ ] Import data from an existing Insomnia or Bruno install
 
 ## Phase 1: Restore what the rip removed
@@ -112,7 +114,10 @@ Largest change here. Do it first, since later features build on the storage mode
 
 ## Phase 8: UI
 
+- [x] Custom title bar with themed menus on Windows and Linux
+- [x] Shared palette, type, radius and control styles
 - [ ] Replace leftover legacy components with the compact design system
+- [ ] Restyle the collection sidebar, response pane and empty states
 - [ ] Settings as a tab, split by section, searchable
 - [ ] Sidebar density and keyboard navigation
 - [ ] Command palette covers every action

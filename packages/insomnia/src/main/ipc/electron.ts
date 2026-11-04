@@ -17,7 +17,7 @@ import { localTemplateTags } from 'insomnia/src/common/templating/local-template
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '~/common/templating/types';
 import type { extractNunjucksTagFromCoords } from '~/common/templating/utils';
 import { invariant } from '~/common/utils/invariant';
-import { getAppMenu, hasTitleBarOverlay } from '~/main/title-bar';
+import { findAppMenuItem, getAppMenu, hasTitleBarOverlay, serializeAppMenu } from '~/main/title-bar';
 
 import { fnOrString } from '../../common/misc';
 
@@ -212,7 +212,7 @@ export type HandleChannels =
   | 'cookies.addSetCookies'
   | 'cookies.getResponseCookiesFromHeaders'
   | 'clear'
-  | 'getAppMenuLabels'
+  | 'getAppMenu'
   | 'readText'
   | 'writeText';
 
@@ -222,7 +222,7 @@ export const ipcMainHandle = (
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
   | 'setTitleBarColors'
-  | 'showAppMenu'
+  | 'clickAppMenuItem'
   | 'addExecutionStep'
   | 'analytics.setOrganizationId'
   | 'applyUpdateAndRestart'
@@ -471,16 +471,13 @@ export function registerElectronHandlers() {
     return shell.openPath(name);
   });
 
-  ipcMainHandle('getAppMenuLabels', () => {
-    return getAppMenu()?.items.filter(item => item.visible).map(item => item.label.replace(/&/g, '')) ?? [];
+  ipcMainHandle('getAppMenu', () => {
+    const menu = getAppMenu();
+    return menu ? serializeAppMenu(menu) : [];
   });
-  ipcMainOn('showAppMenu', (event, { label, x, y }: { label: string; x: number; y: number }) => {
-    const item = getAppMenu()?.items.find(item => item.label.replace(/&/g, '') === label);
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win) {
-      const zoom = event.sender.getZoomFactor();
-      item?.submenu?.popup({ window: win, x: Math.round(x * zoom), y: Math.round(y * zoom) });
-    }
+  ipcMainOn('clickAppMenuItem', (event, path: number[]) => {
+    const item = findAppMenuItem(path);
+    item?.click(undefined, BrowserWindow.fromWebContents(event.sender), event.sender);
   });
   ipcMainOn('setTitleBarColors', (event, { color, symbolColor }: { color: string; symbolColor: string }) => {
     if (hasTitleBarOverlay()) {

@@ -5,7 +5,6 @@ import { useWorkspaceLoaderData } from '../../../routes/organization.$organizati
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { GitProjectSyncDropdown } from './git-project-sync-dropdown';
 import { GitSyncDropdown } from './git-sync-dropdown';
-import { LocalProjectBar } from './local-project-bar';
 
 export const WorkspaceSyncDropdown: FC = () => {
   const { activeProject, gitRepository, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
@@ -18,7 +17,7 @@ export const WorkspaceSyncDropdown: FC = () => {
     !models.project.isGitProject(activeProject);
 
   if (isLocalProject) {
-    return <LocalProjectBar />;
+    return null;
   }
 
   const shouldShowGitSyncDropdown =

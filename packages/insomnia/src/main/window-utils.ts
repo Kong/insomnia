@@ -232,13 +232,14 @@ export function createWindow(): ElectronBrowserWindow {
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
     // Other options
-    backgroundColor: '#1f1f1f',
+    backgroundColor: '#18181b',
     ...(isMac
       ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 10, y: 9 } }
       : {
+          frame: false,
           titleBarStyle: 'hidden' as const,
           ...(hasTitleBarOverlay()
-            ? { titleBarOverlay: { color: '#181818', symbolColor: '#cccccc', height: TITLE_BAR_HEIGHT } }
+            ? { titleBarOverlay: { color: '#131316', symbolColor: '#d4d4d8', height: TITLE_BAR_HEIGHT } }
             : {}),
         }),
     fullscreen: fullscreen,

@@ -67,7 +67,7 @@ export const CommandPalette = memo(function CommandPalette({ style = {} }: { sty
       <Button
         style={{ ...style }}
         data-testid="quick-search"
-        className="flex h-[30.5px] shrink-0 items-center justify-between gap-2 rounded-md bg-(--hl-xs) px-4 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all ring-inset hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
+        className="flex h-[24px] w-[min(380px,32vw)] shrink-0 items-center justify-between gap-2 rounded-md bg-(--hl-xs) px-[10px] text-[12px] text-(--color-font) ring-1 ring-transparent transition-all ring-inset hover:bg-(--hl-xs) focus:ring-(--hl-md) aria-pressed:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
       >
         <div>
           <Icon icon="search" className="mr-2" />
