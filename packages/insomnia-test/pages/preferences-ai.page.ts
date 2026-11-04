@@ -184,18 +184,4 @@ export class PreferencesAiPage extends PreferencesTabPage {
     await this.page.getByRole("button", { name: "Deactivate" }).click();
   }
 
-  /**
-   * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
-   * nothing when it already is. The switch is disabled until an LLM backend
-   * is active. Must be called with `openAiSettingsTab()` already open.
-   */
-  async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
-    const smartCommitsSwitch = this.dialog
-      .getByTestId("toggle-smart-commits")
-      .getByRole("switch");
-    if ((await smartCommitsSwitch.isChecked()) !== enabled) {
-      await smartCommitsSwitch.click();
-    }
-    await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
-  }
 }

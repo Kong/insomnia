@@ -1,10 +1,3 @@
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type {
-  WebSocketRequest,
-  WebSocketRequestBody,
-} from "@package/models/websocket-request";
-import { expect } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
 
@@ -12,53 +5,7 @@ export class WebSocketRequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
   protected readonly persistedDbFile = "insomnia.WebSocketRequest.db";
 
-  /**
-   * Assembles the full WebSocket request state currently shown in the
-   * request pane — URL, params, headers, and body.
-   */
-  async get(): Promise<Omit<WebSocketRequest, "name">> {
-    return {
-      url: await this.getUrl(),
-      params: await this.getParams(),
-      headers: await this.getHeaders(),
-      body: await this.getBody(),
-    };
-  }
 
-  /**
-   * Reads back the currently configured WebSocket message body, treating
-   * an empty/blank content as no body at all.
-   */
-  private async getBody(): Promise<WebSocketRequestBody | undefined> {
-    const body = (await this.getContentTypeBody(ContentType.NoBody)) as
-      WebSocketRequestBody | undefined;
-    if (body && !body.content) return undefined;
-    return body;
-  }
 
-  /**
-   * Sends a message over an already-open connection: the message composer
-   * (the "Body" tab) keeps its own "Send" button available post-connect,
-   * so this can be called repeatedly with different bodies. `callback` runs
-   * while the connection is still open, for asserting the echo arrives.
-   */
-  async sendMessage(
-    body: WebSocketRequestBody,
-    callback: () => Promise<void> | void = () => {},
-    timeout = DEFAULT_TIMEOUT,
-  ): Promise<void> {
-    await this.setBody(body);
-    await this.send();
-    await expect(async () => {
-      await callback();
-    }).toPass({ timeout });
-  }
 
-  /**
-   * Sets the WebSocket message body via the shared content-type body
-   * handling on the base request page.
-   */
-  async setBody(body: WebSocketRequestBody): Promise<void> {
-    await this.setContentTypeBody(body);
-  }
 }

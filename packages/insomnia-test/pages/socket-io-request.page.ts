@@ -1,5 +1,4 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { RequestHeader,SocketIOMessage } from "@package/models/socket-io-request";
 import { expect } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
@@ -8,66 +7,9 @@ export class SocketIORequestPage extends RequestPage {
   protected readonly urlBarId = "websocket-url-bar";
   protected readonly persistedDbFile = "insomnia.SocketIORequest.db";
 
-  /**
-   * Reads the full Socket.IO request state from the UI (url, headers, and
-   * the composed message).
-   */
-  async get(): Promise<{
-    url: string;
-    headers: RequestHeader[];
-    message?: SocketIOMessage;
-  }> {
-    return {
-      url: await this.getUrl(),
-      headers: await this.getHeaders(),
-      message: await this.getMessage(),
-    };
-  }
 
-  /**
-   * Reads the currently composed event name and payload from the body tab.
-   */
-  private async getMessage(): Promise<SocketIOMessage | undefined> {
-    await this.switchTab("body");
-    const panel = this.page.locator(this.TABPANEL);
-    const eventName = await panel
-      .getByRole("textbox", { name: "Event Name" })
-      .inputValue();
-    const payload = await this.readCodeMirror(
-      panel.locator(".CodeMirror").first(),
-    );
-    if (!eventName && !payload) return undefined;
-    return { eventName, payload };
-  }
 
-  /**
-   * Switches to the body tab and clicks "Send" to emit the composed
-   * message.
-   */
-  async sendMessage(): Promise<void> {
-    await this.switchTab("body");
-    const panel = this.page.locator(this.TABPANEL);
-    await panel.getByRole("button", { name: "Send", exact: true }).click();
-  }
 
-  /**
-   * Composes a Socket.IO message: switches to the body tab, sets the
-   * payload of the existing first argument directly on the CodeMirror
-   * instance, and fills in the event name.
-   */
-  async setMessage(message: SocketIOMessage): Promise<void> {
-    await this.switchTab("body");
-    const panel = this.page.locator(this.TABPANEL);
-
-    const editor = panel.locator(".CodeMirror").first();
-    await editor.evaluate((el, value) => {
-      (el as any).CodeMirror?.setValue(value);
-    }, message.payload);
-
-    await panel
-      .getByRole("textbox", { name: "Event Name" })
-      .fill(message.eventName);
-  }
 
   /**
    * Clicks Connect and waits for the button to flip to "Disconnect", so a

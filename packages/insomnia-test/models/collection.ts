@@ -68,37 +68,11 @@ export class Specification {
   ) {}
 }
 
-/** A single unit test read back from a suite's Unit tests list — currently
- * only exposes its name, since that's all `WorkspacePage.getUnitTestNames()`
- * recovers from the UI without running it. */
-export class UnitTest {
-  constructor(readonly name: string) {}
-}
 
-/** A test suite read back from the Tests tab's currently selected row
- * (via `WorkspaceFlow.getTestSuite()`), together with every unit test
- * currently listed under it. */
-export class TestSuite {
-  constructor(
-    readonly name: string,
-    readonly tests: UnitTest[],
-    /** A reference back to the Collection this suite belongs to — the
-     * same `Collection` instance if one was passed to `getTestSuite()`,
-     * otherwise a bare one carrying just the `name`/`id` needed to re-find
-     * it via `WorkspaceFlow.getCollection()`/`.openTests()`. */
-    readonly collection: Collection,
-  ) {}
-}
 
 export class Collection implements Pick<Workspace, "name"> {
   id?: string;
 
-  /** Legacy back-reference: set when this Collection was created/found as
-   * a former standalone "Document" workspace (pre-INS-3528). The two are
-   * now the same workspace type — nothing branches on this field anymore,
-   * it's kept only so tests written against the old model still resolve
-   * the right node. */
-  documentId?: string;
 
   /** Read from the spec's own "Info"/"Paths" outline panel — populated by
    * `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`, left `undefined` if

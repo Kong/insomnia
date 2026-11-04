@@ -46,19 +46,6 @@ export class EnvironmentFlow extends BaseFlow {
     return Object.assign(created, { containerName: environment.name });
   }
 
-  /**
-   * Creates a sub-environment nested under `parent`, then applies
-   * `environment.kvPairData`.
-   */
-  @step()
-  async createSubEnvironment(parent: Environment, environment: Environment): Promise<Environment> {
-    await this.addAndRenameSubEnvironment(
-      environment.name,
-      environment.isPrivate ?? false,
-    );
-    const created = await this.applyVariables(environment);
-    return parent.containerName ? Object.assign(created, { containerName: parent.containerName }) : created;
-  }
 
   /**
    * Finds an environment by name/id and reads its variables back.
@@ -122,97 +109,10 @@ export class EnvironmentFlow extends BaseFlow {
     );
   }
 
-  /**
-   * Activates one of `collection`'s own built-in "Collection Environments"
-   * (its Base Environment, or a private/shared sub-environment nested
-   * directly under it — e.g. from an imported legacy-format collection).
-   * Distinct from `link()`, which instead attaches a separate Project
-   * Environment; both can be active on the same collection at once.
-   */
-  @step()
-  async activate(collection: Collection, name: string): Promise<void> {
-    const workspace = this.pageManager.workspacePage;
-    const node = await workspace.resolveNode(collection);
-    await workspace.clickNode(node);
-    await this.pageManager.environmentPage.selectCollectionEnvironment(name);
-  }
 
-  /**
-   * Opens one environment picker on `collection`'s toolbar and reports
-   * which picker popovers are open, then dismisses it.
-   */
-  @step()
-  async getOpenPickersAfterOpening(
-    collection: Collection,
-    picker: "project" | "collection",
-  ): Promise<("project" | "collection")[]> {
-    const workspace = this.pageManager.workspacePage;
-    const environmentPage = this.pageManager.environmentPage;
-    const node = await workspace.resolveNode(collection);
-    await workspace.clickNode(node);
 
-    await environmentPage.openEnvironmentPicker(picker);
-    const open = await environmentPage.getOpenEnvironmentPickers();
-    await environmentPage.closeEnvironmentPicker();
-    return open;
-  }
 
-  /**
-   * Creates a Project Environment from `collection`'s project picker and
-   * reads the picker back, without linking the new environment.
-   */
-  @step()
-  async addProjectEnvironmentFromPicker(
-    collection: Collection,
-    name: string,
-  ): Promise<{ selected: string; options: string[] }> {
-    const workspace = this.pageManager.workspacePage;
-    const environmentPage = this.pageManager.environmentPage;
-    const node = await workspace.resolveNode(collection);
-    await workspace.clickNode(node);
 
-    await environmentPage.addProjectEnvironment(name);
-    await workspace.clickNode(node);
-    return environmentPage.getProjectEnvironmentPickerState();
-  }
-
-  /**
-   * Creates a shared or private sub-environment inside `collection`'s own
-   * "Manage Environments" modal and reports whether it is marked private.
-   */
-  @step()
-  async createCollectionSubEnvironment(
-    collection: Collection,
-    environment: Environment,
-  ): Promise<{ isPrivate: boolean }> {
-    const workspace = this.pageManager.workspacePage;
-    const environmentPage = this.pageManager.environmentPage;
-    const node = await workspace.resolveNode(collection);
-    await workspace.clickNode(node);
-
-    await environmentPage.openCollectionEnvironmentManager();
-    await this.addAndRenameSubEnvironment(environment.name, environment.isPrivate ?? false);
-    const isPrivate = await environmentPage.isEnvironmentPrivate(environment.name);
-    await environmentPage.closeCollectionEnvironmentManager();
-    return { isPrivate };
-  }
-
-  /**
-   * Adds a shared or private sub-environment from the sidebar, waits for the
-   * new row to appear, then renames it from its auto-generated default name
-   * to `name`.
-   */
-  private async addAndRenameSubEnvironment(
-    name: string,
-    isPrivate: boolean,
-  ): Promise<void> {
-    const environmentPage = this.pageManager.environmentPage;
-    const countBefore = await environmentPage.getEnvironmentCount();
-    await environmentPage.clickAddSubEnvironment(isPrivate);
-    await environmentPage.waitForEnvironmentCount(countBefore + 1);
-    const defaultName = await environmentPage.getLastEnvironmentName();
-    await environmentPage.renameEnvironment(defaultName, name);
-  }
 
   private async applyVariables(environment: Environment): Promise<Environment> {
     const environmentPage = this.pageManager.environmentPage;

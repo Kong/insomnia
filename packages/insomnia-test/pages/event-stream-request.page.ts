@@ -1,42 +1,10 @@
-import { ContentType } from "@package/enums/content-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type {
-  EventStreamMethod,
-  EventStreamRequest,
-  EventStreamRequestBody,
-} from "@package/models/event-stream-request";
-import { expect } from "@playwright/test";
 
 import { RequestPage } from "./request.page";
 
 export class EventStreamRequestPage extends RequestPage {
   protected readonly urlBarId = "request-url-bar";
 
-  /**
-   * Reads the full event-stream request state from the UI (method, url,
-   * headers, params, body, and scripts).
-   */
-  async get(): Promise<Omit<EventStreamRequest, "name">> {
-    const scripts = await this.scripts.getScripts();
-    return {
-      method: (await this.getMethod()).trim() as EventStreamMethod,
-      url: await this.getUrl(),
-      params: await this.getParams(),
-      headers: await this.getHeaders(),
-      body: await this.getBody(),
-      preRequestScript: scripts?.preRequest,
-      afterResponseScript: scripts?.afterResponse,
-    };
-  }
 
-  /**
-   * Reads the current body from the content-type body editor.
-   */
-  private async getBody(): Promise<EventStreamRequestBody | undefined> {
-    const body = await this.getContentTypeBody(ContentType.NoBody);
-    if (!body) return undefined;
-    return { mimeType: body.contentType, text: body.content };
-  }
 
   /**
    * Navigates to the event-stream request pane, then installs a
@@ -64,24 +32,5 @@ export class EventStreamRequestPage extends RequestPage {
     });
   }
 
-  /**
-   * Sets the request body via the content-type body editor. No-ops if the
-   * body has no `mimeType`.
-   */
-  async setBody(body: EventStreamRequestBody): Promise<void> {
-    if (body.mimeType == null) return;
-    await this.setContentTypeBody({
-      contentType: body.mimeType,
-      content: body.text ?? "",
-    });
-  }
 
-  /**
-   * Waits until the request pane becomes visible.
-   */
-  async waitForPane(): Promise<void> {
-    await expect(this.page.locator(this.PANE)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
 }
