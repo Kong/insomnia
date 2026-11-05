@@ -5,19 +5,19 @@ test("Verify the 'Filter responses by environment' preference persists across cl
   user,
 }) => {
   const { preferencesFlow } = user.flowManager;
-  const { preferencesPage } = user.pageManager;
+  const { preferences } = user.pageManager;
 
-  await preferencesPage.open();
+  await preferences.open();
   const enabledBeforeToggle =
-    await preferencesPage.isFilterResponsesByEnvironmentEnabled();
-  await preferencesPage.close();
+    await preferences.isFilterResponsesByEnvironmentEnabled();
+  await preferences.close();
 
   await preferencesFlow.set({ filterResponsesByEnv: !enabledBeforeToggle });
 
-  await preferencesPage.open();
+  await preferences.open();
   const enabledAfterReopen =
-    await preferencesPage.isFilterResponsesByEnvironmentEnabled();
-  await preferencesPage.close();
+    await preferences.isFilterResponsesByEnvironmentEnabled();
+  await preferences.close();
 
   expect(enabledAfterReopen).toBe(!enabledBeforeToggle);
 });

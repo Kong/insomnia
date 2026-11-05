@@ -10,7 +10,7 @@ test("Verify the sidebar focus mode onboarding popover shows once and stays dism
   user,
 }) => {
   const { workspaceFlow, httpRequestFlow, preferencesFlow } = user.flowManager;
-  const { workspacePage, preferencesPage } = user.pageManager;
+  const { workspacePage, preferences } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -56,10 +56,10 @@ test("Verify the sidebar focus mode onboarding popover shows once and stays dism
   await user.page.reload({ waitUntil: "networkidle" });
   const shownAfterReload = await workspaceFlow.dismissFocusModePrompt();
 
-  await preferencesPage.open();
+  await preferences.open();
   const stillEnabledAfterReload =
-    await preferencesPage.isSidebarFocusForCollectionsEnabled();
-  await preferencesPage.close();
+    await preferences.isSidebarFocusForCollectionsEnabled();
+  await preferences.close();
 
   expect(shownOnFirstFocus).toBe(true);
   expect(shownAfterFocusingAnotherCollection).toBe(false);
