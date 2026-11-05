@@ -149,8 +149,14 @@ export class PageManager {
    */
   setWindow(page: Page): void {
     this.page = page;
-    for (const instance of this.instances.values()) {
-      (instance as BasePage).setContext(page);
+    for (const [name, instance] of this.instances) {
+      if (typeof (instance as BasePage).setContext === "function") {
+        // Pages are rewired in place so references a spec already holds stay valid.
+        (instance as BasePage).setContext(page);
+      } else {
+        // Components bind their root locator to the old window at construction, so rebuild.
+        this.instances.set(name, pageRegistry[name as PageName](page));
+      }
     }
   }
 
