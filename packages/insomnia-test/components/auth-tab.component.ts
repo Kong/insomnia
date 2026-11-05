@@ -12,7 +12,7 @@ import type {
   AuthTypeSingleToken,
 } from "insomnia-data";
 
-import { TabPanelPage } from "./tab-panel.page";
+import { TabPanelComponent } from "./tab-panel.component";
 
 type OAuth1TextField = keyof Omit<
   AuthTypeOAuth1,
@@ -111,7 +111,7 @@ interface AuthFieldEdit {
  * Constructed with the owning page's `pane` selector (its tab-bar's outer
  * container), since that's the only thing that differs between them.
  */
-export class AuthTabComponent extends TabPanelPage {
+export class AuthTabComponent extends TabPanelComponent {
   protected get AUTH_TYPE_BUTTON(): string {
     return `${this.PANE} [aria-label="Change Authentication type"]`;
   }

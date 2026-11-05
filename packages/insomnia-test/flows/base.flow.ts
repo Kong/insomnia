@@ -1,7 +1,7 @@
+import type { AuthTabComponent } from "@package/components/auth-tab.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { FlowContext } from "@package/misc/flow-context";
 import type { RequestAuthentication } from "@package/models/authentication";
-import type { AuthTabComponent } from "@package/pages/auth-tab.page";
 import type { PageManager } from "@package/pages/page-manager";
 import { expect } from "@playwright/test";
 

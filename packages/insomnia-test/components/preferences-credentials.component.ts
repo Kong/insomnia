@@ -2,7 +2,7 @@ import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { CloudCredential } from "@package/models/settings";
 import { expect } from "@playwright/test";
 
-import { PreferencesTabPage } from "./preferences-tab.page";
+import { PreferencesTabComponent } from "./preferences-tab.component";
 
 type AwsCloudCredential = Extract<CloudCredential, { provider: "aws" }>;
 type GcpCloudCredential = Extract<CloudCredential, { provider: "gcp" }>;
@@ -15,7 +15,7 @@ type HashiCorpCloudCredential = Extract<
  * The Preferences dialog's Credentials tab: Git credentials and cloud
  * (vault provider) credentials.
  */
-export class PreferencesCredentialsPage extends PreferencesTabPage {
+export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   /**
    * Switches the open Preferences dialog to the Credentials tab, where Git
    * credentials are added/managed.

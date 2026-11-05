@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-import { TabPanelPage } from "./tab-panel.page";
+import { TabPanelComponent } from "./tab-panel.component";
 
 export interface RequestScripts {
   preRequest?: string;
@@ -16,7 +16,7 @@ export interface RequestScripts {
  * `pane` selector (its tab-bar's outer container), since that's the only
  * thing that differs between them.
  */
-export class ScriptTabComponent extends TabPanelPage {
+export class ScriptTabComponent extends TabPanelComponent {
   protected readonly AFTER_RESPONSE_EDITOR = "[role='tab'][data-key='after-response']";
   protected readonly PRE_REQUEST_EDITOR = "[role='tab'][data-key='pre-request']";
 

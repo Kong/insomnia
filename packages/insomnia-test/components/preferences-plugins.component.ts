@@ -1,13 +1,13 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { PreferencesTabPage } from "./preferences-tab.page";
+import { PreferencesTabComponent } from "./preferences-tab.component";
 
 /**
  * The Preferences dialog's Plugins and Scripting tabs: plugin install /
  * generate / reload, and the template-tag and script sandbox switches.
  */
-export class PreferencesPluginsPage extends PreferencesTabPage {
+export class PreferencesPluginsComponent extends PreferencesTabComponent {
   /**
    * Switches the open Preferences dialog to the Scripting tab, where the
    * template-tag sandbox toggle and per-rule-group sandbox switches live.

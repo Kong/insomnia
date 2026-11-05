@@ -1,7 +1,7 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { PreferencesTabPage } from "./preferences-tab.page";
+import { PreferencesTabComponent } from "./preferences-tab.component";
 
 export interface LlmUrlBackendFormFields {
   url: string;
@@ -15,7 +15,7 @@ export interface LlmUrlBackendFormFields {
 /**
  * The Preferences dialog's AI Settings tab: LLM backends and Smart Commits.
  */
-export class PreferencesAiPage extends PreferencesTabPage {
+export class PreferencesAiComponent extends PreferencesTabComponent {
   /**
    * Switches the open Preferences dialog to the "AI Settings" tab. Only
    * rendered once the bundled AI plugin is present and the user is logged

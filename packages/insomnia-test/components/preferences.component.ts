@@ -1,14 +1,14 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
-import { PreferencesTabPage } from "./preferences-tab.page";
+import { PreferencesTabComponent } from "./preferences-tab.component";
 
 /**
  * The Preferences dialog itself (open / close) and its General, Data and
- * Proxy tabs. Other tabs live in `PreferencesCredentialsPage`,
- * `PreferencesPluginsPage`, `PreferencesAiPage` and `PreferencesVaultPage`.
+ * Proxy tabs. Other tabs live in `PreferencesCredentialsComponent`,
+ * `PreferencesPluginsComponent`, `PreferencesAiComponent` and `PreferencesVaultComponent`.
  */
-export class PreferencesPage extends PreferencesTabPage {
+export class PreferencesComponent extends PreferencesTabComponent {
   /**
    * Closes the Preferences dialog via its close button and waits for it
    * to be hidden. More reliable than Escape, whose dismiss behavior can be
@@ -28,7 +28,7 @@ export class PreferencesPage extends PreferencesTabPage {
    */
   async open(): Promise<void> {
     await this.page.getByTestId("settings-button").click();
-    await this.navigate();
+    await this.waitUntilOpen();
   }
 
   /**
