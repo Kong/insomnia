@@ -9,6 +9,7 @@ import nodePath from 'node:path';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import backend from 'git-http-backend';
 import { createHandler } from 'graphql-http/lib/use/http';
 
@@ -115,7 +116,8 @@ app.get('/cookies', (_req, res) => {
     .status(200)
     .header('content-type', 'text/plain')
     .cookie('insomnia-test-cookie', 'value123')
-    .send(`${_req.headers['cookie']}`);
+    .type('text/plain')
+    .send(String(_req.headers['cookie']));
 });
 
 app.use('/file', express.static(nodePath.join(import.meta.dirname, '../fixtures/files')));
@@ -196,11 +198,20 @@ app.get('/v1/oauth/azure/config', (_req, res) => {
   });
 });
 
+// Local test server only; the limit is high enough to never affect tests, it just bounds fs-touching routes.
+// (cast: this package resolves its own copy of @types/express, which differs from the one express-rate-limit sees)
+const gitRouteLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 10_000,
+  standardHeaders: true,
+  legacyHeaders: false,
+}) as unknown as express.RequestHandler;
+
 const GIT_FIXTURE_ROOT = nodePath.join(import.meta.dirname, '../fixtures/git-repo');
 let currentGitTmpDir: string | null = null;
 
 // Create a fresh per-test copy of the git fixture repo
-app.post('/v1/test-utils/git/setup', (_req, res) => {
+app.post('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
   if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
     rmSync(currentGitTmpDir, { recursive: true, force: true });
   }
@@ -210,7 +221,7 @@ app.post('/v1/test-utils/git/setup', (_req, res) => {
 });
 
 // Remove the per-test copy
-app.delete('/v1/test-utils/git/setup', (_req, res) => {
+app.delete('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
   if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
     rmSync(currentGitTmpDir, { recursive: true, force: true });
   }
@@ -220,7 +231,7 @@ app.delete('/v1/test-utils/git/setup', (_req, res) => {
 
 // Git smart HTTP server backed by git-http-backend — accepts real pushes.
 // Falls back to the fixture root if no per-test dir is set up.
-app.use('/git', (req, res) => {
+app.use('/git', gitRouteLimiter, (req, res) => {
   const root = currentGitTmpDir ?? GIT_FIXTURE_ROOT;
   // req.url has the '/git' prefix stripped by Express, e.g. '/git-server.git/info/refs?...'
   const repoPath = nodePath.join(root, req.url.split('?')[0].split('/')[1]);
@@ -270,7 +281,10 @@ startWebSocketServer(
       key: readFileSync(certPath('mtls-server-key.pem')),
       ca: readFileSync(certPath('mtls-ca.pem')),
       requestCert: true,
-      rejectUnauthorized: false,
+      // Intentional: the mTLS test server must accept connections without a valid client cert so that
+      // routes (see mtls.ts) can respond with their own 401; it never talks to anything but local tests.
+      // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+      rejectUnauthorized: false, // lgtm[js/disabling-certificate-validation]
     },
     app,
   ).listen(httpsPort, '::', () => {
