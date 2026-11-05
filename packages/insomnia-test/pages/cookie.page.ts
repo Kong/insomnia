@@ -48,7 +48,14 @@ export class CookiePage extends BasePage {
    * to disappear.
    */
   async close(): Promise<void> {
-    await this.listModal.clickButton("Done", false);
+    // The footer "Done" is the last one in the dialog: right after
+    // `deleteAll()` confirms, the "Delete All" prompt button also reads
+    // "Done" for up to 2s (PromptButton's done state), so a plain
+    // name match is ambiguous and trips Playwright's strict mode.
+    await this.listModal
+      .button("Done", true)
+      .last()
+      .click();
     await this.listDialog.waitFor({
       state: "hidden",
       timeout: DEFAULT_TIMEOUT,
