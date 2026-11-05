@@ -184,10 +184,15 @@ const routeChat: HandleCall<any, any> = (call: any) => {
 /**
  * Starts an RPC server that uses Route Guide example for PreRelease tests
  */
-export const startGRPCServer = (port: number) => {
-  return new Promise<void>((resolve, reject) => {
+export const startGRPCServer = async (port: number) => {
+  const bind = (server: grpc.Server, address: string, credentials: grpc.ServerCredentials) =>
+    new Promise<void>((resolve, reject) => {
+      server.bindAsync(address, credentials, error => (error ? reject(error) : resolve()));
+    });
+
+  const reflectionService = new ReflectionService(packageDefinition);
+  const createServer = () => {
     const server = new grpc.Server();
-    const reflectionService = new ReflectionService(packageDefinition);
 
     // Enable reflection
     reflectionService.addToServer(server);
@@ -199,62 +204,29 @@ export const startGRPCServer = (port: number) => {
       recordRoute: recordRoute,
       routeChat: routeChat,
     });
-    server.bindAsync(`localhost:${port}`, grpc.ServerCredentials.createInsecure(), error => {
-      if (error) {
-        return reject(error);
-      }
+    return server;
+  };
 
-      const dbPath = path.join(GRPC_FIXTURES_DIR, 'route_guide_db.json');
-      fs.readFile(dbPath, function (err, data) {
-        if (err) {
-          throw err;
-        }
-        featureList = JSON.parse(data.toString());
-        console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
-        resolve();
-      });
-    });
+  const server = createServer();
+  const serverWithTLS = createServer();
+  const serverCredentials = grpc.ServerCredentials.createSsl(
+    fs.readFileSync(certPath('mtls-ca.pem')),
+    [
+      {
+        cert_chain: fs.readFileSync(certPath('mtls-server-cert.pem')),
+        private_key: fs.readFileSync(certPath('mtls-server-key.pem')),
+      },
+    ],
+    true, // mTLS enabled, temporarily change to false for local testing if needed
+  );
 
-    const serverWithTLS = new grpc.Server();
-
-    // Enable reflection
-    reflectionService.addToServer(serverWithTLS);
-
-    // @ts-expect-error generated from proto file
-    serverWithTLS.addService(routeguide.RouteGuide.service, {
-      getFeature: getFeature,
-      listFeatures: listFeatures,
-      recordRoute: recordRoute,
-      routeChat: routeChat,
-    });
-    const rootCert = fs.readFileSync(certPath('mtls-ca.pem'));
-    const serverCert = fs.readFileSync(certPath('mtls-server-cert.pem'));
-    const serverKey = fs.readFileSync(certPath('mtls-server-key.pem'));
-    const serverCredentials = grpc.ServerCredentials.createSsl(
-      rootCert,
-      [
-        {
-          cert_chain: serverCert,
-          private_key: serverKey,
-        },
-      ],
-      true, // mTLS enabled, temporarily change to false for local testing if needed
-    );
-    serverWithTLS.bindAsync('localhost:50052', serverCredentials, error => {
-      if (error) {
-        console.error(error);
-        return reject(error);
-      }
-
-      const dbPath = path.join(GRPC_FIXTURES_DIR, 'route_guide_db.json');
-      fs.readFile(dbPath, (err, data) => {
-        if (err) {
-          throw err;
-        }
-        featureList = JSON.parse(data.toString());
-        console.log('Listening at grpcs://localhost:50052 for route_guide.proto');
-        resolve();
-      });
-    });
-  });
+  // Resolve only once the db is loaded and *both* servers are listening; either failing rejects.
+  const db = await fs.promises.readFile(path.join(GRPC_FIXTURES_DIR, 'route_guide_db.json'));
+  featureList = JSON.parse(db.toString());
+  await Promise.all([
+    bind(server, `localhost:${port}`, grpc.ServerCredentials.createInsecure()),
+    bind(serverWithTLS, 'localhost:50052', serverCredentials),
+  ]);
+  console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
+  console.log('Listening at grpcs://localhost:50052 for route_guide.proto');
 };

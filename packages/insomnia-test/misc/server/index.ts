@@ -71,13 +71,6 @@ app.get('/large-json', (_req, res) => {
   res.status(200).json({ items });
 });
 
-app.get('/builds/check/*', (_req, res) => {
-  res.status(200).send({
-    url: 'https://github.com/Kong/insomnia/releases/download/core@2023.5.6/Insomnia.Core-2023.5.6.zip',
-    name: '2099.1.0',
-  });
-});
-
 async function echoHandler(req: any, res: any) {
   res.status(200).send({
     method: req.method,
@@ -187,13 +180,8 @@ app.post('/send-event', (request, response) => {
   subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
   response.json({ success: true });
 });
-// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing
-app.get('/builds/check/mac', (request, response) => {
-  return response.json({
-    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.dmg',
-    name: '11.6.1',
-  });
-});
+// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing.
+// GET /builds/check/* is answered by mockApi (mock-api.ts), which runs first.
 app.get('/updates/win', (request, response) => {
   return response.json({
     url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.zip',
