@@ -98,7 +98,9 @@ function queryArgs(search: string) {
 }
 
 const app = express();
-const rawBody = bodyParser.raw({ inflate: true, type: '*/*' });
+// `type: () => true` (not '*/*'): requests without a Content-Type header, e.g. the
+// scripts' sendRequest() with a string body, must still have their body read.
+const rawBody = bodyParser.raw({ inflate: true, type: () => true });
 
 app.use((req, res, next) => {
   process.stdout.write(`[http-echo] ${req.method} ${req.path}\n`);
