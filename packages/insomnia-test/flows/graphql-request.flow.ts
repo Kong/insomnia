@@ -1,4 +1,5 @@
 
+import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { step } from "@package/misc/step";
@@ -7,7 +8,6 @@ import type { Collection } from "@package/models/collection";
 import type { Folder } from "@package/models/folder";
 import { GraphQLRequest } from "@package/models/graphql-request";
 import type { ResponseView } from "@package/models/response";
-import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import type { GraphQLRequestPage } from "@package/pages/graphql-request.page";
 
 import { BaseFlow } from "./base.flow";
