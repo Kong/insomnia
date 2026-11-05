@@ -135,16 +135,6 @@ export const ProjectDropdown: FC<Props> = ({
         exportProjectToFile(projectName, workspacesForProject);
       },
     },
-    ...(isKonnectProject
-      ? [
-          {
-            id: 'debugger',
-            name: 'Debug session',
-            icon: 'bug' as IconProp,
-            action: () => openKonnectDebuggerTab(organizationId, project),
-          },
-        ]
-      : []),
     {
       id: 'settings',
       name: 'Settings',
@@ -169,6 +159,16 @@ export const ProjectDropdown: FC<Props> = ({
       icon: 'trash',
       action: onDelete,
     },
+    ...(isKonnectProject
+      ? [
+          {
+            id: 'debugger',
+            name: 'Start Debugging',
+            icon: 'bug' as IconProp,
+            action: () => openKonnectDebuggerTab(organizationId, project._id),
+          },
+        ]
+      : []),
   ];
 
   const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({

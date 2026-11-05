@@ -19,6 +19,7 @@ import {
   listKonnectRouteRequests,
 } from '~/konnect/route-request-lookup';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
+import { SizeTag } from '~/ui/components/tags/size-tag';
 import { StatusTag } from '~/ui/components/tags/status-tag';
 import { TimeTag } from '~/ui/components/tags/time-tag';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -548,8 +549,9 @@ const TraceDetail = ({
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex items-stretch gap-2 font-mono">
-        {trace.statusCode !== null && <StatusTag statusCode={trace.statusCode} small />}
-        <TimeTag milliseconds={summary?.totalMs ?? tree?.totalMs ?? trace.durationMs} small />
+        {trace.statusCode !== null && <StatusTag statusCode={trace.statusCode} />}
+        <TimeTag milliseconds={summary?.totalMs ?? tree?.totalMs ?? trace.durationMs} />
+        <SizeTag bytesRead={summary?.responseSize || 0} bytesContent={0} showTooltip={false} />
       </div>
 
       {errorKind ? (
