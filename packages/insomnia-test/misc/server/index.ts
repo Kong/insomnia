@@ -16,13 +16,16 @@ import { createHandler } from 'graphql-http/lib/use/http';
 import { certPath } from '../certs.ts';
 import { basicAuthRouter } from './basic-auth.ts';
 import cloudSyncApi from './cloud-sync-api.ts';
+import { startEventStreamServers } from './event-stream.ts';
 import githubApi from './github-api.ts';
 import gitlabApi from './gitlab-api.ts';
 import { schema } from './graphql.ts';
 import { startGRPCServer } from './grpc.ts';
+import { startHelloGrpcServers } from './grpc-hello.ts';
 import grpcReflectionApi from './grpc-reflection-api.ts';
 import { startHttpEchoServers } from './http-echo.ts';
 import insomniaApi from './insomnia-api.ts';
+import { startMcpServers } from './mcp.ts';
 import { mockApi } from './mock-api.ts';
 import { mtlsRouter } from './mtls.ts';
 import { oauthRoutes } from './oauth.ts';
@@ -30,7 +33,7 @@ import { startOAuth2Server } from './oauth2.ts';
 import { startResolvingProxyServer } from './resolving-proxy.ts';
 import simpleCrud from './simple-crud.ts';
 import { startSocketIOServer } from './socket-io.ts';
-import { startWebSocketServer } from './websocket.ts';
+import { startWebSocketServer, startWsEchoServers } from './websocket.ts';
 
 const app = express();
 app.use(cookieParser() as any);
@@ -299,6 +302,14 @@ startWebSocketServer(
 );
 
 startHttpEchoServers();
+
+startEventStreamServers();
+
+startWsEchoServers();
+
+startMcpServers();
+
+startHelloGrpcServers();
 
 startOAuth2Server();
 
