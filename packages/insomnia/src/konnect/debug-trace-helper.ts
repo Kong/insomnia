@@ -1,6 +1,16 @@
 import type { DebugSession, DebugSpan, DebugTraceDetail, DebugTraceSummary } from './debug-session-api';
 export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out';
 
+// Attribute names used in debug traces
+export const TRACE_ATTRIBUTE_NAMES = {
+  HTTP_REQUEST_METHOD: 'http.request.method',
+  URL_FULL: 'url.full',
+  HTTP_ROUTE: 'http.route',
+  HTTP_RESPONSE_STATUS_CODE: 'http.response.status_code',
+  HTTP_REQUEST_SIZE: 'http.request.size',
+  HTTP_RESPONSE_SIZE: 'http.response.size',
+};
+
 // Derive the state of a debug session from its response
 export function deriveSessionState(session: DebugSession): DebugSessionState {
   if (session.stoppedAt) {
@@ -142,6 +152,8 @@ export interface TraceSummaryBreakdown {
   kongPct: number;
   upstreamPct: number;
   clientPct: number;
+  requestSize: number;
+  responseSize: number;
   thirdPartyPct: number;
 }
 
@@ -186,6 +198,8 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
   const thirdPartyMs = readMs(span.attributes, LATENCY_ATTRIBUTES.thirdParty) ?? 0;
   const sum = kongMs + upstreamMs + clientMs + thirdPartyMs;
   const pct = (value: number) => (sum > 0 ? (value / sum) * 100 : 0);
+  const requestSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_SIZE] || 0;
+  const responseSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_RESPONSE_SIZE] || 0;
   return {
     totalMs: readMs(span.attributes, LATENCY_ATTRIBUTES.total) ?? tree.totalMs,
     kongMs,
@@ -196,6 +210,8 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
     upstreamPct: pct(upstreamMs),
     clientPct: pct(clientMs),
     thirdPartyPct: pct(thirdPartyMs),
+    requestSize,
+    responseSize,
   };
 }
 
@@ -227,16 +243,14 @@ export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | u
   return routeId;
 }
 
-/** Ids of the traces having a span served by the Kong route `routeId`. */
-export function findTraceIdsByRouteId(details: Map<string, DebugTraceDetail>, routeId: string | null): Set<string> {
-  const matching = new Set<string>();
-  if (!routeId) {
-    return matching;
-  }
-  for (const [traceId, detail] of details) {
-    if (detail.spans.some(span => span.attributes[ROUTE_ID_ATTRIBUTE] === routeId)) {
-      matching.add(traceId);
+// Ids of the Kong routes that served the spans of a trace.
+export function getRouteIdsFromTraceDetail(detail: DebugTraceDetail): Set<string> {
+  const routeIds = new Set<string>();
+  for (const span of detail.spans) {
+    const routeId = span.attributes[ROUTE_ID_ATTRIBUTE];
+    if (typeof routeId === 'string') {
+      routeIds.add(routeId);
     }
   }
-  return matching;
+  return routeIds;
 }

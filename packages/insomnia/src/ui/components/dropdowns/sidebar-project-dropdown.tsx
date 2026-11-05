@@ -26,6 +26,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { exportProjectToFile } from '~/ui/components/settings/import-export';
+import { useOpenKonnectDebuggerTab } from '~/ui/hooks/use-insomnia-tab';
 
 import { Icon } from '../icon';
 import { ProjectModal } from '../modals/project-modal';
@@ -84,6 +85,8 @@ export const ProjectDropdown: FC<Props> = ({
   });
   const { workspaceId } = useParams() as { workspaceId?: string };
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
+  const openKonnectDebuggerTab = useOpenKonnectDebuggerTab();
+  const isKonnectProject = models.project.isKonnectProject(project);
 
   const isRemoteProjectInconsistent = models.project.isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent =
@@ -156,6 +159,16 @@ export const ProjectDropdown: FC<Props> = ({
       icon: 'trash',
       action: onDelete,
     },
+    ...(isKonnectProject
+      ? [
+          {
+            id: 'debugger',
+            name: 'Start Debugging',
+            icon: 'bug' as IconProp,
+            action: () => openKonnectDebuggerTab(organizationId, project._id),
+          },
+        ]
+      : []),
   ];
 
   const createInProjectActionList: ProjectActionItem[] = createWorkspaceActionItems({
