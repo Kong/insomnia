@@ -80,6 +80,11 @@ export abstract class RequestPage extends BasePage {
     return this.panel.TABPANEL;
   }
 
+  /** The tab bar of this request's pane. */
+  protected get tabs(): TabsComponent {
+    return this.panel.tabs;
+  }
+
   /** The Auth tab component for this request's own pane. */
   get auth(): AuthTabComponent {
     return new AuthTabComponent(this.page, this.PANE);
