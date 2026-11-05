@@ -146,7 +146,7 @@ export const SpecView = ({
   parsedSpec,
   apiSpec,
 }: SpecViewProps) => {
-  const { activeProject, vcsVersion, activeWorkspace } = useWorkspaceLoaderData()!;
+  const { activeProject, vcsVersion, activeWorkspace, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
@@ -878,15 +878,6 @@ export const SpecView = ({
       </div>
       <span className="flex-1" />
       <div className="flex items-center gap-2">
-        {apiSpec?.contents && (
-          <Button
-            data-testid="lint-via-cli"
-            className="underline"
-            onPress={() => setIsLintCLIModalOpen(true)}
-          >
-            Lint via CLI
-          </Button>
-        )}
         {lintErrors.length > 0 && (
           <div className="flex items-center gap-2 select-none">
             <Icon icon="circle-xmark" className="text-(--color-danger)" />
@@ -914,6 +905,20 @@ export const SpecView = ({
               </Button>
             )}
           </div>
+        )}
+        {apiSpec?.contents && (
+          <>
+            <span aria-hidden="true" className="text-(--hl) select-none">
+              |
+            </span>
+            <Button
+              data-testid="lint-via-cli"
+              className="underline"
+              onPress={() => setIsLintCLIModalOpen(true)}
+            >
+              Lint via CLI
+            </Button>
+          </>
         )}
       </div>
     </div>
@@ -1348,8 +1353,20 @@ export const SpecView = ({
               onOpenChange={setNewMockServerModalOpen}
             />
           )}
-          {isLintCLIModalOpen && (
-            <LintCLIModal onClose={() => setIsLintCLIModalOpen(false)} workspaceId={workspaceId} />
+          {isLintCLIModalOpen && apiSpec && (
+            <LintCLIModal
+              onClose={() => setIsLintCLIModalOpen(false)}
+              apiSpecId={apiSpec._id}
+              // Git projects: the spec's file inside the repo, otherwise inso finds no file. Others: the app data dir holding the NeDB files.
+              workingDir={
+                isConnectedGitProject && gitSyncRulesetPath
+                  ? window.path.join(
+                      window.path.dirname(gitSyncRulesetPath),
+                      activeWorkspaceMeta?.gitFilePath || '',
+                    )
+                  : window.env.INSOMNIA_DATA_PATH || window.app.getPath('userData')
+              }
+            />
           )}
           {isViewRulesetModalOpen && (
             <ModalOverlay

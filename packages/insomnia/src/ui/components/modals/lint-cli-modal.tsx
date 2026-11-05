@@ -7,15 +7,18 @@ import { INSO_CLI_DOCS_URL } from './cli-preview-modal';
 
 export const LintCLIModal = ({
   onClose,
-  workspaceId,
+  apiSpecId,
   rulesetPath,
+  workingDir,
 }: {
   onClose: () => void;
-  workspaceId: string;
+  apiSpecId: string;
   rulesetPath?: string;
+  workingDir?: string;
 }) => {
+  const workingDirArgument = workingDir ? ` -w "${workingDir}"` : '';
   const rulesetArgument = rulesetPath ? ` --ruleset "${rulesetPath}"` : '';
-  const cliCommand = `inso lint spec ${workspaceId.slice(0, 10)}${rulesetArgument}`;
+  const cliCommand = `inso lint spec${workingDirArgument} ${apiSpecId.slice(0, 10)}${rulesetArgument}`;
 
   return (
     <ModalOverlay
@@ -26,7 +29,7 @@ export const LintCLIModal = ({
       }}
       className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
     >
-      <Modal className="m-24 flex max-h-[75%] w-full max-w-[75%] flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
+      <Modal className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
@@ -45,7 +48,7 @@ export const LintCLIModal = ({
                 <div className="pb-4">Copy this command to lint your spec in the terminal</div>
                 <div className="flex max-h-32 min-h-[2em] flex-col overflow-y-auto border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1">
                   <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto font-mono">
-                    <span>{cliCommand}</span>
+                    <span className="min-w-0 break-all">{cliCommand}</span>
                     <CopyButton
                       size="small"
                       content={cliCommand}

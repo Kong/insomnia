@@ -450,3 +450,80 @@ test.describe('Custom Spectral Lint Rules', () => {
     });
   });
 });
+
+async function openLintCliModal(page: Page) {
+  await page.getByTestId('lint-via-cli').click();
+  const dialog = page.getByRole('dialog');
+  await expect.soft(dialog.getByText('Lint via CLI', { exact: true })).toBeVisible({ timeout: 10_000 });
+  return dialog;
+}
+
+test.describe('Lint via CLI modal', () => {
+  test('local project: command uses the app data directory as the working directory', async ({
+    insomnia,
+    dataPath,
+  }) => {
+    await openPetStoreDesignDoc(insomnia.page);
+
+    const dialog = await openLintCliModal(insomnia.page);
+    await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+  });
+
+  test.describe('within a cloud-sync project', () => {
+    test.beforeAll(async () => {
+      await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enabled: true }),
+      });
+    });
+
+    test.afterAll(async () => {
+      await fetch(`${devServerUrl}/__test-config/cloud-sync/reset`, { method: 'POST' });
+      await fetch(`${devServerUrl}/__test-config/cloud-sync`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enabled: false }),
+      });
+    });
+
+    test('cloud project: command uses the app data directory as the working directory', async ({
+      insomnia,
+      dataPath,
+    }) => {
+      const page = insomnia.page;
+      await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
+
+      const dialog = await openLintCliModal(page);
+      await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+    });
+  });
+
+  test.describe('within a git-sync project', () => {
+    test.slow();
+
+    test.beforeEach(async ({ insomnia, request }) => {
+      await request.post('http://127.0.0.1:4010/v1/test-utils/git/setup');
+      await addAccessTokenGitCredential(insomnia);
+      await insomnia.projectPage.createGitSyncProject(GIT_LINT_PROJECT_NAME);
+      await createGitDesignDocument(insomnia, insomnia.page, GIT_LINT_PROJECT_NAME);
+    });
+
+    test.afterEach(async ({ request }) => {
+      await request.delete('http://127.0.0.1:4010/v1/test-utils/git/setup');
+    });
+
+    test('git project: command uses the spec file inside the local repository as the working directory', async ({
+      insomnia,
+      dataPath,
+    }) => {
+      const mirrorDir = await gitRepoMirrorPath(dataPath);
+
+      const dialog = await openLintCliModal(insomnia.page);
+      await expect
+        .soft(dialog)
+        .toContainText(`inso lint spec -w "${path.join(mirrorDir, 'lint_test_spec.yaml')}" spc_`);
+    });
+  });
+});
