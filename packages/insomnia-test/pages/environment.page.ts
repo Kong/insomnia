@@ -352,11 +352,15 @@ export class EnvironmentPage extends BasePage {
   }
 
   /**
-   * Waits for the environment key/value pair listbox to become visible,
-   * confirming the environment page is ready for interaction.
+   * Waits for the environment pane to be ready: either the key/value pair
+   * listbox (table view) or the raw JSON editor. An environment opens in
+   * whichever view its document is in — e.g. a freshly duplicated one can
+   * open in the JSON editor — so waiting for the listbox alone times out.
    */
   async navigate(): Promise<void> {
-    await expect(this.page.locator(this.LISTBOX)).toBeVisible({
+    await expect(
+      this.page.locator(this.LISTBOX).or(this.page.locator(this.RAW_EDITOR)),
+    ).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
