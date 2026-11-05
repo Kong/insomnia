@@ -303,6 +303,14 @@ startWebSocketServer(
 
 startHttpEchoServers();
 
+startEventStreamServers();
+
+startWsEchoServers();
+
+startMcpServers();
+
+startHelloGrpcServers();
+
 startOAuth2Server();
 
 startResolvingProxyServer();
