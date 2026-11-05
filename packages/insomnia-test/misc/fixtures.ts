@@ -123,7 +123,7 @@ export const test = base.extend<Fixtures>({
   // Its own fixture, same shape as `vaultKey` above — pre-seeds
   // `userSession.vaultSalt`, which alone is enough to make Preferences'
   // Vault Key panel show "Enter Vault Key" instead of "Generate Vault Key"
-  // (see `pages/preferences.page.ts`'s vault key methods), without needing
+  // (see `components/preferences.component.ts`'s vault key methods), without needing
   // a `vaultKey` override too. `misc/mock-api.ts` runs a real SRP exchange
   // against whatever salt/verifier a spec's own `preferencesFlow` calls
   // establish — this fixture only ever seeds the renderer's *local* belief

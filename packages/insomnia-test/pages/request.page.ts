@@ -1,6 +1,9 @@
+import { AuthTabComponent } from "@package/components/auth-tab.component";
 import { DropdownComponent } from "@package/components/dropdown.component";
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
+import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { SelectComponent } from "@package/components/select.component";
+import { TabPanelComponent } from "@package/components/tab-panel.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
@@ -12,9 +15,7 @@ import type {
 } from "insomnia-data";
 import type { Page } from "playwright-core";
 
-import { AuthTabComponent } from "./auth-tab.page";
-import { ScriptTabComponent } from "./script-tab.page";
-import { TabPanelPage } from "./tab-panel.page";
+import { BasePage } from "./base.page";
 
 const REQUEST_PANE = '[data-testid="request-pane"]';
 
@@ -24,7 +25,9 @@ interface KeyValuePair {
   disabled?: boolean;
 }
 
-export abstract class RequestPage extends TabPanelPage {
+export abstract class RequestPage extends BasePage {
+  protected readonly PANE = REQUEST_PANE;
+
   protected readonly METHOD_BUTTON =
     '[data-testid="request-pane"] button[aria-label="Request Method"]';
   /** The key/value row editor in the active tab panel (params, headers, body params…). */
@@ -60,26 +63,40 @@ export abstract class RequestPage extends TabPanelPage {
     "body.params",
   ];
 
+  // Getters, not fields: the components are bound to the current window, so
+  // building them on access keeps them following `this.page`.
+  /** The tab-bar pane of this request. */
+  protected get panel(): TabPanelComponent {
+    return new TabPanelComponent(this.page, this.PANE);
+  }
+
+  protected get TABPANEL(): string {
+    return this.panel.TABPANEL;
+  }
+
   /** The Auth tab component for this request's own pane. */
-  readonly auth: AuthTabComponent;
+  get auth(): AuthTabComponent {
+    return new AuthTabComponent(this.page, this.PANE);
+  }
 
   /** The Scripts tab component for this request's own pane. */
-  readonly scripts: ScriptTabComponent;
-
-  constructor(page: Page) {
-    super(page, REQUEST_PANE);
-    this.auth = new AuthTabComponent(page, REQUEST_PANE);
-    this.scripts = new ScriptTabComponent(page, REQUEST_PANE);
+  get scripts(): ScriptTabComponent {
+    return new ScriptTabComponent(this.page, this.PANE);
   }
 
   /**
-   * Also rewires the composed Auth/Scripts tab components onto the new
-   * window.
+   * Waits for this request's pane to become visible, confirming it's open
+   * and active.
    */
-  override setContext(page: Page): void {
-    super.setContext(page);
-    this.auth.setContext(page);
-    this.scripts.setContext(page);
+  async navigate(): Promise<void> {
+    await this.panel.waitUntilVisible();
+  }
+
+  /**
+   * Clicks the tab within this request's pane identified by its data-key.
+   */
+  protected async switchTab(tab: string): Promise<void> {
+    await this.panel.switchTab(tab);
   }
 
   /**

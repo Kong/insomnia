@@ -1,13 +1,14 @@
+import type { BaseComponent } from "@package/components/base.component";
+import { PreferencesComponent } from "@package/components/preferences.component";
+import { PreferencesAiComponent } from "@package/components/preferences-ai.component";
+import { PreferencesCredentialsComponent } from "@package/components/preferences-credentials.component";
+import { PreferencesPluginsComponent } from "@package/components/preferences-plugins.component";
 import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
 import { EnvironmentPage } from "./environment.page";
 import { HttpRequestPage } from "./http-request.page";
-import { PreferencesPage } from "./preferences.page";
-import { PreferencesAiPage } from "./preferences-ai.page";
-import { PreferencesCredentialsPage } from "./preferences-credentials.page";
-import { PreferencesPluginsPage } from "./preferences-plugins.page";
 import { ProjectPage } from "./project.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
@@ -18,23 +19,24 @@ const pageRegistry = {
     new EnvironmentPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
-  preferencesPage: (page: Page): PreferencesPage =>
-    new PreferencesPage(page),
+  // Global dialogs reachable from any page, so components rather than pages.
+  preferences: (page: Page): PreferencesComponent =>
+    new PreferencesComponent(page),
   responsePage: (page: Page): ResponsePage =>
     new ResponsePage(page),
-  preferencesCredentialsPage: (page: Page): PreferencesCredentialsPage =>
-    new PreferencesCredentialsPage(page),
-  preferencesPluginsPage: (page: Page): PreferencesPluginsPage =>
-    new PreferencesPluginsPage(page),
-  preferencesAiPage: (page: Page): PreferencesAiPage =>
-    new PreferencesAiPage(page),
+  preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
+    new PreferencesCredentialsComponent(page),
+  preferencesPlugins: (page: Page): PreferencesPluginsComponent =>
+    new PreferencesPluginsComponent(page),
+  preferencesAi: (page: Page): PreferencesAiComponent =>
+    new PreferencesAiComponent(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
   specPage: (page: Page): SpecPage =>
     new SpecPage(page),
   workspacePage: (page: Page): WorkspacePage =>
     new WorkspacePage(page),
-} satisfies Record<string, (page: Page) => BasePage>;
+} satisfies Record<string, (page: Page) => BasePage | BaseComponent>;
 
 type PageName = Extract<keyof typeof pageRegistry, string>;
 

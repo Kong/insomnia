@@ -1,6 +1,6 @@
 import { ToggleButtonComponent } from "@package/components/toggle.component";
 import { AuthType } from "@package/enums/auth-type";
-import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
@@ -11,7 +11,6 @@ import type {
   AuthTypeOAuth2,
   AuthTypeSingleToken,
 } from "insomnia-data";
-import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
 import { TabPanelComponent } from "./tab-panel.component";
 
@@ -78,20 +77,6 @@ const OAUTH2_ADVANCED_FIELDS: OAuth2TextField[] = [
   "origin",
 ];
 
-export interface OAuth2Tokens {
-  refreshToken: string;
-  identityToken: string;
-  accessToken: string;
-}
-
-/**
- * The tokens display/actions block ("Fetch Tokens"/"Refresh Token", "Clear
- * OAuth 2 session") can take a few seconds to settle: Authorization Code
- * and Implicit grants round-trip through a popup authorization window
- * before the Access Token field populates.
- */
-const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
-
 // A request's auth lives on the Request document; a folder's own auth
 // (inherited by its children) on the RequestGroup document.
 const AUTH_DB_FILES = [
@@ -132,20 +117,6 @@ export class AuthTabComponent extends TabPanelComponent {
   }
 
   /**
-   * Reads back the Refresh Token, Identity Token, and Access Token
-   * fields shown below the Auth tab's OAuth 2.0 form. Empty strings mean
-   * no token has been fetched yet.
-   */
-  async getOAuth2Tokens(): Promise<OAuth2Tokens> {
-    await this.switchTab("auth");
-    return {
-      refreshToken: await this.oauth2TokenInput("Refresh-Token").inputValue(),
-      identityToken: await this.oauth2TokenInput("Identity-Token").inputValue(),
-      accessToken: await this.oauth2TokenInput("Access-Token").inputValue(),
-    };
-  }
-
-  /**
    * Expands the OAuth 2.0 Auth tab's "Advanced Options" accordion
    * (Scope/State/Credentials/Header Prefix/Audience/Resource/Origin,
    * plus the "Clear OAuth 2 session" button) if it isn't already open.
@@ -161,48 +132,6 @@ export class AuthTabComponent extends TabPanelComponent {
       panel.getByTestId("auth-field-Scope").locator(".CodeMirror"),
     ).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Clicks the "Clear" button next to "Refresh Token"/"Fetch Tokens" —
-   * only rendered once at least one token has been fetched — wiping the
-   * Refresh/Identity/Access Token fields. Not to be confused with
-   * "Advanced Options"' own "Clear OAuth 2 session" button, which resets
-   * the embedded authorization popup's own browser session (cookies),
-   * not the app's stored tokens.
-   */
-  async clearOAuth2Tokens(): Promise<void> {
-    await this.switchTab("auth");
-    const clearButton = this.page
-      .locator(this.TABPANEL)
-      .getByRole("button", { name: "Clear", exact: true });
-    await clearButton.click();
-    await expect(clearButton).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Clicks the Auth tab's token-fetch button — labeled "Fetch Tokens"
-   * before any token exists, "Refresh Token" once one does — and waits
-   * for the Access Token field to be populated. For the Authorization
-   * Code and Implicit grants this drives a real popup authorization
-   * window (auto-approved by `misc/oauth2-server.ts`, no interaction
-   * needed here); for Client Credentials/Resource Owner Password/an
-   * existing Refresh Token it resolves directly against the token
-   * endpoint with no popup at all.
-   */
-  async fetchOAuth2Tokens(): Promise<void> {
-    await this.switchTab("auth");
-    const panel = this.page.locator(this.TABPANEL);
-    // The button acts on the auth config in the request's loader data,
-    // which refreshes a moment after the last edit lands on disk — drain
-    // the renderer first so a fetch can't go out with the previous config.
-    await this.waitForRendererIdle();
-    await panel
-      .getByRole("button", { name: /^(Fetch Tokens|Refresh Token)$/ })
-      .click();
-    await expect(this.oauth2TokenInput("Access-Token")).not.toHaveValue("", {
-      timeout: OAUTH2_FETCH_TIMEOUT,
     });
   }
 
@@ -465,19 +394,6 @@ export class AuthTabComponent extends TabPanelComponent {
   }
 
   /**
-   * Polls the on-disk request/folder documents until one carries
-   * `authentication[field] === value`, confirming the edit has actually
-   * been saved (the editors autosave through a debounce) rather than just
-   * shown in the UI.
-   */
-  private async waitForAuthFieldPersisted(
-    field: string,
-    value: unknown,
-  ): Promise<void> {
-    await this.waitForAuthFieldsPersisted([{ field, value }]);
-  }
-
-  /**
    * Polls the on-disk request/folder documents until a single one holds
    * every edit in `edits` at once. The app's debounced editors can save
    * from a stale copy of the auth config, so a write may never land, or
@@ -559,13 +475,5 @@ export class AuthTabComponent extends TabPanelComponent {
       .locator(this.TABPANEL)
       .getByTestId(`auth-field-${label.replace(/ /g, "-")}`)
       .locator(".CodeMirror");
-  }
-
-  /**
-   * Builds the locator for one of the read-only Refresh/Identity/Access
-   * Token inputs (`data-testid="auth-field-Access-Token"` and so on).
-   */
-  private oauth2TokenInput(id: string): Locator {
-    return this.page.locator(this.TABPANEL).getByTestId(`auth-field-${id}`);
   }
 }

@@ -1,8 +1,8 @@
+import type { LlmUrlBackendFormFields } from "@package/components/preferences-ai.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { step } from "@package/misc/step";
 import type { AiUrlBackendSettings} from "@package/models/settings";
 import { Settings } from "@package/models/settings";
-import type { LlmUrlBackendFormFields } from "@package/pages/preferences-ai.page";
 import { expect } from "@playwright/test";
 
 import { BaseFlow } from "./base.flow";
@@ -15,57 +15,57 @@ export class PreferencesFlow extends BaseFlow {
    */
   @step()
   async set(settings: Settings): Promise<Settings> {
-    const { preferencesPage, preferencesCredentialsPage, preferencesPluginsPage, preferencesAiPage } = this.pageManager;
+    const { preferences, preferencesCredentials, preferencesPlugins, preferencesAi } = this.pageManager;
     let aiUrlBackendResult: AiUrlBackendSettings | undefined;
-    await preferencesPage.open();
+    await preferences.open();
     if (settings.validateSSL !== undefined) {
-      await preferencesPage.setValidateSSL(settings.validateSSL);
+      await preferences.setValidateSSL(settings.validateSSL);
     }
     if (settings.sidebarFocusForCollections !== undefined) {
-      await preferencesPage.setSidebarFocusForCollections(
+      await preferences.setSidebarFocusForCollections(
         settings.sidebarFocusForCollections,
       );
     }
     if (settings.showLegacyUnitTests !== undefined) {
-      await preferencesPage.setShowLegacyUnitTests(
+      await preferences.setShowLegacyUnitTests(
         settings.showLegacyUnitTests,
       );
     }
     if (settings.hideSecretValuesInPreviewAndConsole !== undefined) {
-      await preferencesPage.setHideSecretValuesInPreviewAndConsole(
+      await preferences.setHideSecretValuesInPreviewAndConsole(
         settings.hideSecretValuesInPreviewAndConsole,
       );
     }
     if (settings.dataFolders !== undefined) {
       for (const path of settings.dataFolders) {
-        await preferencesPage.addDataFolder(path);
+        await preferences.addDataFolder(path);
       }
     }
     if (settings.pluginSandboxEnabled !== undefined) {
-      await preferencesPluginsPage.openScriptingTab();
-      await preferencesPluginsPage.setTemplateTagSandbox(
+      await preferencesPlugins.openScriptingTab();
+      await preferencesPlugins.setTemplateTagSandbox(
         settings.pluginSandboxEnabled,
       );
     }
     if (settings.filterResponsesByEnv !== undefined) {
-      await preferencesPage.setFilterResponsesByEnvironment(
+      await preferences.setFilterResponsesByEnvironment(
         settings.filterResponsesByEnv,
       );
     }
     if (settings.cloudCredentials !== undefined) {
-      await preferencesCredentialsPage.openCredentialsTab();
+      await preferencesCredentials.openCredentialsTab();
       for (const credential of settings.cloudCredentials) {
         if (credential.provider === "aws") {
-          await preferencesCredentialsPage.createAwsCloudCredential(credential);
+          await preferencesCredentials.createAwsCloudCredential(credential);
         } else if (credential.provider === "gcp") {
-          await preferencesCredentialsPage.createGcpCloudCredential(credential);
+          await preferencesCredentials.createGcpCloudCredential(credential);
         } else {
-          await preferencesCredentialsPage.createHashiCorpCloudCredential(credential);
+          await preferencesCredentials.createHashiCorpCloudCredential(credential);
         }
       }
     }
     if (settings.timeout !== undefined) {
-      await preferencesPage.setRequestTimeout(settings.timeout);
+      await preferences.setRequestTimeout(settings.timeout);
     }
     if (
       settings.proxyEnabled !== undefined ||
@@ -73,74 +73,74 @@ export class PreferencesFlow extends BaseFlow {
       settings.httpsProxy !== undefined ||
       settings.noProxy !== undefined
     ) {
-      await preferencesPage.openProxyTab();
+      await preferences.openProxyTab();
       if (settings.proxyEnabled !== undefined) {
-        await preferencesPage.setProxyEnabled(settings.proxyEnabled);
+        await preferences.setProxyEnabled(settings.proxyEnabled);
       }
       if (settings.httpProxy !== undefined) {
-        await preferencesPage.setHttpProxy(settings.httpProxy);
+        await preferences.setHttpProxy(settings.httpProxy);
       }
       if (settings.httpsProxy !== undefined) {
-        await preferencesPage.setHttpsProxy(settings.httpsProxy);
+        await preferences.setHttpsProxy(settings.httpsProxy);
       }
       if (settings.noProxy !== undefined) {
-        await preferencesPage.setNoProxy(settings.noProxy);
+        await preferences.setNoProxy(settings.noProxy);
       }
     }
     if (settings.aiUrlBackend !== undefined) {
-      await preferencesAiPage.openAiSettingsTab();
+      await preferencesAi.openAiSettingsTab();
       if (settings.aiUrlBackend === null) {
         const fields =
-          await preferencesAiPage.getUrlBackendFormValues("LLM URL Active");
-        await preferencesAiPage.clickDeactivateAiBackend();
+          await preferencesAi.getUrlBackendFormValues("LLM URL Active");
+        await preferencesAi.clickDeactivateAiBackend();
         let isActive = true;
         await expect(async () => {
-          isActive = await preferencesAiPage.isAiBackendActive("LLM URL");
+          isActive = await preferencesAi.isAiBackendActive("LLM URL");
           expect(isActive).toBe(false);
         }).toPass({ timeout: DEFAULT_TIMEOUT });
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, isActive);
       } else {
         const { url, model, apiKey, temperature, topP, maxTokens } =
           settings.aiUrlBackend;
-        await preferencesAiPage.clickAiBackendNav("LLM URL");
-        await preferencesAiPage.setAiUrlBackendUrl(url);
+        await preferencesAi.clickAiBackendNav("LLM URL");
+        await preferencesAi.setAiUrlBackendUrl(url);
         if (apiKey !== undefined) {
-          await preferencesAiPage.setAiUrlBackendApiToken(apiKey);
+          await preferencesAi.setAiUrlBackendApiToken(apiKey);
         }
-        await preferencesAiPage.clickLoadAiModels();
-        await preferencesAiPage.selectAiModel(model);
+        await preferencesAi.clickLoadAiModels();
+        await preferencesAi.selectAiModel(model);
         if (
           temperature !== undefined ||
           topP !== undefined ||
           maxTokens !== undefined
         ) {
-          await preferencesAiPage.openAiAdvancedOptions();
+          await preferencesAi.openAiAdvancedOptions();
           if (temperature !== undefined) {
-            await preferencesAiPage.setAiAdvancedOptionValue(
+            await preferencesAi.setAiAdvancedOptionValue(
               "Temperature (0-2):",
               String(temperature),
             );
           }
           if (topP !== undefined) {
-            await preferencesAiPage.setAiAdvancedOptionValue(
+            await preferencesAi.setAiAdvancedOptionValue(
               "Top P (0-1):",
               String(topP),
             );
           }
           if (maxTokens !== undefined) {
-            await preferencesAiPage.setAiAdvancedOptionValue(
+            await preferencesAi.setAiAdvancedOptionValue(
               "Max Tokens (1-128000):",
               String(maxTokens),
             );
           }
         }
-        await preferencesAiPage.clickActivateAiBackend();
+        await preferencesAi.clickActivateAiBackend();
         const fields =
-          await preferencesAiPage.getUrlBackendFormValues("LLM URL Active");
+          await preferencesAi.getUrlBackendFormValues("LLM URL Active");
         aiUrlBackendResult = this.toAiUrlBackendSettings(fields, true);
       }
     }
-    await preferencesPage.close();
+    await preferences.close();
     return new Settings({ aiUrlBackend: aiUrlBackendResult });
   }
 

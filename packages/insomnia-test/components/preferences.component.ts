@@ -1,4 +1,3 @@
-import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -21,16 +20,6 @@ export class PreferencesComponent extends PreferencesTabComponent {
       .getByRole("button", { name: "Modal Close Button" })
       .click();
     await expect(this.dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Reports whether the Preferences dialog is currently open. Some
-   * actions taken from within it (e.g. a multi-file export's completion)
-   * close it as a side effect, so callers that always invoke `close()`
-   * afterward should check this first rather than assume it's still open.
-   */
-  async isOpen(): Promise<boolean> {
-    return this.dialog.isVisible();
   }
 
   /**
@@ -77,15 +66,6 @@ export class PreferencesComponent extends PreferencesTabComponent {
   }
 
   /**
-   * Reads whether the General tab's "Sidebar focus for collections"
-   * checkbox is currently checked.
-   */
-  async isSidebarFocusForCollectionsEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-sidebarFocusForCollections");
-    return label.locator('input[type="checkbox"]').isChecked();
-  }
-
-  /**
    * A custom-styled checkbox (General tab, Settings.showLegacyUnitTests)
    * whose native input ignores direct clicks — the wrapping label is the
    * actual clickable target. Same shape as setValidateSSL() above. Gates
@@ -105,49 +85,6 @@ export class PreferencesComponent extends PreferencesTabComponent {
   }
 
   /**
-   * Reads whether the General tab's "Show legacy unit tests" checkbox is
-   * currently checked.
-   */
-  async isShowLegacyUnitTestsEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-enableLegacyUnitTests");
-    return label.locator('input[type="checkbox"]').isChecked();
-  }
-
-  /**
-   * Switches the open Preferences dialog to the Data tab, where the
-   * Export/Import shortcuts live.
-   */
-  async openDataTab(): Promise<void> {
-    await this.tabs.tabByName("Data").click();
-  }
-
-  /**
-   * Clicks "Export all data (N files)" on the Data tab, which bundles
-   * every project into a directory (one file per workspace) without
-   * a request-selection or format-selection step. Must be called with
-   * `openDataTab()` already open and the target save directory already
-   * stubbed via `ExportPage.stubSaveDirectoryLocation()`.
-   */
-  async clickExportAllData(): Promise<void> {
-    await this.dialog
-      .getByRole("button")
-      .filter({ hasText: /^Export all data/ })
-      .click();
-  }
-
-  /**
-   * Clicks "Export the "{name}" Project" on the Data tab. Skips the
-   * request-selection dialog and opens "Select Export Type" directly
-   * (see `ExportPage`).
-   */
-  async clickExportProject(name: string): Promise<void> {
-    await this.dialog
-      .getByTestId("export-project-button")
-      .filter({ hasText: `"${name}" Project` })
-      .click();
-  }
-
-  /**
    * Adds `path` to "What folders can Insomnia access?" (General tab), so
    * scripts/template tags can read files under it. Fills the text input
    * and clicks "Add", then waits for it to appear in the folder list.
@@ -164,7 +101,7 @@ export class PreferencesComponent extends PreferencesTabComponent {
    * Switches the open Preferences dialog to the Proxy tab.
    */
   async openProxyTab(): Promise<void> {
-    await this.tabs.tabByName("Proxy").click();
+    await this.dialog.getByRole("tab", { name: "Proxy" }).click();
   }
 
   /**
@@ -230,12 +167,11 @@ export class PreferencesComponent extends PreferencesTabComponent {
         checked: enabled,
         timeout: DEFAULT_TIMEOUT,
       });
-      const alert = new ModalComponent(
-        this.page,
-        this.page.getByRole("dialog").filter({ hasText: /Confidential Variables/ }),
-      );
-      await alert.clickButton("Ok", false);
-      await alert.waitForHidden();
+      const alert = this.page
+        .getByRole("dialog")
+        .filter({ hasText: /Confidential Variables/ });
+      await alert.getByRole("button", { name: "Ok" }).click();
+      await expect(alert).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     }
   }
 
@@ -254,15 +190,6 @@ export class PreferencesComponent extends PreferencesTabComponent {
         timeout: DEFAULT_TIMEOUT,
       });
     }
-  }
-
-  /**
-   * Reads whether the General tab's "Filter responses by environment"
-   * checkbox is currently checked.
-   */
-  async isFilterResponsesByEnvironmentEnabled(): Promise<boolean> {
-    const label = this.dialog.getByTestId("setting-filterResponsesByEnv");
-    return label.locator('input[type="checkbox"]').isChecked();
   }
 
   /**

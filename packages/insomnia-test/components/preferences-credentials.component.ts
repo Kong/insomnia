@@ -1,7 +1,4 @@
-import { DropdownComponent } from "@package/components/dropdown.component";
-import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { GitCredential } from "@package/models/git-credential";
 import type { CloudCredential } from "@package/models/settings";
 import { expect } from "@playwright/test";
 
@@ -24,41 +21,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
    * credentials are added/managed.
    */
   async openCredentialsTab(): Promise<void> {
-    await this.tabs.tabByName("Credentials").click();
-  }
-
-  private createGitCredentialMenu(): DropdownComponent {
-    return new DropdownComponent(
-      this.page,
-      this.dialog.getByRole("button", { name: "Create Git Credential" }),
-    );
-  }
-
-  private createCloudCredentialMenu(): DropdownComponent {
-    return new DropdownComponent(
-      this.page,
-      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
-    );
-  }
-
-  /**
-   * Adds a custom (username/PAT) Git credential from the Credentials tab,
-   * which must already be open (see `openCredentialsTab()`).
-   */
-  async addCustomCredential(credential: GitCredential): Promise<void> {
-    const modal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", {
-      name: /Access Token Credential/,
-      }),
-    );
-    await this.createGitCredentialMenu().select("Access Token");
-    await this.page.getByLabel("Author Email").fill(credential.authorEmail);
-    await this.page.getByLabel("Author Name").fill(credential.authorName);
-    await this.page.getByLabel("Username").fill(credential.username);
-    await this.page.getByLabel("Git Access Token").fill(credential.password);
-    await this.page.getByRole("button", { name: "Save Credential" }).click();
-    await modal.waitForHidden();
+    await this.dialog.getByRole("tab", { name: "Credentials" }).click();
   }
 
   /**
@@ -75,25 +38,25 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createAwsCloudCredential(
     credential: Omit<AwsCloudCredential, "provider">,
   ): Promise<void> {
-    await this.createCloudCredentialMenu().select("AWS", false);
-    const modal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", {
+    await this.dialog
+      .getByRole("button", { name: "Create Cloud Credential" })
+      .click();
+    await this.page.getByRole("menuitemradio", { name: "AWS" }).click();
+    const modal = this.page.getByRole("dialog", {
       name: /Authenticate With AWS/,
-      }),
-    );
-    await modal.root
+    });
+    await modal
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal.root.getByRole("radio", { name: "Credential File" }).check();
-    await modal.root
+    await modal.getByRole("radio", { name: "Credential File" }).check();
+    await modal
       .getByRole("textbox", { name: "Section Name:" })
       .fill(credential.credentials.section);
-    await modal.root
+    await modal
       .getByRole("textbox", { name: "Region:" })
       .fill(credential.credentials.region);
-    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
-    await modal.waitForHidden();
+    await modal.getByRole("button", { name: "Create", exact: true }).click();
+    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -107,21 +70,21 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createGcpCloudCredential(
     credential: Omit<GcpCloudCredential, "provider">,
   ): Promise<void> {
-    await this.createCloudCredentialMenu().select("GCP", false);
-    const modal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", {
+    await this.dialog
+      .getByRole("button", { name: "Create Cloud Credential" })
+      .click();
+    await this.page.getByRole("menuitemradio", { name: "GCP" }).click();
+    const modal = this.page.getByRole("dialog", {
       name: /Authenticate With GCP/,
-      }),
-    );
-    await modal.root
+    });
+    await modal
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal.root
+    await modal
       .getByRole("textbox", { name: "Input Service Account Key Path" })
       .fill(credential.credentials.serviceAccountKeyFilePath);
-    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
-    await modal.waitForHidden();
+    await modal.getByRole("button", { name: "Create", exact: true }).click();
+    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 
   /**
@@ -137,26 +100,26 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createHashiCorpCloudCredential(
     credential: Omit<HashiCorpCloudCredential, "provider">,
   ): Promise<void> {
-    await this.createCloudCredentialMenu().select("HashiCorp", false);
-    const modal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", {
+    await this.dialog
+      .getByRole("button", { name: "Create Cloud Credential" })
+      .click();
+    await this.page.getByRole("menuitemradio", { name: "HashiCorp" }).click();
+    const modal = this.page.getByRole("dialog", {
       name: /Authenticate With HashiCorp/,
-      }),
-    );
-    await modal.root
+    });
+    await modal
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal.root
+    await modal
       .getByRole("textbox", { name: "Server Address:" })
       .fill(credential.credentials.serverAddress);
-    await modal.root
+    await modal
       .getByRole("textbox", { name: "Role Id:" })
       .fill(credential.credentials.role_id);
-    await modal.root
+    await modal
       .getByRole("textbox", { name: "Secret Id:" })
       .fill(credential.credentials.secret_id);
-    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
-    await modal.waitForHidden();
+    await modal.getByRole("button", { name: "Create", exact: true }).click();
+    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 }
