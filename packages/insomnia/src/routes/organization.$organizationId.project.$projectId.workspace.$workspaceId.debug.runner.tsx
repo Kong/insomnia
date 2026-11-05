@@ -30,6 +30,7 @@ import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '~/common/constants';
+import { wrapAroundIterationOverIterationData } from '~/common/iteration-data';
 import { buildRunnerItemKey, type RunnerItemStatus, type RunnerLiveItem } from '~/common/runner-feedback';
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
@@ -935,18 +936,6 @@ export const Runner: FC = () => {
 
 export default Runner;
 
-const wrapAroundIterationOverIterationData = (
-  list?: UserUploadEnvironment[],
-  currentIteration?: number,
-): UserUploadEnvironment | undefined => {
-  if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
-    return undefined;
-  }
-  if (list.length >= currentIteration + 1) {
-    return list[currentIteration];
-  }
-  return list[(currentIteration + 1) % list.length];
-};
 export interface runCollectionActionParams {
   requests: RequestRow[];
   iterationCount: number;
