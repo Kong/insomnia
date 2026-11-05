@@ -39,6 +39,6 @@
     "zod": "^3.25.75"
   },
   "dependencies": {
-    "express-rate-limit": "^8.2.1"
+    "express-rate-limit": "^8.7.3"
   }
 }
