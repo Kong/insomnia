@@ -48,13 +48,14 @@ export class CookiePage extends BasePage {
    * to disappear.
    */
   async close(): Promise<void> {
-    // The footer "Done" is the last one in the dialog: right after
-    // `deleteAll()` confirms, the "Delete All" prompt button also reads
-    // "Done" for up to 2s (PromptButton's done state), so a plain
-    // name match is ambiguous and trips Playwright's strict mode.
-    await this.listModal
-      .button("Done", true)
-      .last()
+    // Right after `deleteAll()` confirms, the "Delete All" prompt button also
+    // reads "Done" for up to 2s (PromptButton's done state), so a plain name
+    // match is ambiguous and trips strict mode. The footer button is the one
+    // that shares a row with the "cookies are automatically sent" note.
+    await this.listDialog
+      .getByText(/cookies are automatically sent/)
+      .locator("..")
+      .getByRole("button", { name: "Done", exact: true })
       .click();
     await this.listDialog.waitFor({
       state: "hidden",
