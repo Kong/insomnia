@@ -218,26 +218,36 @@ export const test = base.extend<Fixtures>({
       );
     });
 
-    const videoPath = testInfo.outputPath("video.webm");
-    await win.screencast.start({ path: videoPath });
+    // `use.trace` in playwright.config.ts only applies to contexts Playwright
+    // creates itself; this window comes from a manual Electron launch, so
+    // tracing has to be started (and kept on failure) explicitly here.
+    const context = win.context();
+    await context.tracing.start({
+      screenshots: true,
+      snapshots: true,
+      sources: true,
+    });
     await startWindowCoverage(win);
 
     await use(win);
 
     // A test that called AppFlow.restart() already closed this `win` —
-    // its screencast can't be stopped, so tolerate that on teardown. Its
+    // its tracing can't be stopped, so tolerate that on teardown. Its
     // coverage was already collected by `AppFlow.restart()` itself before
     // tearing it down (see flows/app.flow.ts), so this is a no-op then.
     await collectWindowCoverage(win);
-    await win.screencast.stop().catch(() => {});
-    if (
-      testInfo.status !== testInfo.expectedStatus &&
-      fs.existsSync(videoPath)
-    ) {
-      await testInfo.attach("video", {
-        path: videoPath,
-        contentType: "video/webm",
-      });
+    const failed = testInfo.status !== testInfo.expectedStatus;
+    const tracePath = testInfo.outputPath("trace.zip");
+    await context.tracing
+      .stop(failed ? { path: tracePath } : undefined)
+      .catch(() => {});
+    if (failed) {
+      if (fs.existsSync(tracePath)) {
+        await testInfo.attach("trace", {
+          path: tracePath,
+          contentType: "application/zip",
+        });
+      }
       if (consoleLog.length) {
         await testInfo.attach("console-log", {
           body: consoleLog.join("\n"),
@@ -250,8 +260,6 @@ export const test = base.extend<Fixtures>({
           contentType: "text/plain",
         });
       }
-    } else {
-      await fs.promises.unlink(videoPath).catch(() => {});
     }
   },
 

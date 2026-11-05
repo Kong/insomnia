@@ -3,6 +3,11 @@ name: Insomnia Test
 on:
   merge_group:
   workflow_dispatch:
+    inputs:
+      coverage:
+        description: Collect and merge V8 coverage (slower)
+        type: boolean
+        default: false
   push:
     branches:
       - develop
@@ -10,6 +15,12 @@ on:
     types:
       - opened
       - synchronize
+
+env:
+  # Coverage is on-demand: always on for develop pushes (the baseline), and
+  # for manual runs only when the `coverage` input is ticked. PRs and merge
+  # queue runs skip it.
+  COVERAGE: ${{ (github.event_name == 'push' || inputs.coverage) && 'true' || 'false' }}
 
 concurrency:
   group: insomnia-test-nonblocking-${{ github.ref }}
@@ -248,16 +259,11 @@ jobs:
         working-directory: packages/insomnia-test
         run: npx playwright install-deps chromium
 
-      - name: Install ffmpeg (required for video recording)
-        working-directory: packages/insomnia-test
-        run: npx playwright install ffmpeg
-
       - name: Run Playwright tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
-          COVERAGE: 'true'
         run: |
           xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
@@ -266,7 +272,7 @@ jobs:
       # upload computes a common ancestor across both, so raw/'s own
       # contents now land one level deeper in the artifact, under `raw/`.
       - name: Upload coverage (raw)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.COVERAGE == 'true' }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: coverage-raw-${{ matrix.shardIndex }}
@@ -297,8 +303,8 @@ jobs:
   # ---------------------------------------------------------------------------
   # This job doesn't gate the workflow — parallel-test (no continue-on-error)
   # already fails the run on its own if any shard fails. This job only
-  # merges every shard's raw V8 coverage data (collected on both develop
-  # pushes and PRs — see parallel-test's COVERAGE env) into one coverage
+  # merges every shard's raw V8 coverage data (collected only when the
+  # workflow-level COVERAGE env is 'true') into one coverage
   # report, and every shard's blob report into one full-suite Playwright
   # report — both run on every trigger this workflow has (push and
   # pull_request are the only two, so no `if` gate is needed on either).
@@ -360,6 +366,7 @@ jobs:
           path: packages/insomnia/dist/linux-unpacked
 
       - name: Download raw coverage from all shards
+        if: ${{ env.COVERAGE == 'true' }}
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -375,11 +382,13 @@ jobs:
       # for the full writeup.
       - name: Merge coverage reports
         id: merge-coverage
+        if: ${{ env.COVERAGE == 'true' }}
         continue-on-error: true
         working-directory: packages/insomnia-test
         run: node misc/merge-coverage-union.ts ../../coverage-raw
 
       - name: Upload merged coverage report
+        if: ${{ env.COVERAGE == 'true' }}
         continue-on-error: true
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
