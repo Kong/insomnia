@@ -98,9 +98,7 @@ function queryArgs(search: string) {
 }
 
 const app = express();
-// `type: () => true` (not '*/*'): requests without a Content-Type header, e.g. the
-// scripts' sendRequest() with a string body, must still have their body read.
-const rawBody = bodyParser.raw({ inflate: true, type: () => true });
+const rawBody = bodyParser.raw({ inflate: true, type: '*/*' });
 
 app.use((req, res, next) => {
   process.stdout.write(`[http-echo] ${req.method} ${req.path}\n`);
@@ -151,10 +149,7 @@ app.post('/posts', rawBody, (req, res) => {
   try {
     parsed = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '');
   } catch {}
-  // writeHead + end (not res.json/send, which re-case the header to `Content-Type`):
-  // the lowercase name matches the previous raw-http echo, and specs assert it.
-  res.writeHead(201, { 'content-type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify({ ...parsed, id: 101 }));
+  res.status(201).json({ ...parsed, id: 101 });
 });
 
 app.post('/graphql', rawBody, async (req, res) => {
@@ -171,8 +166,7 @@ app.post('/graphql', rawBody, async (req, res) => {
     variableValues: variables,
     operationName,
   });
-  res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify(result));
+  res.status(200).json(result);
 });
 
 app.get('/v2/swagger.json', (_req, res) => {
