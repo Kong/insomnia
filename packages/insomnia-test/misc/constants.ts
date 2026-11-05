@@ -18,5 +18,6 @@ export const ACTION_TIMEOUT = 30_000;
  */
 export const MOCK_API_SERVER = "http://localhost:4010";
 
-export const HTTP_SERVER = "http://localhost:4060";
+// The single mock server (misc/server/index.ts) serves HTTP on one port.
+export const HTTP_SERVER = MOCK_API_SERVER;
 

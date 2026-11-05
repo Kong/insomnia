@@ -43,18 +43,6 @@ export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, ad
   };
 }
 
-// Document ids of the seeded Cloud Sync snapshots below (mirrored in mock-api.ts).
-const COLLECTION_R1_WORKSPACE_ID = 'wrk_a7132f924ba7451594ba64ec411c9e13';
-const COLLECTION_R1_BASE_ENVIRONMENT_ID = 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c';
-const COLLECTION_R1_REQUEST_ID = 'req_d11697e0652742e691374e380cdcd2b2';
-const MY_ENVIRONMENT_WORKSPACE_ID = 'wrk_2068a8dfd6914c369073686bb92737ae';
-const MY_ENVIRONMENT_BASE_ENVIRONMENT_ID = 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be';
-const MY_MCP_CLIENT_WORKSPACE_ID = 'wrk_efab8e758b97459bab2659d8fdcf8627';
-const MY_MCP_CLIENT_BASE_ENVIRONMENT_ID = 'env_0c042933878b85facb6c4e673b0166b256f37ad0';
-const MY_MCP_CLIENT_REQUEST_ID = 'mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0';
-const DESIGN_PROJECT_WORKSPACE_ID = 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4';
-const DESIGN_PROJECT_SPEC_ID = 'spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5';
-
 const teams = [
   {
     id: 'team_001',
@@ -70,37 +58,35 @@ const symmetricKey = {
   kty: 'oct',
 };
 
-// Fixed test ciphertext: the seeded project's symmetric key wrapped with the
-// static test account's public key (see the session in misc/server/insomnia-api.ts).
-const wrappedProjectCipher =
+const encryptedSymmetricKey =
   '78c1314a7be673f117872c83b0b47b6f2c1dc36081cdabc5b738f172f1082ab077e9b275c20171c45234c73f82f4dec8f5952b5399b4b05d2f8451972788aea0db43d82bb1df7e835f4becc70b68a375ba227b1f6388ff428596614c4e2c09484a1e5c4e56a82e6196de7c04ef22d958118e6b1478e7aecad2217a62e963defdfa4e0763300b9f840cf5130e6503635f835548cba317cbd1f229280fba6a906e53b35544ff5189790a45de0fc8a6a457bac8349334de9275d31cae1369c6207170128aba3db21fccc92a6d857aa3f5bc6ecbc7c42cace3df5fe5406b78e950f57918cca8983e05b93b6e6ea7a815bb3b643d0b0d7e7bb67aba440cd29c06799a';
 
 const cloudSyncProject = [
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae70',
     name: 'My Collection R1',
-    rootDocumentId: COLLECTION_R1_WORKSPACE_ID,
+    rootDocumentId: 'wrk_a7132f924ba7451594ba64ec411c9e13',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae71',
     name: 'My Environment',
-    rootDocumentId: MY_ENVIRONMENT_WORKSPACE_ID,
+    rootDocumentId: 'wrk_2068a8dfd6914c369073686bb92737ae',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae72',
     name: 'My MCP Client',
-    rootDocumentId: MY_MCP_CLIENT_WORKSPACE_ID,
+    rootDocumentId: 'wrk_efab8e758b97459bab2659d8fdcf8627',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
   {
     id: 'proj_5145140e072d4007a30bfa6630ddae73',
     name: 'Design Project',
-    rootDocumentId: DESIGN_PROJECT_WORKSPACE_ID,
+    rootDocumentId: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
     teamProjectId: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     teams,
   },
@@ -127,17 +113,17 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: 'be076c5943e0d32b05efbbf215b4f9d2bb894a9c',
-          key: COLLECTION_R1_WORKSPACE_ID,
+          key: 'wrk_a7132f924ba7451594ba64ec411c9e13',
           name: 'My Collection R1',
         },
         {
           blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
-          key: COLLECTION_R1_BASE_ENVIRONMENT_ID,
+          key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
         {
           blob: 'd78e5942f5508063ea484bb4b497f0ed446309c9',
-          key: COLLECTION_R1_REQUEST_ID,
+          key: 'req_d11697e0652742e691374e380cdcd2b2',
           name: 'New Request',
         },
       ],
@@ -151,17 +137,17 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: 'be076c5943e0d32b05efbbf215b4f9d2bb894a9c',
-          key: COLLECTION_R1_WORKSPACE_ID,
+          key: 'wrk_a7132f924ba7451594ba64ec411c9e13',
           name: 'My Collection R1',
         },
         {
           blob: '1b7fe31ec583c8a42fedc0e86a103b94076e77c4',
-          key: COLLECTION_R1_BASE_ENVIRONMENT_ID,
+          key: 'env_48cf48a4dc8a0984d07cb8dad01a01c5d604439c',
           name: 'Base Environment',
         },
         {
           blob: '1f8a8cd1da88d9abb4bfc1d6e662716d41705ace',
-          key: COLLECTION_R1_REQUEST_ID,
+          key: 'req_d11697e0652742e691374e380cdcd2b2',
           name: 'New Request',
         },
       ],
@@ -178,12 +164,12 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e',
-          key: MY_ENVIRONMENT_WORKSPACE_ID,
+          key: 'wrk_2068a8dfd6914c369073686bb92737ae',
           name: 'My Environment',
         },
         {
           blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
-          key: MY_ENVIRONMENT_BASE_ENVIRONMENT_ID,
+          key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
           name: 'Base Environment',
         },
       ],
@@ -200,17 +186,17 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: 'a8252b458e8a1b5f3c214e5e7f944887a142ae72',
-          key: MY_MCP_CLIENT_WORKSPACE_ID,
+          key: 'wrk_efab8e758b97459bab2659d8fdcf8627',
           name: 'My MCP Client',
         },
         {
           blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
-          key: MY_MCP_CLIENT_BASE_ENVIRONMENT_ID,
+          key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
         {
           blob: '2f6a337993dcbcc164187f74e4278ca22c0ea065',
-          key: MY_MCP_CLIENT_REQUEST_ID,
+          key: 'mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0',
           name: 'MCP request',
         },
       ],
@@ -224,17 +210,17 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: 'a8252b458e8a1b5f3c214e5e7f944887a142ae72',
-          key: MY_MCP_CLIENT_WORKSPACE_ID,
+          key: 'wrk_efab8e758b97459bab2659d8fdcf8627',
           name: 'My MCP Client',
         },
         {
           blob: 'fed20333ca44d6d4aae729f210ce371ed31392a3',
-          key: MY_MCP_CLIENT_BASE_ENVIRONMENT_ID,
+          key: 'env_0c042933878b85facb6c4e673b0166b256f37ad0',
           name: 'Base Environment',
         },
         {
           blob: '379b74a13b742b573c16dda3ed38abde8cfdb0c3',
-          key: MY_MCP_CLIENT_REQUEST_ID,
+          key: 'mcp-req_18ee6d8bec7645ada7c4ac48d416bdb0',
           name: 'MCP request',
         },
       ],
@@ -251,12 +237,12 @@ const projectSnapshots: Record<string, any[]> = {
       state: [
         {
           blob: '75bdac19931bd37e2853464f7a26ecbb79bc4fca',
-          key: DESIGN_PROJECT_WORKSPACE_ID,
+          key: 'wrk_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b4',
           name: 'Design Project',
         },
         {
           blob: '52aa4f92c8e47e955f0c3fcc2fd38d41710450ad',
-          key: DESIGN_PROJECT_SPEC_ID,
+          key: 'spc_f3e4a2b1c9d0e5f6a7b8c9d0e1f2a3b5',
           name: 'Design Project.yaml',
         },
       ],
@@ -273,12 +259,12 @@ const environmentProjectNewCommitSnapshot = [
     state: [
       {
         blob: '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e',
-        key: MY_ENVIRONMENT_WORKSPACE_ID,
+        key: 'wrk_2068a8dfd6914c369073686bb92737ae',
         name: 'My Environment',
       },
       {
         blob: '7024cbb27bb92821c17c0b27de612a0b1a8c082c',
-        key: MY_ENVIRONMENT_BASE_ENVIRONMENT_ID,
+        key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
     ],
@@ -292,12 +278,12 @@ const environmentProjectNewCommitSnapshot = [
     state: [
       {
         blob: '2588c9eeaf8c4129c5b33bbb9f77de04e8598c5e',
-        key: MY_ENVIRONMENT_WORKSPACE_ID,
+        key: 'wrk_2068a8dfd6914c369073686bb92737ae',
         name: 'My Environment',
       },
       {
         blob: '8928646f281ac14f6410aa29fa60b7060f6529d0',
-        key: MY_ENVIRONMENT_BASE_ENVIRONMENT_ID,
+        key: 'env_2c63ae5788b4ac6a289cfe3776c7b3fa9f1cd9be',
         name: 'Base Environment',
       },
     ],
@@ -448,7 +434,7 @@ export default function setup(app: Application) {
       const fieldNode = selectionSet[0] as FieldNode;
       const operationName = fieldNode.name.value;
 
-      console.log('[GraphQL] %s: %s', operationType, operationName, variables);
+      console.log(`[GraphQL] ${operationType}: ${operationName}`, variables);
 
       // Handle queries
       if (operationType === 'query') {
@@ -553,7 +539,7 @@ export default function setup(app: Application) {
             return res.status(200).json({
               data: {
                 projectKey: {
-                  encSymmetricKey: wrappedProjectCipher,
+                  encSymmetricKey: encryptedSymmetricKey,
                 },
               },
             });

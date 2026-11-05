@@ -9,33 +9,24 @@ import nodePath from 'node:path';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import backend from 'git-http-backend';
 import { createHandler } from 'graphql-http/lib/use/http';
 
 import { certPath } from '../certs.ts';
 import { basicAuthRouter } from './basic-auth.ts';
 import cloudSyncApi from './cloud-sync-api.ts';
-import { startEventStreamServers } from './event-stream.ts';
-import { startGitServer } from './git-http.ts';
 import githubApi from './github-api.ts';
 import gitlabApi from './gitlab-api.ts';
 import { schema } from './graphql.ts';
 import { startGRPCServer } from './grpc.ts';
-import { startHelloGrpcServers } from './grpc-hello.ts';
 import grpcReflectionApi from './grpc-reflection-api.ts';
-import { startHttpEchoServers } from './http-echo.ts';
 import insomniaApi from './insomnia-api.ts';
-import { startMcpServers } from './mcp.ts';
 import { mockApi } from './mock-api.ts';
-import { startMockBinServer } from './mock-bin.ts';
 import { mtlsRouter } from './mtls.ts';
 import { oauthRoutes } from './oauth.ts';
-import { startOAuth2Server } from './oauth2.ts';
-import { startResolvingProxyServer } from './resolving-proxy.ts';
 import simpleCrud from './simple-crud.ts';
 import { startSocketIOServer } from './socket-io.ts';
-import { startWebSocketServer, startWsEchoServers } from './websocket.ts';
+import { startWebSocketServer } from './websocket.ts';
 
 const app = express();
 app.use(cookieParser() as any);
@@ -78,6 +69,13 @@ app.get('/large-json', (_req, res) => {
     value: 'x'.repeat(100),
   }));
   res.status(200).json({ items });
+});
+
+app.get('/builds/check/*', (_req, res) => {
+  res.status(200).send({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@2023.5.6/Insomnia.Core-2023.5.6.zip',
+    name: '2099.1.0',
+  });
 });
 
 async function echoHandler(req: any, res: any) {
@@ -124,8 +122,7 @@ app.get('/cookies', (_req, res) => {
     .status(200)
     .header('content-type', 'text/plain')
     .cookie('insomnia-test-cookie', 'value123')
-    .type('text/plain')
-    .send(String(_req.headers['cookie']));
+    .send(`${_req.headers['cookie']}`);
 });
 
 app.use('/file', express.static(nodePath.join(import.meta.dirname, '../fixtures/files')));
@@ -142,7 +139,7 @@ cloudSyncApi(app);
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
   setTimeout(() => {
-    res.type('text/plain').send(`Delayed by ${delaySec} seconds`);
+    res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
 
@@ -190,8 +187,13 @@ app.post('/send-event', (request, response) => {
   subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
   response.json({ success: true });
 });
-// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing.
-// GET /builds/check/* is answered by mockApi (mock-api.ts), which runs first.
+// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing
+app.get('/builds/check/mac', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.dmg',
+    name: '11.6.1',
+  });
+});
 app.get('/updates/win', (request, response) => {
   return response.json({
     url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.zip',
@@ -206,20 +208,11 @@ app.get('/v1/oauth/azure/config', (_req, res) => {
   });
 });
 
-// Local test server only; the limit is high enough to never affect tests, it just bounds fs-touching routes.
-// (cast: this package resolves its own copy of @types/express, which differs from the one express-rate-limit sees)
-const gitRouteLimiter = rateLimit({
-  windowMs: 60_000,
-  limit: 10_000,
-  standardHeaders: true,
-  legacyHeaders: false,
-}) as unknown as express.RequestHandler;
-
 const GIT_FIXTURE_ROOT = nodePath.join(import.meta.dirname, '../fixtures/git-repo');
 let currentGitTmpDir: string | null = null;
 
 // Create a fresh per-test copy of the git fixture repo
-app.post('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
+app.post('/v1/test-utils/git/setup', (_req, res) => {
   if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
     rmSync(currentGitTmpDir, { recursive: true, force: true });
   }
@@ -229,7 +222,7 @@ app.post('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
 });
 
 // Remove the per-test copy
-app.delete('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
+app.delete('/v1/test-utils/git/setup', (_req, res) => {
   if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
     rmSync(currentGitTmpDir, { recursive: true, force: true });
   }
@@ -239,7 +232,7 @@ app.delete('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
 
 // Git smart HTTP server backed by git-http-backend — accepts real pushes.
 // Falls back to the fixture root if no per-test dir is set up.
-app.use('/git', gitRouteLimiter, (req, res) => {
+app.use('/git', (req, res) => {
   const root = currentGitTmpDir ?? GIT_FIXTURE_ROOT;
   // req.url has the '/git' prefix stripped by Express, e.g. '/git-server.git/info/refs?...'
   const repoPath = nodePath.join(root, req.url.split('?')[0].split('/')[1]);
@@ -289,10 +282,7 @@ startWebSocketServer(
       key: readFileSync(certPath('mtls-server-key.pem')),
       ca: readFileSync(certPath('mtls-ca.pem')),
       requestCert: true,
-      // Intentional: the mTLS test server must accept connections without a valid client cert so that
-      // routes (see mtls.ts) can respond with their own 401; it never talks to anything but local tests.
-      // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
-      rejectUnauthorized: false, // lgtm[js/disabling-certificate-validation]
+      rejectUnauthorized: false,
     },
     app,
   ).listen(httpsPort, '::', () => {
@@ -302,24 +292,6 @@ startWebSocketServer(
     console.log(`Listening at wss://localhost:${httpsPort}`);
   }),
 );
-
-startHttpEchoServers();
-
-startEventStreamServers();
-
-startWsEchoServers();
-
-startMcpServers();
-
-startMockBinServer();
-
-startGitServer();
-
-startHelloGrpcServers();
-
-startOAuth2Server();
-
-startResolvingProxyServer();
 
 startSocketIOServer();
 
