@@ -9,7 +9,7 @@ test("Verify the legacy unit test setting defaults off and hides the Tests tab f
   user,
 }) => {
   const { workspaceFlow } = user.flowManager;
-  const { workspacePage, preferencesPage } = user.pageManager;
+  const { workspacePage, preferences } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -25,9 +25,9 @@ test("Verify the legacy unit test setting defaults off and hides the Tests tab f
     .getByRole("tab", { name: "Tests" })
     ;
 
-  await preferencesPage.open();
-  const enabledByDefault = await preferencesPage.isShowLegacyUnitTestsEnabled();
-  await preferencesPage.close();
+  await preferences.open();
+  const enabledByDefault = await preferences.isShowLegacyUnitTestsEnabled();
+  await preferences.close();
 
   expect(enabledByDefault).toBe(false);
   await expect(testsTabVisibleBeforeEnabling).toBeHidden();
