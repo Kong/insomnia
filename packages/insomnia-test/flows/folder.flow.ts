@@ -1,11 +1,11 @@
+import type { OAuth2Tokens } from "@package/components/auth-tab.component";
+import type { RequestScripts } from "@package/components/script-tab.component";
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { step } from "@package/misc/step";
 import type { Collection } from "@package/models/collection";
 import { Folder } from "@package/models/folder";
-import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import type { FolderPage } from "@package/pages/folder.page";
-import type { RequestScripts } from "@package/components/script-tab.component";
 
 import { BaseFlow } from "./base.flow";
 

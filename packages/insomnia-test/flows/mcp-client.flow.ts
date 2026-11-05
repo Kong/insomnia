@@ -1,3 +1,4 @@
+import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import { type McpCapabilityType, McpListAction } from "@package/enums/mcp-capability";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { FlowContext } from "@package/misc/flow-context";
@@ -5,7 +6,6 @@ import { step } from "@package/misc/step";
 import { McpClient } from "@package/models/mcp-client";
 import type { Project } from "@package/models/project";
 import type { ResponseView } from "@package/models/response";
-import type { OAuth2Tokens } from "@package/components/auth-tab.component";
 import type { McpCapabilityError } from "@package/pages/mcp-client.page";
 import type { PageManager } from "@package/pages/page-manager";
 import { expect } from "@playwright/test";
