@@ -26,7 +26,7 @@ export const ServerDataCacheProvider = ({ children }: PropsWithChildren) => {
       {/*
         Server-data queries bind to this client explicitly via useServerQuery (which resolves
         useServerDataQueryClient internally), so this provider's context is intentionally shadowed
-        by AppDataCacheProvider inside the org subtree and never used for resolution. We keep it
+        by AppDataCacheProvider (nested directly inside this one in root.tsx) and never used for resolution. We keep it
         purely for the client mount()/unmount() lifecycle it runs — Devtools registration, plus
         focus/reconnect refetch and paused-mutation resume for any future finite-staleTime query —
         which is the documented alternative to calling the undocumented client.mount() ourselves.

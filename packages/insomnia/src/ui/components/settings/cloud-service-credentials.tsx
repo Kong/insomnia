@@ -3,8 +3,7 @@ import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
-import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useCloudCredentials, useDeleteCloudCredential } from '~/ui/hooks/data/use-cloud-credentials';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
@@ -52,7 +51,7 @@ const buttonClassName =
 
 export const CloudServiceCredentialList = () => {
   const { isOwner, isEnterprisePlan } = usePlanData();
-  const { cloudCredentials } = useRootLoaderData()!;
+  const cloudCredentials = useCloudCredentials();
   const [modalState, setModalState] = useState<{
     show: boolean;
     provider: CloudProviderName;
@@ -60,7 +59,7 @@ export const CloudServiceCredentialList = () => {
     authUrl?: string;
   }>();
   const [isVaultPluginInstalled, setIsVaultPluginInstalled] = useState(false);
-  const deleteCredentialFetcher = useDeleteCloudCredentialActionFetcher();
+  const { mutate: deleteCredential } = useDeleteCloudCredential();
   useEffect(() => {
     const checkVaultPlugin = async () => {
       const plugins = await pluginsBridge.getBundlePlugins();
@@ -76,9 +75,7 @@ export const CloudServiceCredentialList = () => {
       message: `Are you sure to delete ${name}?`,
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          deleteCredentialFetcher.submit({
-            cloudCredentialId: id,
-          });
+          deleteCredential(id);
         }
       },
     });

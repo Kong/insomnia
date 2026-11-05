@@ -3,7 +3,7 @@ import { models } from 'insomnia-data';
 import React from 'react';
 
 import type { NunjucksParsedTag } from '~/common/templating/types';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useCloudCredentials } from '~/ui/hooks/data/use-cloud-credentials';
 
 import { HelpTooltip } from '../../help-tooltip';
 import {
@@ -26,7 +26,7 @@ const { HashiCorpCredentialType } = models.cloudCredential;
 const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const { cloudCredentials } = useRootLoaderData()!;
+  const cloudCredentials = useCloudCredentials();
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;
