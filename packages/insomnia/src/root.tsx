@@ -50,6 +50,7 @@ import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import { useCreateCloudCredential } from '~/ui/hooks/data/use-cloud-credentials';
+import { useUpdateSettings } from '~/ui/hooks/data/use-settings';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
 import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
@@ -375,6 +376,7 @@ const RootContent = () => {
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
   const { mutate: createCloudCredentials } = useCreateCloudCredential();
+  const { mutateAsync: updateSettings } = useUpdateSettings();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
@@ -588,10 +590,7 @@ const RootContent = () => {
             if (isYes) {
               const mainJsContent = `module.exports.themes = [${JSON.stringify(parsedTheme, null, 2)}];`;
               await createPlugin(`theme-${parsedTheme.name}`, mainJsContent);
-              const settings = await services.settings.get();
-              await services.settings.update(settings, {
-                theme: parsedTheme.name,
-              });
+              await updateSettings({ theme: parsedTheme.name });
               await plugins.reloadPlugins();
               await setTheme(parsedTheme.name);
               showModal(SettingsModal, { tab: 'themes' });
@@ -738,6 +737,7 @@ const RootContent = () => {
     organizationId,
     projectId,
     redirectToDefaultBrowserSubmit,
+    updateSettings,
   ]);
 
   // Surface failures from adopting an OS-opened folder (e.g. unreadable folder or

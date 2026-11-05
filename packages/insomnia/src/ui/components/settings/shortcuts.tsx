@@ -9,7 +9,7 @@ import {
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { generateId } from '../../../common/misc';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -28,7 +28,7 @@ export const isKeyCombinationInRegistry = (
   );
 
 export const Shortcuts: FC = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { hotKeyRegistry } = settings;
   const patchSettings = useSettingsPatcher();
 

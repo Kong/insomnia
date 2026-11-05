@@ -4,8 +4,8 @@ import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { ProjectCreateForm } from '../project/project-create-form';
 
@@ -15,7 +15,7 @@ interface Props {
 
 export const NoProjectView: FC<Props> = ({ storageRules }) => {
   const { organizationId } = useParams() as { organizationId: string };
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { credentials, providers } = useGitCredentials();
 
   // Konnect projects come exclusively from sync, so there is nothing for the user to create here.

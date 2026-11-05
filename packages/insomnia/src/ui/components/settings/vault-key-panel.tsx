@@ -12,6 +12,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { BooleanSetting } from './boolean-setting';
@@ -73,7 +74,8 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 };
 
 export const VaultKeyPanel = () => {
-  const { userSession, settings } = useRootLoaderData()!;
+  const { userSession } = useRootLoaderData()!;
+  const settings = useSettings();
   const { saveVaultKeyLocally } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
