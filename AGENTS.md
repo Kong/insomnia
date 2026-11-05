@@ -85,10 +85,18 @@ Organization
 
 ## Key Patterns
 
-- **Route-Based Actions:** Mutations use React Router's `clientAction` (`src/routes/`).
-  - **CRITICAL:** `clientAction` blocks navigation. For long-running UI operations, use plain async functions instead.
+- **Data Queries & Mutations (migrating to TanStack Query):** Data hooks are grouped per domain in `src/ui/hooks/data/use-<domain>.ts`. Each file holds the domain's query-key factory, its query hook(s) and its mutation hooks (e.g. `useCloudCredentials`, `useCreateCloudCredential`). Shared helpers live next to `use-query.ts` (`useDBQuery` / `useServerQuery`) and `use-mutations.ts` (`useDBMutation` / `useInvalidatingDBMutation` / `useServerMutation`). Never call bare `useQuery` / `useMutation`: the app has two query clients (local DB, server) and the wrappers bind the correct one.
+  - Do not add new `clientAction`s for data mutations. Existing `clientAction`s stay until migrated.
+  - Local DB data covered by `updateAppDataOnDbChanges` (`src/common/app-data.ts`) is refreshed from `db.changes` automatically, so don't invalidate it manually. For DB data it does not cover, use `useInvalidatingDBMutation` with `invalidates`, and set `staleTime: 0` on the query if the data can also change outside these hooks (the DB client defaults to `staleTime: Infinity`, and `initialData` would then suppress the first fetch, so avoid it). Server mutations: invalidate via keys from the matching key factory.
+  - Bulk DB writes inside `mutationFn` must still be buffered (see Database Buffering).
+  - Unlike `clientAction`, mutations do not block navigation, so use them for long-running operations.
+  - If the feature leans heavily on router loader data, review whether to keep `loader`/`clientAction` instead: TanStack mutations do not trigger React Router's automatic loader revalidation.
+  - **Migration checklist (when replacing a `clientAction`):** everything that read the affected data relied on revalidation, so find every consumer before deleting the route. That includes `useRootLoaderData`/`useLoaderData` reads, and also effects, memos or state snapshots keyed on loader-derived values (e.g. a `useCallback` depending on `props.workspace` that reloads data when the loader refreshes). Move those readers to the query hook, drop the field from the loader and its `*LoaderData` type, and update tests that mock the loader hook.
+  - React to completion with per-call `mutate(vars, { onSuccess })` / `mutateAsync`, not a `useEffect` watching `mutation.data`.
+  - **Provider scope:** `ServerDataCacheProvider` > `AppDataCacheProvider` wrap everything in `root.tsx`, including `<Modals />`, so DB/server hooks work anywhere there. They do not work in `Layout`, `ErrorBoundary` or `HydrateFallback`, nor in the component that renders the providers: `Root` is a thin wrapper around `RootContent` for that reason, so don't inline the providers back into `RootContent`'s JSX.
+- **Route-Based Actions (legacy):** Existing mutations use React Router's `clientAction` (`src/routes/`). `clientAction` blocks navigation.
 - **Database Buffering:** Always buffer bulk writes (`database.bufferChangesIndefinitely()`, then `flushChanges()`). Unbuffered writes fire UI revalidation per operation, causing severe lag.
-- **State Management:** Use Router loaders/actions and NeDB for persistent state. Use React `useState`/context for ephemeral UI state (No Redux/Zustand).
+- **State Management:** Router loaders and NeDB for persistent state, TanStack Query for the renderer data cache and mutations. Use React `useState`/context for ephemeral UI state (No Redux/Zustand).
 - **Electron IPC:** For main↔renderer communication, define handlers in `src/main/ipc/`, expose in `src/main/preload.ts`, and update `window.main` in `src/global.d.ts`.
 - **Templates:** Nunjucks runs in a Web Worker (`src/templating/`). Use `{{ _.variable_name }}`.
 - **Models:** Follow CRUD via `models.<type>` (e.g., `create()`, `update()`).
