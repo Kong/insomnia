@@ -77,8 +77,6 @@ const pageRegistry = {
   // Global dialogs reachable from any page, so components rather than pages.
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
   preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
     new PreferencesCredentialsComponent(page),
   preferencesPlugins: (page: Page): PreferencesPluginsComponent =>
