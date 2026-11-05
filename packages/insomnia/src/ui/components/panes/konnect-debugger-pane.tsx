@@ -1,24 +1,30 @@
 import classnames from 'classnames';
-import type { Project } from 'insomnia-data';
+import type { KonnectProject, WorkspaceChildrenForScope } from 'insomnia-data';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 
 import type { DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
 import {
   buildSpanTree,
-  findTraceIdsByRouteId,
   flattenVisible,
-  getRouteIdFromKonnectRouteKey,
+  getRouteIdsFromTraceDetail,
   getTracePath,
   type SpanNode,
   summarizeTrace,
   type TraceSummaryBreakdown,
 } from '~/konnect/debug-trace-helper';
+import {
+  findRouteRequestForTrace,
+  type KonnectRouteRequest,
+  listKonnectRouteRequests,
+} from '~/konnect/route-request-lookup';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { StatusTag } from '~/ui/components/tags/status-tag';
 import { TimeTag } from '~/ui/components/tags/time-tag';
+import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useKonnectDebuggerSession, useKonnectDebuggerSessionTrace } from '~/ui/hooks/use-konnect-debugger-session';
 import { useOrganizationData } from '~/ui/hooks/use-organization-data';
+import { useMultipleWorkspacesData } from '~/ui/hooks/use-workspace-data';
 import { useKonnectSyncEnabled } from '~/ui/organization-utils';
 import { METHOD_PILL_CLASSES } from '~/ui/utils/method-colors';
 
@@ -81,24 +87,22 @@ const formatStartedAt = (startedAt: string | null) => {
   return `${month} ${ordinal(date.getDate())}, ${date.getFullYear()}, ${time} (${ago})`;
 };
 
-interface Props {
-  project: Project;
-  request?: { method: string; url: string };
-  konnectRouteKey?: string | null;
-}
-
-export const KonnectDebuggerPane = ({ project, konnectRouteKey }: Props) => {
-  const organizationId = project.parentId;
-  const { projects } = useOrganizationData(organizationId);
-  const currentProject = projects.find(p => p._id === project._id) || project;
-  const { _id: projectId, konnectRegion, konnectControlPlaneId, konnectDebugSessionId } = currentProject;
+export const KonnectDebuggerPane = ({ project: currentProject }: { project: KonnectProject }) => {
+  const {
+    _id: projectId,
+    konnectRegion,
+    konnectControlPlaneId,
+    konnectDebugSessionId,
+    parentId: organizationId,
+  } = currentProject;
+  const { workspaces } = useOrganizationData(organizationId);
 
   const [durationSecs, setDurationSecs] = useState(15);
   const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
   const konnectDebuggerSession = useKonnectDebuggerSession({
     projectId,
     konnectRegion: konnectRegion!,
-    konnectControlPlaneId: konnectControlPlaneId!,
+    konnectControlPlaneId: konnectControlPlaneId || '',
     konnectDebugSessionId: konnectDebugSessionId || '',
   });
   const {
@@ -127,15 +131,55 @@ export const KonnectDebuggerPane = ({ project, konnectRouteKey }: Props) => {
     selectedTraceId && traces.some(trace => trace.traceId === selectedTraceId) ? selectedTraceId : null;
   const selectedTrace = traces.find(trace => trace.traceId === existingSelectedTraceId) ?? null;
 
-  // A trace matches when one of its spans went through the route this request was synced from.
-  const routeId = getRouteIdFromKonnectRouteKey(konnectRouteKey);
-  const matching = useMemo(() => findTraceIdsByRouteId(traceDetails, routeId), [traceDetails, routeId]);
+  const projectCollections = useMemo(
+    () => workspaces.filter(w => w.parentId === projectId && (w.scope === 'collection' || w.scope === 'design')),
+    [workspaces, projectId],
+  );
+  const projectWorkspaceIds = useMemo(() => projectCollections.map(w => w._id), [projectCollections]);
+  const { dataByWorkspaceId: collectionByWorkspaceIds } = useMultipleWorkspacesData(projectWorkspaceIds);
+  const routeRequests = useMemo(
+    () =>
+      listKonnectRouteRequests(
+        projectCollections,
+        collectionByWorkspaceIds as Map<string, WorkspaceChildrenForScope<'collection' | 'design'>>,
+      ),
+    [projectCollections, collectionByWorkspaceIds],
+  );
+  const routeRequestByTraceId = useMemo(() => {
+    const result = new Map<string, KonnectRouteRequest>();
+    for (const trace of traces) {
+      const detail = traceDetails.get(trace.traceId);
+      const routeRequest =
+        detail && findRouteRequestForTrace(routeRequests, getRouteIdsFromTraceDetail(detail), trace.method);
+      if (routeRequest) {
+        result.set(trace.traceId, routeRequest);
+      }
+    }
+    return result;
+  }, [traces, traceDetails, routeRequests]);
+  const tabNavigate = useTabNavigate();
+  const openRequest = ({ request, workspaceId, workspaceName }: KonnectRouteRequest) =>
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: currentProject,
+        workspace: { _id: workspaceId, name: workspaceName },
+        item: request,
+      },
+      { withTab: true, shouldNavigate: true },
+    );
 
   const hasSession = !!debugSession;
   const showEmptyState = !hasSession && !isStartingOrStopping;
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden text-sm">
+      <MetadataPane
+        projectName={currentProject.name}
+        controlPlaneId={typeof konnectControlPlaneId === 'string' ? konnectControlPlaneId : null}
+        region={typeof konnectRegion === 'string' ? konnectRegion : null}
+        debugSessionId={debuggerSessionId}
+      />
       <StatusBanners debug={konnectDebuggerSession} />
       <div className="flex shrink-0 flex-row flex-wrap items-center gap-3 border-b border-solid border-(--hl-md) px-3 py-2">
         {!isCapturing && (
@@ -220,7 +264,8 @@ export const KonnectDebuggerPane = ({ project, konnectRouteKey }: Props) => {
         <div className="flex min-h-0 flex-1">
           <TraceList
             traces={traces}
-            matching={matching}
+            routeRequestByTraceId={routeRequestByTraceId}
+            onOpenRequest={openRequest}
             selectedId={existingSelectedTraceId}
             onSelect={setSelectedTraceId}
             isActive={isActive}
@@ -350,13 +395,15 @@ const StatusBanners = ({ debug }: { debug: ReturnType<typeof useKonnectDebuggerS
 
 const TraceList = ({
   traces,
-  matching,
+  routeRequestByTraceId,
+  onOpenRequest,
   selectedId,
   onSelect,
   isActive,
 }: {
   traces: DebugTraceSummary[];
-  matching: Set<string>;
+  routeRequestByTraceId: ReadonlyMap<string, KonnectRouteRequest>;
+  onOpenRequest: (routeRequest: KonnectRouteRequest) => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
   isActive: boolean;
@@ -364,12 +411,11 @@ const TraceList = ({
   <div className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-solid border-(--hl-md)">
     <div className="px-3 py-2 text-xs">
       <div className="font-bold tracking-wide text-(--hl) uppercase">Captured ({traces.length})</div>
-      <div className="text-(--hl)">Whole control plane. This request's are highlighted.</div>
-      <div className="text-(--hl)">Results may take a few seconds to appear.</div>
+      <div className="text-(--hl)">Whole control plane and results may take a few seconds to appear.</div>
     </div>
     {traces.length === 0 && isActive && <div className="px-3 py-2 text-xs text-(--hl)">Listening for traffic…</div>}
     {traces.map(trace => {
-      const isMatch = matching.has(trace.traceId);
+      const routeRequest = routeRequestByTraceId.get(trace.traceId);
       const isSelected = trace.traceId === selectedId;
       const upperTraceMethod = (trace.method || '').toUpperCase();
       return (
@@ -378,8 +424,7 @@ const TraceList = ({
           className={classnames(
             'group relative flex border-l-2 border-solid ring-1 ring-transparent transition-colors focus-within:ring-(--hl-md) focus-within:ring-inset',
             isSelected ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)',
-            isMatch ? 'border-l-(--color-surprise)' : 'border-l-transparent',
-            !isMatch && 'text-(--hl)',
+            'border-l-transparent',
           )}
         >
           <Button
@@ -398,11 +443,17 @@ const TraceList = ({
               </span>
               <div className="min-w-0 break-all">{getTracePath(trace) ?? ''}</div>
             </div>
-            <div className="flex w-full items-center justify-between text-xs text-(--hl)">
-              <span>{formatMs(trace.durationMs)}</span>
-              {isMatch && <span className="text-(--color-surprise)">this request</span>}
-            </div>
+            <span className="text-xs text-(--hl)">{formatMs(trace.durationMs)}</span>
           </Button>
+          {routeRequest && (
+            <Button
+              onPress={() => onOpenRequest(routeRequest)}
+              aria-label={`Open request ${routeRequest.request.name}`}
+              className="absolute right-2.5 bottom-2.5 flex max-w-[45%] items-center gap-1 truncate text-xs text-(--color-surprise) underline ring-1 ring-transparent outline-hidden focus:ring-(--hl-md)"
+            >
+              <span className="truncate">{routeRequest.request.name}</span>
+            </Button>
+          )}
           <CopyButton
             size="small"
             content={trace.traceId}
@@ -417,6 +468,49 @@ const TraceList = ({
     })}
   </div>
 );
+
+const MetadataPane = ({
+  projectName,
+  controlPlaneId,
+  region,
+  debugSessionId,
+}: {
+  projectName: string;
+  controlPlaneId: string | null;
+  region: string | null;
+  debugSessionId: string | null;
+}) => {
+  const items: { label: string; value?: string | null; allowCopy?: boolean; copyValue?: string | null }[] = [
+    { label: 'Control Plane', value: projectName, copyValue: controlPlaneId, allowCopy: true },
+    { label: 'Region', value: region?.toLocaleUpperCase() },
+    { label: 'Session ID', value: debugSessionId, allowCopy: true },
+  ].filter(item => !!item.value);
+
+  return (
+    <dl
+      aria-label="Debug session metadata"
+      className="m-0 flex shrink-0 flex-row flex-wrap gap-x-6 gap-y-1 border-b border-solid border-(--hl-md) px-3 py-2 text-xs"
+    >
+      {items.map(({ label, value, allowCopy = false, copyValue }) => (
+        <div key={label} className="flex items-center gap-2">
+          <dt className="text-(--hl)">{label}</dt>
+          <dd className="m-0 font-mono">{value}</dd>
+          {allowCopy && (
+            <CopyButton
+              size="small"
+              content={copyValue ?? value!}
+              title={`Copy ${label.toLowerCase()}`}
+              confirmMessage=""
+              className="h-5! border-0! bg-transparent! px-1.5!"
+            >
+              <i className="fa fa-copy" />
+            </CopyButton>
+          )}
+        </div>
+      ))}
+    </dl>
+  );
+};
 
 const summaryParts = (summary: TraceSummaryBreakdown) =>
   [

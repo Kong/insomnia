@@ -227,16 +227,14 @@ export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | u
   return routeId;
 }
 
-/** Ids of the traces having a span served by the Kong route `routeId`. */
-export function findTraceIdsByRouteId(details: Map<string, DebugTraceDetail>, routeId: string | null): Set<string> {
-  const matching = new Set<string>();
-  if (!routeId) {
-    return matching;
-  }
-  for (const [traceId, detail] of details) {
-    if (detail.spans.some(span => span.attributes[ROUTE_ID_ATTRIBUTE] === routeId)) {
-      matching.add(traceId);
+// Ids of the Kong routes that served the spans of a trace.
+export function getRouteIdsFromTraceDetail(detail: DebugTraceDetail): Set<string> {
+  const routeIds = new Set<string>();
+  for (const span of detail.spans) {
+    const routeId = span.attributes[ROUTE_ID_ATTRIBUTE];
+    if (typeof routeId === 'string') {
+      routeIds.add(routeId);
     }
   }
-  return matching;
+  return routeIds;
 }
