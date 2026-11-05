@@ -170,14 +170,18 @@ The key file is protected with `safeStorage.encryptStringAsync()` / `decryptStri
 
 Two new methods are added to `ElectronStorage`. Existing methods and their callers are unchanged:
 
-- **`setItemDurable(key, value): Promise<void>`:** writes a temp file, fsyncs it, renames it over the target, then fsyncs the directory. Rejects on any failure.
-- **`getItemStrict(key)`:** returns `null` only when the file does not exist. Throws when the file exists but cannot be read or parsed. Never writes.
+- **`setItemDurable(key, value): Promise<void>`:** writes a temp file (mode `0600`) next to the target, fsyncs it, renames it over the target, then fsyncs the directory. Rejects on any failure, and a failure never leaves the temp file behind. The value is stored as JSON, like `setItem` does. A pending buffered `setItem` of the same key is dropped, so it cannot land after the durable write. **On Windows the directory fsync is skipped**, because a directory cannot be opened for it there. **On Windows the rename is retried** (5 attempts, 20 ms doubling) when it fails with `EPERM`, `EBUSY` or `EACCES`, which a virus scanner or indexer holding the target open causes; other errors and other platforms are not retried.
+- **`getItemStrict(key)`:** returns `null` only when the file does not exist. Throws when the file exists but cannot be read or parsed, or when it holds `null`. Never writes.
 
 The key's lifecycle uses only these two methods. "Generate a new key" is reachable only through `getItemStrict` returning `null`.
 
+**The renderer cannot reach the key file.** The IPC handlers that the renderer uses for storage (`electronStorage.getItem` / `setItem` and `secretStorage.getSecret` / `setSecret` / `deleteSecret`) take any key name, and they work on the same directory as the key file. A compromised renderer could otherwise delete or overwrite `fieldEncryptionKey`: the next launch would create a new key, which orphans every encrypted field on disk, or it could plant a key file of its own choosing. These five handlers therefore reject the reserved key name (`assertStorageKeyAllowedForRenderer`, `src/main/ipc/reserved-storage-keys.ts`), including the names a file system treats as the same file: another case, trailing dots and spaces and a Windows alternate data stream (`name:stream`), compared after Unicode normalization, and any other name that is the same file on disk (a Windows short name, a hard link; `ElectronStorage.isSameFile`, which compares device and inode, treats inode 0 as "cannot tell" because some file systems report it for every file, and throws when a file cannot be inspected, so that the guard rejects the call instead of letting it through). The main process itself is not affected, since it calls `ElectronStorage` and the secret storage functions directly. Not covered: the renderer's other file access, which has its own restrictions (e.g. `secure-read-file.ts` only allows reads under the `responses` and `version-control` folders and the folders the user chose); it was not audited for writes.
+
 **First launch when protection fails:** If no key file exists and `encryptStringAsync` fails after retries, the key is **not** persisted in plaintext. Encryption is not enabled for that session (data stays in its current plaintext state and migration is deferred), and key generation is retried on the next launch.
 
-The wrapper is implemented in the main process (e.g., `src/main/local-encryption-key.ts`), following the reference `decryptWithAutoRotate` / `encryptWithRetry` / `withExponentialBackoff` implementation in the research page's appendix. The existing Vault Key helpers in `secret-storage.ts` are out of scope and keep using the sync API.
+**Stored format:** the key file holds `{ "version": 1, "ciphertext": "<base64>" }`, where the ciphertext is the safeStorage-encrypted JWK (`{"kty":"oct","k":...}`). The version lets a later format be told apart; a file with an unknown version or shape is treated like any other unusable key file (degraded mode, never overwritten). A decrypted key must be a symmetric 256-bit key, or it is unusable as well.
+
+The wrapper is implemented in the main process (`src/main/local-encryption-key.ts`, loaded from `database.main.ts` before `init()`), following the reference `decryptWithAutoRotate` / `encryptWithRetry` / `withExponentialBackoff` implementation in the research page's appendix. The existing Vault Key helpers in `secret-storage.ts` are out of scope and keep using the sync API.
 
 ### 4.3 NeDB Serialization Hooks
 
@@ -425,7 +429,7 @@ The key must be durably persisted and verified **before** any datastore is writt
 4. Read it back with `getItemStrict`, decrypt it with `decryptStringAsync`, and compare it with the in-memory key.
 5. Only then initialize the database with hooks.
 
-If any of steps 1–4 fails, the "first launch when protection fails" path in 4.2.1 applies: encryption is not enabled for this session, and key creation is retried on the next launch.
+If any of steps 1–4 fails, the "first launch when protection fails" path in 4.2.1 applies: encryption is not enabled for this session, and key creation is retried on the next launch. For that to hold when step 4 (the read-back) fails, the key file that step 3 just wrote is removed: nothing has been encrypted with this key yet, so removing it loses nothing, whereas leaving it would make the next launch find an unverified key file and never create a new one. The file is removed only if it still holds exactly what this launch wrote: if another process replaced it in the meantime, that is its key and it may already be encrypting data with it, so it is left alone (as it is when the file can no longer be read to check). This is the only case in which the key file is deleted; an existing key file that was not written by the current launch is never deleted.
 
 ### 6.4 Why Interruption Is Safe
 
