@@ -89,7 +89,7 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
   }
   if (request.url === '/basic-auth') {
     // login with user:password
-    if (request.headers.authorization !== 'Basic dXNlcjpwYXNzd29yZA==') {
+    if (request.headers.authorization !== `Basic ${Buffer.from('user:password').toString('base64')}`) {
       return401withBody(socket);
       return;
     }
