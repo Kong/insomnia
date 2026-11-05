@@ -7,7 +7,7 @@ import https from 'node:https';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
-import * as z from 'zod/v4';
+import * as z from 'zod/v3';
 
 import { certPath } from './certs.ts';
 
@@ -24,6 +24,7 @@ const CUSTOM_CA_HTTPS_OPTIONS = {
 function getServer() {
   const server = new McpServer({ name: 'deepwiki-mock', version: '1.0.0' });
 
+  // @ts-expect-error TS2589 — the hoisted zod 4 types the SDK resolves vs this package's zod 3 (aligned with the monorepo) make registerTool's generics too deep to instantiate; runtime is unaffected
   server.registerTool(
     'read_wiki_structure',
     {

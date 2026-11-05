@@ -24,17 +24,17 @@
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/reflection": "^1.0.4",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@playwright/test": "1.63.0",
-    "@types/node": "^26.0.1",
+    "@types/node": "^24.2.1",
     "electron": "^43.2.0",
-    "express": "^5.2.1",
+    "express": "^4.22.3",
     "git-http-backend": "^1.1.2",
-    "graphql": "^17.0.2",
+    "graphql": "^16.10.0",
     "monocart-coverage-reports": "^2.13.0",
     "node-forge": "^1.4.0",
     "socket.io": "^4.8.3",
     "ws": "^8.21.1",
-    "zod": "^4.4.3"
+    "zod": "^3.25.75"
   }
 }
