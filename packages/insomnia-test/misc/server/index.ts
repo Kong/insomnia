@@ -17,7 +17,6 @@ import { certPath } from '../certs.ts';
 import { basicAuthRouter } from './basic-auth.ts';
 import cloudSyncApi from './cloud-sync-api.ts';
 import { startEventStreamServers } from './event-stream.ts';
-import { startGitServer } from './git-http.ts';
 import githubApi from './github-api.ts';
 import gitlabApi from './gitlab-api.ts';
 import { schema } from './graphql.ts';
@@ -310,10 +309,6 @@ startEventStreamServers();
 startWsEchoServers();
 
 startMcpServers();
-
-startMockBinServer();
-
-startGitServer();
 
 startHelloGrpcServers();
 
