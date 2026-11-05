@@ -32,6 +32,19 @@ export function projectRoutableFSClient(defaultFS: git.PromiseFsClient, otherFS:
   let writeFileMap: WriteFileMap | null = null;
 
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
+    // isomorphic-git calls symlink(target, filepath): the first argument is the stored link text,
+    // not a path. Keep it verbatim and route on the link location instead.
+    if (method === 'symlink') {
+      const [linkLocation, ...rest] = args;
+      const location = path.normalize(linkLocation);
+      for (const prefix of Object.keys(otherFS)) {
+        if (location.indexOf(path.normalize(prefix)) === 0) {
+          return otherFS[prefix].promises.symlink!(filePath, location, ...rest);
+        }
+      }
+      return defaultFS.promises.symlink!(filePath, location, ...rest);
+    }
+
     filePath = path.normalize(filePath);
 
     // 1) Prefix routing: forward into any registered special FS (e.g. '.git')

@@ -18,6 +18,7 @@ import { models, services } from 'insomnia-data';
 import type { BackendProject, Compare, StatusCandidate } from 'insomnia-vcs';
 
 import { database, type Operation } from '~/common/database';
+import { assertSafeSyncedDoc } from '~/common/synced-doc-validation';
 import { invariant } from '~/common/utils/invariant';
 import type { SyncVCSLike } from '~/sync/vcs/initialize-backend-project';
 
@@ -72,6 +73,9 @@ export function syncVCSLikeForWorkspace(workspaceId: string): SyncVCSLike {
  * in a pulled delta to the local project before the delta is applied to the database.
  */
 export function reparentSyncDelta(delta: Operation, projectId: string): Operation {
+  // Refuse the whole delta before any of it can be applied
+  delta.upsert?.forEach(assertSafeSyncedDoc);
+  delta.remove?.forEach(assertSafeSyncedDoc);
   delta.upsert?.forEach(doc => {
     if (doc.type === 'ProjectLintRuleset') {
       doc.parentId = projectId;

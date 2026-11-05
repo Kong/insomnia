@@ -16,6 +16,13 @@ import {
 import * as crypt from './crypt';
 import { assertSession, runGraphQL } from './session';
 import { getStore } from './store/current-store';
+import {
+  assertValidBackendProjectId,
+  assertValidBlobId,
+  assertValidSnapshotId,
+  blobKey,
+  isValidSnapshotId,
+} from './store-keys';
 import type {
   BackendProject,
   Branch,
@@ -120,6 +127,7 @@ export class VCS {
   }
 
   async setBackendProject(backendProject: BackendProject) {
+    assertValidBackendProjectId(backendProject.id);
     this._backendProject = backendProject;
     console.debug(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
@@ -311,7 +319,15 @@ export class VCS {
     if (branchName.includes('..')) {
       return 'Branch names must not contain consecutive periods (..)';
     }
+    // The atomic-write temp file is `<name>.json.<uuid>.tmp` (+46 bytes) and must fit in NAME_MAX (255)
+    if (branchName.length > MAX_BRANCH_NAME_LENGTH) {
+      return `Branch names must be at most ${MAX_BRANCH_NAME_LENGTH} characters long`;
+    }
     const parts = branchName.split('/');
+    // Windows resolves these (with or without an extension) to legacy DOS devices
+    if (parts.some(part => /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(part.split('.')[0]))) {
+      return 'Branch names must not contain a Windows reserved device name (e.g. con, nul, aux, prn, com1, lpt1)';
+    }
     if (parts.length > 1) {
       for (const part of parts) {
         if (part.startsWith('.')) {
@@ -406,8 +422,8 @@ export class VCS {
     console.log(`[sync] Switched to branch ${branchName}`);
     // Remove all dirty items from the delta so we keep them around
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
-      remove: await this._getBlobs(remove.map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert),
+      remove: await this._getDeltaDocs(remove),
     };
   }
 
@@ -486,7 +502,7 @@ export class VCS {
     console.log(`[sync] Rolled back to ${snapshotId}`);
     const upsert = [...delta.update, ...delta.add];
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert),
       remove,
     };
   }
@@ -588,7 +604,12 @@ export class VCS {
   }) {
     await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
-    const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
+    // Fixed temp name: `<localBranch.name>.hidden` can exceed the length cap or hit a reserved device name that the local branch itself passes
+    // customFetch overwrites and pull removes the temp branch, so it must not be a user's branch
+    if (localBranch.name === PULL_TMP_BRANCH_NAME || (await this._getBranch(PULL_TMP_BRANCH_NAME)) !== null) {
+      throw new Error(`Cannot pull while a branch named "${PULL_TMP_BRANCH_NAME}" exists`);
+    }
+    const tmpBranchForRemote = await this.customFetch(PULL_TMP_BRANCH_NAME, localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
     const delta = (await this._merge(
@@ -680,6 +701,13 @@ export class VCS {
   }
 
   async customFetch(localBranchName: string, remoteBranchName: string) {
+    // Validate before storing anything so a rejected name can't leave snapshots stored without their branch
+    const localNameError = VCS.validateBranchName(localBranchName);
+
+    if (localNameError) {
+      throw new Error(localNameError);
+    }
+
     const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
 
     if (!remoteBranch) {
@@ -790,8 +818,8 @@ export class VCS {
 
       const conflictResolutions = await this.handleAnyConflicts(
         conflictsWithContent,
-        otherBranchName.includes('.hidden')
-          ? { ours: `${trunkBranchName} local`, theirs: `${otherBranchName.replace('.hidden', '')} remote` }
+        otherBranchName === PULL_TMP_BRANCH_NAME
+          ? { ours: `${trunkBranchName} local`, theirs: `${trunkBranchName} remote` }
           : { ours: trunkBranchName, theirs: otherBranchName },
         '',
       );
@@ -814,8 +842,8 @@ export class VCS {
     // Remove all dirty items from the delta so we keep them around
     const dirtyMap = generateCandidateMap(dirty);
     return {
-      upsert: await this._getBlobs(upsert.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
-      remove: await this._getBlobs(remove.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
+      upsert: await this._getDeltaDocs(upsert.filter(e => !dirtyMap[e.key])),
+      remove: await this._getDeltaDocs(remove.filter(e => !dirtyMap[e.key])),
     };
   }
 
@@ -1013,6 +1041,7 @@ export class VCS {
       );
 
       for (const blob of blobs) {
+        assertValidBlobId(blob.id);
         const encryptedResult = JSON.parse(blob.content);
         result[blob.id] = crypt.decryptAESToBuffer(symmetricKey, encryptedResult);
       }
@@ -1298,7 +1327,16 @@ export class VCS {
   }
 
   async _getBranch(name: string): Promise<Branch | null> {
-    return getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encodeBranchName(name)}.json`);
+    const encoded = encodeBranchName(name);
+    const branch: Branch | null = await getStore().getItem(`/projects/${this._backendProjectId()}/branches/${encoded}.json`);
+
+    // `/` is encoded as `~` on disk, so `a~b` would alias the file of `a/b`. Only return a record that
+    // names itself, rather than rejecting by validator, so branches that predate the validator stay usable
+    if (branch === null || branch.name !== name) {
+      return null;
+    }
+
+    return branch;
   }
 
   async _getOrCreateBranch(name: string): Promise<Branch> {
@@ -1322,6 +1360,7 @@ export class VCS {
   }
 
   async _assertSnapshot(id: string) {
+    assertValidSnapshotId(id);
     const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
@@ -1338,6 +1377,11 @@ export class VCS {
   }
 
   async _getSnapshot(id: string) {
+    // Not a valid snapshot id (e.g. the 'n/a' sentinel), so it can't exist in the store
+    if (!isValidSnapshotId(id)) {
+      return null;
+    }
+
     const snapshot: Snapshot | null = await getStore().getItem(
       `/projects/${this._backendProjectId()}/snapshots/${id}.json`,
     );
@@ -1357,10 +1401,13 @@ export class VCS {
   }
 
   async _storeSnapshot(snapshot: Snapshot) {
+    assertValidSnapshotId(snapshot.id);
     return getStore().setItem(`/projects/${this._backendProjectId()}/snapshots/${snapshot.id}.json`, snapshot);
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
+    // Validate every id up front so a bad id can't result in a partial write
+    snapshots.forEach(s => assertValidSnapshotId(s.id));
     const promises: Promise<Snapshot>[] = [];
 
     for (const snapshot of snapshots) {
@@ -1382,13 +1429,23 @@ export class VCS {
 
     branch.modified = new Date();
     // toLowerCase may introduce issues under case sensitive filesystems
-    return getStore().setItem(
-      `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`,
-      branch,
-    );
+    const key = `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name).toLowerCase()}.json`;
+    // `_getBranch` only matches records that name themselves, so never overwrite one belonging to another branch (`a~b` vs `a/b`, `Foo` vs `foo`)
+    const existing: Branch | null = await getStore().getItem(key);
+
+    if (existing !== null && existing.name !== branch.name) {
+      throw new Error(`Branch "${branch.name}" conflicts with existing branch "${existing.name}"`);
+    }
+
+    return getStore().setItem(key, branch);
   }
 
   async _removeBranch(branch: Branch) {
+    // Only an existing record that names itself is removed (see _getBranch), so legacy names can be deleted but `a~b` can't hit `a/b`
+    if ((await this._getBranch(branch.name)) === null) {
+      throw new Error(`Branch does not exist with name ${branch.name}`);
+    }
+
     return getStore().removeItem(
       `/projects/${this._backendProjectId()}/branches/${encodeBranchName(branch.name)}.json`,
     );
@@ -1398,10 +1455,22 @@ export class VCS {
     await getStore().setItem(`/projects/${this._backendProjectId()}/head.json`, head);
   }
 
-  _getBlob(blobId: string) {
-    return getStore().getItem(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-    ) as Promise<BaseModel | null>;
+  async _getBlob(blobId: string) {
+    return getStore().getItem(blobKey(this._backendProjectId(), blobId)) as Promise<BaseModel | null>;
+  }
+
+  /**
+   * Resolves the docs of state entries for a delta. The state key is validated by the sync server but
+   * the blob content is opaque to it, so a doc whose `_id` differs from its key must be refused here.
+   */
+  async _getDeltaDocs(entries: { key: string; blob: string }[]) {
+    const docs = await this._getBlobs(entries.map(e => e.blob));
+    docs.forEach((doc, i) => {
+      if (doc && doc._id !== entries[i].key) {
+        throw new Error(`Refusing synced document: _id "${String(doc._id)}" does not match state key "${entries[i].key}"`);
+      }
+    });
+    return docs;
   }
 
   async _getBlobs(ids: string[]) {
@@ -1415,51 +1484,40 @@ export class VCS {
   }
 
   async _storeBlob(blobId: string, content: Record<string, any> | null) {
-    return getStore().setItem(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-      content,
-    );
+    return getStore().setItem(blobKey(this._backendProjectId(), blobId), content);
   }
 
   async _storeBlobs(blobsToStore: Record<string, string>) {
+    // Validate every id up front so a bad id can't result in a partial write
+    Object.keys(blobsToStore).forEach(assertValidBlobId);
     const promises: Promise<any>[] = [];
 
     for (const blobId of Object.keys(blobsToStore)) {
       const buff = Buffer.from(blobsToStore[blobId], 'utf8');
-      promises.push(
-        getStore().setItem(
-          `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-          buff,
-        ),
-      );
+      promises.push(getStore().setItem(blobKey(this._backendProjectId(), blobId), buff));
     }
 
     await Promise.all(promises);
   }
 
   async _storeBlobsBuffer(decryptedBlobs: Record<string, Buffer>) {
+    // Validate every id up front so a bad id can't result in a partial write
+    Object.keys(decryptedBlobs).forEach(assertValidBlobId);
     const promises: Promise<any>[] = [];
 
     for (const blobId of Object.keys(decryptedBlobs)) {
-      promises.push(
-        getStore().setItemRaw(
-          `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-          decryptedBlobs[blobId],
-        ),
-      );
+      promises.push(getStore().setItemRaw(blobKey(this._backendProjectId(), blobId), decryptedBlobs[blobId]));
     }
 
     await Promise.all(promises);
   }
 
   async _getBlobRaw(blobId: string) {
-    return getStore().getItemRaw(
-      `/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`,
-    );
+    return getStore().getItemRaw(blobKey(this._backendProjectId(), blobId));
   }
 
   async _hasBlob(blobId: string) {
-    return getStore().hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
+    return getStore().hasItem(blobKey(this._backendProjectId(), blobId));
   }
 
   getActiveBackendProject() {
@@ -1479,6 +1537,15 @@ function _generateSnapshotID(parentId: string, backendProjectId: string, state: 
   return hash.digest('hex');
 }
 
+const MAX_BRANCH_NAME_LENGTH = 200;
+
+const PULL_TMP_BRANCH_NAME = 'pull-tmp.hidden';
+
 function encodeBranchName(branchName: string) {
+  // Branch names can come from the sync server; never let one influence the path beyond its own file name
+  if (/[\\\0]/.test(branchName) || branchName.split('/').some(part => part === '..' || part === '.')) {
+    throw new Error('Invalid branch name');
+  }
+
   return branchName.replaceAll('/', '~');
 }
