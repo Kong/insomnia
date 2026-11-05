@@ -10,12 +10,12 @@ export default function setup(app: express.Application) {
       res.status(404).send();
       return;
     }
-    res.status(200).send({ id, ...item });
+    res.status(200).json({ id, ...item });
   });
 
   app.post('/simple-crud', express.json(), (req, res) => {
     const id = crypto.randomUUID();
     db.set(id, req.body);
-    res.status(201).send({ id, ...req.body });
+    res.status(201).json({ id, ...req.body });
   });
 }

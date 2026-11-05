@@ -448,7 +448,7 @@ export default function setup(app: Application) {
       const fieldNode = selectionSet[0] as FieldNode;
       const operationName = fieldNode.name.value;
 
-      console.log(`[GraphQL] ${operationType}: ${operationName}`, variables);
+      console.log('[GraphQL] %s: %s', operationType, operationName, variables);
 
       // Handle queries
       if (operationType === 'query') {
