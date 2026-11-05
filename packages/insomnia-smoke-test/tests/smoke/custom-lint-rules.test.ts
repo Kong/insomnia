@@ -458,6 +458,24 @@ async function openLintCliModal(page: Page) {
   return dialog;
 }
 
+/**
+ * With the lint modal open (and no custom ruleset yet), upload the custom ruleset
+ * and reopen the modal. Returns the path the command passes to `--ruleset`.
+ */
+async function uploadRulesetAndReadLintCliRulesetPath(insomnia: InsomniaApp, page: Page) {
+  await expect.soft(page.getByRole('dialog')).not.toContainText('--ruleset');
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 10_000 });
+
+  await uploadRuleset(insomnia, page);
+
+  const dialog = await openLintCliModal(page);
+  await expect.soft(dialog).toContainText('--ruleset "');
+  const rulesetPath = /--ruleset "([^"]+)"/.exec(await dialog.innerText())?.[1];
+  expect.soft(rulesetPath).toBeTruthy();
+  return rulesetPath ?? '';
+}
+
 test.describe('Lint via CLI modal', () => {
   test('local project: command uses the app data directory as the working directory', async ({
     insomnia,
@@ -467,6 +485,12 @@ test.describe('Lint via CLI modal', () => {
 
     const dialog = await openLintCliModal(insomnia.page);
     await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+
+    // A custom ruleset is only applied by inso when passed explicitly.
+    const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, insomnia.page);
+    expect.soft(rulesetPath.startsWith(path.join(dataPath, 'projects') + path.sep)).toBe(true);
+    expect.soft(rulesetPath.endsWith('.spectral.yaml')).toBe(true);
+    await expect.poll(() => fs.existsSync(rulesetPath), { timeout: 10_000 }).toBe(true);
   });
 
   test.describe('within a cloud-sync project', () => {
@@ -497,6 +521,11 @@ test.describe('Lint via CLI modal', () => {
 
       const dialog = await openLintCliModal(page);
       await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+
+      const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, page);
+      expect.soft(rulesetPath.startsWith(path.join(dataPath, 'projects') + path.sep)).toBe(true);
+      expect.soft(rulesetPath.endsWith('.spectral.yaml')).toBe(true);
+      await expect.poll(() => fs.existsSync(rulesetPath), { timeout: 10_000 }).toBe(true);
     });
   });
 
@@ -524,6 +553,10 @@ test.describe('Lint via CLI modal', () => {
       await expect
         .soft(dialog)
         .toContainText(`inso lint spec -w "${path.join(mirrorDir, 'lint_test_spec.yaml')}" spc_`);
+
+      const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, insomnia.page);
+      expect.soft(rulesetPath).toBe(path.join(mirrorDir, '.spectral.yaml'));
+      await expect.poll(() => fs.existsSync(rulesetPath), { timeout: 10_000 }).toBe(true);
     });
   });
 });

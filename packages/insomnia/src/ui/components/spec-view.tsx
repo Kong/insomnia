@@ -183,6 +183,9 @@ export const SpecView = ({
     [projectId],
   );
 
+  // Mirrors the main process, which prefers INSOMNIA_DATA_PATH over Electron's userData.
+  const appDataDir = window.env.INSOMNIA_DATA_PATH || window.app.getPath('userData');
+
   const rulesetHasRemoteExtendsEntries = useMemo(() => {
     if (!rulesetContent) return false;
 
@@ -911,11 +914,7 @@ export const SpecView = ({
             <span aria-hidden="true" className="text-(--hl) select-none">
               |
             </span>
-            <Button
-              data-testid="lint-via-cli"
-              className="underline"
-              onPress={() => setIsLintCLIModalOpen(true)}
-            >
+            <Button data-testid="lint-via-cli" className="underline" onPress={() => setIsLintCLIModalOpen(true)}>
               Lint via CLI
             </Button>
           </>
@@ -1360,11 +1359,16 @@ export const SpecView = ({
               // Git projects: the spec's file inside the repo, otherwise inso finds no file. Others: the app data dir holding the NeDB files.
               workingDir={
                 isConnectedGitProject && gitSyncRulesetPath
-                  ? window.path.join(
-                      window.path.dirname(gitSyncRulesetPath),
-                      activeWorkspaceMeta?.gitFilePath || '',
-                    )
-                  : window.env.INSOMNIA_DATA_PATH || window.app.getPath('userData')
+                  ? window.path.join(window.path.dirname(gitSyncRulesetPath), activeWorkspaceMeta?.gitFilePath || '')
+                  : appDataDir
+              }
+              // inso only applies a custom ruleset when passed explicitly. Same file the in-app lint uses.
+              rulesetPath={
+                rulesetContent
+                  ? isConnectedGitProject && gitSyncRulesetPath
+                    ? gitSyncRulesetPath
+                    : window.path.join(appDataDir, 'projects', projectId, '.spectral.yaml')
+                  : undefined
               }
             />
           )}
