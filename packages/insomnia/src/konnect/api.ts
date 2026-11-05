@@ -236,7 +236,7 @@ export async function fetchRoutesForService(
   return routes.map(normalizeRoute);
 }
 
-function regionalApiBase(region: string): string {
+export function regionalApiBase(region: string): string {
   const url = getKonnectApiUrl();
   // If KONNECT_API_URL is already a full URL (e.g. http://localhost:4010 in tests),
   // use it as-is without prepending a region subdomain or https scheme.
