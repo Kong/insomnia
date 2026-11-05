@@ -310,6 +310,8 @@ startWsEchoServers();
 
 startMcpServers();
 
+startMockBinServer();
+
 startHelloGrpcServers();
 
 startOAuth2Server();
