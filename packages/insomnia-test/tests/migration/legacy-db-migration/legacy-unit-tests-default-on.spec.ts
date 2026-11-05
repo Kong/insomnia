@@ -23,12 +23,12 @@ testWithLegacyDatabase(
   "Verify the legacy unit test setting defaults off and lists the existing suite for a profile that already has one",
   async ({ user }) => {
     const { workspaceFlow } = user.flowManager;
-    const { preferencesPage } = user.pageManager;
+    const { preferences } = user.pageManager;
 
-    await preferencesPage.open();
+    await preferences.open();
     const disableByDefault =
-      await preferencesPage.isShowLegacyUnitTestsEnabled();
-    await preferencesPage.close();
+      await preferences.isShowLegacyUnitTestsEnabled();
+    await preferences.close();
 
     const designDocument = await workspaceFlow.getCollectionSpec(
       "Local Design Document",

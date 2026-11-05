@@ -6,18 +6,18 @@ test("Verify Scripting tab rule-group sandbox toggles persist across reopening P
   user,
 }) => {
   const { preferencesFlow } = user.flowManager;
-  const { preferencesPage, preferencesPluginsPage } = user.pageManager;
+  const { preferences, preferencesPlugins } = user.pageManager;
 
-  await preferencesPage.open();
-  await preferencesPluginsPage.openScriptingTab();
-  const scopesInitial = await preferencesPluginsPage.isScriptSandboxRuleEnabled(
+  await preferences.open();
+  await preferencesPlugins.openScriptingTab();
+  const scopesInitial = await preferencesPlugins.isScriptSandboxRuleEnabled(
     ScriptSandboxRuleGroup.Scopes,
   );
   const prototypeMutationInitial =
-    await preferencesPluginsPage.isScriptSandboxRuleEnabled(
+    await preferencesPlugins.isScriptSandboxRuleEnabled(
       ScriptSandboxRuleGroup.PrototypeMutation,
     );
-  await preferencesPage.close();
+  await preferences.close();
 
   await preferencesFlow.toggleScriptSandboxRule(
     ScriptSandboxRuleGroup.Scopes,
@@ -28,16 +28,16 @@ test("Verify Scripting tab rule-group sandbox toggles persist across reopening P
     !prototypeMutationInitial,
   );
 
-  await preferencesPage.open();
-  await preferencesPluginsPage.openScriptingTab();
-  const scopesAfter = await preferencesPluginsPage.isScriptSandboxRuleEnabled(
+  await preferences.open();
+  await preferencesPlugins.openScriptingTab();
+  const scopesAfter = await preferencesPlugins.isScriptSandboxRuleEnabled(
     ScriptSandboxRuleGroup.Scopes,
   );
   const prototypeMutationAfter =
-    await preferencesPluginsPage.isScriptSandboxRuleEnabled(
+    await preferencesPlugins.isScriptSandboxRuleEnabled(
       ScriptSandboxRuleGroup.PrototypeMutation,
     );
-  await preferencesPage.close();
+  await preferences.close();
 
   expect(scopesAfter).toBe(!scopesInitial);
   expect(prototypeMutationAfter).toBe(!prototypeMutationInitial);
