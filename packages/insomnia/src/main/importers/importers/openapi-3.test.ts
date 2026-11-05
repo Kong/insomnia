@@ -753,10 +753,13 @@ describe('openapi-3', () => {
       },
     };
 
-    it('should import webhook operations into a Webhooks folder using {{ _.webhook_url }}', async () => {
+    it('should import webhook operations into a Webhooks folder, outside tag folders, using {{ _.webhook_url }}', async () => {
       const result = await convert(JSON.stringify(doc));
       const folder = result?.find(item => item._type === 'request_group' && item.name === 'Webhooks');
       const webhooks = result?.filter(item => item._type === 'request' && item.parentId === folder?._id);
+      const petsFolder = result?.find(item => item._type === 'request_group' && item.name === 'pets');
+      const inPetsFolder = result?.filter(item => item._type === 'request' && item.parentId === petsFolder?._id);
+      const baseEnv = result?.find(item => item._type === 'environment');
 
       expect(folder).toBeDefined();
       expect(webhooks.map(r => [r.name, r.method, r.url])).toEqual([
@@ -765,14 +768,6 @@ describe('openapi-3', () => {
       ]);
       expect(webhooks[0].body.mimeType).toBe('application/json');
       expect(webhooks[0].body.text).toContain('"name"');
-    });
-
-    it('should keep webhooks out of tag folders and define webhook_url in the base environment', async () => {
-      const result = await convert(JSON.stringify(doc));
-      const petsFolder = result?.find(item => item._type === 'request_group' && item.name === 'pets');
-      const inPetsFolder = result?.filter(item => item._type === 'request' && item.parentId === petsFolder?._id);
-      const baseEnv = result?.find(item => item._type === 'environment');
-
       expect(inPetsFolder.map(r => r.method)).toEqual(['GET']);
       expect(baseEnv.data.webhook_url).toBe('https://example.com/webhook');
     });
