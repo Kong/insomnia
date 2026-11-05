@@ -3,6 +3,7 @@ import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { sync } from '~/ui/ipc';
 import { remoteCompareCache, vcsEventProperties } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -16,7 +17,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
-    await window.main.sync.push(workspaceId, {
+    await sync.push(workspaceId, {
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });

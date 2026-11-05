@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
 import { invariant } from '~/common/utils/invariant';
+import { sync } from '~/ui/ipc';
 import { getSyncItems } from '~/ui/sync-utils';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
@@ -14,7 +15,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const keys = data.keys;
   invariant(Array.isArray(keys), 'Keys are required');
   const { syncItems } = await getSyncItems({ workspaceId });
-  const status = await window.main.sync.status(workspaceId, syncItems);
+  const status = await sync.status(workspaceId, syncItems);
   // Staging needs to happen since it creates blobs for the files
   const itemsToUnstage = keys
     .map(key => {
@@ -27,7 +28,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     })
     .filter(isNotNullOrUndefined);
 
-  await window.main.sync.unstage(workspaceId, itemsToUnstage);
+  await sync.unstage(workspaceId, itemsToUnstage);
 
   return null;
 }
