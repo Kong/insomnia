@@ -14,7 +14,7 @@ test("Verify the plugin bridge executes request actions, surfaces thrown errors,
   user,
 }) => {
   const { appFlow, workspaceFlow, httpRequestFlow } = user.flowManager;
-  const { preferencesPage, preferencesPluginsPage } = user.pageManager;
+  const { preferences, preferencesPlugins } = user.pageManager;
 
   const pluginName = faker.lorem.slug(2);
   const tagName = `probeTag${faker.string.alphanumeric(6)}`;
@@ -48,7 +48,7 @@ test("Verify the plugin bridge executes request actions, surfaces thrown errors,
       action() { throw new Error('probe action boom'); },
     }];`,
   );
-  await preferencesPluginsPage.reloadPlugins();
+  await preferencesPlugins.reloadPlugins();
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -63,22 +63,22 @@ test("Verify the plugin bridge executes request actions, surfaces thrown errors,
     url: `${HTTP_SERVER}/get`,
   } as HttpRequest);
 
-  const metricsBefore = await preferencesPluginsPage.getPluginBridgeMetrics();
+  const metricsBefore = await preferencesPlugins.getPluginBridgeMetrics();
   const concurrentResults = await Promise.all(
     Array.from({ length: 20 }, () =>
-      preferencesPluginsPage.getRegisteredTemplateTagNames(),
+      preferencesPlugins.getRegisteredTemplateTagNames(),
     ),
   );
-  const metricsAfter = await preferencesPluginsPage.getPluginBridgeMetrics();
+  const metricsAfter = await preferencesPlugins.getPluginBridgeMetrics();
 
   let actionError: unknown;
   try {
-    await preferencesPluginsPage.executeRequestAction(actionLabel, request.id!);
+    await preferencesPlugins.executeRequestAction(actionLabel, request.id!);
   } catch (e) {
     actionError = e;
   }
 
-  const metricsAfterThrow = await preferencesPluginsPage.getPluginBridgeMetrics();
+  const metricsAfterThrow = await preferencesPlugins.getPluginBridgeMetrics();
 
   const tagNamesMethod = "getTemplateTags";
   const okBefore = metricsBefore.perMethod[tagNamesMethod]?.ok ?? 0;
