@@ -151,7 +151,10 @@ app.post('/posts', rawBody, (req, res) => {
   try {
     parsed = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '');
   } catch {}
-  res.status(201).json({ ...parsed, id: 101 });
+  // writeHead + end (not res.json/send, which re-case the header to `Content-Type`):
+  // the lowercase name matches the previous raw-http echo, and specs assert it.
+  res.writeHead(201, { 'content-type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ ...parsed, id: 101 }));
 });
 
 app.post('/graphql', rawBody, async (req, res) => {
@@ -168,7 +171,8 @@ app.post('/graphql', rawBody, async (req, res) => {
     variableValues: variables,
     operationName,
   });
-  res.status(200).json(result);
+  res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(result));
 });
 
 app.get('/v2/swagger.json', (_req, res) => {
