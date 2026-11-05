@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import crypto from "node:crypto";
-import http from "node:http";
+import type http from "node:http";
 import zlib from "node:zlib";
 
 import { parse } from "graphql";
@@ -1576,7 +1576,13 @@ function matchDynamic(req: any, url: any) {
   return null;
 }
 
-const server = http.createServer((req, res) => {
+/**
+ * Express middleware: handles the routes this mock owns (account/session
+ * state, the `_admin/*` test hooks, Cloud Sync GraphQL, vault, collaborators,
+ * the static ROUTES table) and falls through (`next()`) for everything else so
+ * the rest of the mock server (misc/server/index.ts) can answer.
+ */
+export function mockApi(req: http.IncomingMessage, res: http.ServerResponse, next: () => void) {
   const url = new URL(req.url!, "http://localhost:4010");
   const key = `${req.method} ${url.pathname}`;
   process.stdout.write(`${key}\n`);
@@ -1632,22 +1638,7 @@ const server = http.createServer((req, res) => {
       "Access-Control-Allow-Origin": "*",
     });
     res.end(JSON.stringify(body));
-  } else if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "*",
-      "Access-Control-Allow-Headers": "*",
-    });
-    res.end();
   } else {
-    res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    });
-    res.end("{}");
+    next();
   }
-});
-
-server.listen(4010, "127.0.0.1", () => {
-  process.stdout.write("Listening at http://localhost:4010\n");
-});
+}
