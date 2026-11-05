@@ -134,7 +134,7 @@ cloudSyncApi(app);
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
   setTimeout(() => {
-    res.send(`Delayed by ${delaySec} seconds`);
+    res.type('text/plain').send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
 
