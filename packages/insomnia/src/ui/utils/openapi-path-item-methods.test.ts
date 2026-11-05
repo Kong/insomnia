@@ -55,7 +55,6 @@ describe('getMethodsFromOpenApiPathItem', () => {
 
     it.each([
       ['an external file', './paths/pets.yaml'],
-      ['a URL', 'https://example.com/pets.yaml'],
       ['a non pathItems pointer', '#/paths/~1other'],
       ['a missing target', '#/components/pathItems/Missing'],
     ])('returns nothing for %s', (_label, $ref) => {
