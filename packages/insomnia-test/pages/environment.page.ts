@@ -4,6 +4,7 @@ import { DropdownComponent } from "@package/components/dropdown.component";
 import { EnvironmentPickerComponent } from "@package/components/environment-picker.component";
 import { KeyValueEditorComponent } from "@package/components/key-value-editor.component";
 import { ModalComponent } from "@package/components/modal.component";
+import { TableComponent } from "@package/components/table.component";
 import { TooltipComponent } from "@package/components/tooltip.component";
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type {
@@ -409,6 +410,22 @@ export class EnvironmentPage extends BasePage {
   }
 
   /**
+   * The key/value pair listbox's trailing (last) row's Name editor
+   * container — the app sets a `data-focused` attribute on this element
+   * on focus/blur, so pass this to BasePage's hasFocus() to check
+   * whether that row's Name cell is focused. For a brand-new,
+   * still-empty environment this trailing row is also its only row.
+   */
+  get blankRowNameContainer(): Locator {
+    return this.page
+      .locator(this.LISTBOX)
+      .locator('[role="option"]')
+      .last()
+      .getByTestId("one-line-editor-container")
+      .first();
+  }
+
+  /**
    * Replaces the entire key/value pair list: deletes all existing rows,
    * then adds each of the given variables one at a time. New rows are
    * always appended last, so each iteration locates the freshly added
@@ -528,4 +545,129 @@ export class EnvironmentPage extends BasePage {
     this.page,
     this.page.getByRole("dialog", { name: "Manage Environments" }),
   );
+
+  private readonly collectionEnvironmentDialog = this.manageEnvironmentsModal.root;
+
+  /**
+   * Opens the current workspace's own "Manage API collection environments"
+   * editor from the "Select an API Collection Environment" popover and
+   * waits for the "Manage Environments" dialog. Its Base Environment is
+   * selected by default; the dialog is not under the `#pane-one` the other
+   * variable methods read, so use `addCollectionEnvironmentVariable()` here.
+   */
+  async openCollectionEnvironmentEditor(): Promise<void> {
+    await this.page.locator(this.COLLECTION_ENVIRONMENT_TRIGGER).click();
+    await this.page
+      .getByRole("button", { name: "Manage API collection environments" })
+      .click();
+    await expect(this.collectionEnvironmentDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Hovers the first rendered variable chip whose template references
+   * `variable` until its source tooltip appears, then reads the tooltip.
+   * The chip can be rebuilt right after the editor mounts, silently
+   * dropping the pointer, so the hover is retried until the tooltip shows.
+   */
+  async hoverVariableSource(
+    variable: string,
+    inDialog = false,
+  ): Promise<string> {
+    const root = inDialog ? this.collectionEnvironmentDialog : this.page;
+    const chip = root.locator(`[data-template*="${variable}"]`).first();
+    await chip.waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    const tooltip = this.page.getByTestId("variable-source-tooltip");
+    await expect(async () => {
+      await this.page.mouse.move(0, 0);
+      await chip.hover();
+      await expect(tooltip).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return (await tooltip.innerText()).trim();
+  }
+
+  /**
+   * Clicks "Open" inside the currently shown variable source tooltip.
+   */
+  async openVariableSource(): Promise<void> {
+    await this.page
+      .getByTestId("variable-source-tooltip")
+      .getByTestId("variable-source-tooltip-open")
+      .click();
+  }
+
+  /**
+   * Presses the shortcut that opens the "Manage Environments" dialog on a
+   * project environment page (which hides the picker) and waits for it.
+   */
+  async openManageEnvironmentsDialogByShortcut(): Promise<void> {
+    await this.page.keyboard.press("ControlOrMeta+e");
+    await expect(this.collectionEnvironmentDialog).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Clicks an environment's row inside the open "Manage Environments" dialog.
+   */
+  async selectEnvironmentInDialog(name: string): Promise<void> {
+    await new TableComponent(this.page, this.collectionEnvironmentDialog)
+      .row(name)
+      .click();
+  }
+
+  /**
+   * Whether an environment row in the "Environments" grid is selected.
+   */
+  async isEnvironmentRowSelected(
+    name: string,
+    inDialog = false,
+  ): Promise<boolean> {
+    const root = inDialog
+      ? this.collectionEnvironmentDialog
+      : this.page.getByRole("grid", { name: "Environments" });
+    return (
+      (await new TableComponent(this.page, root).row(name).first().getAttribute("aria-selected")) ===
+      "true"
+    );
+  }
+
+  /**
+   * Counts the "Manage Environments" dialogs currently mounted.
+   */
+  async countManageEnvironmentsDialogs(): Promise<number> {
+    return this.collectionEnvironmentDialog.count();
+  }
+
+  /**
+   * Fills the last (empty) row of the open "Manage Environments" dialog
+   * with `variable`, then closes the dialog and the picker popover behind it.
+   * Requires `openCollectionEnvironmentEditor()` to have been called first.
+   */
+  async addCollectionEnvironmentVariable(
+    variable: EnvironmentKvPairData,
+  ): Promise<void> {
+    const listbox = this.collectionEnvironmentDialog.getByRole("listbox", {
+      name: "Environment Key Value Pair",
+    });
+    const key = await listbox
+      .locator('[role="option"]')
+      .last()
+      .getAttribute("data-key");
+    const row = listbox.locator(`[role="option"][data-key="${key}"]`);
+    await this.keyValue.nameEditor(row).setValue(variable.name);
+    await this.keyValue.valueEditor(row).setValue(variable.value);
+    await this.manageEnvironmentsModal.clickButton("Close");
+    await expect(this.collectionEnvironmentDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    const picker = this.environmentPicker.listbox("collection");
+    await expect(async () => {
+      if (await picker.isVisible()) {
+        await this.page.keyboard.press("Escape");
+      }
+      await expect(picker).toBeHidden({ timeout: 2000 });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+  }
 }
