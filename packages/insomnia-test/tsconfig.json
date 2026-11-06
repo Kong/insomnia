@@ -12,7 +12,6 @@
     "allowImportingTsExtensions": true,
     "moduleDetection": "force",
     "types": ["node"],
-    "baseUrl": ".",
     "paths": {
       "@package/*": ["./*"]
     }
