@@ -56,24 +56,22 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
     const patch = { name, credentials, provider } as Partial<CloudProviderCredential>;
 
     if (isEditing) {
-      return updateCloudCredential.mutate(
-        {
+      return updateCloudCredential
+        .mutateAsync({
           patch,
           cloudCredentialId: providerCredential._id,
-        },
-        { onSuccess: closeOnSuccess },
-      );
+        })
+        .then(closeOnSuccess);
     }
 
-    return createCloudCredential.mutate(
-      {
+    return createCloudCredential
+      .mutateAsync({
         name,
         credentials,
         provider,
         isAuthenticated,
-      },
-      { onSuccess: closeOnSuccess },
-    );
+      })
+      .then(closeOnSuccess);
   };
 
   const exchangeAzureCode = async () => {
