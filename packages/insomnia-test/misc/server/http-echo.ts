@@ -1,12 +1,12 @@
-// httpbin-style HTTP/HTTPS echo used by the request specs. It runs as its own
-// express app (not the main one) because specs and fixture collections address
-// it by fixed ports and expect these exact response shapes:
-//   4060  http (127.0.0.1 and [::1])
-//   4061  https, self-signed localhost cert
-//   4062  https, certificate signed by the custom CA (no client cert asked)
-//   4063  https, mTLS — a client cert signed by the CA is required
+// httpbin-style HTTP/HTTPS echo used by the request specs. It is an express
+// router, not a server: the main mock server (index.ts) mounts it on
+//   4010  http                 /http-echo
+//   4011  https, custom CA     /http-echo       (no client cert asked)
+//   4011  https, mTLS          /http-echo-mtls  (a client cert signed by the CA is required, else 401)
+// and `startHttpEchoSelfSignedServer` serves the same router on
+//   4061  https, self-signed localhost cert  /http-echo
+// Mirror any change to the paths/ports into HTTP_SERVER* in constants.ts.
 import fs from 'node:fs';
-import http from 'node:http';
 import https from 'node:https';
 import path from 'node:path';
 
@@ -97,12 +97,12 @@ function queryArgs(search: string) {
   return args;
 }
 
-const app = express();
+export const httpEchoRouter = express.Router();
 // `type: () => true` (not '*/*'): requests without a Content-Type header, e.g. the
 // scripts' sendRequest() with a string body, must still have their body read.
 const rawBody = bodyParser.raw({ inflate: true, type: () => true });
 
-app.use((req, res, next) => {
+httpEchoRouter.use((req, res, next) => {
   process.stdout.write(`[http-echo] ${req.method} ${req.path}\n`);
   res.setHeader('Access-Control-Allow-Origin', '*');
   const requestedDelayMs = Number(req.headers['x-reply-delay-ms']);
@@ -113,17 +113,17 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options('*', (_req, res) => {
+httpEchoRouter.options('*', (_req, res) => {
   res.setHeader('Access-Control-Allow-Methods', '*');
   res.setHeader('Access-Control-Allow-Headers', '*');
   res.status(204).end();
 });
 
-app.get('/cookies', (req, res) => {
+httpEchoRouter.get('/cookies', (req, res) => {
   res.status(200).json({ cookies: parseCookies(req.headers.cookie) });
 });
 
-app.all('/post', rawBody, (req, res, next) => {
+httpEchoRouter.all('/post', rawBody, (req, res, next) => {
   if (req.method !== 'POST' && req.method !== 'QUERY') {
     next();
     return;
@@ -146,7 +146,7 @@ app.all('/post', rawBody, (req, res, next) => {
   });
 });
 
-app.post('/posts', rawBody, (req, res) => {
+httpEchoRouter.post('/posts', rawBody, (req, res) => {
   let parsed = {};
   try {
     parsed = JSON.parse(Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '');
@@ -157,7 +157,7 @@ app.post('/posts', rawBody, (req, res) => {
   res.end(JSON.stringify({ ...parsed, id: 101 }));
 });
 
-app.post('/graphql', rawBody, async (req, res) => {
+httpEchoRouter.post('/graphql', rawBody, async (req, res) => {
   let query = '';
   let variables;
   let operationName;
@@ -175,11 +175,11 @@ app.post('/graphql', rawBody, async (req, res) => {
   res.end(JSON.stringify(result));
 });
 
-app.get('/v2/swagger.json', (_req, res) => {
+httpEchoRouter.get('/v2/swagger.json', (_req, res) => {
   res.status(200).type('application/json').send(PETSTORE_SWAGGER);
 });
 
-app.get(/^\/v2\/pet\/\d+$/, (req, res) => {
+httpEchoRouter.get(/^\/v2\/pet\/\d+$/, (req, res) => {
   const petId = Number(req.path.split('/').pop());
   res.status(200).json({
     id: petId,
@@ -192,7 +192,7 @@ app.get(/^\/v2\/pet\/\d+$/, (req, res) => {
   });
 });
 
-app.post('/calculator.asmx', rawBody, (req, res) => {
+httpEchoRouter.post('/calculator.asmx', rawBody, (req, res) => {
   const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
   const intA = Number.parseInt((raw.match(/<[\w:]*intA>(-?\d+)</) || [])[1], 10) || 0;
   const intB = Number.parseInt((raw.match(/<[\w:]*intB>(-?\d+)</) || [])[1], 10) || 0;
@@ -208,42 +208,27 @@ app.post('/calculator.asmx', rawBody, (req, res) => {
     );
 });
 
-app.get('/large-json', (_req, res) => {
+httpEchoRouter.get('/large-json', (_req, res) => {
   const items = Array.from({ length: 100_000 }, (_, i) => ({ id: i, name: `item-${i}`, value: 'x'.repeat(100) }));
   res.status(200).json({ items });
 });
 
-app.get('/status/404', (_req, res) => {
+httpEchoRouter.get('/status/404', (_req, res) => {
   res.status(404).json({ error: 'not found' });
 });
 
 // Anything else: a harmless 200 `{}`.
-app.use((_req, res) => {
+httpEchoRouter.use((_req, res) => {
   res.status(200).json({});
 });
 
-export function startHttpEchoServers() {
-  const mtlsCa = fs.readFileSync(certPath('mtls-ca.pem'));
-  const caSignedServer = {
-    key: fs.readFileSync(certPath('mtls-server-key.pem')),
-    cert: fs.readFileSync(certPath('mtls-server-cert.pem')),
-  };
-
-  http.createServer(app).listen(4060, '127.0.0.1', () => {
-    console.log('http-echo listening at http://localhost:4060');
-  });
-  // Loopback-only IPv6 listener so http://[::1]:4060 (ipv6-local-address.spec.ts) is reachable too.
-  http.createServer(app).listen(4060, '::1');
+export function startHttpEchoSelfSignedServer() {
+  const app = express();
+  app.use('/http-echo', httpEchoRouter);
   https
     .createServer(
       { key: fs.readFileSync(certPath('localhost-key.pem')), cert: fs.readFileSync(certPath('localhost-cert.pem')) },
       app,
     )
-    .listen(4061, '127.0.0.1', () => console.log('http-echo listening at https://localhost:4061'));
-  https
-    .createServer(caSignedServer, app)
-    .listen(4062, '127.0.0.1', () => console.log('http-echo listening at https://localhost:4062 (custom CA)'));
-  https
-    .createServer({ ...caSignedServer, ca: [mtlsCa], requestCert: true, rejectUnauthorized: true }, app)
-    .listen(4063, '127.0.0.1', () => console.log('http-echo listening at https://localhost:4063 (mTLS)'));
+    .listen(4061, '127.0.0.1', () => console.log('http-echo listening at https://localhost:4061/http-echo'));
 }

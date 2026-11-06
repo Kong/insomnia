@@ -11,8 +11,8 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "host": "localhost:4060",
-  "basePath": "/v2",
+  "host": "localhost:4010",
+  "basePath": "/http-echo/v2",
   "tags": [
     {
       "name": "pet",

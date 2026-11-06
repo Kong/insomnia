@@ -19,10 +19,10 @@ export const ACTION_TIMEOUT = 30_000;
 export const MOCK_API_SERVER = "http://localhost:4010";
 export const MOCK_LLM_SERVER = `${MOCK_API_SERVER}/mock-llm`;
 
-export const HTTP_SERVER = "http://localhost:4060";
-export const HTTP_SERVER_HTTPS = "https://localhost:4061";
-export const HTTP_SERVER_CUSTOM_CA_HTTPS = "https://localhost:4062";
-export const HTTP_SERVER_MTLS = "https://localhost:4063";
+export const HTTP_SERVER = "http://localhost:4010/http-echo";
+export const HTTP_SERVER_HTTPS = "https://localhost:4061/http-echo";
+export const HTTP_SERVER_CUSTOM_CA_HTTPS = "https://localhost:4011/http-echo";
+export const HTTP_SERVER_MTLS = "https://localhost:4011/http-echo-mtls";
 
 export const EVENT_STREAM_SERVER = "http://localhost:4050";
 export const EVENT_STREAM_SERVER_HTTPS = "https://localhost:4051";
@@ -60,7 +60,7 @@ export const MOCK_BIN_SERVER = "http://localhost:4090";
  * `RESOLVING_PROXY_SERVER` to reach the mock servers without using
  * `localhost` in the URL — mirror any change to the host into that file.
  */
-export const RESOLVING_PROXY_SERVER = "http://127.0.0.1:4095";
+export const RESOLVING_PROXY_SERVER = "http://127.0.0.1:4010";
 export const RESOLVING_PROXY_HOST = "insomnia.test";
 /**
  * `GET` this on `MOCK_BIN_SERVER` for a fixed response to turn into a mock
@@ -78,7 +78,7 @@ export const MOCK_BIN_SOURCE_RESPONSE = {
  * Authorization Code / Implicit / Client Credentials / Resource Owner
  * Password grants — mirror any change here into that file.
  */
-export const OAUTH2_SERVER = "http://localhost:4080";
+export const OAUTH2_SERVER = "http://localhost:4010/oauth2";
 export const OAUTH2_CLIENT_ID = "test-client-id";
 export const OAUTH2_CLIENT_SECRET = "test-client-secret";
 export const OAUTH2_USERNAME = "testuser";
