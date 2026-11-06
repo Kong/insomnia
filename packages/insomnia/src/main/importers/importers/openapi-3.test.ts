@@ -771,6 +771,17 @@ describe('openapi-3', () => {
       expect(inPetsFolder.map(r => r.method)).toEqual(['GET']);
       expect(baseEnv.data.webhook_url).toBe('https://example.com/webhook');
     });
+
+    it('should import a webhooks-only document without paths', async () => {
+      const { paths: _paths, ...webhooksOnlyDoc } = doc;
+      const result = await convert(JSON.stringify(webhooksOnlyDoc));
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => [r.method, r.url])).toEqual([
+        ['POST', '{{ _.webhook_url }}'],
+        ['DELETE', '{{ _.webhook_url }}'],
+      ]);
+    });
   });
 
   describe('OpenAPI 3.1 schema keywords', () => {
