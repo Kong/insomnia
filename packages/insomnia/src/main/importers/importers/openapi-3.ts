@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
 import { parse as urlParse } from 'node:url';
 
-import { dereference, validate } from '@scalar/openapi-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
 import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
 import type { Converter, ImportRequest } from '../entities';
+import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
@@ -817,20 +817,7 @@ export const convert: Converter = async rawData => {
     return null;
   }
 
-  try {
-    const input = apiDocument as unknown as Record<string, unknown>;
-    const { valid, errors } = await validate(input);
-    if (!valid) {
-      throw errors;
-    }
-    const { schema, errors: dereferenceErrors } = await dereference(input);
-    if (dereferenceErrors?.length) {
-      throw dereferenceErrors;
-    }
-    apiDocument = schema as unknown as OpenAPIV3.Document;
-  } catch (err) {
-    console.log('[openapi-3] Import file validation failed', err);
-  }
+  apiDocument = await resolveOpenApiDocument(apiDocument, '[openapi-3]');
 
   // Import
   const workspace: ImportRequest = {
