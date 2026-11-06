@@ -146,7 +146,11 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <RequestParametersEditor bulk={settings.useBulkParametersEditor} />
+            <RequestParametersEditor
+              request={request}
+              onChange={patch => patchExampleRequest?.(requestId, patch)}
+              bulk={settings.useBulkParametersEditor}
+            />
             {pathParameters.length > 0 && (
               <div className="w-full overflow-y-auto p-4">
                 <div className="grid w-full shrink-0 grid-cols-2 gap-x-[20.8px] overflow-hidden rounded-xs">
@@ -194,9 +198,8 @@ export const ExampleRequestPane = ({ example, request, environmentId, settings }
           <div className="flex-1 shrink-0 overflow-y-auto">
             <RequestHeadersEditor
               bulk={settings.useBulkHeaderEditor}
-              headers={request.headers}
-              requestType="Request"
-              disableUserAgentHeader={request.disableUserAgentHeader}
+              request={request}
+              onChange={patch => patchExampleRequest?.(requestId, patch)}
             />
           </div>
           <div className="box-border flex h-(--line-height-sm) flex-row border-t border-solid border-(--hl-md) text-(--font-size-sm)">

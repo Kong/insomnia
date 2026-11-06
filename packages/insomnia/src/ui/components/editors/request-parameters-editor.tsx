@@ -1,31 +1,27 @@
 import type { RequestParameter } from 'insomnia-data';
 import { type FC, useCallback } from 'react';
-import { useParams } from 'react-router';
 
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
-import { useExampleEditorContext } from '~/ui/context/example-editor-context';
-import { useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
+  // Any request flavour that owns a parameter list; the editor stays controlled
+  // and does not care which document type it belongs to.
+  request: { _id: string; parameters: RequestParameter[] };
+  onChange: (patch: { parameters: RequestParameter[] }) => void;
   bulk: boolean;
   disabled?: boolean;
   onDescriptionToggle?: () => void;
 }
 
-export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onDescriptionToggle }) => {
-  const exampleEditor = useExampleEditorContext();
-  const { requestId: routeRequestId } = useParams() as { requestId: string };
-  const loaderData = useRequestLoaderData() as RequestLoaderData | undefined;
-  const routePatchRequest = useRequestPatcher();
-  const requestId = exampleEditor ? exampleEditor.exampleId : routeRequestId;
-  const activeRequest = exampleEditor ? exampleEditor.request : loaderData!.activeRequest;
-  const patchRequest = exampleEditor ? exampleEditor.patchRequest : routePatchRequest;
+export const RequestParametersEditor: FC<Props> = ({
+  request,
+  onChange,
+  bulk,
+  disabled = false,
+  onDescriptionToggle,
+}) => {
   const handleBulkUpdate = useCallback(
     (paramsString: string) => {
       const parameters: {
@@ -48,13 +44,13 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
           value,
         });
       }
-      patchRequest(requestId, { parameters });
+      onChange({ parameters });
     },
-    [patchRequest, requestId],
+    [onChange],
   );
 
   let paramsString = '';
-  for (const param of activeRequest.parameters) {
+  for (const param of request.parameters) {
     // Make sure it's not disabled
     if (param.disabled) {
       continue;
@@ -69,16 +65,16 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
 
   const onChangeParameter = useCallback(
     (parameters: RequestParameter[]) => {
-      patchRequest(requestId, { parameters });
+      onChange({ parameters });
     },
-    [patchRequest, requestId],
+    [onChange],
   );
 
   if (bulk) {
     return (
       <CodeEditor
         id="request-parameters-editor"
-        historyKey={`request-parameters-editor::${requestId}`}
+        historyKey={`request-parameters-editor::${request._id}`}
         className="flex-1"
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
@@ -95,7 +91,7 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
       namePlaceholder="name"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={activeRequest.parameters}
+      pairs={request.parameters}
       onChange={pairs => onChangeParameter(pairs as RequestParameter[])}
       isDisabled={disabled}
       onDescriptionToggle={onDescriptionToggle}

@@ -389,7 +389,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                   </div>
                 </div>
                 <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
-                  <RequestParametersEditor bulk={settings.useBulkParametersEditor} disabled={disabled} />
+                  <RequestParametersEditor
+                    request={activeRequest}
+                    onChange={patch => patchRequest(activeRequest._id, patch)}
+                    bulk={settings.useBulkParametersEditor}
+                    disabled={disabled}
+                  />
                 </ErrorBoundary>
               </div>
             </Panel>
@@ -482,11 +487,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
-            headers={activeRequest.headers}
+            request={activeRequest}
+            onChange={patch => patchRequest(activeRequest._id, patch)}
             bulk={false}
             isDisabled={readyState}
-            requestType="WebSocketRequest"
-            disableUserAgentHeader={activeRequest.disableUserAgentHeader}
           />
         </TabPanel>
         <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
