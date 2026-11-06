@@ -28,6 +28,13 @@ import type {
 import { models } from 'insomnia-data';
 import { generateId } from 'insomnia-data/common';
 
+import {
+  createFieldDecryptionFailureReport,
+  createFieldEncryptionHooks,
+  type FieldDecryptionFailure,
+  reconcileFieldDecryptionFailures,
+} from './field-encryption/hooks';
+import type { FieldEncryptionKey } from './field-encryption/value';
 import { initModel } from './init-model';
 import { repairDatabase } from './repair-database';
 
@@ -35,9 +42,19 @@ const getTempPath = (name: string) => {
   return name === 'temp' ? os.tmpdir() : fsPath.join(os.tmpdir(), 'insomnia-send-request');
 };
 
-type initOptions = DataStoreOptions & { dbPath?: string };
+type initOptions = DataStoreOptions & {
+  dbPath?: string;
+  /** Encrypts the sensitive fields of every datastore of this instance. Ignored for `inMemoryOnly` instances. */
+  fieldEncryptionKey?: FieldEncryptionKey;
+};
 
 type FlushChangesImpl = (id?: number, fake?: boolean) => Promise<ChangeBufferEvent[] | void>;
+
+interface DatabaseInternals {
+  flushChangesImpl: FlushChangesImpl;
+  /** The fields that could not be decrypted when the datastores were loaded by the last `init()`. */
+  getFieldDecryptionFailures: () => FieldDecryptionFailure[];
+}
 
 /**
  * Create the NeDB database implementation for main process and Node.js.
@@ -45,9 +62,10 @@ type FlushChangesImpl = (id?: number, fake?: boolean) => Promise<ChangeBufferEve
  * instance (e.g. an in-memory scratch database) never affects another one.
  */
 export const createNedbDatabase = <O = initOptions>(
-  wrapper?: (nedbDatabase: IDatabase<initOptions>, internals: { flushChangesImpl: FlushChangesImpl }) => IDatabase<O>,
+  wrapper?: (nedbDatabase: IDatabase<initOptions>, internals: DatabaseInternals) => IDatabase<O>,
 ) => {
   let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
+  let fieldDecryptionFailureReport = createFieldDecryptionFailureReport();
 
   // ~~~~~~~~~~~~~~~~ //
   // Change Listeners //
@@ -239,15 +257,34 @@ export const createNedbDatabase = <O = initOptions>(
     },
 
     /** init in main process */
-    init: async ({ dbPath, ...config }: initOptions = {}, forceReset = false) => {
+    init: async ({ dbPath, fieldEncryptionKey, ...config }: initOptions = {}, forceReset = false) => {
       if (forceReset) {
         changeListeners = [];
         nedbBucket = {} as Record<AllTypes, NeDB>;
       }
+
+      fieldDecryptionFailureReport = createFieldDecryptionFailureReport();
+      const encryptionEnabled = !!fieldEncryptionKey && !config.inMemoryOnly;
+      if (encryptionEnabled) {
+        // Derive the encrypted path table now, so a broken model schema fails init() instead of the first hook call
+        models.getEncryptedFieldPathsByType();
+      }
+      // The same hooks go into every datastore of this instance through defaultConfig
+      const encryptionHooks = encryptionEnabled
+        ? createFieldEncryptionHooks(fieldEncryptionKey, {
+            getEncryptedFieldPaths: models.getEncryptedFieldPathsForType,
+            failureReport: fieldDecryptionFailureReport,
+          })
+        : {};
+
       const defaultConfig: NeDB.DataStoreOptions = {
-        autoload: true,
         corruptAlertThreshold: 0.9,
+        // Without an onload handler NeDB rethrows a failed load as an unhandled rejection. init() reports it below.
+        onload: () => {},
         ...config,
+        // Not overridable: init() waits for every load below, and a datastore that was never loaded never answers a query
+        autoload: true,
+        ...encryptionHooks,
       };
 
       if (!dbPath) {
@@ -432,6 +469,34 @@ export const createNedbDatabase = <O = initOptions>(
           filename: fsPath.join(dbPath, 'insomnia.WorkspaceMeta.db'),
         }),
       };
+
+      // Wait for every datastore to load. A datastore whose load failed never becomes ready, and its queries would
+      // otherwise wait forever, so report it here instead of hanging at the first query.
+      const loads = Object.entries(nedbBucket);
+      const results = await Promise.allSettled(loads.map(([, datastore]) => datastore.autoloadPromise));
+      const failures = results.flatMap((result, i) =>
+        result.status === 'rejected' ? [{ type: loads[i][0], reason: result.reason }] : [],
+      );
+      if (failures.length > 0) {
+        // A datastore whose load failed never becomes ready: drop them all, so that any later use fails at once
+        // instead of waiting forever
+        nedbBucket = {} as Record<AllTypes, NeDB>;
+        const description = failures
+          .map(({ type, reason }) => `${type} (${reason instanceof Error ? reason.message : String(reason)})`)
+          .join(', ');
+        throw new AggregateError(
+          failures.map(({ reason }) => reason),
+          `Failed to load datastores: ${description}`,
+        );
+      }
+
+      if (encryptionEnabled) {
+        await reconcileFieldDecryptionFailures(
+          fieldDecryptionFailureReport,
+          models.getEncryptedFieldPathsForType,
+          async (type, _id) => nedbBucket[type as AllTypes]?.findOneAsync({ _id }),
+        );
+      }
 
       // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
       // TODO: Figure out why this makes tests hang
@@ -621,6 +686,11 @@ export const createNedbDatabase = <O = initOptions>(
     }
   }
 
-  const database = wrapper ? wrapper(originalDatabase, { flushChangesImpl }) : originalDatabase;
+  const database = wrapper
+    ? wrapper(originalDatabase, {
+        flushChangesImpl,
+        getFieldDecryptionFailures: () => fieldDecryptionFailureReport.list(),
+      })
+    : originalDatabase;
   return database as IDatabase<O>;
 };
