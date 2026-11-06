@@ -24,15 +24,15 @@ import { schema } from './graphql.ts';
 import { startGRPCServer } from './grpc.ts';
 import { startHelloGrpcServers } from './grpc-hello.ts';
 import grpcReflectionApi from './grpc-reflection-api.ts';
-import { startHttpEchoServers } from './http-echo.ts';
+import { httpEchoRouter, startHttpEchoSelfSignedServer } from './http-echo.ts';
 import insomniaApi from './insomnia-api.ts';
 import { startMcpServers } from './mcp.ts';
 import { mockApi } from './mock-api.ts';
 import { startMockBinServer } from './mock-bin.ts';
-import { mtlsRouter } from './mtls.ts';
+import { clientCertificateAuth, mtlsRouter } from './mtls.ts';
 import { oauthRoutes } from './oauth.ts';
-import { startOAuth2Server } from './oauth2.ts';
-import { startResolvingProxyServer } from './resolving-proxy.ts';
+import { oauth2Router } from './oauth2.ts';
+import { attachResolvingProxy, resolvingProxyMiddleware } from './resolving-proxy.ts';
 import simpleCrud from './simple-crud.ts';
 import { startSocketIOServer } from './socket-io.ts';
 import { startWebSocketServer, startWsEchoServers } from './websocket.ts';
@@ -43,6 +43,8 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} ${new Date().toISOString()}`);
   next();
 });
+// Forward proxy (insomnia.test -> 127.0.0.1): absolute-URI requests are answered here, before any route.
+app.use(resolvingProxyMiddleware);
 // Account/session state, `_admin/*` hooks, Cloud Sync GraphQL, vault and
 // collaborators. Falls through to the routes below for anything it doesn't own.
 app.use(mockApi);
@@ -131,6 +133,9 @@ app.get('/cookies', (_req, res) => {
 app.use('/file', express.static(nodePath.join(import.meta.dirname, '../fixtures/files')));
 app.use('/auth/basic', basicAuthRouter);
 app.use('/protected', mtlsRouter);
+app.use('/oauth2', oauth2Router);
+app.use('/http-echo', httpEchoRouter);
+app.use('/http-echo-mtls', clientCertificateAuth, httpEchoRouter);
 app.use(grpcReflectionApi);
 
 githubApi(app);
@@ -273,14 +278,14 @@ app.use((req, res) => {
   res.status(200).json({});
 });
 
-startWebSocketServer(
-  app.listen(port, '::', () => {
-    console.log(`Listening at http://localhost:${port}`);
-    console.log(`Listening at http://127.0.0.1:${port}`);
-    console.log(`Listening at http://[::1]:${port}`);
-    console.log(`Listening at ws://localhost:${port}`);
-  }),
-);
+const httpServer = app.listen(port, '::', () => {
+  console.log(`Listening at http://localhost:${port}`);
+  console.log(`Listening at http://127.0.0.1:${port}`);
+  console.log(`Listening at http://[::1]:${port}`);
+  console.log(`Listening at ws://localhost:${port}`);
+});
+startWebSocketServer(httpServer);
+attachResolvingProxy(httpServer);
 
 startWebSocketServer(
   createServer(
@@ -303,7 +308,7 @@ startWebSocketServer(
   }),
 );
 
-startHttpEchoServers();
+startHttpEchoSelfSignedServer();
 
 startEventStreamServers();
 
@@ -316,10 +321,6 @@ startMockBinServer();
 startGitServer();
 
 startHelloGrpcServers();
-
-startOAuth2Server();
-
-startResolvingProxyServer();
 
 startSocketIOServer();
 
