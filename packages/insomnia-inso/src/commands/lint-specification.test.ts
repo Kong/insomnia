@@ -111,7 +111,7 @@ tags:
     expect(result.isValid).toBe(true);
   });
 
-  // Exercises $self, query, additionalOperations, in: querystring, itemSchema, tag parent/kind,
+  // Exercises $self, query, additionalOperations, in: querystring, itemSchema, example dataValue, tag parent/kind,
   // xml.nodeType, discriminator.defaultMapping, oauth2MetadataUrl, device flow and deprecated schemes.
   it('should lint a valid OpenAPI 3.2 spec without any results', async () => {
     const specContent = fs.readFileSync(path.join(__dirname, 'fixtures/openapi-3.2-valid.yaml'), 'utf8');
@@ -128,5 +128,29 @@ tags:
     const result = await lintSpecification({ specContent });
     expect(result.isValid).toBe(false);
     expect(result.results?.map(r => r.path.join('.'))).toEqual(['info', 'paths./pets.query']);
+  });
+
+  // The example rules are limited to 3.0 / 3.1 because they don't support 3.2 `dataValue`
+  it('should still validate media examples on an OpenAPI 3.1 spec', async () => {
+    const specContent = `openapi: 3.1.0
+info:
+  title: Pets
+  version: 1.0.0
+paths:
+  /pets:
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                invalid:
+                  value: 42
+`;
+    const result = await lintSpecification({ specContent });
+    expect(result.results?.map(r => r.code)).toContain('oas3-valid-media-example');
   });
 });

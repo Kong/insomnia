@@ -53,7 +53,7 @@ paths:
               examples:
                 sample:
                   summary: Two pets
-                  value:
+                  dataValue:
                     - id: 1
                       name: Rex
                       type: dog

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { isIPv4, isIPv6 } from 'node:net';
 
 import Spectral from '@stoplight/spectral-core';
+import { oas3_0, oas3_1 } from '@stoplight/spectral-formats';
 import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
@@ -13,6 +14,20 @@ import spectralRuntime from '@stoplight/spectral-runtime';
 process.on('uncaughtException', error => {
   console.error(error);
 });
+
+// These rules only know the example `value` field and report OpenAPI 3.2 `dataValue` examples as errors,
+// so they only run for OpenAPI 3.0 / 3.1 until Spectral supports 3.2 examples.
+// Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
+const RULES_WITHOUT_OAS3_2_EXAMPLES = ['oas3-valid-media-example', 'oas3-examples-value-or-externalValue'];
+const defaultRuleset = {
+  ...oas,
+  rules: {
+    ...oas.rules,
+    ...Object.fromEntries(
+      RULES_WITHOUT_OAS3_2_EXAMPLES.map(name => [name, { ...oas.rules[name], formats: [oas3_0, oas3_1] }]),
+    ),
+  },
+};
 
 function isPrivateOrLoopbackHost(hostname) {
   if (hostname === 'localhost' || hostname.endsWith('.localhost')) return true;
@@ -106,7 +121,7 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
   try {
     const spectral = new Spectral.Spectral({ resolver: safeRefResolver });
     const { fetch } = spectralRuntime;
-    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch }) : oas;
+    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch }) : defaultRuleset;
     spectral.setRuleset(ruleset);
     console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
     const diagnostics = await spectral.run(documentContent);
