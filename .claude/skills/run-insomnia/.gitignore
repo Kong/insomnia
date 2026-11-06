@@ -1,0 +1,3 @@
+# Backend URLs for non-public environments. This repo is public — keep them out
+# of it. Start from profiles.example.json.
+profiles.json
