@@ -56,6 +56,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
   const { getQuickJSModule } = await import('./quickjs-runtime');
   const QuickJS = await getQuickJSModule();
   const ctx = QuickJS.newContext();
+  let disposeBridge = () => {};
   const deadline = Date.now() + timeoutMs;
 
   // Single-file convenience: synthesize a one-entry module map from pluginSource when the caller
@@ -78,7 +79,7 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
     // sandbox global, see SANDBOX_INTERNAL_GLOBALS) and wire up a context of its own. Swapping in a
     // rejecting bridge here means any such attempt fails inside the sandbox instead of reaching the
     // real host, no matter how it's invoked.
-    installHostBridge(ctx, discover ? rejectingBridge : bridge);
+    disposeBridge = installHostBridge(ctx, discover ? rejectingBridge : bridge);
     installHostConsole(ctx, onConsole);
     installHostCrypto(ctx, opts.hostCrypto);
 
@@ -108,6 +109,9 @@ export const runTagInSandbox = async (opts: RunTagInSandboxOptions): Promise<str
 
     return await drivePromiseToString(ctx, timeoutMs);
   } finally {
+    // Bridge calls still in flight (e.g. one that never settles before the timeout) hold VM handles
+    // that must be released first, or disposing the context trips QuickJS's gc_obj_list assertion.
+    disposeBridge();
     ctx.dispose();
   }
 };
@@ -118,7 +122,8 @@ const rejectingBridge: HostBridge = async path => {
 };
 
 /** Register `__hostBridge(path, bodyJson)` returning a VM promise resolved from async host work. */
-const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
+const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): (() => void) => {
+  const pending = new Set<ReturnType<QuickJSContext['newPromise']>>();
   const fn = ctx.newFunction('__hostBridge', (pathHandle, bodyHandle) => {
     const path = ctx.getString(pathHandle);
     let body: unknown;
@@ -128,17 +133,31 @@ const installHostBridge = (ctx: QuickJSContext, bridge: HostBridge): void => {
       body = {};
     }
     const deferred = ctx.newPromise();
+    pending.add(deferred);
+    // A call that settles after the context was disposed (timeout) has nothing left to resolve.
+    const settle = (json: string) => {
+      if (pending.delete(deferred) && ctx.alive) {
+        resolveWithString(ctx, deferred, json);
+      }
+    };
     Promise.resolve()
       .then(() => bridge(path, body))
       .then(
-        value => resolveWithString(ctx, deferred, encodeBridgeSuccess(value)),
-        err => resolveWithString(ctx, deferred, encodeBridgeFailure(err)),
+        value => settle(encodeBridgeSuccess(value)),
+        err => settle(encodeBridgeFailure(err)),
       );
     // The settled VM promise schedules a job; pump it so the awaiting sandbox code resumes.
-    deferred.settled.then(() => ctx.runtime.executePendingJobs());
+    deferred.settled.then(() => ctx.alive && ctx.runtime.executePendingJobs());
     return deferred.handle;
   });
   setGlobal(ctx, '__hostBridge', fn);
+
+  return () => {
+    for (const deferred of pending) {
+      deferred.dispose();
+    }
+    pending.clear();
+  };
 };
 
 /**
