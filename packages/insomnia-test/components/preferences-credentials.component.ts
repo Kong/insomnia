@@ -1,9 +1,6 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
 import { ModalComponent } from "@package/components/modal.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { GitCredential } from "@package/models/git-credential";
 import type { CloudCredential } from "@package/models/settings";
-import { expect } from "@playwright/test";
 
 import { PreferencesTabComponent } from "./preferences-tab.component";
 
@@ -25,28 +22,6 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
    */
   async openCredentialsTab(): Promise<void> {
     await this.tabs.tabByName("Credentials").click();
-  }
-
-  /**
-   * Adds a custom (username/PAT) Git credential from the Credentials tab,
-   * which must already be open (see `openCredentialsTab()`).
-   */
-  async addCustomCredential(credential: GitCredential): Promise<void> {
-    const modal = new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", {
-      name: /Access Token Credential/,
-      }),
-    );
-    await DropdownComponent.byLabel(this.page, "Create Git Credential").select(
-      "Access Token",
-    );
-    await this.page.getByLabel("Author Email").fill(credential.authorEmail);
-    await this.page.getByLabel("Author Name").fill(credential.authorName);
-    await this.page.getByLabel("Username").fill(credential.username);
-    await this.page.getByLabel("Git Access Token").fill(credential.password);
-    await this.page.getByRole("button", { name: "Save Credential" }).click();
-    await modal.waitForHidden();
   }
 
   /**
