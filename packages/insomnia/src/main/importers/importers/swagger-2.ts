@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
 import type { Converter, Header, ImportRequest } from '../entities';
+import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
@@ -501,13 +501,10 @@ export const convert: Converter = async rawData => {
     return null;
   } // Await here so we catch any exceptions
 
-  try {
-    api = await SwaggerParser.validate(api);
-  } catch (err) {
-    // We already know it's a Swagger doc so we will try to import it anyway instead
-    // of bailing out here.
-    console.log('[swagger] Import file validation failed', err);
-  } // Import
+  // We already know it's a Swagger doc, so validation errors are only logged and we import it anyway
+  api = await resolveOpenApiDocument(api, '[swagger]');
+
+  // Import
 
   const workspace: ImportRequest = {
     _type: 'workspace',
