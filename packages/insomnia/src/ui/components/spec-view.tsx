@@ -59,6 +59,7 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { getMethodsFromOpenApiPathItem, type PathItemObject } from '~/ui/utils/openapi-path-item-methods';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 const SwaggerUIDiv = ({ text }: { text: string }) => {
@@ -105,16 +106,6 @@ interface SpecActionItem {
   tooltip?: string;
   action: () => void;
 }
-
-const getMethodsFromOpenApiPathItem = (pathItem: OpenAPIV3.PathItemObject): string[] => {
-  const methods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].filter(
-    method =>
-      // @ts-expect-error -- shrug I don't care what pathItem has in it
-      pathItem[method],
-  );
-
-  return methods;
-};
 
 const lintOptions = {
   delay: 1000,
@@ -219,7 +210,10 @@ export const SpecView = ({
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
-  const showSpecInfo = Boolean(info || servers || paths || components);
+  // `components.pathItems` and `webhooks` were added in OpenAPI 3.1 and are not part of the openapi-types document type
+  const pathItems = (components as { pathItems?: Record<string, PathItemObject> } | undefined)?.pathItems;
+  const webhooks = (parsedSpec as { webhooks?: Record<string, PathItemObject> } | undefined)?.webhooks;
+  const showSpecInfo = Boolean(info || servers || paths || webhooks || components);
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
@@ -340,11 +334,12 @@ export const SpecView = ({
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
-  const navigateToPath = (path: string): void => {
+  // `path` is either dot-separated or already split into segments (needed when a key itself contains dots)
+  const navigateToPath = (path: string | string[]): void => {
     if (!apiSpec) {
       return;
     }
-    const pathSegments = path.split('.');
+    const pathSegments = Array.isArray(path) ? path : path.split('.');
     const scrollPosition = {
       start: { line: 0, col: 0 },
       end: { line: 0, col: 200 },
@@ -1086,16 +1081,68 @@ export const SpecView = ({
                         <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
                           <span className="truncate">{item.path}</span>
                           <span className="flex-1" />
-                          {getMethodsFromOpenApiPathItem(item).map(method => (
-                            <Button
-                              key={method}
-                              data-testid={`spec-outline-method-${method.toUpperCase()}`}
-                              onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
-                              className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
-                            >
-                              {formatMethodName(method.toUpperCase())}
-                            </Button>
-                          ))}
+                          {getMethodsFromOpenApiPathItem(['paths', item.path], item, pathItems).map(
+                            ({ method, jumpTo }) => (
+                              <Button
+                                key={jumpTo.join('.')}
+                                data-testid={`spec-outline-method-${method.toUpperCase()}`}
+                                onPress={() => navigateToPath(jumpTo)}
+                                className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
+                              >
+                                {formatMethodName(method.toUpperCase())}
+                              </Button>
+                            ),
+                          )}
+                        </div>
+                      </GridListItem>
+                    )}
+                  </GridList>
+                )}
+              </div>
+            )}
+            {/* Webhooks */}
+            {webhooks && (
+              <div className="divide-y divide-solid divide-(--hl-md)">
+                <div>
+                  <Button
+                    className="flex w-full items-center justify-between gap-2 p-(--padding-sm) text-sm text-(--hl) uppercase select-none hover:bg-(--hl-sm) focus:bg-(--hl-sm)"
+                    onPress={() => {
+                      expandedKeys.includes('webhooks')
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'webhooks'))
+                        : setExpandedKeys([...expandedKeys, 'webhooks']);
+                    }}
+                  >
+                    <span className="truncate">Webhooks</span>
+                    <Icon icon={expandedKeys.includes('webhooks') ? 'minus' : 'plus'} className="text-xs" />
+                  </Button>
+                </div>
+                {expandedKeys.includes('webhooks') && (
+                  <GridList
+                    aria-label="Webhooks"
+                    items={Object.entries(webhooks).map(([name, item]) => ({
+                      ...item,
+                      id: name,
+                      name,
+                    }))}
+                    // Webhook names often contain dots (e.g. `pet.created`), so navigate with segments
+                    onAction={key => navigateToPath(['webhooks', key.toString()])}
+                  >
+                    {item => (
+                      <GridListItem className="group outline-hidden select-none" id={item.name}>
+                        <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
+                          <span className="truncate">{item.name}</span>
+                          <span className="flex-1" />
+                          {getMethodsFromOpenApiPathItem(['webhooks', item.name], item, pathItems).map(
+                            ({ method, jumpTo }) => (
+                              <Button
+                                key={jumpTo.join('.')}
+                                onPress={() => navigateToPath(jumpTo)}
+                                className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
+                              >
+                                {formatMethodName(method.toUpperCase())}
+                              </Button>
+                            ),
+                          )}
                         </div>
                       </GridListItem>
                     )}

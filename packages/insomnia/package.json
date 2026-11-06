@@ -151,7 +151,7 @@
     "shell-path": "^3.1.0",
     "shell-quote": "^1.8.2",
     "socket.io-client": "^4.8.1",
-    "swagger-ui-dist": "^5.21.0",
+    "swagger-ui-dist": "^5.33.0",
     "tinykeys": "^3.0.0",
     "tough-cookie": "^4.1.4",
     "tweetnacl": "^1.0.3",
