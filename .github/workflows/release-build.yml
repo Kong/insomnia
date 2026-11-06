@@ -171,13 +171,28 @@ jobs:
         shell: bash
         run: ./build-secure-wrapper.sh CI
 
-      - name: Move .dll and .exe files to /tosign (PowerShell)
+      # Every file costs one code-signing token, so only files without a valid signature go to /tosign.
+      # The stock Insomnia.exe was signed by electron-builder in the unpacked step. The copies made by
+      # build-secure-wrapper.sh (insomnia.dll, Insomnia-origin-<version>.exe) keep that signature, and
+      # d3dcompiler_47.dll and dxil.dll are already signed by Microsoft. The other vendor .dll files
+      # and the new wrapper Insomnia.exe are signed here.
+      - name: Move unsigned .dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
-          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -Filter *.exe | Move-Item -Destination "packages/insomnia/dist/win-unpacked/tosign"
+          Get-ChildItem -Path "packages/insomnia/dist/win-unpacked" -File |
+            Where-Object { $_.Extension -eq '.dll' -or $_.Extension -eq '.exe' } |
+            ForEach-Object {
+              $status = (Get-AuthenticodeSignature -LiteralPath $_.FullName).Status
+              if ($status -eq 'Valid') {
+                Write-Host "Already signed, skipping: $($_.Name)"
+              } else {
+                Write-Host "To sign ($status): $($_.Name)"
+                Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- to sign (DigiCert action): ``$($_.Name)``"
+                Move-Item -LiteralPath $_.FullName -Destination "packages/insomnia/dist/win-unpacked/tosign"
+              }
+            }
 
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
@@ -203,12 +218,14 @@ jobs:
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
 
       # re-packages the now code-signed electron-builder contents into the installer
+      # SKIP_SIGN_PREPACKAGED_APP_EXE: the wrapper Insomnia.exe is signed above, Squirrel must not sign it again
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
         env:
+          SKIP_SIGN_PREPACKAGED_APP_EXE: 'true'
           SM_HOST: ${{ vars.DIGICERT_SM_HOST }}
           SM_API_KEY: ${{ secrets.DIGICERT_SM_API_KEY }}
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
