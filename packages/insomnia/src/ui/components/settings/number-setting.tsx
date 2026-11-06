@@ -1,7 +1,7 @@
 import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
@@ -26,7 +26,7 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step = 1 }) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);

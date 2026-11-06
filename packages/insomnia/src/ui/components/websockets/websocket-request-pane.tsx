@@ -16,7 +16,7 @@ import {
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 import { tryToInterpolateRequestAndCollectSensitiveValues } from '~/ui/utils/try-interpolate';
 
@@ -194,7 +194,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   const disabled = readyState;
 

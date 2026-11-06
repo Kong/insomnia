@@ -55,9 +55,9 @@ import { Tooltip } from '~/ui/components/tooltip';
 import { ResponseTimelineViewer } from '~/ui/components/viewers/response-timeline-viewer';
 import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import {
   cancelExecution,
@@ -172,7 +172,7 @@ export const Runner: FC = () => {
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(

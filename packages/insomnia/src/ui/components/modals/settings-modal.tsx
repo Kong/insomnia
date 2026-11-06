@@ -8,6 +8,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 
@@ -44,7 +45,8 @@ type SettingsModalTabKey =
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
-  const { userSession, settings } = useRootLoaderData()!;
+  const { userSession } = useRootLoaderData()!;
+  const settings = useSettings();
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
   const { organizationId } = useParams() as { organizationId?: string };

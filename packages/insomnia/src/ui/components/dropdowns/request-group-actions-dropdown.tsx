@@ -10,8 +10,8 @@ import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { toKebabCase } from '../../../common/misc';
@@ -44,7 +44,7 @@ export const RequestGroupActionsDropdown = ({
   activeProject,
   activeWorkspace,
 }: Props) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});

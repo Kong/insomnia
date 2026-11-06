@@ -1,24 +1,12 @@
-import type { ThemeSettings } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { getColorScheme } from '~/ui/plugins/misc';
 
 // Kept out of ./theme so components rendered under the root route (eg. modals) can use it without
-// importing ~/root, which would close an import cycle. The root loader is read by its route id.
+// importing ~/root, which would close an import cycle.
 export const useIsLightTheme = () => {
-  const rootLoaderData = useRouteLoaderData('root') as { settings?: ThemeSettings } | undefined;
-
-  let lightTheme = 'default';
-  let darkTheme = 'default';
-  let theme = 'default';
-  let autoDetectColorScheme = false;
-  if (rootLoaderData?.settings) {
-    lightTheme = rootLoaderData.settings.lightTheme;
-    darkTheme = rootLoaderData.settings.darkTheme;
-    theme = rootLoaderData.settings.theme;
-    autoDetectColorScheme = rootLoaderData.settings.autoDetectColorScheme;
-  }
+  const { lightTheme, darkTheme, theme, autoDetectColorScheme } = useSettings();
 
   const calcIsLightTheme = useCallback(() => {
     let isLightTheme = false;

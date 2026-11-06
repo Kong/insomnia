@@ -4,7 +4,7 @@ import { Button } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';
@@ -18,7 +18,7 @@ import { PromptModal } from '../modals/prompt-modal';
 
 export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { hotKeyRegistry } = settings;
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const dropdownRef = useRef<DropdownHandle>(null);

@@ -1,6 +1,6 @@
 import React, { type FC, memo, useState } from 'react';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { docsBase } from '../../../common/documentation';
 import { Link } from '../base/link';
@@ -18,7 +18,7 @@ interface Props {
 export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse, showErrorDetails = true }) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   let msg: React.ReactNode = null;
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { editorFontSize } = settings;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {

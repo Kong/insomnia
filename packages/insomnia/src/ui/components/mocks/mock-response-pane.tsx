@@ -10,6 +10,7 @@ import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 
@@ -32,7 +33,7 @@ const { useInterval } = reactUse;
 
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
   const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });

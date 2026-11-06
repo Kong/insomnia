@@ -43,9 +43,9 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '~/ui/utils/grpc';
 
@@ -227,7 +227,7 @@ const Debug = () => {
     };
   }, []);
 
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>
