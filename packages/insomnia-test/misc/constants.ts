@@ -83,5 +83,3 @@ export const OAUTH2_CLIENT_ID = "test-client-id";
 export const OAUTH2_CLIENT_SECRET = "test-client-secret";
 export const OAUTH2_USERNAME = "testuser";
 export const OAUTH2_PASSWORD = "testpass";
-
-export const GIT_SERVER = "http://localhost:4070";
