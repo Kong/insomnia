@@ -306,6 +306,50 @@ test.describe('Environment Editor', () => {
     await expect.soft(page.getByRole('option', { name: 'My New Project Env' })).toBeVisible();
   });
 
+  test('the project environment dropdown filters its list by name', async ({ page, insomnia }) => {
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
+
+    for (const name of ['Alpha Project Env', 'Beta Project Env']) {
+      await page.getByLabel('Select a Project Environment').click();
+      await page.getByLabel('Add Project Environment').click();
+      await page.getByPlaceholder('Enter a name for your Environment').fill(name);
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
+      await page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
+      await insomnia.pressEscape();
+
+      // creating navigates into the new environment's own page; go back to the collection
+      await insomnia.navigationSidebar.selectWorkspace('My first collection');
+    }
+
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(page.getByRole('option', { name: 'Alpha Project Env' })).toBeVisible();
+    await expect.soft(page.getByRole('option', { name: 'Beta Project Env' })).toBeVisible();
+
+    // typing a name narrows the list down to it
+    await page.getByLabel('Filter project environments').fill('Beta');
+    await expect.soft(page.getByRole('option', { name: 'Beta Project Env' })).toBeVisible();
+    await expect.soft(page.getByRole('option', { name: 'Alpha Project Env' })).toBeHidden();
+    await expect.soft(page.getByRole('option', { name: 'No Project Environment' })).toBeHidden();
+
+    // a filter that matches nothing shows the empty state
+    await page.getByLabel('Filter project environments').fill('no such environment');
+    await expect.soft(page.getByText('No matching environments')).toBeVisible();
+
+    // clearing the filter brings the whole list back
+    await page.getByRole('button', { name: 'Clear filter' }).click();
+    await expect.soft(page.getByRole('option', { name: 'Alpha Project Env' })).toBeVisible();
+    await expect.soft(page.getByRole('option', { name: 'Beta Project Env' })).toBeVisible();
+
+    // closing the dropdown with a filter still typed in it resets to the full list on reopen
+    await page.getByLabel('Filter project environments').fill('Beta');
+    await expect.soft(page.getByRole('option', { name: 'Alpha Project Env' })).toBeHidden();
+    await page.locator('body').click();
+    await page.getByRole('listbox', { name: 'Select a Project Environment' }).waitFor({ state: 'hidden' });
+    await page.getByLabel('Select a Project Environment').click();
+    await expect.soft(page.getByLabel('Filter project environments')).toHaveValue('');
+    await expect.soft(page.getByRole('option', { name: 'Alpha Project Env' })).toBeVisible();
+  });
+
   test('Add Sub Environment and Add Private Sub Environment create environments with the correct privacy', async ({
     page,
   }) => {
