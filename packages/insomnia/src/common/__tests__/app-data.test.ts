@@ -150,7 +150,10 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceId = 'wrk_1';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const collectionChildren: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
@@ -170,11 +173,14 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceBId = 'wrk_b';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceAId });
     const childrenA: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceAId), childrenA);
@@ -218,11 +224,11 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('fetches all workspace ids in a single batched call when none are cached', async () => {
     const childrenA = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(
@@ -242,13 +248,13 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('only fetches the uncached subset of workspace ids', async () => {
     const cachedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), cachedChildren);
 
     const fetchedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(new Map([['wrk_b', fetchedChildren]]));
@@ -261,7 +267,7 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('does not call the service when every workspace id is already cached', async () => {
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 

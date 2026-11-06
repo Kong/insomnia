@@ -66,6 +66,7 @@ describe('importLegacyInsomniaFolder()', () => {
         [
           'ApiSpec',
           'Environment',
+          'Example',
           'GrpcRequest',
           'MockRoute',
           'MockServer',

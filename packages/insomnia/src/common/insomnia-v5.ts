@@ -18,6 +18,7 @@ import type {
   CookieJar,
   Environment,
   EnvironmentKvPairData,
+  Example,
   GrpcRequest,
   IDatabase,
   McpRequest,
@@ -48,6 +49,7 @@ import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
 import {
+  type Insomnia_Example,
   type Insomnia_GRPCRequest,
   type Insomnia_Request,
   type Insomnia_RequestGroup,
@@ -120,11 +122,7 @@ function mapParameters(parameters?: RequestParameter[]) {
  * @param resource - The resource object to extract metadata from
  * @returns Metadata object in v5 format, or undefined if resource is null/undefined
  */
-function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
-  if (!resource) {
-    return;
-  }
-
+function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest | Example) {
   return {
     id: resource._id,
     created: resource.created,
@@ -275,6 +273,33 @@ function mapBody(body?: RequestBody) {
       type: param.type,
     })),
   };
+}
+
+/**
+ * Maps Example resources to the v5 export format nested under their parent request
+ *
+ * @param examples - Example resources whose parentId is the same request
+ * @returns Examples in v5 export format
+ */
+function mapExampleResourcesToInsomniaExamples(examples: Example[]): Insomnia_Example[] {
+  return examples.map(example => ({
+    name: example.name,
+    meta: mapMeta(example),
+    request: {
+      method: example.request.method,
+      url: example.request.url,
+      parameters: mapParameters(example.request.parameters),
+      pathParameters: example.request.pathParameters,
+      headers: mapHeaders(example.request.headers),
+      body: mapBody(example.request.body),
+    },
+    response: {
+      statusCode: example.response.statusCode,
+      statusMessage: example.response.statusMessage,
+      headers: example.response.headers.map(header => ({ name: header.name, value: header.value })),
+      body: example.response.body,
+    },
+  }));
 }
 
 /**
@@ -664,9 +689,9 @@ function isSocketIOCollectionNode(item: Record<string, any>): boolean {
 
 function getCollection(
   file: InsomniaFile,
-): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] {
+): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup | Example)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] = [];
+    const resources: (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup | Example)[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -738,6 +763,32 @@ function getCollection(
           };
 
           resources.push(request);
+
+          (item.examples || []).forEach(example => {
+            const exampleResource: WithExportType<Example> = {
+              ...mapMetaToInsomniaMeta(example.meta),
+              type: 'Example',
+              _type: 'example',
+              name: example.name || 'Example',
+              parentId: request._id,
+              request: {
+                method: example.request?.method || 'GET',
+                url: example.request?.url || '',
+                parameters: mapParameters(example.request?.parameters),
+                pathParameters: example.request?.pathParameters || [],
+                headers: mapHeaders(example.request?.headers),
+                body: mapBody(example.request?.body),
+              },
+              response: {
+                statusCode: example.response?.statusCode || 200,
+                statusMessage: example.response?.statusMessage || '',
+                headers: (example.response?.headers || []).map(header => ({ name: header.name, value: header.value })),
+                body: example.response?.body || '',
+              },
+            };
+
+            resources.push(exampleResource);
+          });
         } else if ('reflectionApi' in item) {
           const grpcRequest: WithExportType<GrpcRequest> = {
             ...mapMetaToInsomniaMeta(
@@ -1095,7 +1146,7 @@ export async function getInsomniaV5DataExport({
      * @returns Hierarchical collection structure in v5 format
      */
     function getCollectionFromResources(
-      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
+      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest | Example)[],
       parentId: string,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
@@ -1104,7 +1155,7 @@ export async function getInsomniaV5DataExport({
       resources
         .filter(resource => {
           // Include all request groups, or filter by requestIds if specified
-          if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
+          if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource) || models.example.isExample(resource)) {
             return true;
           }
 
@@ -1135,6 +1186,14 @@ export async function getInsomniaV5DataExport({
                 rebuildPath: resource.settingRebuildPath,
               },
               pathParameters: resource.pathParameters,
+              // Examples are only exported for requests that can own them, so a
+              // request that was switched to GraphQL or SSE never leaks stale
+              // examples into files other clients read.
+              examples: models.example.canHostExamples(resource)
+                ? mapExampleResourcesToInsomniaExamples(
+                    resources.filter(models.example.isExample).filter(example => example.parentId === resource._id),
+                  )
+                : undefined,
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
@@ -1443,7 +1502,8 @@ export async function getInsomniaV5DataExport({
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
               models.grpcRequest.isGrpcRequest(resource) ||
-              models.socketIORequest.isSocketIORequest(resource),
+              models.socketIORequest.isSocketIORequest(resource) ||
+              models.example.isExample(resource),
           ),
           workspace._id,
         ),
@@ -1472,7 +1532,8 @@ export async function getInsomniaV5DataExport({
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
               models.grpcRequest.isGrpcRequest(resource) ||
-              models.socketIORequest.isSocketIORequest(resource),
+              models.socketIORequest.isSocketIORequest(resource) ||
+              models.example.isExample(resource),
           ),
           workspace._id,
         ),

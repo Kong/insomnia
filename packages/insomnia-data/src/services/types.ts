@@ -20,6 +20,10 @@ import type {
   WorkspaceScope,
 } from 'insomnia-data';
 
+// Lists render examples from summaries; bodies live only in the example
+// editor's own query, so workspace-wide reads never ship example bodies.
+import type { ExampleSummary } from '../models/example';
+
 export type ProjectWithGitRepository = Project & { gitRepository?: GitRepository };
 
 export interface OrganizationData {
@@ -34,13 +38,16 @@ interface CommonWorkspaceChildren<TChildren, TChildrenMeta extends object = {}> 
 }
 
 type CollectionChildDoc = Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup;
+
+// Lists render examples from summaries; bodies live only in the example editor's
+// own query, so a workspace-wide read never ships example bodies.
 export type { CollectionChildDoc };
 
 type CollectionRequestMeta = RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta;
 
 export interface CollectionWorkspaceChildren
   extends CommonWorkspaceChildren<
-    { requestsAndGroups: CollectionChildDoc[] },
+    { requestsAndGroups: CollectionChildDoc[]; examples: ExampleSummary[] },
     {
       allRequestMetas: CollectionRequestMeta[];
       requestGroupMetas: RequestGroupMeta[];
@@ -51,7 +58,7 @@ export interface MockServerWorkspaceChildren extends CommonWorkspaceChildren<{ m
 
 export interface DesignWorkspaceChildren
   extends CommonWorkspaceChildren<
-    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[] },
+    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[]; examples: ExampleSummary[] },
     {
       allRequestMetas: CollectionRequestMeta[];
       requestGroupMetas: RequestGroupMeta[];

@@ -17,6 +17,7 @@ import { useParams } from 'react-router';
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useCreateExample } from '~/ui/hooks/use-example-mutations';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -64,6 +65,16 @@ export const RequestActionsDropdown = ({
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
+  const createExampleMutation = useCreateExample();
+
+  const addExample = () => {
+    createExampleMutation.mutate({
+      requestId: request._id,
+      workspaceId,
+      projectId,
+      organizationId,
+    });
+  };
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -258,6 +269,16 @@ export const RequestActionsDropdown = ({
           icon: 'thumbtack',
           hint: hotKeyRegistry.request_togglePin,
         },
+        ...(isRequest(request) && models.example.canHostExamples(request)
+          ? [
+              {
+                id: 'AddExample',
+                name: 'Add Example',
+                action: addExample,
+                icon: 'code' as IconName,
+              },
+            ]
+          : []),
         {
           id: 'Duplicate',
           name: 'Duplicate',

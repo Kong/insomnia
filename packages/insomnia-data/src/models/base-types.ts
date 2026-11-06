@@ -7,6 +7,7 @@ export const allTypesSchema = z.enum([
   'CloudCredential',
   'CookieJar',
   'Environment',
+  'Example',
   'GitCredentials',
   'GitRepository',
   'GrpcRequest',

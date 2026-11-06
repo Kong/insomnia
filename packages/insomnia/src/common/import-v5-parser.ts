@@ -22,6 +22,7 @@ import { JsonSchema } from '~/common/zod/base-schemas';
 
 const {
   environment,
+  example,
   mockServer,
   mockRoute,
   unitTest,
@@ -205,6 +206,22 @@ export const RequestGroupSchema = z.object({
 });
 
 const {
+  name: exampleNameShape,
+  description: _exampleDescriptionShape,
+  metaSortKey: _exampleMetaSortKeyShape,
+  ...restExampleSchemaShape
+} = example.baseExampleSchema.shape;
+export const ExampleSchema = z.object({
+  name: exampleNameShape,
+  // Examples are identified across files by `meta.id`, so it is required and
+  // must be a real example id (no placeholder/default).
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('exp_'),
+  }),
+  ...restExampleSchemaShape,
+});
+
+const {
   url: requestUrlShape,
   name: requestNameShape,
   description: requestDescriptionShape,
@@ -236,6 +253,10 @@ export const RequestSchema = z.object({
     },
   }),
   pathParameters: requestPathParametersShape.nullable(),
+  examples: z.array(ExampleSchema).optional(),
+}).refine(request => !request.examples?.length || example.canHostExamples(request), {
+  message: 'Only plain HTTP requests can contain examples',
+  path: ['examples'],
 });
 
 /**
@@ -499,6 +520,7 @@ export type InsomniaFile = z.infer<typeof InsomniaFileSchema>;
 export type Insomnia_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 export type Insomnia_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
 export type Insomnia_Request = z.infer<typeof RequestSchema>;
+export type Insomnia_Example = z.infer<typeof ExampleSchema>;
 export type Insomnia_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
 export type Insomnia_SocketIORequest = z.infer<typeof SocketIORequestSchema>;
 export type Insomnia_Meta = z.infer<typeof MetaSchema>;

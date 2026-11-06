@@ -11,6 +11,26 @@ export const isRequestLikeDocType = (docType: string) =>
   docType === models.webSocketRequest.type ||
   docType === models.socketIORequest.type;
 
+// An example's parent is a request, so a deleted example falls back to that
+// request's editor. Passing this URL keeps `closeTabById` from sending the user
+// to the project dashboard when the example was the only open tab.
+export const getExampleDeleteFallbackUrl = ({
+  parentId,
+  closingTab,
+  organizationId,
+  projectId,
+}: {
+  parentId?: string | null;
+  closingTab?: BaseTab;
+  organizationId?: string;
+  projectId?: string;
+}): string | undefined => {
+  if (!closingTab || !parentId) {
+    return undefined;
+  }
+  return `/organization/${organizationId}/project/${projectId}/workspace/${closingTab.workspaceId}/debug/request/${parentId}`;
+};
+
 // When deleting a request that's the only open tab, land on its parent (the
 // folder it was in, or the collection root) instead of bouncing all the way
 // back to the project dashboard. Returns undefined when there isn't enough

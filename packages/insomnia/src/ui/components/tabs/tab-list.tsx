@@ -1,4 +1,4 @@
-import type { BaseModel, MockRoute, Request } from 'insomnia-data';
+import type { BaseModel, Example, MockRoute, Request } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -26,7 +26,7 @@ import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
+import { getExampleDeleteFallbackUrl, getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
 import { type BaseTab, InsomniaTab } from './tab';
 
 const { isRequest } = models.request;
@@ -115,6 +115,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.workspace.type,
       models.environment.type,
       models.mockRoute.type,
+      models.example.type,
       models.project.type,
       models.socketIORequest.type,
     ];
@@ -144,6 +145,10 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
+      } else if (docType === models.example.type) {
+        const closingTab = tabListRef.current.find(tab => tab.id === docId);
+        const fallbackUrl = getExampleDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
+        closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else if (isRequestLikeDocType(docType)) {
         const closingTab = tabListRef.current.find(tab => tab.id === docId);
         const fallbackUrl = getRequestDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
@@ -194,6 +199,14 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           });
         } else if (doc.type === models.mockRoute.type) {
           const method = (doc as MockRoute).method;
+          const tag = formatMethodName(method);
+          updateTabById?.(doc._id, {
+            method,
+            tag,
+          });
+        } else if (doc.type === models.example.type) {
+          // An example's method lives inside its request snapshot.
+          const method = (doc as Example).request.method;
           const tag = formatMethodName(method);
           updateTabById?.(doc._id, {
             method,

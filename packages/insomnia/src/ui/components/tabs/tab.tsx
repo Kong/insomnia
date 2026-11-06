@@ -19,6 +19,7 @@ export type TabType =
   | 'environment'
   | 'mockServer'
   | 'mockRoute'
+  | 'example'
   | 'document'
   | 'collection'
   | 'runner'
@@ -109,6 +110,12 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
           {tab.tag}
         </span>
       );
+    }
+
+    if (type === 'example') {
+      // Examples are documents, not HTTP calls: match the sidebar node icon
+      // instead of reusing the request method badge.
+      return <Icon icon="code" />;
     }
 
     if (type === 'folder') {

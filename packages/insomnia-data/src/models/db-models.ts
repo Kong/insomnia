@@ -4,6 +4,7 @@ export * as clientCertificate from './client-certificate';
 export * as cloudCredential from './cloud-credential';
 export * as cookieJar from './cookie-jar';
 export * as environment from './environment';
+export * as example from './example';
 export * as gitCredentials from './git-credentials';
 export * as gitRepository from './git-repository';
 export * as grpcRequest from './grpc-request';

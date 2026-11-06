@@ -54,6 +54,9 @@ function inferTabType(resource: TabResource): TabType | null {
   if (models.mockRoute.isMockRoute(resource)) {
     return 'mockRoute';
   }
+  if (models.example.isExample(resource)) {
+    return 'example';
+  }
   if (models.unitTestSuite.isUnitTestSuite(resource)) {
     return 'testSuite';
   }
@@ -201,6 +204,11 @@ const buildTabFromResource = async (params: AddTabParams): Promise<BaseTab | nul
   if (models.mockRoute.isMockRoute(resource)) {
     baseTab.tag = formatMethodName(resource.method);
     baseTab.method = resource.method;
+  }
+
+  if (models.example.isExample(resource)) {
+    baseTab.tag = formatMethodName(resource.request.method);
+    baseTab.method = resource.request.method;
   }
 
   return baseTab;
