@@ -1,6 +1,8 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
+import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
 import { TabBarComponent } from "@package/components/tab-bar.component";
+import { TooltipComponent } from "@package/components/tooltip.component";
 import { TreeComponent } from "@package/components/tree.component";
 import type { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
@@ -260,15 +262,120 @@ export class WorkspacePage extends BasePage {
   }
 
   /**
+   * Clicks the "Ok" button on the currently open dialog and waits for it
+   * to close. Used to dismiss an error dialog (e.g. one surfaced by an
+   * action decorated with `@throwOnDialog`) so a test can continue with
+   * further steps afterward.
+   */
+  async closeDialog(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await dialog.getByRole("button", { name: "Ok" }).click();
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks the "Duplicate" button and waits for the dialog to close.
+   */
+  async clickDuplicate(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await this.page
+      .getByRole("button", { name: "Duplicate", exact: true })
+      .click();
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
    * Clicks the "Create" button in the duplicate-request dialog and waits
    * for the dialog to close.
    */
   async clickDuplicateRequest(): Promise<void> {
-    const dialog = this.page.getByRole("dialog");
+    const dialog = new ModalComponent(this.page).root;
     await this.page
       .getByRole("button", { name: "Create", exact: true })
       .click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  private readonly generateCodeDialog = new ModalComponent(
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Generate Client Code" }),
+  ).root;
+
+  private readonly generateCodeCodeMirror = this.generateCodeDialog.locator(
+    '[data-testid="CodeEditor"] .CodeMirror',
+  );
+
+  /**
+   * Reads the code snippet shown in the "Generate Client Code" dialog
+   * (opened via `ContextMenuItem.GenerateCode`), then closes it via
+   * "Done".
+   */
+  async getGeneratedCode(): Promise<string> {
+    const code = await this.readCodeMirror(this.generateCodeCodeMirror);
+    await this.generateCodeDialog.getByRole("button", { name: "Done" }).click();
+    await expect(this.generateCodeDialog).toBeHidden({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    return code;
+  }
+
+  /**
+   * Switches the "Generate Client Code" dialog's target language (the
+   * first of its two dropdowns, e.g. "Shell"/"Node.js"/"Python"), then
+   * waits for the snippet to actually re-render with the new target
+   * before returning — the snippet updates
+   * asynchronously (~1s) after the menu item click, so a caller reading
+   * `getGeneratedCode()` immediately after would race a stale snippet.
+   * No-ops if `target` is already the dropdown's current selection.
+   */
+  async setGenerateCodeTarget(target: string): Promise<void> {
+    const dropdown = this.generateCodeDialog.getByTestId(
+      "generate-code-target-dropdown",
+    );
+    if ((await dropdown.innerText()).trim() === target) {
+      return;
+    }
+    const before = await this.readCodeMirror(this.generateCodeCodeMirror);
+    const trigger = dropdown.getByRole("button");
+    await trigger.click();
+    await new DropdownComponent(this.page, trigger).item(target).click();
+    await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await expect
+      .poll(() => this.readCodeMirror(this.generateCodeCodeMirror), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .not.toBe(before);
+  }
+
+  /**
+   * Switches the "Generate Client Code" dialog's client library (the
+   * second dropdown, whose options depend on the currently-selected
+   * target — e.g. Node.js offers HTTP/Request/Unirest/Axios/Fetch), then
+   * waits for the snippet to re-render with the new client, same as
+   * `setGenerateCodeTarget()`. No-ops if `client` is already the
+   * dropdown's current selection.
+   */
+  async setGenerateCodeClient(client: string): Promise<void> {
+    const dropdown = this.generateCodeDialog.getByTestId(
+      "generate-code-client-dropdown",
+    );
+    if ((await dropdown.innerText()).trim() === client) {
+      return;
+    }
+    const before = await this.readCodeMirror(this.generateCodeCodeMirror);
+    const trigger = dropdown.getByRole("button");
+    await trigger.click();
+    await new DropdownComponent(this.page, trigger).item(client).click();
+    await expect(this.page.getByRole("menuitem")).toHaveCount(0, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await expect
+      .poll(() => this.readCodeMirror(this.generateCodeCodeMirror), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .not.toBe(before);
   }
 
   /**
@@ -313,9 +420,10 @@ export class WorkspacePage extends BasePage {
     // at the same time (e.g. the focus-mode onboarding popover) also
     // matches role="dialog" and never closes on its own, which made the
     // unscoped version wait out its full timeout for the wrong dialog.
-    const dialog = this.page
-      .getByRole("dialog")
-      .filter({ has: this.page.locator(this.PROMPT_INPUT) });
+    const dialog = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ has: this.page.locator(this.PROMPT_INPUT) }),
+    ).root;
     await this.page
       .getByRole("button", { name: "Rename", exact: true })
       .click();
@@ -539,7 +647,7 @@ export class WorkspacePage extends BasePage {
     // instead dismiss an unrelated open dialog/panel (e.g. the
     // Environment Editor) and disrupt the tree this row lives in.
     await expect(async () => {
-      if (await this.page.getByRole("tooltip").isVisible()) {
+      if (await new TooltipComponent(this.page, row).tooltip.isVisible()) {
         await this.page.keyboard.press("Escape");
       }
       await row.click({ button: "right", timeout: 3000 });
@@ -654,6 +762,37 @@ export class WorkspacePage extends BasePage {
    */
   private dragRow(node: TreeNode): Locator {
     return this.treeNav.containerRow(node._id);
+  }
+
+  /**
+   * Selects the target project in the duplicate dialog's project
+   * dropdown. If no project name is given, selects the option marked
+   * "(current)".
+   */
+  async selectDuplicateProject(projectName?: string): Promise<void> {
+    const select = new ModalComponent(this.page).root.locator(
+      'select[name="projectId"]',
+    );
+    const options = await select.locator("option").allTextContents();
+    const label = projectName
+      ? options.find((o) => o.startsWith(projectName))
+      : options.find((o) => o.includes("(current)"));
+    if (!label) {
+      throw new Error(
+        `Project "${projectName ?? "(current)"}" not found in duplicate dialog`,
+      );
+    }
+    await select.selectOption({ label });
+  }
+
+  /**
+   * Fills the name field in the duplicate dialog and verifies the value
+   * stuck.
+   */
+  async setDuplicateName(name: string): Promise<void> {
+    const input = new ModalComponent(this.page).root.locator('input[name="name"]');
+    await input.fill(name);
+    await expect(input).toHaveValue(name);
   }
 
   /**

@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import { ProjectType } from "@package/enums/project-types";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
@@ -30,9 +31,10 @@ export class ProjectPage extends BasePage {
    */
   async clickNewProject(): Promise<void> {
     await this.page.locator(NEW_PROJECT_BUTTON).click();
-    await expect(this.page.locator(this.NEW_PROJECT_DIALOG)).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await new ModalComponent(
+      this.page,
+      this.page.locator(this.NEW_PROJECT_DIALOG),
+    ).expectOpen();
   }
 
   /**

@@ -17,14 +17,6 @@ export abstract class BasePage {
   abstract navigate(): Promise<void>;
 
   /**
-   * Rewires this Page instance onto a fresh window — called by
-   * `PageManager.setWindow()` after `AppFlow.restart()`.
-   */
-  setContext(page: Page): void {
-    this.page = page;
-  }
-
-  /**
    * Reads a CodeMirror editor's current value. See `CodeEditorComponent`.
    */
   protected async readCodeMirror(locator: Locator): Promise<string> {

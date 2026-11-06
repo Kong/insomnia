@@ -12,4 +12,9 @@ export class TabsComponent extends BaseComponent {
   tab(key: string): Locator {
     return this.root.locator(`[data-key="${key}"][role="tab"]`);
   }
+
+  /** A tab by its visible label. */
+  tabByName(name: string | RegExp): Locator {
+    return this.root.getByRole("tab", { name });
+  }
 }

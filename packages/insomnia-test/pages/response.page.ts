@@ -1,7 +1,10 @@
 import { ResponseViewerComponent } from '@package/components/response-viewer.component';
+import { TabsComponent } from "@package/components/tabs.component";
+import { RequestState } from '@package/enums/request-state';
+import type { ResponseExportOption } from '@package/enums/response-export-option';
 import { DEFAULT_TIMEOUT, LONG_TIMEOUT } from '@package/misc/constants';
 import type { ResponseHeader, ResponseStatusBar, ResponseTestResult, ResponseView, StreamEvent } from '@package/models/response';
-import { expect } from '@playwright/test';
+import { expect, type Locator } from '@playwright/test';
 
 import { BasePage } from './base.page';
 
@@ -38,6 +41,10 @@ export class ResponsePage extends BasePage {
     return new ResponseViewerComponent(this.page);
   }
   private readonly TABPANEL = '[data-testid="response-pane"] [role="tabpanel"]';
+
+  private get cancelRequestButton(): Locator {
+    return this.page.locator(this.PANE).getByRole('button', { name: 'Cancel Request' });
+  }
 
   /**
    * Assembles the full response state currently shown in the response
@@ -174,6 +181,27 @@ export class ResponsePage extends BasePage {
   }
 
   /**
+   * Clicks "Cancel Request" while a request is in flight.
+   */
+  async cancelRequest(): Promise<void> {
+    await this.cancelRequestButton.click();
+  }
+
+  /**
+   * Reports whether text (e.g. `"Request was cancelled"`, `"Executing
+   * script timeout"`) is currently visible anywhere in the response pane.
+   */
+  async hasMessage(text: string): Promise<boolean> {
+    return this.page.locator(this.PANE).getByText(text).first().isVisible();
+  }
+
+  async getRequestState(): Promise<RequestState> {
+    const cancelButton = this.cancelRequestButton;
+    if ((await cancelButton.count()) === 0) return RequestState.Idle;
+    return (await cancelButton.first().isVisible()) ? RequestState.Sending : RequestState.Idle;
+  }
+
+  /**
    * Reads the response's HTTP status tag and splits it into a numeric
    * status code and message.
    */
@@ -211,12 +239,46 @@ export class ResponsePage extends BasePage {
    * wait on `RequestPage.send()`.
    */
   async navigate(): Promise<void> {
-    const previewTab = this.page.locator(`${this.PANE} [data-key="timeline"][role="tab"]`);
+    const previewTab = new TabsComponent(this.page, this.page.locator(this.PANE)).tab("timeline");
     const dialog = this.page.getByRole('dialog').first();
     await previewTab.or(dialog).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     if (await dialog.isVisible()) {
       throw new Error((await dialog.innerText()).trim());
     }
+  }
+
+  /**
+   * Exports the response currently shown via the "Preview" dropdown,
+   * writing it through the native save dialog, which must already be
+   * stubbed (see `FlowContext.stubSaveDialog`).
+   */
+  async exportResponse(option: ResponseExportOption): Promise<void> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    await this.page.getByRole('menuitem', { name: option }).click();
+  }
+
+  /**
+   * Clicks the "Save To File" button that only renders for responses over
+   * the large-response threshold, writing the raw body through the native
+   * save dialog, which must already be stubbed (see
+   * `FlowContext.stubSaveDialog`).
+   */
+  async saveResponseToFile(): Promise<void> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Save To File' }).click();
+  }
+
+  /**
+   * Opens the "Preview" dropdown and reads one export item's label and
+   * whether it is disabled, then closes the dropdown.
+   */
+  async getExportOptionState(option: ResponseExportOption): Promise<{ text: string; disabled: boolean }> {
+    await this.page.locator(this.PANE).getByRole('button', { name: 'Preview' }).click();
+    const item = this.page.getByRole('menuitem', { name: option });
+    await item.waitFor({ state: 'visible' });
+    const text = (await item.innerText()).replace(/\s+/g, ' ').trim();
+    const disabled = /cursor-not-allowed/.test((await item.getAttribute('class')) ?? '');
+    await this.page.keyboard.press('Escape');
+    return { text, disabled };
   }
 
   private async switchTab(tab: ResponseTab): Promise<boolean> {

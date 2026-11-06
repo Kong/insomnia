@@ -4,6 +4,7 @@ import { KeyValueEditorComponent } from "@package/components/key-value-editor.co
 import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { SelectComponent } from "@package/components/select.component";
 import { TabPanelComponent } from "@package/components/tab-panel.component";
+import { PressedToggleComponent } from "@package/components/toggle.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
@@ -13,7 +14,6 @@ import type {
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
-import type { Page } from "playwright-core";
 
 import { BasePage } from "./base.page";
 
@@ -106,6 +106,39 @@ export abstract class RequestPage extends BasePage {
    */
   protected get URL_BAR(): string {
     return `${this.PANE} #${this.urlBarId} + .CodeMirror`;
+  }
+
+  /**
+   * Reads back the request's current headers.
+   */
+  async getHeaders(): Promise<RequestHeader[]> {
+    return this.readKeyValuePairs("headers");
+  }
+
+  /**
+   * Switches to the params tab and clicks "Import from URL", which parses
+   * the URL bar's current query string into structured params rows and
+   * strips the query string off the URL bar. Waits for the params rows to
+   * finish mounting (one per parsed query param) before returning, since
+   * the key/value editor's rows — and their CodeMirror instances — render
+   * asynchronously after the click.
+   */
+  async importParamsFromUrl(): Promise<void> {
+    await this.switchTab("params");
+    const query = (await this.getUrl()).split("?")[1] ?? "";
+    const paramCount = query.length
+      ? query.split("&").filter(Boolean).length
+      : 0;
+    const panel = this.page.locator(this.TABPANEL);
+    const rows = panel.locator('[role="listbox"] [role="option"]');
+    const countBefore = await rows.count();
+    await this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Import from URL" })
+      .click();
+    await expect(rows).toHaveCount(countBefore + paramCount, {
+      timeout: DEFAULT_TIMEOUT,
+    });
   }
 
   /**
@@ -226,7 +259,10 @@ export abstract class RequestPage extends BasePage {
       );
       await setValue();
       if (pair.disabled) {
-        await row.locator('button[aria-pressed="true"]').click();
+        await new PressedToggleComponent(
+          this.page,
+          row.locator("button[aria-pressed]"),
+        ).set(false);
       }
       await this.waitForPairPersisted(pair, {
         reapply: async () => {
@@ -336,8 +372,7 @@ export abstract class RequestPage extends BasePage {
   ): Promise<void> {
     const toggle = row.locator("button[aria-pressed]");
     if ((await toggle.count()) === 0) return;
-    const enabled = (await toggle.getAttribute("aria-pressed")) === "true";
-    if (enabled === Boolean(pair.disabled)) await toggle.click();
+    await new PressedToggleComponent(this.page, toggle).set(!pair.disabled);
   }
 
   /**
@@ -394,6 +429,25 @@ export abstract class RequestPage extends BasePage {
    */
   async setParams(params: RequestParameter[]): Promise<void> {
     await this.setKeyValuePairs("params", params);
+  }
+
+  /**
+   * Sets the request's query parameters through the Params tab's "Bulk
+   * Edit" text editor (one `name: value` line per pair) instead of
+   * per-row key/value editors, which sidesteps the stale-row-list save
+   * race that many separately saved rows can trigger. The pane stays in
+   * bulk mode afterwards, since that is an app-wide setting.
+   */
+  async setParamsBulk(params: RequestParameter[]): Promise<void> {
+    await this.switchTab("params");
+    const panel = this.page.locator(this.TABPANEL);
+    const toggle = panel.getByRole("button", { name: "Bulk Edit" });
+    if ((await toggle.count()) > 0) await toggle.click();
+    await this.setCodeMirrorValue(
+      panel.locator(".CodeMirror").first(),
+      params.map(({ name, value }) => `${name}: ${value ?? ""}`).join("\n"),
+    );
+    await this.waitForPairsSettled(params);
   }
 
   /**
