@@ -14,7 +14,7 @@ import { ensureCerts } from "./misc/certs.ts";
 //
 // Opts out automatically whenever INSOMNIA_BINARY is set (CI always sets
 // it, pointing at that run's freshly built/cached binary — see
-// .github/workflows/playwright.yml), or explicitly via
+// .github/workflows/insomnia-test.yml), or explicitly via
 // INSOMNIA_DEV_MODE=false/0 to fall back to the packaged
 // /Applications/Insomnia.app build locally without pointing at a specific
 // binary.
