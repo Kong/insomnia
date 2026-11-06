@@ -1,0 +1,46 @@
+import { faker } from "@faker-js/faker";
+import { ProjectType } from "@package/enums/project-types";
+import { test, WS_SERVER } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { EnvironmentKvPairDataType } from "@package/models/environment";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+const variableName = "unlinked";
+
+test("Verify Unlinked Environment Variable Causes Error in WebSocket Request", async ({
+  user,
+}) => {
+  const { environmentFlow, webSocketRequestFlow, workspaceFlow } =
+    user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  await environmentFlow.createBaseEnvironment(project, {
+    name: faker.string.alphanumeric(10),
+    kvPairData: [
+      {
+        id: "",
+        name: variableName,
+        value: "variable",
+        type: EnvironmentKvPairDataType.STRING,
+        enabled: true,
+      },
+    ],
+  });
+
+  const request = await webSocketRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    url: `${WS_SERVER}/{{${variableName}}}`,
+  });
+
+  await expect(webSocketRequestFlow.send(request)).rejects.toThrow(
+    /Failed to Render Request/,
+  );
+});

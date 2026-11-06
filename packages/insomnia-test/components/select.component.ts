@@ -1,5 +1,5 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
@@ -13,6 +13,10 @@ import { BaseComponent } from "./base.component";
  * `data-testid="hidden-select-container"`; it is used to verify the value.
  */
 export class SelectComponent extends BaseComponent {
+  static byLabel(page: Page, label: string | RegExp): SelectComponent {
+    return new SelectComponent(page, page.getByRole("button", { name: label }));
+  }
+
   // Scoped to the Select popover: pages such as the multipart body editor also
   // render their own listbox ("Key-value pairs"), which would trip strict mode.
   get listbox(): Locator {
@@ -50,5 +54,31 @@ export class SelectComponent extends BaseComponent {
       .first()
       .inputValue();
   }
+
+  async optionNames(): Promise<string[]> {
+    await this.open();
+    return (await this.listbox.getByRole("option").allInnerTexts()).map((t) =>
+      t.trim(),
+    );
+  }
 }
 
+/** A react-aria `ComboBox`: a text input that filters an option listbox. */
+export class ComboBoxComponent extends BaseComponent {
+  get input(): Locator {
+    return this.root.getByRole("combobox");
+  }
+
+  get listbox(): Locator {
+    return this.page.getByRole("listbox");
+  }
+
+  async select(text: string, optionName: string | RegExp = text): Promise<void> {
+    await this.input.fill(text);
+    await this.listbox.getByRole("option", { name: optionName }).first().click();
+  }
+
+  async value(): Promise<string> {
+    return this.input.inputValue();
+  }
+}

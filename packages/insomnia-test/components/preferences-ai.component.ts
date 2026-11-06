@@ -1,3 +1,4 @@
+import { SwitchComponent } from "@package/components/toggle.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -182,5 +183,22 @@ export class PreferencesAiComponent extends PreferencesTabComponent {
    */
   async clickDeactivateAiBackend(): Promise<void> {
     await this.page.getByRole("button", { name: "Deactivate" }).click();
+  }
+
+  /**
+   * Turns the AI Settings tab's "Smart Commits" switch on or off, doing
+   * nothing when it already is. The switch is disabled until an LLM backend
+   * is active. Must be called with `openAiSettingsTab()` already open.
+   */
+  async setSmartCommitsEnabled(enabled: boolean): Promise<void> {
+    const smartCommits = new SwitchComponent(
+      this.page,
+      this.dialog.getByTestId("toggle-smart-commits"),
+    );
+    const smartCommitsSwitch = smartCommits.control;
+    if ((await smartCommits.isOn()) !== enabled) {
+      await smartCommitsSwitch.click();
+    }
+    await expect(smartCommitsSwitch).toBeChecked({ checked: enabled });
   }
 }

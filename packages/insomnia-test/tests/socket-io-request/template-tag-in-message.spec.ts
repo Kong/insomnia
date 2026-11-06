@@ -1,0 +1,42 @@
+import { faker } from "@faker-js/faker";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, SOCKET_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+test("Verify Template Tag in Socket.IO Message Payload Is Resolved", async ({
+  user,
+}) => {
+  const { socketIoRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const request = await socketIoRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    url: SOCKET_SERVER,
+    message: {
+      eventName: "hello",
+      payload: JSON.stringify("{% base64 'encode', 'normal', 'abc' %}"),
+    },
+  });
+  await socketIoRequestFlow.connect(request);
+  const sendResponse = await socketIoRequestFlow.sendMessage(request);
+  await socketIoRequestFlow.disconnect(request);
+
+  await expect
+    .poll(
+      async () =>
+        (await sendResponse.events?.())?.some(
+          (event) => event.data === "hello\nYWJj",
+        ),
+      { timeout: DEFAULT_TIMEOUT },
+    )
+    .toBeTruthy();
+});
