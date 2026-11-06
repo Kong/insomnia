@@ -245,12 +245,15 @@ export class SpecPage extends BasePage {
    * all.
    */
   async getOpenApiVersion(): Promise<string> {
-    const label = this.page
-      .locator(this.PANE_ONE)
-      .first()
-      .getByText(/OpenAPI \d/)
-      .first();
-    if ((await label.count()) === 0) return "";
+    // The span is always rendered once the spec has content, but stays
+    // empty until the parsed spec's `openapi` field is known, so wait for
+    // text rather than for the element.
+    const label = this.page.getByTestId("spec-openapi-version");
+    try {
+      await expect(label).toHaveText(/OpenAPI \d/, { timeout: DEFAULT_TIMEOUT });
+    } catch {
+      return "";
+    }
     return (await label.innerText()).trim();
   }
 
@@ -379,10 +382,14 @@ export class SpecPage extends BasePage {
    * Reads every suite name currently listed in the Test Suites sidebar.
    */
   async getTestSuiteNames(): Promise<string[]> {
-    return new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows.allInnerTexts();
+    // Re-opening the Tests tab re-renders the list; wait for it to settle
+    // so a read taken mid-render doesn't return a stale or partial list.
+    return this.waitForStableValue(() =>
+      new TableComponent(
+        this.page,
+        this.page.locator(this.TEST_SUITES_LIST),
+      ).rows.allInnerTexts(),
+    );
   }
 
   /**

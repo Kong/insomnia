@@ -635,7 +635,7 @@ export const SpecView = ({
 
   const specPaneToolbar = apiSpec?.contents ? (
     <div className="flex h-10 shrink-0 items-center gap-2 overflow-hidden border-b border-solid border-(--hl-md) px-(--padding-sm)">
-      <span className="truncate text-sm text-(--hl) italic">
+      <span data-testid="spec-openapi-version" className="truncate text-sm text-(--hl) italic">
         {parsedSpec?.openapi ? `OpenAPI ${parsedSpec.openapi}` : ''}
       </span>
       <span className="flex-1" />
