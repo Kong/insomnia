@@ -252,11 +252,6 @@ describe('openapi-3', () => {
                     schema: {
                       $ref: '#/components/schemas/AdoptedPet',
                     },
-                    example: {
-                      name: 'Buddy',
-                      age: 2,
-                      adoptionDate: '2024-01-15',
-                    },
                   },
                 },
               },
@@ -854,6 +849,75 @@ describe('openapi-3', () => {
         flag: false,
         tag: 'rex',
       });
+    });
+  });
+
+  describe('example values', () => {
+    const buildDoc = (operation: Record<string, unknown>) => ({
+      openapi: '3.2.0',
+      info: { title: 'Pets', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      paths: { '/pets': { post: { responses: { 201: { description: 'created' } }, ...operation } } },
+    });
+    const petSchema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        type: { type: 'string', enum: ['dog', 'cat'] },
+        age: { type: 'integer', default: 0 },
+        vaccinated: { type: 'boolean', example: false },
+      },
+    };
+    const importRequest = async (operation: Record<string, unknown>) =>
+      (await convert(JSON.stringify(buildDoc(operation))))!.find(item => item._type === 'request');
+
+    it('should prefer the media type example, taking the first usable examples entry and dataValue over value', async () => {
+      const body = (examples: Record<string, unknown>) => ({
+        requestBody: { content: { 'application/json': { schema: petSchema, examples } } },
+      });
+
+      const fromDataValue = await importRequest(
+        body({
+          external: { externalValue: 'https://example.com/pet.json' },
+          rex: { dataValue: { name: 'Rex' }, value: { name: 'ignored' } },
+        }),
+      );
+      const fromValue = await importRequest(body({ tom: { value: { name: 'Tom' } } }));
+
+      expect(JSON.parse(fromDataValue.body.text)).toEqual({ name: 'Rex' });
+      expect(JSON.parse(fromValue.body.text)).toEqual({ name: 'Tom' });
+    });
+
+    it('should generate from the schema, keeping falsy examples / defaults and using the first enum value', async () => {
+      const request = await importRequest({ requestBody: { content: { 'application/json': { schema: petSchema } } } });
+
+      expect(JSON.parse(request.body.text)).toEqual({ name: 'string', type: 'dog', age: 0, vaccinated: false });
+    });
+
+    it('should prefer parameter examples, including querystring media type examples', async () => {
+      const request = await importRequest({
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer' }, example: 20 },
+          { name: 'X-Trace', in: 'header', schema: { type: 'string' }, examples: { trace: { dataValue: 'abc' } } },
+          {
+            name: 'filter',
+            in: 'querystring',
+            content: {
+              'application/x-www-form-urlencoded': {
+                schema: { type: 'object', properties: { color: { type: 'string' }, size: { type: 'integer' } } },
+                example: { color: 'brown' },
+              },
+            },
+          },
+        ],
+      });
+
+      expect(request.parameters).toEqual([
+        { name: 'limit', value: '20', disabled: true },
+        { name: 'color', value: 'brown', disabled: true },
+        { name: 'size', value: '0', disabled: true },
+      ]);
+      expect(request.headers).toContainEqual({ name: 'X-Trace', value: 'abc', disabled: true });
     });
   });
 });

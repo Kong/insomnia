@@ -400,15 +400,21 @@ const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
  */
 const convertQueryStringParameters = (parameters: QueryStringParameterObject[] = []) => {
   return parameters.flatMap(({ required, content }) => {
-    const schema = content?.['application/x-www-form-urlencoded']?.schema as OpenAPIV3.SchemaObject | undefined;
+    const mediaType = content?.['application/x-www-form-urlencoded'];
+    const schema = mediaType?.schema as OpenAPIV3.SchemaObject | undefined;
     const properties = schema?.properties;
     if (!properties || !isPlainObject(properties)) {
       return [];
     }
+    // Property values come from the media type example when it declares them
+    const mediaTypeExample = getExampleValue(mediaType);
+    const exampleValues = isPlainObject(mediaTypeExample) ? (mediaTypeExample as Record<string, unknown>) : {};
     return Object.entries(properties).flatMap(([propertyName, propertySchema]) =>
       flattenParameter(
         propertyName,
-        generateParameterExample(propertySchema as OpenAPIV3.SchemaObject),
+        exampleValues[propertyName] !== undefined
+          ? exampleValues[propertyName]
+          : generateParameterExample(propertySchema as OpenAPIV3.SchemaObject),
         required !== true || !schema.required?.includes(propertyName),
       ),
     );
@@ -652,7 +658,11 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
       };
     }
 
-    const example = generateParameterExample(bodyParameter.schema as OpenAPIV3.SchemaObject);
+    const mediaTypeExample = getExampleValue(bodyParameter);
+    const example =
+      mediaTypeExample !== undefined
+        ? mediaTypeExample
+        : generateParameterExample(bodyParameter.schema as OpenAPIV3.SchemaObject);
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: MIMETYPE_JSON,
@@ -680,12 +690,46 @@ const flattenParameter = (
 };
 
 /**
+ * Returns the example declared on a Media Type or Parameter Object: `example`, otherwise the first `examples` entry
+ * with a usable value (OpenAPI 3.2 `dataValue` before `value`; `externalValue` / `serializedValue` are skipped).
+ * Returns `undefined` when there is none, so the caller can fall back to generating one from the schema.
+ */
+const getExampleValue = (holder?: { example?: unknown; examples?: unknown }): unknown => {
+  if (!holder) {
+    return undefined;
+  }
+  if (holder.example !== undefined) {
+    return holder.example;
+  }
+  if (!isPlainObject(holder.examples)) {
+    return undefined;
+  }
+  for (const exampleObject of Object.values(holder.examples as Record<string, unknown>)) {
+    if (!isPlainObject(exampleObject)) {
+      continue;
+    }
+    const { dataValue, value } = exampleObject as { dataValue?: unknown; value?: unknown };
+    if (dataValue !== undefined) {
+      return dataValue;
+    }
+    if (value !== undefined) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+/**
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.flatMap(({ required, name, schema }) =>
-    flattenParameter(name, generateParameterExample(schema as OpenAPIV3.SchemaObject), required !== true),
-  );
+  return parameters.flatMap(parameter => {
+    const { required, name, schema } = parameter;
+    const parameterExample = getExampleValue(parameter);
+    const value =
+      parameterExample !== undefined ? parameterExample : generateParameterExample(schema as OpenAPIV3.SchemaObject);
+    return flattenParameter(name, value, required !== true);
+  });
 };
 
 /**
@@ -750,6 +794,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
       const: constValue,
       readOnly,
       default: defaultValue,
+      enum: enumValues,
       allOf,
       oneOf,
       anyOf,
@@ -767,7 +812,8 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
       return;
     }
 
-    if (example) {
+    // `!== undefined` so that falsy values such as `0`, `false` and `''` are kept
+    if (example !== undefined) {
       return example;
     }
 
@@ -779,8 +825,12 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
       return constValue;
     }
 
-    if (defaultValue) {
+    if (defaultValue !== undefined) {
       return defaultValue;
+    }
+
+    if (Array.isArray(enumValues) && enumValues.length > 0) {
+      return enumValues[0];
     }
 
     // Handle allOf by merging examples from all schemas

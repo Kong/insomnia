@@ -1109,7 +1109,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -1155,7 +1155,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -1590,7 +1590,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -1636,7 +1636,7 @@ exports[`Fixtures > Import openapi3 > dereferenced-with-tags-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -2791,7 +2791,7 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
         "text": "{
   "id": 0,
   "name": "string",
-  "type": "string"
+  "type": "dog"
 }",
       },
       "description": "",
@@ -2816,7 +2816,7 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
         "mimeType": "application/json",
         "text": "{
   "name": "string",
-  "type": "string"
+  "type": "dog"
 }",
       },
       "description": "",
@@ -2896,7 +2896,7 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
         {
           "disabled": true,
           "name": "type",
-          "value": "string",
+          "value": "dog",
         },
       ],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
@@ -2911,7 +2911,7 @@ exports[`Fixtures > Import openapi3 > openapi-3.2-input.yaml 1`] = `
         "text": "{
   "id": 0,
   "name": "string",
-  "type": "string"
+  "type": "dog"
 }",
       },
       "description": "",
@@ -3063,7 +3063,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -3109,7 +3109,7 @@ exports[`Fixtures > Import openapi3 > petstore-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -3639,7 +3639,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
@@ -3685,7 +3685,7 @@ exports[`Fixtures > Import openapi3 > petstore-with-tags-input.json 1`] = `
       "name": "string"
     }
   ],
-  "status": "string"
+  "status": "available"
 }",
       },
       "description": "",
