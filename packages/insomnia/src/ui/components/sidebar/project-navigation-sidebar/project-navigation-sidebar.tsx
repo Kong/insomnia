@@ -53,7 +53,7 @@ import {
   KonnectSyncResultPanel,
   useKonnectSyncBar,
 } from './konnect-sync-bar';
-import { getSidebarGridListItemId, getSidebarItemParentId } from './project-navigation-sidebar-utils';
+import { getSidebarGridListItemId, getSidebarItemParentId, getSidebarPinnedHeaderId } from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';

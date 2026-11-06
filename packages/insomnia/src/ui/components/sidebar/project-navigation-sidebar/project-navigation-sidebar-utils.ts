@@ -60,10 +60,12 @@ export const getSidebarGridListItemId = (item: FlatItem): string => {
   }
 };
 
-// The id of the item this row is nested under, exposed as `data-parent-id` so tests can rebuild the tree.
+export const getSidebarPinnedHeaderId = (workspaceId: string): string => `${workspaceId}-pinned-header`;
+
+// The row id (see `getSidebarGridListItemId`) of the row this row is nested under, exposed as `data-parent-id` so tests can rebuild the tree.
+// Returns `undefined` for top-level rows and for rows whose parent is not a sidebar row (e.g. a project's organization).
 export const getSidebarItemParentId = (item: FlatItem): string | undefined => {
   switch (item.kind) {
-    case 'project':
     case 'workspace':
     case 'collectionChild': {
       return item.doc.parentId;
@@ -72,7 +74,7 @@ export const getSidebarItemParentId = (item: FlatItem): string | undefined => {
       return item.workspaceId;
     }
     case 'pinnedRequest': {
-      return item.doc.parentId;
+      return getSidebarPinnedHeaderId(item.workspace._id);
     }
     case 'unsyncedWorkspace':
     case 'emptyProject': {
