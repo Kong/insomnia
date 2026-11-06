@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { certPath } from "@package/misc/certs";
-import { DEFAULT_TIMEOUT, HTTP_SERVER_MTLS, test } from "@package/misc/fixtures";
+import { HTTP_SERVER_MTLS, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
@@ -36,10 +36,8 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     url,
   });
   const responseBeforeCert = await httpRequestFlow.send(requestBeforeCert);
-  expect(responseBeforeCert.statusBar.code).toBeUndefined();
-  await expect
-    .poll(() => responseBeforeCert.console(), { timeout: DEFAULT_TIMEOUT })
-    .toMatch(/certificate required/i);
+  expect(responseBeforeCert.statusBar.code).toBe(401);
+  expect(responseBeforeCert.preview).toMatchObject({ error: "Client certificate required" });
 
   await certificatesFlow.addClientCertificate(collection, {
     host: "localhost",
@@ -55,7 +53,7 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
   const responseWithCert = await httpRequestFlow.send(requestWithCert);
   expect(responseWithCert.statusBar.code).toBe(200);
   expect(responseWithCert.preview).toMatchObject({
-    headers: expect.objectContaining({ host: "localhost:4063" }),
+    headers: expect.objectContaining({ host: "localhost:4011" }),
   });
 
   await certificatesFlow.setClientCertificateEnabled(
@@ -70,8 +68,6 @@ test("Verify Client Certificate Toggle Controls mTLS Enforcement For HTTP Reques
     url,
   });
   const responseAfterDisable = await httpRequestFlow.send(requestAfterDisable);
-  expect(responseAfterDisable.statusBar.code).toBeUndefined();
-  await expect
-    .poll(() => responseAfterDisable.console(), { timeout: DEFAULT_TIMEOUT })
-    .toMatch(/certificate required/i);
+  expect(responseAfterDisable.statusBar.code).toBe(401);
+  expect(responseAfterDisable.preview).toMatchObject({ error: "Client certificate required" });
 });

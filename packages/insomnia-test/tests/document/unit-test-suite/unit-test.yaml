@@ -25,7 +25,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: localhost:4060/status/404
+  - url: localhost:4010/http-echo/status/404
     name: request B
     meta:
       id: req_6b3c869841324716a49980330ed0fbce

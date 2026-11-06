@@ -24,7 +24,7 @@ test("Import WSDL by Clipboard", async ({ user }) => {
   const request = await httpRequestFlow.get("Add");
   expect(request).toMatchObject({
     method: "POST",
-    url: "http://127.0.0.1:4060/calculator.asmx",
+    url: "http://127.0.0.1:4010/http-echo/calculator.asmx",
   });
 
   await httpRequestPage.setBody({

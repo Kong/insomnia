@@ -15,7 +15,7 @@ resources:
     parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
     modified: 1737617845875
     created: 1734948333857
-    url: localhost:4060/post
+    url: localhost:4010/http-echo/post
     name: legacy-array-vault
     description: ""
     method: POST
@@ -42,7 +42,7 @@ resources:
     parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
     modified: 1737617874271
     created: 1737617856040
-    url: localhost:4060/post
+    url: localhost:4010/http-echo/post
     name: legacy-object-vault
     description: ""
     method: POST
@@ -69,7 +69,7 @@ resources:
     parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
     modified: 1737617920254
     created: 1737617896390
-    url: localhost:4060/post
+    url: localhost:4010/http-echo/post
     name: legacy-invalid-vault
     description: ""
     method: POST

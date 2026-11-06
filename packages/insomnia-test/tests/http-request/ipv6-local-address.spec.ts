@@ -7,7 +7,7 @@ import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-const url = "http://[::1]:4060/post";
+const url = "http://[::1]:4010/http-echo/post";
 
 test("Verify HTTP request succeeds against a local IPv6 address", async ({
   user,

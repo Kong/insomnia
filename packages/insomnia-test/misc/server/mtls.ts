@@ -5,7 +5,7 @@ export const mtlsRouter = express.Router();
 
 mtlsRouter.use(clientCertificateAuth);
 
-async function clientCertificateAuth(req: any, res: Response, next: NextFunction) {
+export async function clientCertificateAuth(req: any, res: Response, next: NextFunction) {
   if (!req.client.authorized) {
     return res.status(401).send({ error: 'Client certificate required' });
   }

@@ -32,7 +32,7 @@ test("Verify Custom CA Root Certificate Establishes Trust For HTTPS Request", as
   expect(responseBeforeCa.statusBar.code).toBeUndefined();
   await expect
     .poll(() => responseBeforeCa.console(), { timeout: DEFAULT_TIMEOUT })
-    .toMatch(/unable to get local issuer certificate/i);
+    .toMatch(/unable to get local issuer certificate|self-signed certificate in certificate chain/i);
 
   await certificatesFlow.setCaCertificate(
     collection,
@@ -47,6 +47,6 @@ test("Verify Custom CA Root Certificate Establishes Trust For HTTPS Request", as
   const responseAfterCa = await httpRequestFlow.send(requestAfterCa);
   expect(responseAfterCa.statusBar.code).toBe(200);
   expect(responseAfterCa.preview).toMatchObject({
-    headers: expect.objectContaining({ host: "localhost:4062" }),
+    headers: expect.objectContaining({ host: "localhost:4011" }),
   });
 });

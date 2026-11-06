@@ -2,8 +2,6 @@ import crypto from "node:crypto";
 
 import express from "express";
 
-const PORT = process.env.OAUTH2_PORT || 4080;
-
 // Fixed test credentials, the same "no interactive login step" convention
 // as misc/git-server.ts's testuser/testpass — mirrored as exported
 // constants in misc/fixtures.ts, which is the source specs import from.
@@ -15,9 +13,9 @@ const PASSWORD = "testpass";
 // A loopback-only mock with no cookies or sessions, so there is no ambient
 // credential for a cross-site request to ride on and CSRF tokens don't apply.
 // nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
-const app = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+export const oauth2Router = express.Router();
+oauth2Router.use(express.urlencoded({ extended: true }));
+oauth2Router.use(express.json());
 
 // In-memory stores. A fresh mock server process (started per Playwright
 // run, same as every other misc/*.js server) means these are naturally
@@ -88,7 +86,7 @@ function verifyClient(req: express.Request) {
 // any request for the known CLIENT_ID and redirects straight back, since
 // driving a real login form inside Insomnia's embedded authorization
 // window is out of scope for what these tests need to verify.
-app.get("/authorize", (req, res) => {
+oauth2Router.get("/authorize", (req, res) => {
   const {
     response_type,
     client_id,
@@ -145,7 +143,7 @@ app.get("/authorize", (req, res) => {
 
 // Token endpoint, used by every grant type to obtain (or refresh) an
 // access token.
-app.post("/token", (req, res) => {
+oauth2Router.post("/token", (req, res) => {
   const { grant_type } = req.body;
 
   if (grant_type === "authorization_code") {
@@ -287,7 +285,7 @@ app.post("/token", (req, res) => {
 // A protected resource for send()-time verification that a fetched access
 // token is actually usable end-to-end, mirroring misc/echo-server.ts's
 // own request-echo pattern.
-app.get("/resource", (req, res) => {
+oauth2Router.get("/resource", (req, res) => {
   const authHeader = req.headers.authorization || "";
   const [scheme, token] = authHeader.split(" ");
   const entry = accessTokens.get(token);
@@ -309,15 +307,9 @@ app.get("/resource", (req, res) => {
 // Auth tab's UI shows afterward. Looked up by access_token — the caller
 // already has it in hand from fetchOAuth2Tokens() — rather than "most
 // recent", so concurrent specs each see only their own exchange.
-app.get("/_debug/last-token-request", (req, res) => {
+oauth2Router.get("/_debug/last-token-request", (req, res) => {
   const { access_token } = req.query as Record<string, any>;
   res.json(tokenRequestLog.get(access_token) || null);
 });
 
-app.get("/health", (req, res) => res.send("ok"));
-
-export function startOAuth2Server() {
-  app.listen(PORT as number, '127.0.0.1', () => {
-    console.log(`OAuth2 mock server listening at http://localhost:${PORT}`);
-  });
-}
+oauth2Router.get("/health", (req, res) => res.send("ok"));

@@ -6,7 +6,7 @@ meta:
   created: 1736618909373
   modified: 1736618909373
 collection:
-  - url: localhost:4060/post
+  - url: localhost:4010/http-echo/post
     name: New Request
     meta:
       id: req_180c79263db64fd8a01a2579cdcb5778
@@ -34,7 +34,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: http://localhost:4060/post
+  - url: http://localhost:4010/http-echo/post
     name: Global Var Request
     meta:
       id: req_5f4e6d7c8b9a0f1e2d3c4b5a69788779

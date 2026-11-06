@@ -6,7 +6,7 @@ meta:
   created: 1739887154405
   modified: 1739887154405
 collection:
-  - url: http://localhost:4060/post
+  - url: http://localhost:4010/http-echo/post
     name: cascade request no folder
     meta:
       id: req_4c6e8a0b2d4f6a8c0e2b4d6f8a0c2e18
@@ -39,7 +39,7 @@ collection:
       modified: 1668533312225
       sortKey: -1668533312225
     children:
-      - url: http://localhost:4060/post
+      - url: http://localhost:4010/http-echo/post
         name: cascade request
         meta:
           id: req_1f3e5a7c9b1d3f5a7c9e1b3d5f7a9c13
@@ -73,7 +73,7 @@ collection:
           modified: 1668533312226
           sortKey: -1668533312224
         children:
-          - url: http://localhost:4060/post
+          - url: http://localhost:4010/http-echo/post
             name: inner request
             meta:
               id: req_0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c23

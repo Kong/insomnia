@@ -190,10 +190,10 @@
   </wsdl:binding>
   <wsdl:service name="Calculator">
     <wsdl:port name="CalculatorSoap" binding="tns:CalculatorSoap">
-      <soap:address location="http://127.0.0.1:4060/calculator.asmx" />
+      <soap:address location="http://127.0.0.1:4010/http-echo/calculator.asmx" />
     </wsdl:port>
     <wsdl:port name="CalculatorSoap12" binding="tns:CalculatorSoap12">
-      <soap12:address location="http://127.0.0.1:4060/calculator.asmx" />
+      <soap12:address location="http://127.0.0.1:4010/http-echo/calculator.asmx" />
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

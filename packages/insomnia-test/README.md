@@ -60,15 +60,15 @@ PWDEBUG=1 npx playwright test <file>      # step-through debugger
 | --- | --- | --- |
 | Mock Insomnia API | 4010 | `npm run mock-api` |
 | Event stream (SSE) | 4050 | `npm run event-stream-server` |
-| HTTP echo | 4060–4063 | `npm run echo-server` |
+| HTTP echo | 4010 / 4011 (`/http-echo`, `/http-echo-mtls`), 4061 | 4010/4011 part of `npm run mock-server` |
 | Socket.IO | 3000 / 3001 | `npm run socket-server` |
 | WebSocket echo | 4040 / 4041 | `npm run ws-echo-server` |
 | MCP | 4020–4022 | `npm run mcp-server` |
 | gRPC | 9000–9002 | `npm run grpc-server` |
 | Git HTTP | 4070 | `npm run git-server` |
-| OAuth2 | 4080 | `npm run oauth2-server` |
+| OAuth2 | 4010 (`/oauth2`) | part of `npm run mock-server` |
 | Mock bin | 4090 | `npm run mock-bin-server` |
-| Resolving proxy (`insomnia.test` → 127.0.0.1) | 4095 | `npm run resolving-proxy-server` |
+| Resolving proxy (`insomnia.test` → 127.0.0.1) | 4010 | part of `npm run mock-server` |
 
 TLS/mTLS certificates for these servers are generated on first run (`misc/certs.ts`, output in `misc/fixtures/generated/`, git-ignored). Endpoint constants live in `misc/constants.ts`.
 
