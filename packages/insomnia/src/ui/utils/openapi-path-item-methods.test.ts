@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { getMethodsFromOpenApiPathItem } from './openapi-path-item-methods';
 
 const operation = { responses: {} };
+const PETS = ['paths', '/pets'];
 
 describe('getMethodsFromOpenApiPathItem', () => {
   it('returns standard methods in spec order, with the 3.2 query method last', () => {
-    const result = getMethodsFromOpenApiPathItem('/pets', { query: operation, trace: operation, get: operation });
+    const result = getMethodsFromOpenApiPathItem(PETS, { query: operation, trace: operation, get: operation });
 
     expect(result).toEqual([
       { method: 'get', jumpTo: ['paths', '/pets', 'get'] },
@@ -16,7 +17,7 @@ describe('getMethodsFromOpenApiPathItem', () => {
   });
 
   it('expands additionalOperations in declaration order instead of listing the key itself', () => {
-    const result = getMethodsFromOpenApiPathItem('/pets', {
+    const result = getMethodsFromOpenApiPathItem(PETS, {
       get: operation,
       additionalOperations: { PURGE: operation, LINK: operation },
     });
@@ -28,13 +29,19 @@ describe('getMethodsFromOpenApiPathItem', () => {
     ]);
   });
 
+  it('keeps names containing dots as a single segment, e.g. webhooks', () => {
+    const result = getMethodsFromOpenApiPathItem(['webhooks', 'pet.created'], { post: operation });
+
+    expect(result).toEqual([{ method: 'post', jumpTo: ['webhooks', 'pet.created', 'post'] }]);
+  });
+
   describe('Path Item $ref', () => {
     const pathItems = {
       Pets: { get: operation, query: operation, additionalOperations: { PURGE: operation } },
     };
 
     it('resolves a local components.pathItems reference and points at the referenced operations', () => {
-      const result = getMethodsFromOpenApiPathItem('/pets', { $ref: '#/components/pathItems/Pets' }, pathItems);
+      const result = getMethodsFromOpenApiPathItem(PETS, { $ref: '#/components/pathItems/Pets' }, pathItems);
 
       expect(result).toEqual([
         { method: 'get', jumpTo: ['components', 'pathItems', 'Pets', 'get'] },
@@ -45,7 +52,7 @@ describe('getMethodsFromOpenApiPathItem', () => {
 
     it('prefers the methods defined next to the $ref', () => {
       const result = getMethodsFromOpenApiPathItem(
-        '/pets',
+        PETS,
         { $ref: '#/components/pathItems/Pets', post: operation },
         pathItems,
       );
@@ -58,14 +65,18 @@ describe('getMethodsFromOpenApiPathItem', () => {
       ['a non pathItems pointer', '#/paths/~1other'],
       ['a missing target', '#/components/pathItems/Missing'],
     ])('returns nothing for %s', (_label, $ref) => {
-      expect(getMethodsFromOpenApiPathItem('/pets', { $ref }, pathItems)).toEqual([]);
+      expect(getMethodsFromOpenApiPathItem(PETS, { $ref }, pathItems)).toEqual([]);
     });
 
     it('does not follow a reference chain', () => {
-      const result = getMethodsFromOpenApiPathItem('/pets', { $ref: '#/components/pathItems/A' }, {
-        A: { $ref: '#/components/pathItems/B' },
-        B: { get: operation },
-      });
+      const result = getMethodsFromOpenApiPathItem(
+        PETS,
+        { $ref: '#/components/pathItems/A' },
+        {
+          A: { $ref: '#/components/pathItems/B' },
+          B: { get: operation },
+        },
+      );
 
       expect(result).toEqual([]);
     });
