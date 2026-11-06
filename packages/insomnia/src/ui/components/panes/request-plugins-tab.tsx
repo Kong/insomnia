@@ -1,0 +1,387 @@
+import type { Project, Request, Workspace } from 'insomnia-data';
+import { type ReactNode, useState } from 'react';
+import { Button } from 'react-aria-components';
+
+import type { KonnectPlugin } from '../../../konnect/api';
+import {
+  getKonnectPluginCreateUrl,
+  getKonnectPluginEditUrl,
+  getKonnectPluginsUrl,
+  getPluginDocsUrl,
+  getPluginHubUrl,
+  getPluginPriorityDocsUrl,
+} from '../../../konnect/links';
+import { SUGGESTED_PLUGINS } from '../../../konnect/plugin-catalog';
+import {
+  getRequestProtocol,
+  type KonnectRouteLink,
+  type PluginScope,
+  resolveKonnectRouteLink,
+  selectEffectivePlugins,
+} from '../../../konnect/plugin-scope';
+import { useKonnectPlugins } from '../../hooks/use-konnect-plugins';
+import { Icon } from '../icon';
+import { DeckCommandModal } from '../modals/deck-command-modal';
+
+interface Props {
+  activeRequest: Pick<Request, 'konnectRouteKey' | 'url'>;
+  activeWorkspace: Pick<Workspace, 'konnectServiceId'> | null | undefined;
+  activeProject: Pick<Project, 'konnectControlPlaneId' | 'konnectRegion' | 'name'> | null | undefined;
+}
+
+type DeckModalState = { mode: 'edit'; plugin: KonnectPlugin } | { mode: 'add'; pluginName: string };
+
+const GROUP_LABELS: Record<PluginScope, string> = {
+  route: 'Plugins on this Route',
+  service: 'Plugins on this Service',
+  global: 'Plugins on this Control Plane',
+};
+
+const SCOPE_META_LABELS: Record<PluginScope, string> = {
+  route: 'Route-scoped',
+  service: 'Service-scoped',
+  global: 'Global',
+};
+
+const ACTION_CLASS = 'rounded-xs px-2 py-1 text-xs text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)';
+
+/**
+ * Keeps the action column on the same row while there is room for it, and
+ * lets the left content wrap instead of pushing the buttons onto a new line.
+ * Below the container breakpoint, the action column moves under the content.
+ */
+function PluginRowLayout({ children, actions }: { children: ReactNode; actions: ReactNode }) {
+  return (
+    <div className="@container border-b border-solid border-(--hl-md)">
+      <div className="flex flex-col gap-2 px-4 py-2 @min-[42rem]:flex-row @min-[42rem]:items-center @min-[42rem]:justify-between">
+        <div className="flex min-w-0 flex-1 items-start gap-3">{children}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-1 self-start @min-[42rem]:self-center">{actions}</div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 bg-(--hl-xs) px-4 py-2">
+      <div className="min-w-0">
+        <h4 className="text-xs font-bold text-(--hl) uppercase">{title}</h4>
+        {description && <p className="text-xs text-(--hl)">{description}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function PluginRow({
+  plugin,
+  scopeLabel,
+  link,
+  onShowDeck,
+}: {
+  plugin: KonnectPlugin;
+  scopeLabel: string;
+  link: KonnectRouteLink;
+  onShowDeck: (plugin: KonnectPlugin) => void;
+}) {
+  const editUrl = getKonnectPluginEditUrl(link.region, link.controlPlaneId, plugin.name, plugin.id);
+  const before = plugin.ordering?.before?.access ?? [];
+  const after = plugin.ordering?.after?.access ?? [];
+
+  return (
+    <PluginRowLayout
+      actions={
+        <>
+          <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(getPluginDocsUrl(plugin.name))}>
+            Docs
+          </Button>
+          {editUrl && (
+            <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(editUrl)}>
+              Edit in Konnect
+            </Button>
+          )}
+          <Button className={ACTION_CLASS} onPress={() => onShowDeck(plugin)}>
+            decK command
+          </Button>
+        </>
+      }
+    >
+      <span
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${plugin.enabled ? 'bg-green-500' : 'bg-(--hl-md)'}`}
+        aria-hidden
+      />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-medium">{plugin.instance_name ?? plugin.name}</span>
+          {plugin.instance_name && <span className="shrink-0 text-xs text-(--hl)">{plugin.name}</span>}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--hl)">
+          <span>{scopeLabel === 'Conditional' ? 'conditional' : scopeLabel}</span>
+          {!plugin.enabled && <span className="text-(--color-danger)">disabled</span>}
+          {plugin.condition && (
+            <span title={plugin.condition}>{scopeLabel === 'Conditional' ? 'condition' : 'conditional'}</span>
+          )}
+          {plugin.consumer && <span>consumer-scoped</span>}
+          {plugin.consumer_group && <span>consumer-group-scoped</span>}
+          {before.length > 0 && <span>runs before {before.join(', ')}</span>}
+          {after.length > 0 && <span>runs after {after.join(', ')}</span>}
+        </div>
+      </div>
+    </PluginRowLayout>
+  );
+}
+
+function EmptyState({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-(--hl)">
+      <span>{title}</span>
+      <span className="max-w-lg text-xs">{detail}</span>
+    </div>
+  );
+}
+
+export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProject }: Props) => {
+  const [deckModal, setDeckModal] = useState<DeckModalState | null>(null);
+  const link = resolveKonnectRouteLink(activeRequest, activeWorkspace, activeProject);
+  const { status, plugins, availableSuggestionNames, availabilityStatus, error, missingPat, isRefreshing, refresh } =
+    useKonnectPlugins(link);
+
+  if (!activeProject?.konnectControlPlaneId) {
+    return null;
+  }
+
+  if (!activeRequest.konnectRouteKey || !activeWorkspace?.konnectServiceId) {
+    return (
+      <EmptyState
+        title="This request isn't linked to a Konnect route."
+        detail="Plugins can only be shown for requests synced from Kong Konnect."
+      />
+    );
+  }
+
+  if (!activeProject.konnectRegion) {
+    return (
+      <EmptyState
+        title="This project is missing its Konnect region."
+        detail="Re-sync Konnect for this project, then reopen this tab."
+      />
+    );
+  }
+
+  if (status === 'loading') {
+    return <div className="p-4 text-sm text-(--hl)">Loading plugins from Konnect…</div>;
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="flex flex-col items-start gap-2 p-4">
+        <p className="text-sm text-(--color-danger)">Failed to load plugins: {error}</p>
+        {missingPat && (
+          <p className="text-xs text-(--hl)">Configure a Konnect personal access token in Kong Konnect settings.</p>
+        )}
+        <Button className={ACTION_CLASS} onPress={refresh}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (!link) {
+    return (
+      <EmptyState
+        title="This request isn't linked to a Konnect route."
+        detail="Plugins can only be shown for requests synced from Kong Konnect."
+      />
+    );
+  }
+
+  const selection = selectEffectivePlugins(plugins, link, getRequestProtocol(activeRequest.url));
+  const suggestions =
+    availabilityStatus === 'loading'
+      ? []
+      : SUGGESTED_PLUGINS.filter(
+          plugin =>
+            !selection.appliedNames.includes(plugin.name) &&
+            (availabilityStatus === 'error' || availableSuggestionNames?.includes(plugin.name)),
+        ).slice(0, 6);
+  const appliedCount = selection.groups.reduce(
+    (count, group) => count + group.plugins.filter(plugin => plugin.enabled).length,
+    0,
+  );
+  const conditionalCount = selection.conditional.filter(plugin => plugin.enabled).length;
+  const hasAppliedPlugins =
+    selection.groups.some(group => group.plugins.length > 0) || selection.conditional.length > 0;
+  const pluginsUrl = getKonnectPluginsUrl(link.region, link.controlPlaneId);
+  const deckContext = {
+    controlPlaneName: link.controlPlaneName,
+    region: link.region,
+    routeId: link.routeId,
+  };
+
+  return (
+    <div className="flex h-full w-full flex-col overflow-y-auto">
+      <div className="@container border-b border-solid border-(--hl-md)">
+        <div className="flex flex-col gap-2 p-4 @min-[42rem]:flex-row @min-[42rem]:items-center @min-[42rem]:justify-between">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-xs font-bold text-(--hl) uppercase">Konnect plugins</h3>
+            {appliedCount === 0 && conditionalCount === 0 ? (
+              <p className="text-xs text-(--hl)">
+                Plugins are grouped by scope; Insomnia does not resolve plugin precedence.
+              </p>
+            ) : (
+              <p className="text-xs text-(--hl)">
+                {appliedCount} enabled plugin {appliedCount === 1 ? 'instance applies' : 'instances apply'} to this
+                request{conditionalCount > 0 ? `, plus ${conditionalCount} conditional` : ''}. Grouped by scope;
+                Insomnia does not resolve plugin precedence.
+              </p>
+            )}
+            <Button
+              className="mt-1 p-0 text-xs text-(--hl) underline hover:text-(--color-font)"
+              onPress={() => window.main.openInBrowser(getPluginPriorityDocsUrl())}
+            >
+              How plugin priority works
+            </Button>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-1 self-start @min-[42rem]:self-center">
+            <Button
+              className={`${ACTION_CLASS} inline-flex items-center gap-1`}
+              isDisabled={isRefreshing}
+              onPress={refresh}
+            >
+              <Icon icon="refresh" spin={isRefreshing} />
+              Refresh
+            </Button>
+            {pluginsUrl && (
+              <Button
+                className="shrink-0 rounded-xs px-2 py-1 text-xs text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)"
+                onPress={() => window.main.openInBrowser(pluginsUrl)}
+              >
+                View all in Konnect
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {!hasAppliedPlugins && (
+        <div className="mx-4 my-3 flex items-start gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) px-3 py-2">
+          <Icon icon="info-circle" className="mt-0.5 shrink-0 text-(--hl)" />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="text-xs font-medium text-(--color-font)">No plugins apply to this request.</span>
+            <span className="text-xs text-(--hl)">
+              Plugins configured on this route, its service, or the control plane will appear here.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {selection.groups.map(group =>
+        group.plugins.length > 0 ? (
+          <section key={group.scope}>
+            <SectionHeader title={GROUP_LABELS[group.scope]} />
+            {group.plugins.map(plugin => (
+              <PluginRow
+                key={plugin.id}
+                plugin={plugin}
+                scopeLabel={SCOPE_META_LABELS[group.scope]}
+                link={link}
+                onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
+              />
+            ))}
+          </section>
+        ) : null,
+      )}
+
+      {selection.conditional.length > 0 && (
+        <section>
+          <SectionHeader
+            title="Conditional"
+            description="These plugins only run for a specific consumer or when their condition matches. Insomnia can't verify that from the request alone."
+          />
+          {selection.conditional.map(plugin => (
+            <PluginRow
+              key={plugin.id}
+              plugin={plugin}
+              scopeLabel="Conditional"
+              link={link}
+              onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
+            />
+          ))}
+        </section>
+      )}
+
+      {suggestions.length > 0 && (
+        <section>
+          <SectionHeader
+            title="Suggested plugins"
+            description="Commonly used plugins not applied to this route."
+            action={
+              <Button
+                className="shrink-0 rounded-xs px-2 py-1 text-xs text-(--hl) hover:bg-(--hl-sm) hover:text-(--color-font)"
+                onPress={() => window.main.openInBrowser(getPluginHubUrl())}
+              >
+                View all plugins
+              </Button>
+            }
+          />
+          {availabilityStatus === 'error' && (
+            <p className="px-4 py-2 text-xs text-(--hl)">
+              Could not check plugin availability; showing all suggestions.
+            </p>
+          )}
+          {suggestions.map(suggestion => {
+            const addUrl = getKonnectPluginCreateUrl(link.region, link.controlPlaneId, suggestion.name);
+            return (
+              <PluginRowLayout
+                key={suggestion.name}
+                actions={
+                  <>
+                    <Button
+                      className={ACTION_CLASS}
+                      onPress={() => window.main.openInBrowser(getPluginDocsUrl(suggestion.name))}
+                    >
+                      Docs
+                    </Button>
+                    {addUrl && (
+                      <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(addUrl)}>
+                        Add in Konnect
+                      </Button>
+                    )}
+                    <Button
+                      className={ACTION_CLASS}
+                      onPress={() => setDeckModal({ mode: 'add', pluginName: suggestion.name })}
+                    >
+                      decK command
+                    </Button>
+                  </>
+                }
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="font-medium">{suggestion.displayName}</span>
+                  <span className="text-xs text-(--hl)">{suggestion.description}</span>
+                </div>
+              </PluginRowLayout>
+            );
+          })}
+        </section>
+      )}
+
+      {deckModal?.mode === 'edit' && (
+        <DeckCommandModal
+          mode="edit"
+          plugin={deckModal.plugin}
+          context={deckContext}
+          onHide={() => setDeckModal(null)}
+        />
+      )}
+      {deckModal?.mode === 'add' && (
+        <DeckCommandModal
+          mode="add"
+          pluginName={deckModal.pluginName}
+          context={deckContext}
+          onHide={() => setDeckModal(null)}
+        />
+      )}
+    </div>
+  );
+};

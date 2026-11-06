@@ -21,6 +21,8 @@ export interface EnvOptions {
   INSOMNIA_VAULT_SRP_SECRET: string;
   KONNECT_API_URL: string;
   KONNECT_API_REGIONS?: string;
+  KONNECT_CLOUD_ORIGIN?: string;
+  KONG_DOCS_ORIGIN?: string;
 }
 
 /**
