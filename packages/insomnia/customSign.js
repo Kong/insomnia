@@ -1,7 +1,22 @@
 const { exec } = require('child_process');
+const fs = require('fs');
 const util = require('util');
 const path = require('path');
 const execAsync = util.promisify(exec);
+
+// Every signed file costs one code-signing token. List the files in the GitHub job summary,
+// so the number of tokens used by a release build is visible. Never fails the signing.
+function recordSignedFile(file) {
+  const { GITHUB_STEP_SUMMARY } = process.env;
+  if (!GITHUB_STEP_SUMMARY) {
+    return;
+  }
+  try {
+    fs.appendFileSync(GITHUB_STEP_SUMMARY, `- signed (customSign): \`${path.basename(file)}\`\n`);
+  } catch (error) {
+    console.log('[customSign] Could not write to the job summary:', error.message);
+  }
+}
 
 // adapted from https://www.electron.build/win.html#how-do-delegate-code-signing
 // It was possible code-sign installer after packaging, but some files are only available
@@ -15,7 +30,10 @@ exports.default = async function (configuration) {
 
   const { SM_KEYPAIR_ALIAS, SM_API_KEY, SM_CLIENT_CERT_PASSWORD } = process.env;
   if (!SM_KEYPAIR_ALIAS || !SM_API_KEY || !SM_CLIENT_CERT_PASSWORD) {
-    console.log('[customSign] Skipping signing,  Missing required environment variable: SM_KEYPAIR_ALIAS');
+    const missing = Object.entries({ SM_KEYPAIR_ALIAS, SM_API_KEY, SM_CLIENT_CERT_PASSWORD })
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+    console.log(`[customSign] Skipping signing, missing required environment variable(s): ${missing.join(', ')}`);
     return;
   }
 
@@ -37,6 +55,7 @@ exports.default = async function (configuration) {
     }
 
     console.log('[customSign] File signed successfully.');
+    recordSignedFile(fixedAbsolutePath);
   } catch (error) {
     console.error('[customSign] Error executing smctl sign command:', error);
     throw error;
