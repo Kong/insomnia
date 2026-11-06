@@ -118,6 +118,57 @@ describe('OAuth 1.0', () => {
       ),
     );
   });
+
+  // Example from https://developer.x.com/en/docs/authentication/oauth-1-0a/creating-a-signature
+  const exampleAuthentication = {
+    type: 'oauth1',
+    consumerKey: 'xvz1evFS4wEEPTGEFPHBog',
+    consumerSecret: 'kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw',
+    tokenKey: '370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb',
+    tokenSecret: 'LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE',
+    signatureMethod: 'HMAC-SHA1',
+    nonce: 'kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg',
+    timestamp: '1318622958',
+  };
+  const exampleUrl = 'https://api.twitter.com/1.1/statuses/update.json?include_entities=true';
+  const exampleHeader = (signature: string) =>
+    [
+      'OAuth ' + 'oauth_consumer_key="xvz1evFS4wEEPTGEFPHBog"',
+      'oauth_nonce="kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg"',
+      `oauth_signature="${signature}"`,
+      'oauth_signature_method="HMAC-SHA1"',
+      'oauth_timestamp="1318622958"',
+      'oauth_token="370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb"',
+      'oauth_version="1.0"',
+    ].join(', ');
+
+  it.each([false, true])(
+    'Signs form-urlencoded body params without a body hash (includeBodyHash: %s)',
+    async includeBodyHash => {
+      const request = {
+        url: exampleUrl,
+        method: 'POST',
+        authentication: { ...exampleAuthentication, includeBodyHash },
+        body: {
+          mimeType: 'application/x-www-form-urlencoded',
+          params: [{ name: 'status', value: 'Hello Ladies + Gentlemen, a signed OAuth request!' }],
+        },
+      };
+      const header = await getAuthHeader(request, exampleUrl);
+      expect(header.header.value).toBe(exampleHeader('hCtSmYh%2BiHYCEqBWrE7C7hYmtUk%3D'));
+    },
+  );
+
+  it('Does not sign other body types', async () => {
+    const request = {
+      url: exampleUrl,
+      method: 'POST',
+      authentication: exampleAuthentication,
+      body: { mimeType: 'application/json', text: '{"status":"Hello"}' },
+    };
+    const header = await getAuthHeader(request, exampleUrl);
+    expect(header.header.value).toBe(exampleHeader('swB2%2FK4QtoSNF7fQfLzyNivuoj4%3D'));
+  });
 });
 
 describe('_buildBearerHeader()', () => {
