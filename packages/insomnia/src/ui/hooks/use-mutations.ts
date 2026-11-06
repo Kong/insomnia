@@ -27,7 +27,7 @@ export function useInvalidatingDBMutation<
       ...options,
       onSuccess: async (data, vars, result, context) => {
         if (options.onSuccess) {
-          options.onSuccess(data, vars, result, context);
+          await options.onSuccess(data, vars, result, context);
         }
         const keys = typeof options.invalidates === 'function' ? options.invalidates(data, vars) : options.invalidates;
         await Promise.all(keys.map(queryKey => dbQueryClient.invalidateQueries({ queryKey })));
