@@ -1739,10 +1739,6 @@ const OriginalGitProjectStagingModal: FC<
     return false;
   })();
 
-  const undiscardableFilePath =
-    previewDiffItem?.undiscardable && !previewDiffItem.staged && isPreviewDiffItemInChangesList
-      ? previewDiffItem.filepath
-      : null;
   const hasUnknownFields = previewDiffItem && previewDiffItem.unknownFieldRanges.length > 0;
 
   return (
@@ -1925,8 +1921,6 @@ const OriginalGitProjectStagingModal: FC<
                           functionality for your collaborators. We recommend upgrading.
                         </WarningBanner>
                       )}
-                      {/* Show undiscardable change warning if the file is undiscardable and has no unknown field ranges */}
-                      {undiscardableFilePath && !hasUnknownFields && <UndiscardableChangeWarning />}
                       <p>
                         <Icon icon="info-circle" className="mr-2" />
                         This file includes changes to{' '}
@@ -1956,9 +1950,8 @@ const OriginalGitProjectStagingModal: FC<
                           onShowTextView={() => setDiffViewMode('text')}
                           actionGate={actionGate}
                           isActionInFlight={isActionInFlight}
-                          // One warning above the diff at most: unrecognized fields, or a change that is only Insomnia
-                          // reformatting the file, already have their own, which say more than the format warning would.
-                          hideFormatWarning={Boolean(hasUnknownFields || undiscardableFilePath)}
+                          // Unrecognized fields already have their own warning, which says more than the format warning would.
+                          hideFormatWarning={Boolean(hasUnknownFields)}
                         />
                       )}
                     </div>
@@ -2000,13 +1993,6 @@ const OriginalGitProjectStagingModal: FC<
       {discardData && (
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
-          showUndiscardableWarning={
-            // Only show the undiscardable warning if there are no unknown fields, there is an undiscardable file, and it is the only file being discarded.
-            !hasUnknownFields &&
-            undiscardableFilePath !== null &&
-            discardData.filesCount === 1 &&
-            discardData.paths.includes(undiscardableFilePath)
-          }
           onConfirm={async () => {
             await actionGate.runAfter(() =>
               undoUnstagedChangesFetcher.submit({
@@ -2036,22 +2022,14 @@ const OriginalGitProjectStagingModal: FC<
   );
 };
 
-const UndiscardableChangeWarning = () => (
-  <WarningBanner icon="exclamation-triangle">
-    This change is only Insomnia internally reformatting the file (often because of manual edits, or changes made in
-    other versions of Insomnia). It can&apos;t be discarded - Commit this file once to resolve it.
-  </WarningBanner>
-);
-
 interface ConfirmModalProps {
   message: string;
-  showUndiscardableWarning?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
 }
 
 // TODO - refactor this to use the new modal system
-const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onClose }: ConfirmModalProps) => {
+const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps) => {
   return (
     <ModalOverlay
       isOpen
@@ -2083,7 +2061,6 @@ const ConfirmDiscardModal = ({ message, showUndiscardableWarning, onConfirm, onC
                 </Button>
               </div>
               <div className="">{message}</div>
-              {showUndiscardableWarning && <UndiscardableChangeWarning />}
               <div className="flex h-10 shrink-0 items-center justify-end gap-2">
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"

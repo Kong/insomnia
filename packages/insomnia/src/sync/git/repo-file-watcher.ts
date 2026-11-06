@@ -51,10 +51,14 @@ import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { writeFileWithinDir } from '../../main/safe-fs-write';
+import { getCanonicalInsomniaFileContent } from './canonical-file';
+import { applyEntityDelta, computeEntityDelta, isEmptyDelta } from './entity-delta';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
 const DEBOUNCE_MS = 300;
+/** Replays kept for the files an editing session touches. */
+const CANONICAL_CACHE_SIZE = 8;
 const GIT_DIR = '.git';
 
 export type FileIssueKind = 'conflict' | 'parse-error' | 'write-blocked';
@@ -81,6 +85,14 @@ export interface FileProblemsChangedPayload {
 /** Compute a SHA-256 hex digest of a string. */
 function contentHash(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+/**
+ * Blank the two timestamps the importer fills in. They differ between two DB
+ * views of the same file without meaning anything.
+ */
+function withoutImportTimestamps(content: string): string {
+  return content.replace(/^(\s+(?:created|modified)): \d+$/gm, '$1: 0');
 }
 
 /**
@@ -132,6 +144,20 @@ class RepoFileWatcher {
    * Used by the FS→DB import to detect and skip echo events (our own writes).
    */
   private lastWrittenHash = new Map<string, string>();
+
+  /**
+   * SHA-256 of the workspace export the file on disk currently represents.
+   * When the DB still exports the same content there is nothing to write,
+   * whatever form the file is in.
+   */
+  private lastExportHash = new Map<string, string>();
+
+  /**
+   * The replay (`export(import(file))`) of the bytes last seen at a path. A
+   * burst of edits rewrites the same workspace repeatedly; the replay of the
+   * file the previous write left behind is the base of the next one.
+   */
+  private canonicalCache = new Map<string, { fileHash: string; canonical: string }>();
 
   /**
    * Last known absolute path for each workspace, keyed by workspace _id.
@@ -303,20 +329,28 @@ class RepoFileWatcher {
 
           if (maxDbModified <= fileMtime) return; // disk is up-to-date
 
-          // DB is newer \u2014 write fresh YAML so importAllFiles doesn\u2019t overwrite it
+          // DB is newer — write fresh YAML so importAllFiles doesn’t overwrite it
           const yamlContent = await getInsomniaV5DataExport({
             workspaceId: workspace._id,
             includePrivateEnvironments: false,
           });
           if (!yamlContent?.trim()) return;
 
-          await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-          await writeFileWithinDir(this.repoDir, absPath, yamlContent);
+          const result = await this.writeWorkspaceYaml(absPath, workspace._id, yamlContent);
+          if (result === 'refused') {
+            // The file could not be brought up to date. Importing it below would
+            // overwrite the newer DB state this method exists to protect, so
+            // keep it out of the import until the next flush retries.
+            const stale = await fs.promises.readFile(absPath, 'utf8').catch(() => null);
+            if (stale !== null) {
+              this.lastWrittenHash.set(path.normalize(absPath), contentHash(stale));
+            }
+            return;
+          }
 
-          const hash = contentHash(yamlContent);
           const normalised = path.normalize(absPath);
-          this.lastWrittenHash.set(normalised, hash);
           this.lastSyncMtime.set(normalised, Date.now() + 1);
+          this.lastKnownGitFilePath.set(workspace._id, normalised);
           this.clearProblem(normalised);
 
           console.log(
@@ -547,35 +581,16 @@ class RepoFileWatcher {
           return;
         }
 
-        const hash = contentHash(yamlContent);
-
-        // The hash cache only tells us the DB side hasn't changed since our
-        // last write — it says nothing about whether that write still exists
-        // on disk. If the repo folder was deleted and came back (e.g. via
-        // relocate/adopt, or a drive remount), the file may be gone even
-        // though its content hash is unchanged; skipping the write here would
-        // leave it missing indefinitely.
-        if (this.lastWrittenHash.get(absPath) === hash) {
-          const stillOnDisk = await fs.promises
-            .access(absPath)
-            .then(() => true)
-            .catch(() => false);
-          if (stillOnDisk) {
-            continue;
-          }
+        const result = await this.writeWorkspaceYaml(absPath, workspace._id, yamlContent);
+        if (result === 'refused') {
+          continue;
         }
-
-        await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-        await writeFileWithinDir(this.repoDir, absPath, yamlContent);
 
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
         }
 
-        this.lastWrittenHash.set(absPath, hash);
         this.lastKnownGitFilePath.set(workspace._id, absPath);
-        // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
-        this.lastSyncMtime.set(absPath, Date.now());
         this.clearProblem(absPath);
       } catch (err) {
         console.warn('[repo-file-watcher] Could not flush workspace to disk:', workspace._id, err);
@@ -587,6 +602,147 @@ class RepoFileWatcher {
         });
       }
     }
+  }
+
+  /**
+   * Bring `absPath` in line with `yamlContent` without regenerating the parts
+   * of the file the DB did not change: only the entities that differ between
+   * the file as the DB sees it and the DB itself are spliced in. Comments,
+   * indentation, unknown fields and the order of untouched entities survive.
+   *
+   * Returns what the file now holds: the DB state, an unchanged file, or a refusal.
+   */
+  private async writeWorkspaceYaml(
+    absPath: string,
+    workspaceId: string,
+    yamlContent: string,
+  ): Promise<'written' | 'unchanged' | 'refused'> {
+    const normalised = path.normalize(absPath);
+
+    // The DB side has not changed since the file was last synced, so there is
+    // nothing to write — whatever form the file is in is the correct form. The
+    // check runs before the read, so a no-op flush never loads the file.
+    if (this.lastExportHash.get(workspaceId) === contentHash(yamlContent)) {
+      const stillOnDisk = await fs.promises.access(absPath).then(
+        () => true,
+        () => false,
+      );
+      if (stillOnDisk) {
+        return 'unchanged';
+      }
+    }
+
+    const existing = await fs.promises.readFile(absPath, 'utf8').catch((err: NodeJS.ErrnoException) => {
+      if (err.code === 'ENOENT') {
+        return null;
+      }
+      throw err;
+    });
+
+    if (existing === null) {
+      await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+      await writeFileWithinDir(this.repoDir, absPath, yamlContent);
+      this.recordWorkspaceWrite(normalised, workspaceId, yamlContent, yamlContent);
+      return 'written';
+    }
+
+    const existingHash = contentHash(existing);
+    const cachedBase = this.canonicalCache.get(normalised);
+    let base: string;
+    if (cachedBase?.fileHash === existingHash) {
+      base = cachedBase.canonical;
+    } else {
+      const canonical = await getCanonicalInsomniaFileContent(existing);
+      if (canonical === null) {
+        return this.refuseWrite(absPath, 'Not an importable Insomnia file, refusing to overwrite');
+      }
+      base = canonical;
+      this.rememberCanonical(normalised, existingHash, canonical);
+    }
+
+    const delta = computeEntityDelta(base, yamlContent);
+    if (isEmptyDelta(delta)) {
+      this.recordWorkspaceWrite(normalised, workspaceId, existing, yamlContent);
+      return 'unchanged';
+    }
+
+    const patched = applyEntityDelta(existing, yamlContent, delta);
+    if (patched === null) {
+      return this.refuseWrite(absPath, 'Could not patch the YAML file, leaving it untouched');
+    }
+
+    // Writing only what the delta says must leave the file importing to the
+    // DB state. Anything else means the splice went wrong: keep the file.
+    const patchedBase = await getCanonicalInsomniaFileContent(patched);
+    if (patchedBase === null || !this.verifyPatch(patchedBase, yamlContent)) {
+      return this.refuseWrite(absPath, 'Patch verification failed, leaving the YAML file untouched');
+    }
+    this.rememberCanonical(normalised, contentHash(patched), patchedBase);
+
+    await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
+    await writeFileWithinDir(this.repoDir, absPath, patched);
+    this.recordWorkspaceWrite(normalised, workspaceId, patched, yamlContent);
+    return 'written';
+  }
+
+  /**
+   * Both sides are canonical exports, so equal text means the patch reached the
+   * DB state. The text can differ on the timestamps the importer fills in, and
+   * that is the only difference the entity comparison tolerates — fall back to
+   * it only when the text differs.
+   */
+  private verifyPatch(patchedCanonical: string, dbCanonical: string): boolean {
+    if (withoutImportTimestamps(patchedCanonical) === withoutImportTimestamps(dbCanonical)) {
+      return true;
+    }
+    return isEmptyDelta(computeEntityDelta(patchedCanonical, dbCanonical));
+  }
+
+  /** Keep the replay of a file around: the next write of the same bytes reuses it. */
+  private rememberCanonical(normalised: string, fileHash: string, canonical: string): void {
+    this.canonicalCache.delete(normalised);
+    this.canonicalCache.set(normalised, { fileHash, canonical });
+    if (this.canonicalCache.size > CANONICAL_CACHE_SIZE) {
+      const oldest = this.canonicalCache.keys().next().value;
+      if (oldest !== undefined) {
+        this.canonicalCache.delete(oldest);
+      }
+    }
+  }
+
+  /**
+   * Record that the file could not be brought in line with the DB, so the UI
+   * can show it instead of the workspace silently falling out of sync.
+   */
+  private refuseWrite(absPath: string, message: string): 'refused' {
+    const normalised = path.normalize(absPath);
+    const recorded = this.problemFiles.get(normalised);
+    // The same refusal is already on screen; a retry must not notify again.
+    if (recorded?.kind !== 'write-blocked' || recorded.message !== message) {
+      this.addProblem(normalised, {
+        filePath: absPath,
+        relPath: this.toPosixRelPath(absPath),
+        kind: 'write-blocked',
+        message,
+      });
+    }
+    return 'refused';
+  }
+
+  /**
+   * Record what is now on disk: `content` is what the fs watcher must not
+   * import back, `yamlContent` is the DB state the file now represents.
+   */
+  private recordWorkspaceWrite(
+    normalised: string,
+    workspaceId: string,
+    content: string,
+    yamlContent: string,
+  ): void {
+    this.lastWrittenHash.set(normalised, contentHash(content));
+    this.lastExportHash.set(workspaceId, contentHash(yamlContent));
+    // Use Date.now() — always >= the actual mtime of the file just written, saves a stat() syscall
+    this.lastSyncMtime.set(normalised, Date.now());
   }
 
   private async flushProjectLintRulesetToDisk(): Promise<void> {
@@ -798,6 +954,15 @@ class RepoFileWatcher {
     await this.deleteOrphans(docs);
     await this.upsertDocs(absPath, normalised, result.mtimeMs, docs);
 
+    const workspaceId = docs.find(models.workspace.isWorkspace)?._id;
+    if (workspaceId) {
+      // The file now represents the DB, so the next flush has nothing to write.
+      const exported = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
+      if (exported) {
+        this.lastExportHash.set(workspaceId, contentHash(exported));
+      }
+    }
+
     this.notifyRenderer();
   }
 
@@ -996,7 +1161,11 @@ class RepoFileWatcher {
     // Clean up tracking maps
     this.lastSyncMtime.delete(normalised);
     this.lastWrittenHash.delete(normalised);
+    this.canonicalCache.delete(normalised);
     this.clearProblem(normalised);
+    if (workspaceIdToDelete) {
+      this.lastExportHash.delete(workspaceIdToDelete);
+    }
   }
 
   private cleanupRemovedWorkspaceFileTracking(workspaceId: string, normalisedPath: string): void {
@@ -1005,6 +1174,8 @@ class RepoFileWatcher {
     }
     this.lastSyncMtime.delete(normalisedPath);
     this.lastWrittenHash.delete(normalisedPath);
+    this.canonicalCache.delete(normalisedPath);
+    this.lastExportHash.delete(workspaceId);
     this.clearProblem(normalisedPath);
   }
 
@@ -1043,6 +1214,7 @@ class RepoFileWatcher {
       await db.flushChanges(bufferId);
     }
     this.docToWorkspace.delete(workspace._id);
+    this.lastExportHash.delete(workspace._id);
   }
 
   /** Fetch workspaces in this project together with their metadata. When `filterIds` is provided, only those workspaces are returned. */
@@ -1171,13 +1343,12 @@ class RepoFileWatcher {
         return;
       }
 
-      await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
-      await writeFileWithinDir(this.repoDir, absPath, yamlContent);
+      const result = await this.writeWorkspaceYaml(absPath, workspace._id, yamlContent);
+      if (result === 'refused') {
+        return;
+      }
 
       const normalised = path.normalize(absPath);
-      this.lastWrittenHash.set(normalised, contentHash(yamlContent));
-      const stat = await fs.promises.stat(absPath);
-      this.lastSyncMtime.set(normalised, stat.mtimeMs);
       this.lastKnownGitFilePath.set(workspace._id, normalised);
       this.clearProblem(normalised);
 
