@@ -13,6 +13,7 @@ import type { NunjucksParsedTag, NunjucksParsedTagArg } from '~/common/templatin
 import * as templateUtils from '~/common/templating/utils';
 import { init as initPluginStore } from '~/plugins/context/store';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { useCloudCredentials } from '~/ui/hooks/data/use-cloud-credentials';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
 
@@ -95,6 +96,12 @@ export const TagEditor: FC<Props> = props => {
   );
   const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
   const [hasMaskedValue, setHasMaskedValue] = useState(false);
+  // Global cloud credentials come from the query cache so create/edit/delete mutations refresh them automatically.
+  const cloudCredentials = useCloudCredentials();
+  const allDocs = useMemo<Record<string, BaseModel[]>>(
+    () => ({ ...state.allDocs, [cloudCredentialModelType]: cloudCredentials }),
+    [state.allDocs, cloudCredentials],
+  );
 
   const isEditorMountedRef = useRef(true);
   useEffect(() => {
@@ -115,8 +122,6 @@ export const TagEditor: FC<Props> = props => {
     for (const doc of descendants) {
       allDocs[doc.type].push(doc);
     }
-    // add global Cloud Credential data
-    allDocs[cloudCredentialModelType] = await services.cloudCredential.all();
     const requestDocs = allDocs[models.request.type] as (Request | RequestGroup)[] | undefined;
     const requestGroupDocs = allDocs[models.requestGroup.type] as (Request | RequestGroup)[] | undefined;
     allDocs[models.request.type] = sortRequests(
@@ -410,7 +415,7 @@ export const TagEditor: FC<Props> = props => {
                   onChange={(newConfigValue: string) => updateArg(newConfigValue, index)}
                   activeTagData={activeTagData}
                   activeTagDefinition={activeTagDefinition}
-                  docs={state.allDocs}
+                  docs={allDocs}
                   vaultPluginData={state.vaultPluginData}
                   onConvertLegacyTag={(legacyCredentialId: string) => {
                     const credentialArgIndex = activeTagDefinition.args.findIndex(
@@ -464,7 +469,7 @@ export const TagEditor: FC<Props> = props => {
             );
           } else if (argDefinition.type === 'model') {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
-            let targetDoc = state.allDocs[modelName];
+            let targetDoc = allDocs[modelName];
             const getModelValue = () => {
               if (typeof strValue === 'string') {
                 if (modelName === cloudCredentialModelType) {
@@ -517,11 +522,11 @@ export const TagEditor: FC<Props> = props => {
                   let namePrefix: string | null = null;
                   // Show parent folder with name if it's a request
                   if (isRequest(doc)) {
-                    const requests = state.allDocs[models.request.type] || [];
+                    const requests = allDocs[models.request.type] || [];
                     const request = requests.find(r => r._id === doc._id) as Request;
                     const method = request && typeof request.method === 'string' ? request.method : 'GET';
                     const parentId = request ? request.parentId : 'n/a';
-                    const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
+                    const allRequestGroups = allDocs[models.requestGroup.type] || [];
                     const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
                     const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
                     namePrefix = `${folderName + method} `;

@@ -18,8 +18,8 @@ const { HashiCorpCredentialType } = models.cloudCredential;
 
 const mockRootLoaderData = vi.hoisted(() => ({ cloudCredentials: [] as unknown[] }));
 
-vi.mock('~/ui/hooks/use-root-loader-data', () => ({
-  useRootLoaderData: () => mockRootLoaderData,
+vi.mock('~/ui/hooks/data/use-cloud-credentials', () => ({
+  useCloudCredentials: () => mockRootLoaderData.cloudCredentials,
 }));
 
 vi.mock('../../help-tooltip', () => ({

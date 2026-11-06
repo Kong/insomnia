@@ -15,6 +15,10 @@ const createAppDataQueryClient = () =>
         networkMode: 'always',
         refetchOnWindowFocus: false,
       },
+      mutations: {
+        // Local database mutations should run regardless of network connectivity.
+        networkMode: 'always',
+      },
     },
   });
 
