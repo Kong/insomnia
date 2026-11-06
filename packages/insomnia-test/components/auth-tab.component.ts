@@ -11,7 +11,6 @@ import type {
   AuthTypeOAuth2,
   AuthTypeSingleToken,
 } from "insomnia-data";
-import type { OAuth1SignatureMethod } from "insomnia-data/common";
 
 import { TabPanelComponent } from "./tab-panel.component";
 
@@ -462,19 +461,6 @@ export class AuthTabComponent extends TabPanelComponent {
 
   private async setToggle(id: string, enabled: boolean): Promise<void> {
     await this.toggle(id).set(enabled);
-  }
-
-  /**
-   * Polls the on-disk request/folder documents until one carries
-   * `authentication[field] === value`, confirming the edit has actually
-   * been saved (the editors autosave through a debounce) rather than just
-   * shown in the UI.
-   */
-  private async waitForAuthFieldPersisted(
-    field: string,
-    value: unknown,
-  ): Promise<void> {
-    await this.waitForAuthFieldsPersisted([{ field, value }]);
   }
 
   /**
