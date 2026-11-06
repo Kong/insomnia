@@ -1,4 +1,5 @@
 import type { HttpMethod } from "@package/enums/http-method";
+import type { LintSeverity } from "@package/enums/lint-severity";
 import type { RulesetType } from "@package/enums/ruleset-type";
 import type { Workspace } from "insomnia-data";
 
@@ -38,6 +39,20 @@ export type PathItem = Partial<
   >
 >;
 
+/** A single lint panel entry — the Spectral rule id, how many occurrences
+ * fired it, its full description text (the message following the rule id,
+ * e.g. `must have required property "paths"`), its severity, and the
+ * "Ln N" reference for each occurrence (one per `count`, in panel order).
+ * Read by `WorkspacePage.getLintEntries()`, which expands every entry to
+ * collect `lineRefs` — for a cheap, non-expanding read of just the codes,
+ * use `WorkspacePage.getLintEntryCodes()` instead. */
+export interface LintEntry {
+  code: string;
+  description: string;
+  severity: LintSeverity;
+  lineRefs: string[];
+}
+
 /** Built by `WorkspacePage.getSpecification()` from the spec's own "Info"/
  * "Paths" outline panel — not the raw spec text: that panel doesn't expose
  * `host`/`basePath`/`schemes` (no "Servers" section for a Swagger 2.0 doc)
@@ -53,14 +68,52 @@ export class Specification {
   ) {}
 }
 
+/** A single unit test read back from a suite's Unit tests list — currently
+ * only exposes its name, since that's all `WorkspacePage.getUnitTestNames()`
+ * recovers from the UI without running it. */
+export class UnitTest {
+  constructor(readonly name: string) {}
+}
+
+/** A test suite read back from the Tests tab's currently selected row
+ * (via `WorkspaceFlow.getTestSuite()`), together with every unit test
+ * currently listed under it. */
+export class TestSuite {
+  constructor(
+    readonly name: string,
+    readonly tests: UnitTest[],
+    /** A reference back to the Collection this suite belongs to — the
+     * same `Collection` instance if one was passed to `getTestSuite()`,
+     * otherwise a bare one carrying just the `name`/`id` needed to re-find
+     * it via `WorkspaceFlow.getCollection()`/`.openTests()`. */
+    readonly collection: Collection,
+  ) {}
+}
+
 export class Collection implements Pick<Workspace, "name"> {
   id?: string;
+
+  /** Legacy back-reference: set when this Collection was created/found as
+   * a former standalone "Document" workspace (pre-INS-3528). The two are
+   * now the same workspace type — nothing branches on this field anymore,
+   * it's kept only so tests written against the old model still resolve
+   * the right node. */
+  documentId?: string;
 
   /** Read from the spec's own "Info"/"Paths" outline panel — populated by
    * `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`, left `undefined` if
    * the collection has no spec attached (no "Info" section renders). Not
    * set directly; read this instead of building it yourself. */
   specification?: Specification;
+
+  /** The lint panel's settled error/warning counts, fired rule codes, and
+   * (via `entries`) each rule's full description text — populated by
+   * `WorkspaceFlow.getLintState()`. Not set directly. */
+  lint?: {
+    errors: number;
+    warnings: number;
+    entries: LintEntry[];
+  };
 
   /** Whether a custom or the default Spectral ruleset is active — populated
    * by `WorkspaceFlow.getCollectionSpec()`/`.createCollection()`. Not set directly. */
