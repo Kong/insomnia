@@ -286,7 +286,9 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   const webhookRequests: ImportRequest[] = [];
   Object.entries(getWebhooks(document)).forEach(([webhookName, webhookItem]) => {
     getPathItemOperations(webhookItem).forEach(([method, operation]) => {
-      const security = (operation as unknown as OpenAPIV3.Document).security || rootSecurity;
+      // Root `security` describes how clients call the API; webhooks are sent by the API provider, so only the
+      // operation's own `security` applies
+      const { security } = operation as unknown as OpenAPIV3.OperationObject;
       webhookRequests.push(
         importRequest(
           { ...operation, path: webhookName, method },
@@ -982,6 +984,9 @@ export const convert: Converter = async rawData => {
     description: apiDocument.info.description || '', // scope is not set because it could be imported for design OR to generate requests
   };
 
+  const endpoints = parseEndpoints(apiDocument);
+  const hasWebhookRequests = endpoints.some(item => item._type === 'request' && item.parentId === WEBHOOKS_FOLDER_ID);
+
   const baseEnv: ImportRequest = {
     _type: 'environment',
     _id: '__BASE_ENVIRONMENT_ID__',
@@ -989,12 +994,11 @@ export const convert: Converter = async rawData => {
     name: 'Base environment',
     data: {
       base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
-      ...(Object.keys(getWebhooks(apiDocument)).length ? { webhook_url: 'https://example.com/webhook' } : {}),
+      ...(hasWebhookRequests ? { webhook_url: 'https://example.com/webhook' } : {}),
     },
   };
 
   const openapiEnvs = parseEnvs(baseEnv, apiDocument);
-  const endpoints = parseEndpoints(apiDocument);
 
   return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };

@@ -782,6 +782,35 @@ describe('openapi-3', () => {
         ['DELETE', '{{ _.webhook_url }}'],
       ]);
     });
+
+    it('should only apply the security declared on the webhook operation, not the root security', async () => {
+      const result = await convert(
+        JSON.stringify({
+          ...doc,
+          security: [{ bearer: [] }],
+          components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } } },
+          webhooks: {
+            ...doc.webhooks,
+            petRemoved: { delete: { security: [{ bearer: [] }], responses: { 200: { description: 'ok' } } } },
+          },
+        }),
+      );
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => [r.method, r.url, r.authentication.type])).toEqual([
+        ['GET', '{{ _.base_url }}/pets', 'bearer'],
+        ['POST', '{{ _.webhook_url }}', undefined],
+        ['DELETE', '{{ _.webhook_url }}', 'bearer'],
+      ]);
+    });
+
+    it('should not define webhook_url when no webhook has an operation', async () => {
+      const result = await convert(JSON.stringify({ ...doc, webhooks: { empty: {} } }));
+      const baseEnv = result?.find(item => item._type === 'environment');
+
+      expect(result?.some(item => item.name === 'Webhooks')).toBe(false);
+      expect(baseEnv.data).not.toHaveProperty('webhook_url');
+    });
   });
 
   describe('OpenAPI 3.1 schema keywords', () => {
