@@ -14,7 +14,7 @@ const toLoopback = (host: string) => (host === FAKE_HOST ? "127.0.0.1" : host);
 // mock servers under a hostname that isn't `localhost`.
 // Mounted on the main server (misc/server/index.ts) ahead of every other
 // middleware: a proxied http request carries an absolute-URI request line
-// (`GET http://insomnia.test:4060/... HTTP/1.1`), which no regular route matches.
+// (`GET http://insomnia.test:4010/... HTTP/1.1`), which no regular route matches.
 export const resolvingProxyMiddleware = (req: http.IncomingMessage, res: http.ServerResponse, next: () => void) => {
   if (!/^https?:\/\//i.test(req.url!)) {
     next();
