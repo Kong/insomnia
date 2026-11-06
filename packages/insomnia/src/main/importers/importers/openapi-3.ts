@@ -237,13 +237,15 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   const rootSecurity = document.security;
   const securitySchemes = document.components?.securitySchemes as OpenAPIV3.SecuritySchemeObject | undefined;
   const defaultParent = WORKSPACE_ID;
+  // `paths` is optional since OpenAPI 3.1, e.g. in a webhooks-only document
+  const paths = document.paths || {};
 
   const endpointsSchemas: ({
     path: string;
     method: string;
     tags?: string[];
-  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths).flatMap(path => {
-    const schemasPerMethod = document.paths[path];
+  } & OpenAPIV3.SchemaObject)[] = Object.keys(paths).flatMap(path => {
+    const schemasPerMethod = paths[path];
 
     if (!schemasPerMethod) {
       return [];
