@@ -1,5 +1,4 @@
-import { ScriptTab } from "@package/enums/script-tab";
-import { expect, type Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { TabPanelComponent } from "./tab-panel.component";
 
@@ -81,75 +80,5 @@ export class ScriptTabComponent extends TabPanelComponent {
       await expect(editor).toBeVisible({ timeout: 2000 });
       await this.setCodeMirrorValue(editor, value);
     }).toPass({ timeout: 45_000 });
-  }
-
-  /**
-   * Types into the Scripts tab's Pre-request and/or After-response
-   * editors via real keystrokes (rather than replacing the value
-   * outright like `setScripts()`), so it builds genuine CodeMirror undo
-   * history the way a user's typing would. Only scripts that are
-   * provided are typed into.
-   */
-  async typeScripts(scripts: RequestScripts): Promise<void> {
-    if (scripts.preRequest) {
-      await this.switchScriptTab(ScriptTab.PreRequest);
-      const panel = this.page.locator(this.TABPANEL);
-      const editor = panel.locator(".CodeMirror").first();
-      await editor.click();
-      await this.page.keyboard.press("End");
-      await this.page.keyboard.type(scripts.preRequest);
-      await this.waitForScriptPersisted("preRequestScript", editor);
-    }
-    if (scripts.afterResponse) {
-      await this.switchScriptTab(ScriptTab.AfterResponse);
-      const panel = this.page.locator(this.TABPANEL);
-      const editor = panel.locator(".CodeMirror").first();
-      await editor.click();
-      await this.page.keyboard.press("End");
-      await this.page.keyboard.type(scripts.afterResponse);
-      await this.waitForScriptPersisted("afterResponseScript", editor);
-    }
-  }
-
-  /**
-   * Polls the on-disk request/folder documents until one holds `editor`'s
-   * current content as its `field` script, confirming the editor's
-   * debounced autosave has landed after typing into it.
-   */
-  private async waitForScriptPersisted(
-    field: "preRequestScript" | "afterResponseScript",
-    editor: Locator,
-  ): Promise<void> {
-    const typed = await this.readCodeMirror(editor);
-    await this.waitForFieldPersisted(
-      ["insomnia.Request.db", "insomnia.RequestGroup.db"],
-      (doc) => doc[field],
-      typed,
-    );
-  }
-
-  /**
-   * Switches to the Scripts tab's Pre-request or After-response sub-tab,
-   * clicks into its editor, and sends the platform's Undo shortcut
-   * (Cmd+Z on macOS, Ctrl+Z elsewhere).
-   */
-  async undoScript(which: ScriptTab): Promise<void> {
-    await this.switchScriptTab(which);
-    const panel = this.page.locator(this.TABPANEL);
-    const editor = panel.locator(".CodeMirror").first();
-    await this.undo(() => editor.click());
-  }
-
-  /**
-   * Switches to the Scripts tab, then to the given script's own sub-tab.
-   */
-  async switchScriptTab(which: ScriptTab): Promise<void> {
-    await this.switchTab("scripts");
-    const panel = this.page.locator(this.TABPANEL);
-    const editorSelector =
-      which === ScriptTab.PreRequest
-        ? this.PRE_REQUEST_EDITOR
-        : this.AFTER_RESPONSE_EDITOR;
-    await panel.locator(editorSelector).click();
   }
 }

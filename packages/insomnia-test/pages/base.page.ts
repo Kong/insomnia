@@ -17,14 +17,6 @@ export abstract class BasePage {
   abstract navigate(): Promise<void>;
 
   /**
-   * Rewires this Page instance onto a fresh window — called by
-   * `PageManager.setWindow()` after `AppFlow.restart()`.
-   */
-  setContext(page: Page): void {
-    this.page = page;
-  }
-
-  /**
    * Reads a CodeMirror editor's current value. See `CodeEditorComponent`.
    */
   protected async readCodeMirror(locator: Locator): Promise<string> {
@@ -147,56 +139,5 @@ export abstract class BasePage {
     timeout?: number,
   ): Promise<T> {
     return waitForStableValue(read, stableReads, timeout);
-  }
-
-  /**
-   * Sends the platform's Undo shortcut (Cmd+Z on macOS, Ctrl+Z elsewhere)
-   * to whatever currently has focus.
-   */
-  async undo(focus?: () => Promise<void>): Promise<void> {
-    if (focus) {
-      await focus();
-    }
-    await this.page.keyboard.press(
-      process.platform === "darwin" ? "Meta+z" : "Control+z",
-    );
-  }
-
-  /**
-   * Checks whether an element is hidden. Pass one of a page's own public
-   * readonly Locator fields, e.g. `projectSettingsPage.isHidden(projectSettingsPage.gitSetupForm)`.
-   */
-  async isHidden(target: Locator): Promise<boolean> {
-    return target.isHidden();
-  }
-
-  /**
-   * Checks whether an element is disabled. Pass one of a page's own public
-   * readonly Locator fields, e.g. `projectSettingsPage.isDisabled(projectSettingsPage.scanForFilesButton)`.
-   */
-  async isDisabled(target: Locator): Promise<boolean> {
-    return target.isDisabled();
-  }
-
-  /**
-   * Checks whether a CodeMirror editor currently has focus, via the
-   * `data-focused` attribute the app itself sets on the editor's
-   * container on focus/blur (see one-line-editor.tsx) — more reliable
-   * than comparing against `document.activeElement` across an iframe/
-   * Electron boundary.
-   */
-  async hasFocus(container: Locator): Promise<boolean> {
-    return (await container.getAttribute("data-focused")) === "on";
-  }
-
-  /**
-   * Checks whether a plain DOM element (a button, a react-aria textbox,
-   * a tab, etc. — anything that isn't a CodeMirror editor) currently has
-   * focus, via `document.activeElement`. Use hasFocus() instead for a
-   * CodeMirror editor's container, since CodeMirror doesn't reliably
-   * register itself as `document.activeElement`.
-   */
-  async isFocused(target: Locator): Promise<boolean> {
-    return target.evaluate((el) => el === document.activeElement);
   }
 }

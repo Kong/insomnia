@@ -1,5 +1,5 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
-import type { Locator, Page } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
@@ -13,16 +13,6 @@ import { BaseComponent } from "./base.component";
  * `menuitemradio`; both are matched.
  */
 export class DropdownComponent extends BaseComponent {
-  /** Dropdown whose trigger carries `data-testid="Dropdown-<name>"`. */
-  static byTestId(page: Page, testId: string): DropdownComponent {
-    return new DropdownComponent(page, page.getByTestId(testId));
-  }
-
-  /** Dropdown whose trigger button has the accessible name `name`. */
-  static byLabel(page: Page, name: string | RegExp): DropdownComponent {
-    return new DropdownComponent(page, page.getByRole("button", { name }));
-  }
-
   get menu(): Locator {
     return this.page.getByRole("menu");
   }
@@ -42,48 +32,9 @@ export class DropdownComponent extends BaseComponent {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
-  async close(): Promise<void> {
-    if (!(await this.menu.isVisible())) return;
-    await this.page.keyboard.press("Escape");
-    await expect(this.menu).toBeHidden({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  async isOpen(): Promise<boolean> {
-    return this.menu.isVisible();
-  }
-
   /** Opens the menu and clicks the item called `name`. */
   async select(name: string | RegExp, exact = true): Promise<void> {
     await this.open();
     await this.item(name, exact).click();
-  }
-
-  /** Item labels currently shown (menu is opened if needed, then left open). */
-  async itemNames(): Promise<string[]> {
-    await this.open();
-    return (
-      await this.menu
-        .getByRole("menuitem")
-        .or(this.menu.getByRole("menuitemradio"))
-        .allInnerTexts()
-    ).map((t) => t.trim());
-  }
-
-  async isItemChecked(name: string | RegExp): Promise<boolean> {
-    await this.open();
-    return (
-      (await this.item(name).getAttribute("aria-checked")) === "true"
-    );
-  }
-
-  async isItemDisabled(name: string | RegExp): Promise<boolean> {
-    await this.open();
-    return (await this.item(name).getAttribute("aria-disabled")) === "true";
-  }
-
-  /** Opens the menu via right-click on `root` (context menus). */
-  async openContextMenu(): Promise<void> {
-    await this.root.click({ button: "right" });
-    await expect(this.menu).toBeVisible({ timeout: DEFAULT_TIMEOUT });
   }
 }
