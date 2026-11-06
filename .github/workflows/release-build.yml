@@ -131,8 +131,10 @@ jobs:
       - name: Setup DIGICERT_SM_CLIENT_CERT_FILE from base64 secret data
         if: runner.os == 'Windows'
         shell: bash
+        env:
+          DIGICERT_SM_CLIENT_CERT_FILE_B64: ${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}
         run: |
-          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          echo "$DIGICERT_SM_CLIENT_CERT_FILE_B64" | base64 --decode > /d/Certificate_pkcs12.p12
 
       - name: Set variables
         id: variables
@@ -404,7 +406,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          if-no-files-found: ignore
+          if-no-files-found: error
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
