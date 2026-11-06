@@ -38,66 +38,6 @@ export class ProjectPage extends BasePage {
   }
 
   /**
-   * Logs out via the header's user-dropdown menu ("Log out" -> confirm
-   * "Log Out" in the modal), then waits for the login screen's "Use local
-   * Scratch Pad" entry point to appear. Works even against a session
-   * injected directly via `INSOMNIA_SESSION` (not a real backend login) —
-   * `logout()` only clears local session state.
-   */
-  async logOut(): Promise<void> {
-    await this.page
-      .getByTestId("user-dropdown")
-      .filter({ visible: true })
-      .click();
-    await this.page.getByTestId("account-logout").click();
-    await this.page.getByRole("button", { name: "Log Out" }).click();
-    await expect(this.page.getByLabel("Use local Scratch Pad")).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
-  }
-
-  /**
-   * Clicks the login screen's "Use local Scratch Pad" entry point and
-   * waits for the Scratch Pad workspace to load. Must be called after
-   * `logOut()`.
-   */
-  async clickUseLocalScratchPad(): Promise<void> {
-    await this.page.getByLabel("Use local Scratch Pad").click();
-    await expect(
-      this.page.getByRole("heading", { name: "Unlock full features" }),
-    ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Reports whether a login-screen entry point (e.g. `"Continue with
-   * Email"`, `"Use local Scratch Pad"`) is currently visible. Must be
-   * called after `logOut()`.
-   */
-  async isLoginEntryPointVisible(name: string): Promise<boolean> {
-    return this.page.getByLabel(name).isVisible();
-  }
-
-  /**
-   * Reports whether the Scratch Pad workspace's "Unlock full features"
-   * sign-up nudge is currently visible. Must be called after
-   * `clickUseLocalScratchPad()`.
-   */
-  async isUnlockFullFeaturesVisible(): Promise<boolean> {
-    return this.page
-      .getByRole("heading", { name: "Unlock full features" })
-      .isVisible();
-  }
-
-  /**
-   * Opens the organization switcher and selects the organization with the
-   * given name (e.g. "Control Planes" for the Konnect organization).
-   */
-  async switchOrganization(name: string): Promise<void> {
-    await this.page.getByRole("button", { name: "Organizations" }).click();
-    await this.page.getByRole("option", { name }).click();
-  }
-
-  /**
    * Selects a project type in the create-project dialog. For Local and
    * Cloud projects, waits for the Create button to become enabled. For Git
    * projects, the Create button is replaced by a multi-step repo-detail
@@ -122,18 +62,5 @@ export class ProjectPage extends BasePage {
     await expect(
       this.page.getByRole("button", { name: "Create", exact: true }),
     ).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
-  }
-
-  /**
-   * Clicks a project-type tile in the create/update-project dialog without
-   * waiting for a successful sub-form to appear afterward, unlike
-   * `setNewProjectType()`. Needed when the type is expected to be blocked
-   * (Git Sync disabled via feature flag), where that success wait would
-   * never resolve.
-   */
-  async clickProjectTypeTile(type: ProjectType): Promise<void> {
-    await this.page
-      .locator(`div[aria-label="Project Type Item: ${type}"]`)
-      .click();
   }
 }

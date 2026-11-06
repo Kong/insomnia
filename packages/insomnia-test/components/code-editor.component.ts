@@ -14,14 +14,6 @@ import { BaseComponent } from "./base.component";
  * instead of keystrokes, which is both faster and immune to autocomplete.
  */
 export class CodeEditorComponent extends BaseComponent {
-  /** The n-th `CodeEditor` on the page (or within `scope`). */
-  static nth(page: Page, index = 0, scope?: Locator): CodeEditorComponent {
-    return new CodeEditorComponent(
-      page,
-      (scope ?? page).getByTestId("CodeEditor").nth(index),
-    );
-  }
-
   private directCodeMirror?: Locator;
 
   /**
@@ -83,30 +75,6 @@ export class CodeEditorComponent extends BaseComponent {
     return true;
   }
 
-  async clear(): Promise<void> {
-    await this.setValue("");
-  }
-
-  async focus(): Promise<void> {
-    await this.codeMirror.evaluate((el) => (el as any).CodeMirror?.focus());
-  }
-
-  /** The app sets `data-focused="on"` on the container on focus/blur. */
-  async hasFocus(): Promise<boolean> {
-    return (await this.root.getAttribute("data-focused")) === "on";
-  }
-
-  async expectValue(
-    expected: string | RegExp,
-    timeout = DEFAULT_TIMEOUT,
-  ): Promise<void> {
-    await expect(async () => {
-      const value = await this.getValue();
-      if (typeof expected === "string") expect(value).toBe(expected);
-      else expect(value).toMatch(expected);
-    }).toPass({ timeout });
-  }
-
   /** Types through the keyboard; use only when the key events matter. */
   async type(text: string): Promise<void> {
     await this.codeMirror.click();
@@ -116,10 +84,4 @@ export class CodeEditorComponent extends BaseComponent {
 
 /** Single-line variant (`data-testid="OneLineEditor"`): url bar, kv cells. */
 export class OneLineEditorComponent extends CodeEditorComponent {
-  static nth(page: Page, index = 0, scope?: Locator): OneLineEditorComponent {
-    return new OneLineEditorComponent(
-      page,
-      (scope ?? page).getByTestId("OneLineEditor").nth(index),
-    );
-  }
 }

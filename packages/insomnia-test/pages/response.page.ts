@@ -148,53 +148,6 @@ export class ResponsePage extends BasePage {
   }
 
   /**
-   * Reads a specific streamed gRPC response message by clicking its
-   * "Response N" tab and parsing the editor content as JSON, falling back
-   * to the raw text when it isn't valid JSON.
-   */
-  async getGrpcMessage(index = 0): Promise<unknown> {
-    const tab = this.page.locator(this.PANE).getByRole('tab', { name: `Response ${index + 1}`, exact: true });
-    if ((await tab.count()) === 0) return undefined;
-    await tab.click();
-    const editor = this.page.locator(`${this.PANE} [role="tabpanel"] .CodeMirror`).first();
-    const raw = await this.readCodeMirror(editor);
-    if (!raw) return undefined;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return raw;
-    }
-  }
-
-  /**
-   * Reads every streamed gRPC response message, in order, by walking
-   * "Response N" tabs until one doesn't exist. Works uniformly for unary
-   * (a single "Response 1" tab) and server/client/bidi-streaming calls
-   * (one tab per message received).
-   */
-  async getGrpcMessages(): Promise<unknown[]> {
-    const messages: unknown[] = [];
-    for (let index = 0; ; index++) {
-      const message = await this.getGrpcMessage(index);
-      if (message === undefined) break;
-      messages.push(message);
-    }
-    return messages;
-  }
-
-  /**
-   * Reads the gRPC response status tag and splits it into a status code
-   * and message.
-   */
-  async getGrpcStatus(): Promise<{ code: string; message: string } | undefined> {
-    const tag = this.viewer.statusTag;
-    if ((await tag.count()) === 0) return undefined;
-    const raw = (await tag.innerText()).replace(this.NBSP, ' ').trim();
-    const [code, ...rest] = raw.split(/\s+/);
-    return { code, message: rest.join(' ') };
-  }
-
-  /**
    * Reads all response headers listed on the "headers" tab.
    */
   private async getHeaders(): Promise<ResponseHeader[] | undefined> {
@@ -289,20 +242,6 @@ export class ResponsePage extends BasePage {
     const previewTab = new TabsComponent(this.page, this.page.locator(this.PANE)).tab("timeline");
     const dialog = this.page.getByRole('dialog').first();
     await previewTab.or(dialog).first().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
-    if (await dialog.isVisible()) {
-      throw new Error((await dialog.innerText()).trim());
-    }
-  }
-
-  /**
-   * Confirms a gRPC response has been rendered by waiting for the
-   * response status tag to become visible. If an error dialog appears
-   * instead (gRPC business failures), throws using its text.
-   */
-  async navigateGrpc(): Promise<void> {
-    const statusTag = this.viewer.statusTag;
-    const dialog = this.page.getByRole('dialog').first();
-    await statusTag.or(dialog).first().waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
     if (await dialog.isVisible()) {
       throw new Error((await dialog.innerText()).trim());
     }

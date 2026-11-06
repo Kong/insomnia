@@ -48,10 +48,6 @@ export class KeyValueEditorComponent extends BaseComponent {
     );
   }
 
-  async rowCount(): Promise<number> {
-    return this.rows.count();
-  }
-
   get addButton(): Locator {
     return this.root.getByRole("button", { name: "Add", exact: true });
   }
@@ -82,38 +78,5 @@ export class KeyValueEditorComponent extends BaseComponent {
       if (name || value) pairs.push({ name, value, disabled: !enabled });
     }
     return pairs;
-  }
-
-  /** Replaces all rows with `pairs`. */
-  async set(pairs: KeyValueRow[]): Promise<void> {
-    await this.deleteAll();
-    for (const [index, pair] of pairs.entries()) {
-      if (!this.hasTrailingBlankRow && index > 0) {
-        await this.addButton.click();
-      }
-      // Index fixed up front: once persisted a new trailing blank row is
-      // appended, so `.last()` would no longer be the row being edited.
-      const row = this.rows.nth((await this.rows.count()) - 1);
-      await this.nameEditor(row).setValue(pair.name);
-      await this.valueEditor(row).setValue(pair.value);
-      if (pair.disabled) {
-        await row.locator("button[aria-pressed]").click();
-      }
-    }
-  }
-
-  /** Switches the single row at `index` on/off. */
-  async setRowEnabled(index: number, enabled: boolean): Promise<void> {
-    const toggle = this.rows.nth(index).locator("button[aria-pressed]");
-    const current = (await toggle.getAttribute("aria-pressed")) === "true";
-    if (current !== enabled) await toggle.click();
-  }
-
-  /** Drags row `from` onto row `to` via the grip handle. */
-  async dragRow(from: number, to: number): Promise<void> {
-    await this.rows
-      .nth(from)
-      .locator('[data-icon="grip-vertical"]')
-      .dragTo(this.rows.nth(to));
   }
 }
