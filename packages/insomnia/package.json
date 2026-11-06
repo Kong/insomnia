@@ -25,7 +25,7 @@
     "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
-    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
+    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --prepackaged ./dist/win-unpacked",
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
