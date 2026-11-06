@@ -52,6 +52,27 @@ export interface KonnectRoute {
   service: { id: string } | null;
 }
 
+export interface KonnectPluginOrdering {
+  before?: { access?: string[] } | null;
+  after?: { access?: string[] } | null;
+}
+
+export interface KonnectPlugin {
+  id: string;
+  name: string;
+  instance_name: string | null;
+  enabled: boolean;
+  config: Record<string, unknown> | null;
+  protocols: string[] | null;
+  tags: string[] | null;
+  condition: string | null;
+  ordering: KonnectPluginOrdering | null;
+  route: { id: string } | null;
+  service: { id: string } | null;
+  consumer: { id: string } | null;
+  consumer_group: { id: string } | null;
+}
+
 export const getActiveRegions = getKonnectApiRegions;
 
 // Boundary normalizers — coerce any missing nullable field to `null` so the
@@ -124,7 +145,7 @@ export interface PatValidationResult {
 
 export async function validatePat(pat: string): Promise<PatValidationResult> {
   try {
-    const response = await fetch(`${regionalApiBase('us')}/v2/control-planes?page[size]=1`, {
+    const response = await fetch(`${getKonnectRegionalApiBase('us')}/v2/control-planes?page[size]=1`, {
       headers: { Authorization: `Bearer ${pat}` },
     });
     if (response.ok) {
@@ -144,7 +165,7 @@ export async function validatePat(pat: string): Promise<PatValidationResult> {
 
 export async function fetchKonnectOrganizationId(pat: string, signal?: AbortSignal): Promise<string | undefined> {
   try {
-    const response = await fetchWithRetry(`${regionalApiBase('us')}/v3/organizations/me`, pat, signal);
+    const response = await fetchWithRetry(`${getKonnectRegionalApiBase('us')}/v3/organizations/me`, pat, signal);
     if (!response.ok) {
       return undefined;
     }
@@ -164,7 +185,7 @@ export async function* fetchAllControlPlanes(
   let totalPages = 1;
 
   do {
-    const url = `${regionalApiBase(region)}/v2/control-planes?page[size]=${PAGE_SIZE}&page[number]=${page}`;
+    const url = `${getKonnectRegionalApiBase(region)}/v2/control-planes?page[size]=${PAGE_SIZE}&page[number]=${page}`;
     const response = await fetchWithRetry(url, pat, signal);
 
     if (!response.ok) {
@@ -212,7 +233,7 @@ export async function fetchAllServices(
   signal?: AbortSignal,
 ): Promise<KonnectService[]> {
   const services = await fetchAllOffsetPaginated<KonnectService>(
-    `${regionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services`,
+    `${getKonnectRegionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services`,
     pat,
     `fetching services for CP ${cpId}`,
     signal,
@@ -228,7 +249,7 @@ export async function fetchRoutesForService(
   signal?: AbortSignal,
 ): Promise<KonnectRoute[]> {
   const routes = await fetchAllOffsetPaginated<KonnectRoute>(
-    `${regionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services/${serviceId}/routes`,
+    `${getKonnectRegionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/services/${serviceId}/routes`,
     pat,
     `fetching routes for service ${serviceId}`,
     signal,
@@ -236,7 +257,128 @@ export async function fetchRoutesForService(
   return routes.map(normalizeRoute);
 }
 
-function regionalApiBase(region: string): string {
+export async function fetchAllPlugins(
+  pat: string,
+  cpId: string,
+  region: string,
+  signal?: AbortSignal,
+): Promise<KonnectPlugin[]> {
+  const plugins = await fetchAllOffsetPaginated<KonnectPlugin>(
+    `${getKonnectRegionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/plugins`,
+    pat,
+    `fetching plugins for CP ${cpId}`,
+    signal,
+  );
+  return plugins.map(normalizePlugin);
+}
+
+export async function fetchAvailablePluginNames(
+  pat: string,
+  cpId: string,
+  region: string,
+  signal?: AbortSignal,
+): Promise<string[]> {
+  const response = await fetchWithRetry(
+    `${getKonnectRegionalApiBase(region)}/v2/control-planes/${cpId}/core-entities/v1/available-plugins`,
+    pat,
+    signal,
+  );
+  if (!response.ok) {
+    throw new Error(`Konnect API error ${response.status} fetching available plugins`);
+  }
+  const items = findPluginArray(await response.json());
+  if (!items) {
+    throw new Error('Unexpected Konnect available-plugins response shape');
+  }
+  const names = items.map(readPluginName).filter((name): name is string => name !== null);
+  if (items.length > 0 && names.length === 0) {
+    throw new Error('Unexpected Konnect available-plugins item shape');
+  }
+  return names;
+}
+
+function findPluginArray(body: unknown, depth = 0): unknown[] | null {
+  if (Array.isArray(body)) {
+    return body;
+  }
+  if (!body || typeof body !== 'object' || depth > 3) {
+    return null;
+  }
+  const record = body as Record<string, unknown>;
+  for (const key of ['data', 'items', 'plugins', 'available_plugins', 'availablePlugins']) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value;
+    }
+    if (value && typeof value === 'object') {
+      const nested = findPluginArray(value, depth + 1);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+  for (const value of Object.values(record)) {
+    if (Array.isArray(value)) {
+      return value;
+    }
+    if (value && typeof value === 'object') {
+      const nested = findPluginArray(value, depth + 1);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+  return null;
+}
+
+function readPluginName(item: unknown): string | null {
+  if (typeof item === 'string') {
+    return item || null;
+  }
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+  const record = item as Record<string, unknown>;
+  for (const key of ['name', 'plugin_name', 'pluginName', 'slug']) {
+    const value = record[key];
+    if (typeof value === 'string' && value) {
+      return value;
+    }
+  }
+  for (const key of ['plugin', 'definition', 'attributes', 'properties']) {
+    const nested = record[key];
+    if (nested) {
+      const name = readPluginName(nested);
+      if (name) {
+        return name;
+      }
+    }
+  }
+  return null;
+}
+
+function normalizePlugin(plugin: KonnectPlugin): KonnectPlugin {
+  return {
+    ...plugin,
+    instance_name: plugin.instance_name ?? null,
+    enabled: plugin.enabled ?? true,
+    config: plugin.config ?? null,
+    protocols: plugin.protocols ?? null,
+    tags: plugin.tags ?? null,
+    condition: plugin.condition ?? null,
+    ordering: plugin.ordering ?? null,
+    route: plugin.route ?? null,
+    service: plugin.service ?? null,
+    consumer: plugin.consumer ?? null,
+    consumer_group: plugin.consumer_group ?? null,
+  };
+}
+
+/**
+ * Resolves the Konnect API base for a region. `KONNECT_API_URL` can be a
+ * regional hostname (the default) or a full URL (used by tests/proxies).
+ */
+export function getKonnectRegionalApiBase(region: string): string {
   const url = getKonnectApiUrl();
   // If KONNECT_API_URL is already a full URL (e.g. http://localhost:4010 in tests),
   // use it as-is without prepending a region subdomain or https scheme.

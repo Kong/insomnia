@@ -124,6 +124,10 @@ export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.i
 // Customer.io CDP (analytics/in-app messaging) — see ui/hooks/use-cio.tsx
 export const getCioCdnUrl = () => 'https://cdp-eu.customer.io';
 export const getKonnectApiUrl = () => env.KONNECT_API_URL || 'api.konghq.com';
+export const getKonnectCloudOrigin = () =>
+  (env.KONNECT_CLOUD_ORIGIN || 'https://cloud.konghq.com').replace(/\/+$/, '');
+export const getKongDocsOrigin = () =>
+  (env.KONG_DOCS_ORIGIN || 'https://developer.konghq.com').replace(/\/+$/, '');
 export const getKonnectApiRegions = (): string[] => {
   const regions = (env.KONNECT_API_REGIONS ?? '')
     .split(',')
