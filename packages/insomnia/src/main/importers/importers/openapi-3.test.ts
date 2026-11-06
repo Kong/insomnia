@@ -252,11 +252,6 @@ describe('openapi-3', () => {
                     schema: {
                       $ref: '#/components/schemas/AdoptedPet',
                     },
-                    example: {
-                      name: 'Buddy',
-                      age: 2,
-                      adoptionDate: '2024-01-15',
-                    },
                   },
                 },
               },
@@ -546,6 +541,383 @@ describe('openapi-3', () => {
       }
       expect(node).toBeNull();
       expect(depth).toBeLessThan(10);
+    });
+  });
+  describe('OpenAPI 3.2', () => {
+    it('should import additionalOperations as one request per custom method', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Cache API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            get: { operationId: 'listPets', responses: { 200: { description: 'ok' } } },
+            query: { operationId: 'queryPets', responses: { 200: { description: 'ok' } } },
+            additionalOperations: {
+              PURGE: { operationId: 'purgePets', responses: { 204: { description: 'purged' } } },
+              LINK: { operationId: 'linkPets', responses: { 204: { description: 'linked' } } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => r.method)).toEqual(['GET', 'QUERY', 'PURGE', 'LINK']);
+      expect(requests.every(r => r.url === '{{ _.base_url }}/pets')).toBe(true);
+    });
+
+    it('should expand an in: querystring parameter into one query parameter per property', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets/lookup': {
+            get: {
+              parameters: [
+                {
+                  name: 'filter',
+                  in: 'querystring',
+                  required: true,
+                  content: {
+                    'application/x-www-form-urlencoded': {
+                      schema: {
+                        type: 'object',
+                        required: ['name'],
+                        properties: { name: { type: 'string' }, limit: { type: 'integer', default: 10 } },
+                      },
+                    },
+                  },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result!.find(item => item._type === 'request');
+
+      expect(request.parameters).toEqual([
+        { name: 'name', value: 'string', disabled: false },
+        { name: 'limit', value: '10', disabled: true },
+      ]);
+    });
+
+    it('should disable all querystring properties when the parameter is optional, and skip non form-urlencoded content', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            get: {
+              parameters: [
+                {
+                  name: 'optional',
+                  in: 'querystring',
+                  content: {
+                    'application/x-www-form-urlencoded': {
+                      schema: { type: 'object', required: ['a'], properties: { a: { type: 'string' } } },
+                    },
+                  },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+            post: {
+              parameters: [
+                {
+                  name: 'json',
+                  in: 'querystring',
+                  required: true,
+                  content: { 'application/json': { schema: { type: 'object' } } },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const [get, post] = result!.filter(item => item._type === 'request');
+
+      expect(get.parameters).toEqual([{ name: 'a', value: 'string', disabled: true }]);
+      expect(post.parameters).toEqual([]);
+    });
+  });
+
+  describe('path level parameters', () => {
+    it('should merge Path Item parameters into each operation, letting the operation override', async () => {
+      const openApiDoc = {
+        openapi: '3.0.3',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            parameters: [
+              { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
+              { name: 'sort', in: 'query', schema: { type: 'string', default: 'asc' } },
+              { name: 'X-Trace', in: 'header', required: true, schema: { type: 'string' } },
+            ],
+            get: {
+              parameters: [{ name: 'limit', in: 'query', required: true, schema: { type: 'integer', default: 50 } }],
+              responses: { 200: { description: 'ok' } },
+            },
+            post: { responses: { 200: { description: 'ok' } } },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const [get, post] = result!.filter(item => item._type === 'request');
+
+      expect(get.parameters).toEqual([
+        { name: 'sort', value: 'asc', disabled: true },
+        { name: 'limit', value: '50', disabled: false },
+      ]);
+      expect(get.headers).toContainEqual({ name: 'X-Trace', value: 'string', disabled: false });
+      expect(post.parameters).toEqual([
+        { name: 'limit', value: '10', disabled: true },
+        { name: 'sort', value: 'asc', disabled: true },
+      ]);
+    });
+  });
+
+  describe('text/event-stream responses', () => {
+    const buildDoc = (responses: Record<string, unknown>, parameters: unknown[] = []) => ({
+      openapi: '3.1.0',
+      info: { title: 'Events', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      paths: { '/events': { get: { parameters, responses } } },
+    });
+
+    it('should add an Accept header for a 2xx text/event-stream response', async () => {
+      const doc = buildDoc({ 200: { description: 'ok', content: { 'text/event-stream; charset=utf-8': {} } } });
+      const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+
+      expect(request.headers).toEqual([{ name: 'Accept', value: 'text/event-stream', disabled: false }]);
+    });
+
+    it('should accept 2XX range keys', async () => {
+      const doc = buildDoc({ '2XX': { description: 'ok', content: { 'text/event-stream': {} } } });
+      const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+
+      expect(request.headers.map(h => h.name)).toEqual(['Accept']);
+    });
+
+    it('should not add Accept for non-2xx, other streaming types or an explicit Accept parameter', async () => {
+      const nonSuccess = buildDoc({ 400: { description: 'bad', content: { 'text/event-stream': {} } } });
+      const ndjson = buildDoc({ 200: { description: 'ok', content: { 'application/x-ndjson': {} } } });
+      const explicit = buildDoc({ 200: { description: 'ok', content: { 'text/event-stream': {} } } }, [
+        { name: 'Accept', in: 'header', schema: { type: 'string', default: 'application/json' } },
+      ]);
+
+      for (const doc of [nonSuccess, ndjson]) {
+        const request = (await convert(JSON.stringify(doc)))!.find(item => item._type === 'request');
+        expect(request.headers).toEqual([]);
+      }
+      const request = (await convert(JSON.stringify(explicit)))!.find(item => item._type === 'request');
+      expect(request.headers).toEqual([{ name: 'Accept', value: 'application/json', disabled: true }]);
+    });
+  });
+
+  describe('webhooks', () => {
+    const doc = {
+      openapi: '3.1.0',
+      info: { title: 'Pets', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      tags: [{ name: 'pets' }],
+      paths: { '/pets': { get: { tags: ['pets'], responses: { 200: { description: 'ok' } } } } },
+      webhooks: {
+        petAdopted: {
+          post: {
+            tags: ['pets'],
+            summary: 'Fired when a pet is adopted',
+            requestBody: {
+              content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' } } } } },
+            },
+            responses: { 200: { description: 'ok' } },
+          },
+        },
+        petRemoved: { delete: { responses: { 200: { description: 'ok' } } } },
+      },
+    };
+
+    it('should import webhook operations into a Webhooks folder, outside tag folders, using {{ _.webhook_url }}', async () => {
+      const result = await convert(JSON.stringify(doc));
+      const folder = result?.find(item => item._type === 'request_group' && item.name === 'Webhooks');
+      const webhooks = result?.filter(item => item._type === 'request' && item.parentId === folder?._id);
+      const petsFolder = result?.find(item => item._type === 'request_group' && item.name === 'pets');
+      const inPetsFolder = result?.filter(item => item._type === 'request' && item.parentId === petsFolder?._id);
+      const baseEnv = result?.find(item => item._type === 'environment');
+
+      expect(folder).toBeDefined();
+      expect(webhooks.map(r => [r.name, r.method, r.url])).toEqual([
+        ['Fired when a pet is adopted', 'POST', '{{ _.webhook_url }}'],
+        ['petRemoved', 'DELETE', '{{ _.webhook_url }}'],
+      ]);
+      expect(webhooks[0].body.mimeType).toBe('application/json');
+      expect(webhooks[0].body.text).toContain('"name"');
+      expect(inPetsFolder.map(r => r.method)).toEqual(['GET']);
+      expect(baseEnv.data.webhook_url).toBe('https://example.com/webhook');
+    });
+
+    it('should import a webhooks-only document without paths', async () => {
+      const { paths: _paths, ...webhooksOnlyDoc } = doc;
+      const result = await convert(JSON.stringify(webhooksOnlyDoc));
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => [r.method, r.url])).toEqual([
+        ['POST', '{{ _.webhook_url }}'],
+        ['DELETE', '{{ _.webhook_url }}'],
+      ]);
+    });
+
+    it('should only apply the security declared on the webhook operation, not the root security', async () => {
+      const result = await convert(
+        JSON.stringify({
+          ...doc,
+          security: [{ bearer: [] }],
+          components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } } },
+          webhooks: {
+            ...doc.webhooks,
+            petRemoved: { delete: { security: [{ bearer: [] }], responses: { 200: { description: 'ok' } } } },
+          },
+        }),
+      );
+      const requests = result?.filter(item => item._type === 'request');
+
+      expect(requests.map(r => [r.method, r.url, r.authentication.type])).toEqual([
+        ['GET', '{{ _.base_url }}/pets', 'bearer'],
+        ['POST', '{{ _.webhook_url }}', undefined],
+        ['DELETE', '{{ _.webhook_url }}', 'bearer'],
+      ]);
+    });
+
+    it('should not define webhook_url when no webhook has an operation', async () => {
+      const result = await convert(JSON.stringify({ ...doc, webhooks: { empty: {} } }));
+      const baseEnv = result?.find(item => item._type === 'environment');
+
+      expect(result?.some(item => item.name === 'Webhooks')).toBe(false);
+      expect(baseEnv.data).not.toHaveProperty('webhook_url');
+    });
+  });
+
+  describe('OpenAPI 3.1 schema keywords', () => {
+    it('should use examples, const and the first non-null type for example values', async () => {
+      const openApiDoc = {
+        openapi: '3.1.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            post: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        name: { type: ['string', 'null'] },
+                        kind: { const: 'dog' },
+                        zero: { const: 0 },
+                        flag: { const: false },
+                        tag: { type: 'string', examples: ['rex', 'fido'] },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result?.find(item => item._type === 'request');
+
+      expect(JSON.parse(request.body.text)).toEqual({
+        name: 'string',
+        kind: 'dog',
+        zero: 0,
+        flag: false,
+        tag: 'rex',
+      });
+    });
+  });
+
+  describe('example values', () => {
+    const buildDoc = (operation: Record<string, unknown>) => ({
+      openapi: '3.2.0',
+      info: { title: 'Pets', version: '1.0.0' },
+      servers: [{ url: 'https://api.example.com' }],
+      paths: { '/pets': { post: { responses: { 201: { description: 'created' } }, ...operation } } },
+    });
+    const petSchema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        type: { type: 'string', enum: ['dog', 'cat'] },
+        age: { type: 'integer', default: 0 },
+        vaccinated: { type: 'boolean', example: false },
+      },
+    };
+    const importRequest = async (operation: Record<string, unknown>) =>
+      (await convert(JSON.stringify(buildDoc(operation))))!.find(item => item._type === 'request');
+
+    it('should prefer the media type example, taking the first usable examples entry and dataValue over value', async () => {
+      const body = (examples: Record<string, unknown>) => ({
+        requestBody: { content: { 'application/json': { schema: petSchema, examples } } },
+      });
+
+      const fromDataValue = await importRequest(
+        body({
+          external: { externalValue: 'https://example.com/pet.json' },
+          rex: { dataValue: { name: 'Rex' }, value: { name: 'ignored' } },
+        }),
+      );
+      const fromValue = await importRequest(body({ tom: { value: { name: 'Tom' } } }));
+
+      expect(JSON.parse(fromDataValue.body.text)).toEqual({ name: 'Rex' });
+      expect(JSON.parse(fromValue.body.text)).toEqual({ name: 'Tom' });
+    });
+
+    it('should generate from the schema, keeping falsy examples / defaults and using the first enum value', async () => {
+      const request = await importRequest({ requestBody: { content: { 'application/json': { schema: petSchema } } } });
+
+      expect(JSON.parse(request.body.text)).toEqual({ name: 'string', type: 'dog', age: 0, vaccinated: false });
+    });
+
+    it('should prefer parameter examples, including querystring media type examples', async () => {
+      const request = await importRequest({
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer' }, example: 20 },
+          { name: 'X-Trace', in: 'header', schema: { type: 'string' }, examples: { trace: { dataValue: 'abc' } } },
+          {
+            name: 'filter',
+            in: 'querystring',
+            content: {
+              'application/x-www-form-urlencoded': {
+                schema: { type: 'object', properties: { color: { type: 'string' }, size: { type: 'integer' } } },
+                example: { color: 'brown' },
+              },
+            },
+          },
+        ],
+      });
+
+      expect(request.parameters).toEqual([
+        { name: 'limit', value: '20', disabled: true },
+        { name: 'color', value: 'brown', disabled: true },
+        { name: 'size', value: '0', disabled: true },
+      ]);
+      expect(request.headers).toContainEqual({ name: 'X-Trace', value: 'abc', disabled: true });
     });
   });
 });
