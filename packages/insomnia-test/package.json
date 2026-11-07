@@ -36,7 +36,7 @@
     "oidc-provider": "^8.8.1",
     "socket.io": "^4.8.3",
     "ws": "^8.21.1",
-    "zod": "^3.25.75"
+    "zod": "^4.6.6"
   },
   "dependencies": {
     "express-rate-limit": "^8.7.3"
