@@ -322,7 +322,7 @@ jobs:
         if: always() && runner.os == 'Windows'
         shell: bash
         run: |
-          rm -f ${{ env.SM_CLIENT_CERT_FILE }}
+          rm -f '${{ env.SM_CLIENT_CERT_FILE }}'
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
