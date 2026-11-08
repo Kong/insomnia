@@ -1,0 +1,518 @@
+import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
+import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
+import { EnvironmentType, models } from 'insomnia-data';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Button,
+  DropIndicator,
+  GridList,
+  GridListItem,
+  Heading,
+  Label,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  ToggleButton,
+  useDragAndDrop,
+} from 'react-aria-components';
+import { useParams } from 'react-router';
+
+import { responseTagRegex } from '~/common/templating/utils';
+import { getDataFromKVPair, hasProtectedKvPairs } from '~/common/utils/environment-utils';
+import { invariant } from '~/common/utils/invariant';
+import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
+import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
+import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
+import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
+import { Tooltip } from '~/ui/components/tooltip';
+import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+
+import { docsAfterResponseScript, docsTemplateTags } from '../../common/documentation';
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { EditableInput } from './editable-input';
+import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from './editors/environment-editor';
+import { EnvironmentKVEditor } from './editors/environment-key-value-editor/key-value-editor';
+import { Icon } from './icon';
+import { showModal } from './modals';
+import { AlertModal } from './modals/alert-modal';
+
+export const WorkspaceEnvironmentsEditor = ({
+  initialEnvironmentId,
+  selectionRequestId = 0,
+  footerAction,
+}: {
+  initialEnvironmentId?: string;
+  selectionRequestId?: number;
+  // Rendered at the end of the footer row, e.g. a close button. `isSaving` is true while an update is in flight.
+  footerAction?: (state: { isSaving: boolean }) => React.ReactNode;
+}) => {
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
+
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const routeData = useWorkspaceLoaderData()!;
+  const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
+
+  const { features } = useOrganizationPermissions();
+
+  const createEnvironmentFetcher = useEnvironmentCreateActionFetcher();
+  const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
+  const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
+  const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
+  const { toggleEnvironmentType } = useToggleEnvironmentType();
+
+  const { baseEnvironment, activeEnvironment, subEnvironments, activeProject, activeWorkspaceMeta } = routeData;
+  const preselectedEnvironmentId =
+    initialEnvironmentId && [baseEnvironment, ...subEnvironments].some(env => env._id === initialEnvironmentId)
+      ? initialEnvironmentId
+      : activeEnvironment._id;
+  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(preselectedEnvironmentId);
+  useEffect(() => {
+    if (initialEnvironmentId) {
+      setSelectedEnvironmentId(preselectedEnvironmentId);
+    }
+  }, [initialEnvironmentId, preselectedEnvironmentId, selectionRequestId]);
+  const isUsingInsomniaCloudSync = Boolean(
+    models.project.isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId,
+  );
+  const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
+
+  const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
+  const hasResponseTagEnvironmentVariable = useMemo(() => {
+    if (selectedEnvironment) {
+      return responseTagRegex.test(JSON.stringify(selectedEnvironment.data));
+    }
+    return false;
+  }, [selectedEnvironment]);
+  const allowSwitchEnvironment = !hasProtectedKvPairs(selectedEnvironment?.kvPairData);
+
+  const environmentActionsList: {
+    id: string;
+    name: string;
+    icon: IconName;
+    action: (environment: Environment) => void;
+  }[] = [
+    {
+      id: 'duplicate',
+      name: 'Duplicate',
+      icon: 'copy',
+      action: async (environment: Environment) => {
+        duplicateEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          environmentId: environment._id,
+        });
+      },
+    },
+    {
+      id: 'delete',
+      name: 'Delete',
+      icon: 'trash',
+      action: async (environment: Environment) => {
+        showModal(AlertModal, {
+          title: 'Delete Environment',
+          message: `Are you sure you want to delete "${environment.name}"?`,
+          addCancel: true,
+          okLabel: 'Delete',
+          onConfirm: async () => {
+            deleteEnvironmentFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              environmentId: environment._id,
+            });
+
+            setSelectedEnvironmentId(baseEnvironment._id);
+          },
+        });
+      },
+    },
+  ];
+
+  const createEnvironmentActionsList: {
+    id: string;
+    name: string;
+    description: string;
+    icon: IconProp;
+    action: (environment: Environment) => void;
+  }[] = [
+    {
+      id: 'shared',
+      name: 'Add Sub Environment',
+      description: `Sub environments are additional nested environments that ${isUsingGitSync ? 'sync with Git Sync' : isUsingInsomniaCloudSync ? 'sync with Insomnia Sync' : 'can be exported'} and are shared with your team.`,
+      icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
+      action: async () => {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
+            isPrivate: false,
+            source: 'environment-editor',
+          },
+        });
+      },
+    },
+    {
+      id: 'private',
+      name: 'Add Private Sub Environment',
+      description: 'Private sub environments stay local to your machine and are never exported, synced, or committed.',
+      icon: 'lock',
+      action: async () => {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
+            isPrivate: true,
+            source: 'environment-editor',
+          },
+        });
+      },
+    },
+  ];
+
+  const handleEnvironmentChange = (value: EnvironmentInfo) => {
+    if (environmentEditorRef.current?.isValid() && selectedEnvironment) {
+      const { object, propertyOrder } = value;
+
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: object,
+          dataPropertyOrder: propertyOrder,
+        },
+        environmentId: selectedEnvironment._id,
+      });
+    }
+  };
+
+  const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
+    if (selectedEnvironment) {
+      const environmentData = getDataFromKVPair(kvPairData);
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: environmentData.data,
+          dataPropertyOrder: environmentData.dataPropertyOrder,
+          kvPairData,
+        },
+        environmentId: selectedEnvironment._id,
+      });
+    }
+  };
+  const environmentsDragAndDrop = useDragAndDrop({
+    getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder(e) {
+      const source = [...e.keys][0];
+      const sourceEnv = subEnvironments.find(evt => evt._id === source);
+      const targetEnv = subEnvironments.find(evt => evt._id === e.target.key);
+      if (!sourceEnv || !targetEnv) {
+        return;
+      }
+      const dropPosition = e.target.dropPosition;
+      if (dropPosition === 'before') {
+        const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
+        const previousEnv = subEnvironments[currentEnvIndex - 1];
+        sourceEnv.metaSortKey = !previousEnv
+          ? targetEnv.metaSortKey - 1
+          : (previousEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+      }
+      if (dropPosition === 'after') {
+        const currentEnvIndex = subEnvironments.findIndex(evt => evt._id === targetEnv._id);
+        const nextEnv = subEnvironments[currentEnvIndex + 1];
+        sourceEnv.metaSortKey = !nextEnv
+          ? targetEnv.metaSortKey + 1
+          : (nextEnv.metaSortKey + targetEnv.metaSortKey) / 2;
+      }
+
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: { metaSortKey: sourceEnv.metaSortKey },
+        environmentId: sourceEnv._id,
+      });
+    },
+    renderDropIndicator(target) {
+      if (target.type === 'item') {
+        if (target.dropPosition === 'before' && target.key === baseEnvironment._id) {
+          return <DropIndicator target={target} className="hidden" />;
+        }
+        return <DropIndicator target={target} className="outline-1 outline-(--color-surprise) outline-solid" />;
+      }
+
+      return <DropIndicator target={target} className="outline-1 outline-(--color-surprise) outline-solid" />;
+    },
+  });
+
+  return (
+    <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
+      <div className="flex w-full flex-1 basis-96 divide-x divide-solid divide-(--hl-md) overflow-hidden overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
+        <div className="flex w-full max-w-xs shrink-0 flex-col overflow-hidden">
+          <div className="flex shrink-0 flex-col gap-1 border-b border-solid border-(--hl-sm) p-1">
+            {createEnvironmentActionsList.map(action => (
+              <Tooltip key={action.id} position="bottom" message={action.description}>
+                <Button
+                  aria-label={action.name}
+                  data-testid={action.id === 'private' ? 'AddPrivateSubEnvironment' : 'AddSubEnvironment'}
+                  onPress={() => action.action(baseEnvironment)}
+                  className="flex w-full items-center gap-2 rounded-xs border border-solid border-(--hl-sm) px-4 py-2 text-sm whitespace-nowrap text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                >
+                  <Icon className="w-3.5" icon={action.icon} />
+                  <span className="truncate">{action.name}</span>
+                </Button>
+              </Tooltip>
+            ))}
+          </div>
+          <GridList
+            aria-label="Environments"
+            items={[baseEnvironment, ...subEnvironments]}
+            className="w-full flex-1 overflow-y-auto py-(--padding-xs) data-empty:py-0"
+            disallowEmptySelection
+            selectionMode="single"
+            selectionBehavior="replace"
+            selectedKeys={[selectedEnvironmentId]}
+            dragAndDropHooks={environmentsDragAndDrop.dragAndDropHooks}
+            onSelectionChange={keys => {
+              if (keys !== 'all') {
+                const [environmentId] = keys.values();
+                setSelectedEnvironmentId(environmentId.toString());
+              }
+            }}
+          >
+            {item => {
+              return (
+                <GridListItem
+                  key={item._id}
+                  id={item._id}
+                  textValue={item.name}
+                  className="group outline-hidden select-none"
+                >
+                  <div
+                    className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden pr-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)`}
+                  >
+                    <span className="absolute top-0 left-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-(--color-surprise)" />
+                    <Icon
+                      data-testid={item.isPrivate ? 'environment-private-icon' : undefined}
+                      icon={
+                        item.isPrivate
+                          ? 'lock'
+                          : isUsingGitSync
+                            ? ['fab', 'git-alt']
+                            : isUsingInsomniaCloudSync
+                              ? 'globe-americas'
+                              : 'file-arrow-down'
+                      }
+                      className="w-5"
+                      style={{
+                        color: item.color || undefined,
+                      }}
+                    />
+                    <EditableInput
+                      value={item.name}
+                      name="name"
+                      ariaLabel="Environment name"
+                      className="flex-1 px-1 hover:bg-transparent!"
+                      onSubmit={name => {
+                        name &&
+                          updateEnvironmentFetcher.submit({
+                            organizationId,
+                            projectId,
+                            workspaceId,
+                            patch: {
+                              name,
+                            },
+                            environmentId: item._id,
+                          });
+                      }}
+                    />
+                    {item.parentId !== workspaceId && (
+                      <MenuTrigger>
+                        <Button
+                          aria-label="Environment Actions"
+                          className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
+                        >
+                          <Icon icon="caret-down" />
+                        </Button>
+                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                          <Menu
+                            aria-label="Environment Actions menu"
+                            selectionMode="single"
+                            onAction={key => {
+                              environmentActionsList.find(({ id }) => key === id)?.action(item);
+                            }}
+                            items={environmentActionsList}
+                            className="min-w-max overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) py-2 text-sm shadow-lg select-none focus:outline-hidden"
+                          >
+                            {item => (
+                              <MenuItem
+                                key={item.id}
+                                id={item.id}
+                                className="flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-selected:font-bold"
+                                aria-label={item.name}
+                              >
+                                <Icon className="w-5" icon={item.icon} />
+                                <span>{item.name}</span>
+                              </MenuItem>
+                            )}
+                          </Menu>
+                        </Popover>
+                      </MenuTrigger>
+                    )}
+                  </div>
+                </GridListItem>
+              );
+            }}
+          </GridList>
+        </div>
+        <div className="flex flex-1 flex-col divide-y divide-solid divide-(--hl-md) overflow-hidden">
+          <div className="flex w-full items-center justify-between gap-2 overflow-hidden px-(--padding-sm)">
+            <Heading className="flex grow items-center gap-2 overflow-hidden px-4 py-2 text-lg">
+              <Icon
+                style={{ color: selectedEnvironment?.color || '' }}
+                className="w-4"
+                icon={
+                  selectedEnvironment?.isPrivate
+                    ? 'lock'
+                    : isUsingGitSync
+                      ? ['fab', 'git-alt']
+                      : isUsingInsomniaCloudSync
+                        ? 'globe-americas'
+                        : 'file-arrow-down'
+                }
+              />
+              <EditableInput
+                value={selectedEnvironment?.name || ''}
+                name="name"
+                ariaLabel="Environment name"
+                className="flex-1 px-1"
+                onSubmit={name => {
+                  name &&
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        name,
+                      },
+                      environmentId: selectedEnvironmentId,
+                    });
+                }}
+              />
+            </Heading>
+            {selectedEnvironment && selectedEnvironment.parentId !== workspaceId && (
+              <Label className="mr-2 ml-auto flex shrink-0 items-center gap-2 rounded-xs bg-(--hl-sm) px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm)">
+                <span>Color:</span>
+                <input
+                  onChange={e => {
+                    const color = e.target.value;
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        color,
+                      },
+                      environmentId: selectedEnvironment._id,
+                    });
+                  }}
+                  type="color"
+                  value={selectedEnvironment?.color || ''}
+                />
+              </Label>
+            )}
+            {selectedEnvironment && allowSwitchEnvironment && (
+              <ToggleButton
+                onChange={isSelected => {
+                  const toggleSwitchEnvironmentType = (
+                    newEnvironmentType: EnvironmentType,
+                    kvPairData: EnvironmentKvPairData[],
+                  ) => {
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        environmentType: newEnvironmentType,
+                        kvPairData: kvPairData,
+                      },
+                      environmentId: selectedEnvironment._id,
+                    });
+                  };
+                  const isValidJSON = !!environmentEditorRef.current?.isValid();
+                  toggleEnvironmentType(isSelected, selectedEnvironment, isValidJSON, toggleSwitchEnvironmentType);
+                }}
+                isSelected={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR}
+                className="flex w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
+                aria-label={selectedEnvironment?.environmentType !== EnvironmentType.KVPAIR ? 'Table Edit' : 'Raw Edit'}
+              >
+                {({ isSelected }) => (
+                  <Fragment>
+                    <Icon
+                      icon={!isSelected ? 'toggle-on' : 'toggle-off'}
+                      className={`${!isSelected ? 'text-(--color-success)' : ''}`}
+                    />
+                    <span>Table View</span>
+                  </Fragment>
+                )}
+              </ToggleButton>
+            )}
+          </div>
+          {/* legacy JSON environment do not have environmentType property*/}
+          {selectedEnvironment &&
+            (selectedEnvironment.environmentType === EnvironmentType.JSON || !selectedEnvironment.environmentType) && (
+              <EnvironmentEditor
+                ref={environmentEditorRef}
+                key={selectedEnvironment._id}
+                historyKey={`environment-editor::${selectedEnvironment._id}`}
+                onChange={handleEnvironmentChange}
+                environmentInfo={{
+                  object: selectedEnvironment.data,
+                  propertyOrder: selectedEnvironment.dataPropertyOrder ?? null,
+                }}
+              />
+            )}
+          {selectedEnvironment && selectedEnvironment.environmentType === EnvironmentType.KVPAIR && (
+            <EnvironmentKVEditor
+              key={selectedEnvironment._id}
+              data={selectedEnvironment.kvPairData || []}
+              onChange={handleKVPairChange}
+            />
+          )}
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          {/* Warning message when user uses response tag in environment variable and suggest to user after-response script INS-4243 */}
+          {hasResponseTagEnvironmentVariable && (
+            <p className="warning text-sm italic">
+              <Icon icon="exclamation-circle" />
+              <a href={docsAfterResponseScript}>
+                {' '}
+                We suggest to save your response into an environment variable using after-response script.
+              </a>
+            </p>
+          )}
+          <p className="text-sm italic">
+            * Environment data can be used for <a href={docsTemplateTags}>Nunjucks Templating</a> in your requests.
+          </p>
+        </div>
+        {footerAction?.({ isSaving: updateEnvironmentFetcher.state !== 'idle' })}
+      </div>
+    </div>
+  );
+};
