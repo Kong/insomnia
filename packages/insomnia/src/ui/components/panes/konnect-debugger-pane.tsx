@@ -410,7 +410,7 @@ const TraceList = ({
   isActive: boolean;
 }) => (
   <div className="flex w-56 shrink-0 flex-col overflow-y-auto border-r border-solid border-(--hl-md)">
-    <div className="px-3 py-2 text-xs">
+    <div className="border-b border-solid border-(--hl-md) px-3 py-2 text-xs">
       <div className="font-bold tracking-wide text-(--hl) uppercase">Captured ({traces.length})</div>
       <div className="text-(--hl)">Whole control plane and results may take a few seconds to appear.</div>
     </div>
@@ -423,7 +423,7 @@ const TraceList = ({
         <div
           key={trace.traceId}
           className={classnames(
-            'group relative flex border-l-2 border-solid ring-1 ring-transparent transition-colors focus-within:ring-(--hl-md) focus-within:ring-inset',
+            'group relative flex border-b border-solid border-(--hl-md) ring-1 ring-transparent transition-colors focus-within:ring-(--hl-md) focus-within:ring-inset',
             isSelected ? 'bg-(--hl-sm)' : 'hover:bg-(--hl-xs)',
             'border-l-transparent',
           )}
