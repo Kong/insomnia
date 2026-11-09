@@ -322,7 +322,6 @@ export const GitRepoForm: FC<Props> = ({
               ) : (
                 <Input
                   label="Repository URL"
-                  description={'Enter the URL to the remote repo that includes ".git" at the end.'}
                   key={selectedCredentialsId}
                   defaultValue={projectData.uri}
                   name="uri"
