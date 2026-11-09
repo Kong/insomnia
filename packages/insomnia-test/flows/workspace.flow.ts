@@ -838,20 +838,16 @@ export class WorkspaceFlow extends BaseFlow {
    * fired rules — bundling/re-linting happens asynchronously after the
    * "View selected ruleset content" button already shows, so a bare read
    * right after `WorkspacePage.uploadRuleset()` can catch a stale rule
-   * list — and returns the settled rule list. If rejected, dismisses the
-   * resulting "Invalid Spectral Ruleset" error dialog and returns
-   * `"invalid"` instead, leaving the default ruleset active.
+   * list — and returns the settled rule list. If rejected, rejects with
+   * the "Invalid Spectral Ruleset" error dialog's text (via
+   * `@throwOnDialog`), leaving the default ruleset active and the dialog
+   * open — dismiss it with `closeDialog()`.
    */
   @step()
-  async uploadRuleset(filePath: string, expectCode?: string): Promise<string[] | 'invalid'> {
-    const workspace = this.pageManager.workspacePage;
+  async uploadRuleset(filePath: string, expectCode?: string): Promise<string[]> {
     const specPage = this.pageManager.specPage;
     await this.context.stubFileChooser(filePath);
-    const result = await specPage.uploadRuleset();
-    if (result === 'invalid') {
-      await workspace.closeDialog();
-      return 'invalid';
-    }
+    await specPage.uploadRuleset();
 
     await specPage.expandLintPanel();
     if (expectCode) {

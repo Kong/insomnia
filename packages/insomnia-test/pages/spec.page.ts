@@ -12,6 +12,7 @@ import { RulesetType } from "@package/enums/ruleset-type";
 import type { SpecFormat } from "@package/enums/spec-format";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { throwOnDialog } from "@package/misc/decorators";
 import type {
   LintEntry,
   PathItem} from "@package/models/collection";
@@ -587,11 +588,13 @@ export class SpecPage extends BasePage {
    * Clicks "Upload custom ruleset" (the native file-open dialog must
    * already be stubbed — see `FlowContext.stubFileChooser`) and waits for either outcome to settle: the
    * "View selected ruleset content" button (ruleset accepted) or the
-   * "Invalid Spectral Ruleset" error dialog (ruleset rejected). Dismiss
-   * the error dialog afterward via `closeDialog()` — it's the app's shared
+   * "Invalid Spectral Ruleset" error dialog (ruleset rejected). On
+   * rejection `@throwOnDialog` rejects with the dialog's text, leaving the
+   * dialog open — dismiss it via `closeDialog()` — it's the app's shared
    * error modal, so no dedicated close method lives here.
    */
-  async uploadRuleset(): Promise<"success" | "invalid"> {
+  @throwOnDialog()
+  async uploadRuleset(): Promise<void> {
     await this.page.locator(this.UPLOAD_RULESET_BUTTON).click();
 
     const success = this.page.locator(this.VIEW_RULESET_BUTTON);
@@ -599,7 +602,6 @@ export class SpecPage extends BasePage {
       exact: true,
     });
     await expect(success.or(invalid)).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await invalid.isVisible()) ? "invalid" : "success";
   }
 
   /**
