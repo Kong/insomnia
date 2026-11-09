@@ -1,11 +1,15 @@
 {
   "collection": {
     "_id": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
+    "afterResponseScript": "",
+    "authentication": {},
     "created": 1762508027498,
     "modified": 1762508027498,
     "isPrivate": false,
     "description": "",
+    "headers": [],
     "metaSortKey": 0,
+    "preRequestScript": "",
     "type": "Workspace",
     "name": "CLI Run Collection Report Generation",
     "parentId": "",
