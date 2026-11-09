@@ -120,7 +120,6 @@ export function buildSpanTree(detail: DebugTraceDetail): SpanTree {
     }
   }
 
-  // Depth, owner and self time depend on the parent, so fill them in top-down once the tree is linked.
   const finalize = (node: SpanNode, depth: number) => {
     node.depth = depth;
     node.children.sort((a, b) => a.startOffsetMs - b.startOffsetMs);
@@ -133,7 +132,7 @@ export function buildSpanTree(detail: DebugTraceDetail): SpanTree {
   return { roots, totalMs };
 }
 
-/** Depth-first rows for the waterfall, skipping the children of collapsed spans. */
+// Depth-first rows for the waterfall, skipping the children of collapsed spans.
 export function flattenVisible(roots: SpanNode[], collapsed: ReadonlySet<string>): SpanNode[] {
   const result: SpanNode[] = [];
   const visit = (node: SpanNode) => {
