@@ -681,7 +681,15 @@ function getCollection(
   file: InsomniaFile,
 ): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] = [];
+    const resources: (
+      | Request
+      | WebSocketRequest
+      | WebSocketPayload
+      | SocketIORequest
+      | SocketIOPayload
+      | GrpcRequest
+      | RequestGroup
+    )[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -1097,7 +1105,9 @@ export async function getInsomniaV5DataExport({
       exportableResources.filter(models.socketIOPayload.isSocketIOPayload).map(payload => [payload.parentId, payload]),
     );
     const webSocketPayloadsByRequestId = new Map(
-      exportableResources.filter(models.webSocketPayload.isWebSocketPayload).map(payload => [payload.parentId, payload]),
+      exportableResources
+        .filter(models.webSocketPayload.isWebSocketPayload)
+        .map(payload => [payload.parentId, payload]),
     );
 
     /**
@@ -1452,6 +1462,7 @@ export async function getInsomniaV5DataExport({
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         headers: mapHeaders(workspace.headers),
+        authentication: workspace.authentication,
         scripts: getScriptFromResources(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
@@ -1483,6 +1494,7 @@ export async function getInsomniaV5DataExport({
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
         headers: mapHeaders(workspace.headers),
+        authentication: workspace.authentication,
         scripts: getScriptFromResources(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
