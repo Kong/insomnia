@@ -46,6 +46,7 @@ import { database as db } from './database';
 
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
 
 // Source labels read as `<environment type> : <name>`; the type alone stands in
 // when an environment has no name.
@@ -849,7 +850,7 @@ export async function getRenderedRequestAndContext({
   context: Record<string, any>;
 }> {
   const ancestors = await getRenderContextAncestors(request);
-  const workspace = ancestors.find(models.workspace.isWorkspace);
+  const workspace = ancestors.find(isWorkspace);
   // requestGroups is of order leaf to root
   const requestGroups = ancestors.filter(isRequestGroup);
 
@@ -881,8 +882,8 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
-  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
-  request.headers = getOrInheritHeaders({ request, requestGroups });
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups, workspace });
+  request.headers = getOrInheritHeaders({ request, requestGroups, workspace });
   request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Only manually-authored cookies may contain live template syntax. Server-set cookie values
   // are excluded from rendering here too, not just in the Cookie Jar UI, so that a template

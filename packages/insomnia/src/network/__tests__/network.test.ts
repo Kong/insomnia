@@ -1125,6 +1125,63 @@ describe('getOrInheritHeaders', () => {
       { name: 'foo', value: 'bar, bar' },
     ]);
   });
+  it('should apply workspace headers before folder and request headers', () => {
+    // requestGroups is ordered leaf to root
+    const requestGroups = [
+      { headers: [{ name: 'x-level', value: 'nearest-folder' }] },
+      { headers: [{ name: 'x-level', value: 'furthest-folder' }] },
+    ];
+    const workspace = { headers: [{ name: 'x-level', value: 'workspace' }] };
+    const request = { headers: [{ name: 'x-level', value: 'request' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups, workspace })).toEqual([
+      { name: 'x-level', value: 'workspace, furthest-folder, nearest-folder, request' },
+    ]);
+  });
+  it('should inherit workspace headers that the request and folders do not define', () => {
+    const workspace = { headers: [{ name: 'x-workspace', value: 'w' }] };
+    const requestGroups = [{ headers: [{ name: 'x-folder', value: 'f' }] }];
+    const request = { headers: [{ name: 'x-request', value: 'r' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups, workspace })).toEqual([
+      { name: 'x-folder', value: 'f' },
+      { name: 'x-request', value: 'r' },
+      { name: 'x-workspace', value: 'w' },
+    ]);
+  });
+  it('should let the closest node win for single-value headers', () => {
+    const workspace = { headers: [{ name: 'Content-Type', value: 'text/plain' }] };
+    const requestGroups = [
+      { headers: [{ name: 'content-type', value: 'application/xml' }] },
+      { headers: [{ name: 'Content-Type', value: 'application/json' }] },
+    ];
+    expect(networkUtils.getOrInheritHeaders({ request: { headers: [] }, requestGroups, workspace })).toEqual([
+      { name: 'content-type', value: 'application/xml' },
+    ]);
+    const request = { headers: [{ name: 'Content-Type', value: 'text/html' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups, workspace })).toEqual([
+      { name: 'Content-Type', value: 'text/html' },
+    ]);
+  });
+  it('should ignore disabled and unnamed workspace headers', () => {
+    const workspace = {
+      headers: [
+        { name: 'x-off', value: 'off', disabled: true },
+        { name: ' ', value: 'blank' },
+        { name: 'x-on', value: 'on' },
+      ],
+    };
+    expect(networkUtils.getOrInheritHeaders({ request: { headers: [] }, requestGroups: [], workspace })).toEqual([
+      { name: 'x-on', value: 'on' },
+    ]);
+  });
+  it('should work when the workspace is omitted or has no headers', () => {
+    const request = { headers: [{ name: 'x-request', value: 'r' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups: [] })).toEqual([
+      { name: 'x-request', value: 'r' },
+    ]);
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups: [], workspace: {} as any })).toEqual([
+      { name: 'x-request', value: 'r' },
+    ]);
+  });
   it('should use last header casing', () => {
     const requestGroups = [{ headers: [{ name: 'x-foo', value: 'bar' }] }];
     const request = { headers: [{ name: 'X-Foo', value: 'baz' }] };
@@ -1321,5 +1378,25 @@ describe('getRenderedRequest suppressUserAgent', () => {
     });
 
     expect((await getRenderedRequest({ request })).suppressUserAgent).toBe(true);
+  });
+});
+
+describe('shouldSuppressUserAgent with workspace headers', () => {
+  it('suppresses the default user-agent when the only user-agent header is a disabled workspace one', () => {
+    const request = { headers: [], disableUserAgentHeader: false };
+    const workspace = { headers: [{ name: 'User-Agent', value: 'ws', disabled: true }] };
+    expect(networkUtils.shouldSuppressUserAgent({ request, workspace })).toBe(true);
+  });
+
+  it('does not suppress when an enabled user-agent header exists on the request', () => {
+    const request = { headers: [{ name: 'user-agent', value: 'req' }], disableUserAgentHeader: false };
+    const workspace = { headers: [{ name: 'User-Agent', value: 'ws', disabled: true }] };
+    expect(networkUtils.shouldSuppressUserAgent({ request, workspace })).toBe(false);
+  });
+
+  it('does not suppress when the workspace has no user-agent header', () => {
+    const request = { headers: [], disableUserAgentHeader: false };
+    expect(networkUtils.shouldSuppressUserAgent({ request, workspace: { headers: [] } })).toBe(false);
+    expect(networkUtils.shouldSuppressUserAgent({ request })).toBe(false);
   });
 });
