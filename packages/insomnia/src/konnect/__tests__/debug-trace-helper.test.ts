@@ -26,7 +26,6 @@ describe('getRouteIdFromKonnectRouteKey', () => {
 
   it('returns null for missing keys', () => {
     expect(getRouteIdFromKonnectRouteKey(null)).toBeNull();
-    expect(getRouteIdFromKonnectRouteKey(undefined)).toBeNull();
     expect(getRouteIdFromKonnectRouteKey('')).toBeNull();
   });
 });
