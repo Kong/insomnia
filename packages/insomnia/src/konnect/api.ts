@@ -286,75 +286,15 @@ export async function fetchAvailablePluginNames(
   if (!response.ok) {
     throw new Error(`Konnect API error ${response.status} fetching available plugins`);
   }
-  const items = findPluginArray(await response.json());
-  if (!items) {
-    throw new Error('Unexpected Konnect available-plugins response shape');
+  const body: unknown = await response.json();
+  const names = body && typeof body === 'object' && 'names' in body ? body.names : undefined;
+  if (!Array.isArray(names)) {
+    throw new TypeError('Unexpected Konnect available-plugins response shape');
   }
-  const names = items.map(readPluginName).filter((name): name is string => name !== null);
-  if (items.length > 0 && names.length === 0) {
-    throw new Error('Unexpected Konnect available-plugins item shape');
+  if (!names.every((name): name is string => typeof name === 'string')) {
+    throw new TypeError('Unexpected Konnect available-plugins item shape');
   }
   return names;
-}
-
-function findPluginArray(body: unknown, depth = 0): unknown[] | null {
-  if (Array.isArray(body)) {
-    return body;
-  }
-  if (!body || typeof body !== 'object' || depth > 3) {
-    return null;
-  }
-  const record = body as Record<string, unknown>;
-  for (const key of ['data', 'items', 'plugins', 'available_plugins', 'availablePlugins']) {
-    const value = record[key];
-    if (Array.isArray(value)) {
-      return value;
-    }
-    if (value && typeof value === 'object') {
-      const nested = findPluginArray(value, depth + 1);
-      if (nested) {
-        return nested;
-      }
-    }
-  }
-  for (const value of Object.values(record)) {
-    if (Array.isArray(value)) {
-      return value;
-    }
-    if (value && typeof value === 'object') {
-      const nested = findPluginArray(value, depth + 1);
-      if (nested) {
-        return nested;
-      }
-    }
-  }
-  return null;
-}
-
-function readPluginName(item: unknown): string | null {
-  if (typeof item === 'string') {
-    return item || null;
-  }
-  if (!item || typeof item !== 'object') {
-    return null;
-  }
-  const record = item as Record<string, unknown>;
-  for (const key of ['name', 'plugin_name', 'pluginName', 'slug']) {
-    const value = record[key];
-    if (typeof value === 'string' && value) {
-      return value;
-    }
-  }
-  for (const key of ['plugin', 'definition', 'attributes', 'properties']) {
-    const nested = record[key];
-    if (nested) {
-      const name = readPluginName(nested);
-      if (name) {
-        return name;
-      }
-    }
-  }
-  return null;
 }
 
 function normalizePlugin(plugin: KonnectPlugin): KonnectPlugin {

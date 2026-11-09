@@ -438,12 +438,8 @@ describe('fetchAllPlugins', () => {
 // ─── fetchAvailablePluginNames ───────────────────────────────────────────────
 
 describe('fetchAvailablePluginNames', () => {
-  it('reads names from a data array and the available-plugins endpoint', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({
-        data: [{ name: 'datakit' }, { plugin_name: 'key-auth' }, { slug: 'cors' }],
-      }),
-    );
+  it('reads names from the available-plugins endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ names: ['datakit', 'key-auth', 'cors'] }));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual([
@@ -454,22 +450,13 @@ describe('fetchAvailablePluginNames', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('/core-entities/v1/available-plugins');
   });
 
-  it('accepts a direct array of names', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(['datakit', 'cors'])));
+  it('returns an empty list when no plugins are available', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ names: [] })));
 
-    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual(['datakit', 'cors']);
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual([]);
   });
 
-  it('accepts a plugins array with nested plugin objects', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(jsonResponse({ plugins: [{ plugin: { name: 'request-transformer' } }] })),
-    );
-
-    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual(['request-transformer']);
-  });
-
-  it('throws on an unexpected response shape', async () => {
+  it('throws when names is missing', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ nope: true })));
 
     await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).rejects.toThrow(
@@ -477,8 +464,8 @@ describe('fetchAvailablePluginNames', () => {
     );
   });
 
-  it('throws when available plugin items have no recognizable name', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data: [{ nope: true }] })));
+  it('throws when names contains a non-string item', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ names: ['datakit', { name: 'cors' }] })));
 
     await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).rejects.toThrow(
       'Unexpected Konnect available-plugins item shape',

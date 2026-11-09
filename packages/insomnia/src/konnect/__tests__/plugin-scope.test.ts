@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KonnectPlugin } from '../api';
-import { getRequestProtocol, resolveKonnectRouteLink, selectEffectivePlugins } from '../plugin-scope';
+import { getRequestProtocol, resolveKonnectSyncedRoute, selectEffectivePlugins } from '../plugin-scope';
 
-const link = { routeId: 'route-1', serviceId: 'service-1' };
+const syncedRoute = { routeId: 'route-1', serviceId: 'service-1' };
 
 function plugin(overrides: Partial<KonnectPlugin> & Pick<KonnectPlugin, 'id' | 'name'>): KonnectPlugin {
   return {
@@ -22,10 +22,10 @@ function plugin(overrides: Partial<KonnectPlugin> & Pick<KonnectPlugin, 'id' | '
   };
 }
 
-describe('resolveKonnectRouteLink', () => {
+describe('resolveKonnectSyncedRoute', () => {
   it('extracts the route id from the composite route key', () => {
     expect(
-      resolveKonnectRouteLink(
+      resolveKonnectSyncedRoute(
         { konnectRouteKey: 'route-1:GET:/flights:http' },
         { konnectServiceId: 'service-1' },
         { konnectControlPlaneId: 'cp-1', konnectRegion: 'us', name: 'Insomnia Airlines' },
@@ -42,9 +42,9 @@ describe('resolveKonnectRouteLink', () => {
   it.each<
     [
       string,
-      Parameters<typeof resolveKonnectRouteLink>[0],
-      Parameters<typeof resolveKonnectRouteLink>[1],
-      Parameters<typeof resolveKonnectRouteLink>[2],
+      Parameters<typeof resolveKonnectSyncedRoute>[0],
+      Parameters<typeof resolveKonnectSyncedRoute>[1],
+      Parameters<typeof resolveKonnectSyncedRoute>[2],
     ]
   >([
     [
@@ -72,7 +72,7 @@ describe('resolveKonnectRouteLink', () => {
       { konnectControlPlaneId: 'cp-1', name: 'CP' },
     ],
   ])('returns null for %s', (_label, request, workspace, project) => {
-    expect(resolveKonnectRouteLink(request, workspace, project)).toBeNull();
+    expect(resolveKonnectSyncedRoute(request, workspace, project)).toBeNull();
   });
 });
 
@@ -96,7 +96,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
         plugin({ id: 'p-global', name: 'cors' }),
       ],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -110,7 +110,7 @@ describe('selectEffectivePlugins', () => {
   it('keeps a route + service plugin in the route group', () => {
     const result = selectEffectivePlugins(
       [plugin({ id: 'p-both', name: 'key-auth', route: { id: 'route-1' }, service: { id: 'service-1' } })],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -124,7 +124,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-other-route', name: 'key-auth', route: { id: 'route-2' } }),
         plugin({ id: 'p-other-service', name: 'cors', service: { id: 'service-2' } }),
       ],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -138,7 +138,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-global', name: 'rate-limiting' }),
         plugin({ id: 'p-route', name: 'rate-limiting', route: { id: 'route-1' } }),
       ],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -153,7 +153,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-global', name: 'rate-limiting' }),
         plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
       ],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -168,7 +168,7 @@ describe('selectEffectivePlugins', () => {
   ])('reports %s scoped instances as conditional', (_label, overrides) => {
     const result = selectEffectivePlugins(
       [plugin({ id: 'p-conditional', name: 'key-auth', route: { id: 'route-1' }, ...overrides })],
-      link,
+      syncedRoute,
       'http',
     );
 
@@ -178,7 +178,11 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('keeps disabled plugins visible and counts them as configured', () => {
-    const result = selectEffectivePlugins([plugin({ id: 'p-disabled', name: 'cors', enabled: false })], link, 'http');
+    const result = selectEffectivePlugins(
+      [plugin({ id: 'p-disabled', name: 'cors', enabled: false })],
+      syncedRoute,
+      'http',
+    );
 
     expect(result.groups[2].plugins).toEqual([expect.objectContaining({ id: 'p-disabled', enabled: false })]);
     expect(result.appliedNames).toEqual(['cors']);
@@ -190,7 +194,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] }),
         plugin({ id: 'p-http', name: 'cors', protocols: ['http', 'https'] }),
       ],
-      link,
+      syncedRoute,
       'https',
     );
 
@@ -200,7 +204,7 @@ describe('selectEffectivePlugins', () => {
   it('does not filter by protocol when the request protocol is unknown', () => {
     const result = selectEffectivePlugins(
       [plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] })],
-      link,
+      syncedRoute,
       null,
     );
 
@@ -213,7 +217,7 @@ describe('selectEffectivePlugins', () => {
         plugin({ id: 'p-first', name: 'zz-plugin', route: { id: 'route-1' } }),
         plugin({ id: 'p-second', name: 'aa-plugin', route: { id: 'route-1' } }),
       ],
-      link,
+      syncedRoute,
       'http',
     );
 

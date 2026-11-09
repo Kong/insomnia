@@ -14,9 +14,9 @@ import {
 import { SUGGESTED_PLUGINS } from '../../../konnect/plugin-catalog';
 import {
   getRequestProtocol,
-  type KonnectRouteLink,
+  type KonnectSyncedRoute,
   type PluginScope,
-  resolveKonnectRouteLink,
+  resolveKonnectSyncedRoute,
   selectEffectivePlugins,
 } from '../../../konnect/plugin-scope';
 import { useKonnectPlugins } from '../../hooks/use-konnect-plugins';
@@ -76,15 +76,15 @@ function SectionHeader({ title, description, action }: { title: string; descript
 function PluginRow({
   plugin,
   scopeLabel,
-  link,
+  syncedRoute,
   onShowDeck,
 }: {
   plugin: KonnectPlugin;
   scopeLabel: string;
-  link: KonnectRouteLink;
+  syncedRoute: KonnectSyncedRoute;
   onShowDeck: (plugin: KonnectPlugin) => void;
 }) {
-  const editUrl = getKonnectPluginEditUrl(link.region, link.controlPlaneId, plugin.name, plugin.id);
+  const editUrl = getKonnectPluginEditUrl(syncedRoute.region, syncedRoute.controlPlaneId, plugin.name, plugin.id);
   const before = plugin.ordering?.before?.access ?? [];
   const after = plugin.ordering?.after?.access ?? [];
 
@@ -140,11 +140,43 @@ function EmptyState({ title, detail }: { title: string; detail: string }) {
   );
 }
 
+function ErrorState({
+  title,
+  detail,
+  onRetry,
+  isRetrying,
+}: {
+  title: string;
+  detail: string;
+  onRetry: () => void;
+  isRetrying: boolean;
+}) {
+  return (
+    <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-(--color-danger-bg) text-(--color-danger)">
+        <Icon icon="triangle-exclamation" className="size-4" aria-hidden />
+      </span>
+      <div className="flex max-w-lg flex-col gap-1">
+        <p className="text-sm font-medium text-(--color-font)">{title}</p>
+        <p className="text-xs break-words text-(--hl)">{detail}</p>
+      </div>
+      <Button
+        className="inline-flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline aria-disabled:opacity-50"
+        isDisabled={isRetrying}
+        onPress={onRetry}
+      >
+        <Icon icon="refresh" spin={isRetrying} />
+        Retry
+      </Button>
+    </div>
+  );
+}
+
 export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProject }: Props) => {
   const [deckModal, setDeckModal] = useState<DeckModalState | null>(null);
-  const link = resolveKonnectRouteLink(activeRequest, activeWorkspace, activeProject);
+  const syncedRoute = resolveKonnectSyncedRoute(activeRequest, activeWorkspace, activeProject);
   const { status, plugins, availableSuggestionNames, availabilityStatus, error, missingPat, isRefreshing, refresh } =
-    useKonnectPlugins(link);
+    useKonnectPlugins(syncedRoute);
 
   if (!activeProject?.konnectControlPlaneId) {
     return null;
@@ -174,19 +206,20 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
 
   if (status === 'error') {
     return (
-      <div className="flex flex-col items-start gap-2 p-4">
-        <p className="text-sm text-(--color-danger)">Failed to load plugins: {error}</p>
-        {missingPat && (
-          <p className="text-xs text-(--hl)">Configure a Konnect personal access token in Kong Konnect settings.</p>
-        )}
-        <Button className={ACTION_CLASS} onPress={refresh}>
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        title={missingPat ? 'Konnect personal access token required' : 'Failed to load plugins'}
+        detail={
+          missingPat
+            ? 'Configure a personal access token in Kong Konnect settings, then retry.'
+            : (error ?? 'Konnect did not return an error message.')
+        }
+        onRetry={refresh}
+        isRetrying={isRefreshing}
+      />
     );
   }
 
-  if (!link) {
+  if (!syncedRoute) {
     return (
       <EmptyState
         title="This request isn't linked to a Konnect route."
@@ -195,15 +228,13 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
     );
   }
 
-  const selection = selectEffectivePlugins(plugins, link, getRequestProtocol(activeRequest.url));
+  const selection = selectEffectivePlugins(plugins, syncedRoute, getRequestProtocol(activeRequest.url));
   const suggestions =
-    availabilityStatus === 'loading'
-      ? []
-      : SUGGESTED_PLUGINS.filter(
-          plugin =>
-            !selection.appliedNames.includes(plugin.name) &&
-            (availabilityStatus === 'error' || availableSuggestionNames?.includes(plugin.name)),
-        ).slice(0, 6);
+    availabilityStatus === 'ready'
+      ? SUGGESTED_PLUGINS.filter(
+          plugin => !selection.appliedNames.includes(plugin.name) && availableSuggestionNames?.includes(plugin.name),
+        ).slice(0, 6)
+      : [];
   const appliedCount = selection.groups.reduce(
     (count, group) => count + group.plugins.filter(plugin => plugin.enabled).length,
     0,
@@ -211,11 +242,11 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
   const conditionalCount = selection.conditional.filter(plugin => plugin.enabled).length;
   const hasAppliedPlugins =
     selection.groups.some(group => group.plugins.length > 0) || selection.conditional.length > 0;
-  const pluginsUrl = getKonnectPluginsUrl(link.region, link.controlPlaneId);
+  const pluginsUrl = getKonnectPluginsUrl(syncedRoute.region, syncedRoute.controlPlaneId);
   const deckContext = {
-    controlPlaneName: link.controlPlaneName,
-    region: link.region,
-    routeId: link.routeId,
+    controlPlaneName: syncedRoute.controlPlaneName,
+    region: syncedRoute.region,
+    routeId: syncedRoute.routeId,
   };
 
   return (
@@ -263,6 +294,27 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
         </div>
       </div>
 
+      {error && (
+        <div
+          role="alert"
+          className="mx-4 my-3 flex items-start gap-2 rounded-xs border border-solid border-(--color-danger) bg-(--color-danger-bg) px-3 py-2"
+        >
+          <Icon icon="triangle-exclamation" className="mt-0.5 shrink-0 text-(--color-danger)" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="text-xs font-medium text-(--color-danger)">Failed to refresh plugins.</span>
+            <span className="text-xs text-(--hl)">{error}</span>
+            {missingPat && (
+              <span className="text-xs text-(--hl)">
+                Configure a Konnect personal access token in Kong Konnect settings.
+              </span>
+            )}
+          </div>
+          <Button className={`${ACTION_CLASS} shrink-0 self-center`} isDisabled={isRefreshing} onPress={refresh}>
+            Retry
+          </Button>
+        </div>
+      )}
+
       {!hasAppliedPlugins && (
         <div className="mx-4 my-3 flex items-start gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) px-3 py-2">
           <Icon icon="info-circle" className="mt-0.5 shrink-0 text-(--hl)" />
@@ -284,7 +336,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
                 key={plugin.id}
                 plugin={plugin}
                 scopeLabel={SCOPE_META_LABELS[group.scope]}
-                link={link}
+                syncedRoute={syncedRoute}
                 onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
               />
             ))}
@@ -303,7 +355,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
               key={plugin.id}
               plugin={plugin}
               scopeLabel="Conditional"
-              link={link}
+              syncedRoute={syncedRoute}
               onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
             />
           ))}
@@ -324,13 +376,8 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
               </Button>
             }
           />
-          {availabilityStatus === 'error' && (
-            <p className="px-4 py-2 text-xs text-(--hl)">
-              Could not check plugin availability; showing all suggestions.
-            </p>
-          )}
           {suggestions.map(suggestion => {
-            const addUrl = getKonnectPluginCreateUrl(link.region, link.controlPlaneId, suggestion.name);
+            const addUrl = getKonnectPluginCreateUrl(syncedRoute.region, syncedRoute.controlPlaneId, suggestion.name);
             return (
               <PluginRowLayout
                 key={suggestion.name}

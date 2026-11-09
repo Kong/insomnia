@@ -2,7 +2,7 @@ import type { Project, Request, Workspace } from 'insomnia-data';
 
 import type { KonnectPlugin } from './api';
 
-export interface KonnectRouteLink {
+export interface KonnectSyncedRoute {
   controlPlaneId: string;
   controlPlaneName: string;
   region: string;
@@ -28,11 +28,11 @@ export interface PluginSelection {
  * composite key (`${route.id}:${method}:${pathSegment}:${protocol}`), so only
  * the first segment is the Konnect route id.
  */
-export function resolveKonnectRouteLink(
+export function resolveKonnectSyncedRoute(
   request: Pick<Request, 'konnectRouteKey'>,
   workspace: Pick<Workspace, 'konnectServiceId'> | null | undefined,
   project: Pick<Project, 'konnectControlPlaneId' | 'konnectRegion' | 'name'> | null | undefined,
-): KonnectRouteLink | null {
+): KonnectSyncedRoute | null {
   if (!request.konnectRouteKey || !workspace?.konnectServiceId || !project?.konnectControlPlaneId) {
     return null;
   }
@@ -69,14 +69,14 @@ export function getRequestProtocol(url: string): string | null {
  */
 export function selectEffectivePlugins(
   plugins: KonnectPlugin[],
-  link: Pick<KonnectRouteLink, 'routeId' | 'serviceId'>,
+  syncedRoute: Pick<KonnectSyncedRoute, 'routeId' | 'serviceId'>,
   requestProtocol: string | null,
 ): PluginSelection {
   const applicable = plugins.filter(plugin => {
-    if (plugin.route && plugin.route.id !== link.routeId) {
+    if (plugin.route && plugin.route.id !== syncedRoute.routeId) {
       return false;
     }
-    if (plugin.service && plugin.service.id !== link.serviceId) {
+    if (plugin.service && plugin.service.id !== syncedRoute.serviceId) {
       return false;
     }
     if (requestProtocol && plugin.protocols?.length && !plugin.protocols.includes(requestProtocol)) {

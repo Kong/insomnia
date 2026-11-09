@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useServerQuery } from '~/ui/hooks/use-query';
 
 import { fetchAllPlugins, fetchAvailablePluginNames, type KonnectPlugin } from '../../konnect/api';
-import type { KonnectRouteLink } from '../../konnect/plugin-scope';
+import type { KonnectSyncedRoute } from '../../konnect/plugin-scope';
 
 export interface KonnectPluginsState {
   status: 'not-linked' | 'loading' | 'error' | 'ready';
@@ -33,9 +33,9 @@ const AVAILABLE_PLUGINS_GC_TIME_MS = 60 * 60 * 1000;
  * The tab unmounts when it is not selected, so TanStack Query is what keeps
  * switching tabs from refetching the same control plane plugins.
  */
-export function useKonnectPlugins(link: KonnectRouteLink | null): KonnectPluginsState {
-  const controlPlaneId = link?.controlPlaneId;
-  const region = link?.region;
+export function useKonnectPlugins(syncedRoute: KonnectSyncedRoute | null): KonnectPluginsState {
+  const controlPlaneId = syncedRoute?.controlPlaneId;
+  const region = syncedRoute?.region;
 
   const pluginsQuery = useServerQuery({
     queryKey: ['konnect-plugins', 'v3', controlPlaneId, region],
@@ -59,7 +59,12 @@ export function useKonnectPlugins(link: KonnectRouteLink | null): KonnectPlugins
       if (!pat) {
         throw new MissingKonnectPatError();
       }
-      return fetchAvailablePluginNames(pat, controlPlaneId!, region!, signal);
+      try {
+        return await fetchAvailablePluginNames(pat, controlPlaneId!, region!, signal);
+      } catch (error) {
+        console.warn(`[konnect] Failed to check available plugins for control plane ${controlPlaneId}`, error);
+        throw error;
+      }
     },
     enabled: Boolean(controlPlaneId && region),
     staleTime: AVAILABLE_PLUGINS_STALE_TIME_MS,
@@ -67,11 +72,11 @@ export function useKonnectPlugins(link: KonnectRouteLink | null): KonnectPlugins
     retry: false,
   });
 
-  const status: KonnectPluginsState['status'] = !link
+  const status: KonnectPluginsState['status'] = !syncedRoute
     ? 'not-linked'
     : pluginsQuery.isPending
       ? 'loading'
-      : pluginsQuery.isError
+      : pluginsQuery.isError && pluginsQuery.data === undefined
         ? 'error'
         : 'ready';
 
