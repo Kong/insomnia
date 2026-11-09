@@ -14,7 +14,6 @@ import {
 } from '../../../konnect/links';
 import { SUGGESTED_PLUGINS } from '../../../konnect/plugin-catalog';
 import {
-  getRequestProtocol,
   type KonnectSyncedRoute,
   type PluginScope,
   resolveKonnectSyncedRoute,
@@ -25,7 +24,7 @@ import { Icon } from '../icon';
 import { DeckCommandModal } from '../modals/deck-command-modal';
 
 interface Props {
-  activeRequest: Pick<Request, 'konnectRouteKey' | 'url'>;
+  activeRequest: Pick<Request, 'konnectRouteKey'>;
   activeWorkspace: Pick<Workspace, 'konnectServiceId'> | null | undefined;
   activeProject: Pick<Project, 'konnectControlPlaneId' | 'konnectRegion' | 'name'> | null | undefined;
 }
@@ -222,7 +221,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
     );
   }
 
-  const selection = selectApplicablePlugins(plugins, syncedRoute, getRequestProtocol(activeRequest.url));
+  const selection = selectApplicablePlugins(plugins, syncedRoute);
   const suggestions =
     availabilityStatus === 'ready'
       ? SUGGESTED_PLUGINS.filter(

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KonnectPlugin } from '../api';
-import { getRequestProtocol, resolveKonnectSyncedRoute, selectApplicablePlugins } from '../plugin-scope';
+import { resolveKonnectSyncedRoute, selectApplicablePlugins } from '../plugin-scope';
 
-const syncedRoute = { routeId: 'route-1', serviceId: 'service-1' };
+const syncedRoute = { routeId: 'route-1', serviceId: 'service-1', protocol: 'http' };
 
 function plugin(overrides: Partial<KonnectPlugin> & Pick<KonnectPlugin, 'id' | 'name'>): KonnectPlugin {
   return {
@@ -36,7 +36,18 @@ describe('resolveKonnectSyncedRoute', () => {
       region: 'us',
       serviceId: 'service-1',
       routeId: 'route-1',
+      protocol: 'http',
     });
+  });
+
+  it('reads the protocol from the last key segment when the path contains a colon', () => {
+    expect(
+      resolveKonnectSyncedRoute(
+        { konnectRouteKey: 'route-1:GET:/api/:id:https' },
+        { konnectServiceId: 'service-1' },
+        { konnectControlPlaneId: 'cp-1', konnectRegion: 'us', name: 'CP' },
+      ),
+    ).toEqual(expect.objectContaining({ routeId: 'route-1', protocol: 'https' }));
   });
 
   it.each<
@@ -76,18 +87,6 @@ describe('resolveKonnectSyncedRoute', () => {
   });
 });
 
-describe('getRequestProtocol', () => {
-  it.each([
-    ['http://{{ _.proxy_host }}/flights', 'http'],
-    ['HTTPS://example.com', 'https'],
-    ['grpc://localhost:9000', 'grpc'],
-    ['{{ _.proxy_url }}/flights', null],
-    ['/relative/path', null],
-  ])('returns the protocol for %s', (url, expected) => {
-    expect(getRequestProtocol(url)).toBe(expected);
-  });
-});
-
 describe('selectApplicablePlugins', () => {
   it('groups plugins by route, service, and control plane scope', () => {
     const result = selectApplicablePlugins(
@@ -97,7 +96,6 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-global', name: 'cors' }),
       ],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups).toEqual([
@@ -111,7 +109,6 @@ describe('selectApplicablePlugins', () => {
     const result = selectApplicablePlugins(
       [plugin({ id: 'p-both', name: 'key-auth', route: { id: 'route-1' }, service: { id: 'service-1' } })],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups[0].plugins).toHaveLength(1);
@@ -125,7 +122,6 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-other-service', name: 'cors', service: { id: 'service-2' } }),
       ],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups.every(group => group.plugins.length === 0)).toBe(true);
@@ -139,7 +135,6 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-route', name: 'rate-limiting', route: { id: 'route-1' } }),
       ],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups[0].plugins).toEqual([expect.objectContaining({ id: 'p-route' })]);
@@ -154,7 +149,6 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
       ],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups[1].plugins).toEqual([expect.objectContaining({ id: 'p-service' })]);
@@ -169,7 +163,6 @@ describe('selectApplicablePlugins', () => {
     const result = selectApplicablePlugins(
       [plugin({ id: 'p-conditional', name: 'key-auth', route: { id: 'route-1' }, ...overrides })],
       syncedRoute,
-      'http',
     );
 
     expect(result.conditional).toEqual([expect.objectContaining({ id: 'p-conditional' })]);
@@ -181,7 +174,6 @@ describe('selectApplicablePlugins', () => {
     const result = selectApplicablePlugins(
       [plugin({ id: 'p-disabled', name: 'cors', enabled: false })],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups[2].plugins).toEqual([expect.objectContaining({ id: 'p-disabled', enabled: false })]);
@@ -194,21 +186,10 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] }),
         plugin({ id: 'p-http', name: 'cors', protocols: ['http', 'https'] }),
       ],
-      syncedRoute,
-      'https',
+      { ...syncedRoute, protocol: 'https' },
     );
 
     expect(result.appliedNames).toEqual(['cors']);
-  });
-
-  it('does not filter by protocol when the request protocol is unknown', () => {
-    const result = selectApplicablePlugins(
-      [plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] })],
-      syncedRoute,
-      null,
-    );
-
-    expect(result.appliedNames).toEqual(['key-auth']);
   });
 
   it('keeps every tied instance in API order', () => {
@@ -218,7 +199,6 @@ describe('selectApplicablePlugins', () => {
         plugin({ id: 'p-second', name: 'aa-plugin', route: { id: 'route-1' } }),
       ],
       syncedRoute,
-      'http',
     );
 
     expect(result.groups[0].plugins).toEqual([

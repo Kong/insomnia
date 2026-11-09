@@ -8,6 +8,7 @@ export interface KonnectSyncedRoute {
   region: string;
   serviceId: string;
   routeId: string;
+  protocol: string;
 }
 
 export type PluginScope = 'route' | 'service' | 'global';
@@ -25,8 +26,9 @@ export interface PluginSelection {
 
 /**
  * Resolves the Konnect route behind a synced request. `konnectRouteKey` is a
- * composite key (`${route.id}:${method}:${pathSegment}:${protocol}`), so only
- * the first segment is the Konnect route id.
+ * composite key (`${route.id}:${method}:${pathSegment}:${protocol}`). The route
+ * id is the first segment; the protocol is the last, which keeps paths that
+ * contain `:` safe.
  */
 export function resolveKonnectSyncedRoute(
   request: Pick<Request, 'konnectRouteKey'>,
@@ -39,8 +41,10 @@ export function resolveKonnectSyncedRoute(
   if (!project.konnectRegion) {
     return null;
   }
-  const routeId = request.konnectRouteKey.split(':')[0];
-  if (!routeId) {
+  const segments = request.konnectRouteKey.split(':');
+  const routeId = segments[0];
+  const protocol = segments.at(-1)?.toLowerCase();
+  if (!routeId || !protocol) {
     return null;
   }
   return {
@@ -49,12 +53,8 @@ export function resolveKonnectSyncedRoute(
     region: project.konnectRegion,
     serviceId: workspace.konnectServiceId,
     routeId,
+    protocol,
   };
-}
-
-export function getRequestProtocol(url: string): string | null {
-  const match = /^([a-z][a-z0-9+.-]*):\/\//i.exec(url.trim());
-  return match ? match[1].toLowerCase() : null;
 }
 
 /**
@@ -69,8 +69,7 @@ export function getRequestProtocol(url: string): string | null {
  */
 export function selectApplicablePlugins(
   plugins: KonnectPlugin[],
-  syncedRoute: Pick<KonnectSyncedRoute, 'routeId' | 'serviceId'>,
-  requestProtocol: string | null,
+  syncedRoute: Pick<KonnectSyncedRoute, 'routeId' | 'serviceId' | 'protocol'>,
 ): PluginSelection {
   const applicable = plugins.filter(plugin => {
     if (plugin.route && plugin.route.id !== syncedRoute.routeId) {
@@ -79,7 +78,7 @@ export function selectApplicablePlugins(
     if (plugin.service && plugin.service.id !== syncedRoute.serviceId) {
       return false;
     }
-    if (requestProtocol && plugin.protocols?.length && !plugin.protocols.includes(requestProtocol)) {
+    if (plugin.protocols?.length && !plugin.protocols.includes(syncedRoute.protocol)) {
       return false;
     }
     return true;
