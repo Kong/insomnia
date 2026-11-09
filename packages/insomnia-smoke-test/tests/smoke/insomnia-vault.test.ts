@@ -161,7 +161,9 @@ test.describe('Check vault used in environment', () => {
 
     // secret values are masked in the console by default; turn it off so the test can verify the decrypted values
     await insomnia.statusbar.openPreferences();
-    const hideSecretsCheckbox = page.getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' }).first();
+    const hideSecretsCheckbox = page
+      .getByRole('checkbox', { name: 'Hide Confidential values in Preview/Console' })
+      .first();
     await hideSecretsCheckbox.click();
     await expect.soft(hideSecretsCheckbox).not.toBeChecked();
     // Turning the setting off raises a notice that confidential values now persist locally;
@@ -246,13 +248,15 @@ test.describe('Check vault used in environment', () => {
     await expect.soft(page.getByText('Error: vault is a reserved')).toBeVisible();
   });
 
-  test('switch JSON item to secret in global private sub environment', async ({ page }) => {
+  test('switch JSON item to secret and back in global private sub environment', async ({ page, insomnia }) => {
     const pageErrors: Error[] = [];
     page.on('pageerror', error => pageErrors.push(error));
 
-    // create new global private environment
-    await page.getByLabel('Create in project').click();
-    await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
+    // create new global private environment from the sidebar project dropdown
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      projectName: 'Personal Workspace',
+      actionName: 'Environment',
+    });
     await page.getByPlaceholder('Enter a name for your Environment').fill('JSON To Secret Environment');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('AddPrivateSubEnvironment').click();
@@ -278,6 +282,14 @@ test.describe('Check vault used in environment', () => {
     // the original JSON value is kept as the decrypted secret value
     await firstRow.locator('.fa-eye-slash').click();
     await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('{}');
+
+    // switch Secret back to JSON
+    await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
+    await expect.soft(page.getByRole('menuitemradio', { name: 'JSON' })).toBeEnabled();
+    await page.getByRole('menuitemradio', { name: 'JSON' }).click();
+    await page.getByRole('button', { name: 'Change', exact: true }).click();
+    await expect.soft(firstRow.getByRole('button', { name: 'Type Selection' })).toHaveText('JSON');
+    await expect.soft(firstRow.getByText('Click to Edit')).toBeVisible();
 
     expect.soft(pageErrors).toEqual([]);
   });

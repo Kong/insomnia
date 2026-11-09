@@ -292,10 +292,18 @@ export const EnvironmentKVEditor = ({
           onDone: async (yes: boolean) => {
             if (yes) {
               // decrypt and save the value
+              const decryptedValue = await getRuntime().crypto.decryptSecretValue(
+                originValue,
+                symmetricKey as JsonWebKey,
+              );
               handleItemPatch(id, {
                 type: newType,
                 isConfidential: true,
-                value: await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey),
+                // empty value is not valid JSON, use empty object instead
+                value:
+                  newType === EnvironmentKvPairDataType.JSON && decryptedValue.trim() === ''
+                    ? JSON.stringify({})
+                    : decryptedValue,
               });
             }
           },
@@ -344,7 +352,11 @@ export const EnvironmentKVEditor = ({
     const itemError = kvPairError.find(p => p.id === id);
     const hasItemWithSameNameAfter =
       name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim() && pair.enabled);
-    const isValidJSONString = checkValidJSONString(value);
+    // secret value is encrypted, check its decrypted value instead (undefined until decrypted)
+    const valueForTypeCheck = type === EnvironmentKvPairDataType.SECRET ? decryptedValues[id] : value;
+    const canSwitchToJSON =
+      valueForTypeCheck !== undefined &&
+      (valueForTypeCheck.trim() === '' || checkValidJSONString(valueForTypeCheck));
     return (
       <>
         {!disabled && (
@@ -511,7 +523,7 @@ export const EnvironmentKVEditor = ({
                 selectionMode="single"
                 selectedKeys={[type]}
                 // Only valid json string or empty string allowed to convert to JSON type
-                disabledKeys={isValidJSONString || value.trim() === '' ? [] : [EnvironmentKvPairDataType.JSON]}
+                disabledKeys={canSwitchToJSON ? [] : [EnvironmentKvPairDataType.JSON]}
                 items={kvPairItemTypes}
               >
                 {item => (
