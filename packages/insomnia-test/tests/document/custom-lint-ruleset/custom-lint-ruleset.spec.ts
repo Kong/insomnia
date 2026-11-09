@@ -11,11 +11,20 @@ import { expect } from "@playwright/test";
 const VALID_RULESET = path.join(import.meta.dirname, "custom.spectral.yaml");
 const INVALID_RULESET = path.join(import.meta.dirname, "invalid.spectral.yaml");
 
+// Rules from Spectral's built-in `oas` ruleset that a minimal OpenAPI spec
+// (no servers / contact / descriptions / operationId / tags) always trips.
+const DEFAULT_RULESET_WARNING_CODES = [
+  "info-contact",
+  "info-description",
+  "oas3-api-servers",
+  "operation-description",
+  "operation-operationId",
+  "operation-tags",
+];
+
 test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invalid Ruleset", async ({
   user,
 }) => {
-  test.fail(true, "INS-3469");
-
   const { workspaceFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(
@@ -49,22 +58,29 @@ test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invali
   const afterRemove = await workspaceFlow.getCollectionSpec(collection);
   const lintAfterRemove = await workspaceFlow.getLintState();
 
-  await workspaceFlow.uploadRuleset(INVALID_RULESET);
+  await expect(workspaceFlow.uploadRuleset(INVALID_RULESET)).rejects.toThrow(
+    /Invalid Spectral Ruleset/,
+  );
+  await workspaceFlow.closeDialog();
   const afterInvalidUpload = await workspaceFlow.getCollectionSpec(collection);
 
   expect(collection.rulesetType).toBe(RulesetType.Default);
-  expect(lintAfterCreate).toEqual({ errors: 0, warnings: 0, codes: [] });
+  expect(lintAfterCreate.errors).toBe(0);
+  expect(lintAfterCreate.entries.map((entry) => entry.code).sort()).toEqual(
+    DEFAULT_RULESET_WARNING_CODES,
+  );
   expect(customRulesetCodes).toContain("require-x-test-marker");
   expect(afterRemove?.rulesetType).toBe(RulesetType.Default);
-  expect(lintAfterRemove).toEqual({ errors: 0, warnings: 0, codes: [] });
+  expect(lintAfterRemove.errors).toBe(0);
+  expect(lintAfterRemove.entries.map((entry) => entry.code).sort()).toEqual(
+    DEFAULT_RULESET_WARNING_CODES,
+  );
   expect(afterInvalidUpload?.rulesetType).toBe(RulesetType.Default);
 });
 
 test("Verify Custom Spectral Ruleset Upload, Removal, And Rejection Of An Invalid Ruleset On A YAML Spec", async ({
   user,
 }) => {
-  test.fail(true, "INS-3469");
-
   const { workspaceFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(
@@ -100,13 +116,22 @@ paths:
   const afterRemove = await workspaceFlow.getCollectionSpec(collection);
   const lintAfterRemove = await workspaceFlow.getLintState();
 
-  await workspaceFlow.uploadRuleset(INVALID_RULESET);
+  await expect(workspaceFlow.uploadRuleset(INVALID_RULESET)).rejects.toThrow(
+    /Invalid Spectral Ruleset/,
+  );
+  await workspaceFlow.closeDialog();
   const afterInvalidUpload = await workspaceFlow.getCollectionSpec(collection);
 
   expect(collection.rulesetType).toBe(RulesetType.Default);
-  expect(lintAfterCreate).toEqual({ errors: 0, warnings: 0, codes: [] });
+  expect(lintAfterCreate.errors).toBe(0);
+  expect(lintAfterCreate.entries.map((entry) => entry.code).sort()).toEqual(
+    DEFAULT_RULESET_WARNING_CODES,
+  );
   expect(customRulesetCodes).toContain("require-x-test-marker");
   expect(afterRemove?.rulesetType).toBe(RulesetType.Default);
-  expect(lintAfterRemove).toEqual({ errors: 0, warnings: 0, codes: [] });
+  expect(lintAfterRemove.errors).toBe(0);
+  expect(lintAfterRemove.entries.map((entry) => entry.code).sort()).toEqual(
+    DEFAULT_RULESET_WARNING_CODES,
+  );
   expect(afterInvalidUpload?.rulesetType).toBe(RulesetType.Default);
 });
