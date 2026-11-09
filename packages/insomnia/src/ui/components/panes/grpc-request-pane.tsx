@@ -1,4 +1,4 @@
-import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
+import type { GrpcRequest, GrpcRequestHeader, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { setDefaultProtocol, urlMatchesCertHost } from 'insomnia-data/common';
 import React, { type FunctionComponent, useRef, useState } from 'react';
@@ -45,6 +45,18 @@ import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { Pane, PaneBody, PaneHeader } from './pane';
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
+
+const getGrpcRequestAncestors = async (request: GrpcRequest) => {
+  const ancestors = await db.withAncestors<GrpcRequest | RequestGroup | Workspace>(request, [
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+  return {
+    requestGroups: ancestors.filter(isRequestGroup),
+    workspace: ancestors.find(isWorkspace),
+  };
+};
 interface Props {
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
@@ -89,15 +101,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
     } else if (activeRequest.url && activeRequest.reflectionApi && !activeRequest.reflectionApi.enabled) {
       // Intentionally skipped when the buf reflection API is enabled: loading would send the API key on pane open.
       // In that case methods are only loaded when the user clicks the reflection refresh button.
-      const requestGroups = (
-        await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-      ).filter(isRequestGroup);
+      const { requestGroups, workspace } = await getGrpcRequestAncestors(activeRequest);
       const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
         request: activeRequest,
         environmentId,
         payload: {
           url: activeRequest.url,
-          metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+          metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups, workspace }),
           reflectionApi: activeRequest.reflectionApi,
         },
       });
@@ -147,14 +157,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const handleRequestSend = async () => {
     if (method && !running) {
       try {
-        const requestGroups = (
-          await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-        ).filter(isRequestGroup);
+        const { requestGroups, workspace } = await getGrpcRequestAncestors(activeRequest);
         const request = await getRenderedGrpcRequest({
           // split off the metadata from the request
           request: {
             ...activeRequest,
-            metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+            metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups, workspace }),
           },
           environment: environmentId,
           purpose: 'send',
@@ -300,15 +308,17 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const requestGroups = (
-                      await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
-                    ).filter(isRequestGroup);
+                    const { requestGroups, workspace } = await getGrpcRequestAncestors(activeRequest);
                     let rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
                       request: activeRequest,
                       environmentId,
                       payload: {
                         url: activeRequest.url,
-                        metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+                        metadata: getOrInheritHeaders({
+                          request: { headers: activeRequest.metadata },
+                          requestGroups,
+                          workspace,
+                        }),
                         reflectionApi: activeRequest.reflectionApi,
                       },
                     });
