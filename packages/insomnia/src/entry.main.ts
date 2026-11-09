@@ -29,6 +29,7 @@ import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerSyncHandlers } from './main/cloud-sync/ipc';
+import { reportDatabaseStartupFailure } from './main/database-startup-error';
 import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
 import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
@@ -140,7 +141,13 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await initDatabase(mainDatabase);
+  try {
+    await initDatabase(mainDatabase);
+  } catch (error) {
+    // There is no window yet. Without this the process would stay alive with nothing on screen.
+    await reportDatabaseStartupFailure(error, dataPath);
+    return;
+  }
   // Initialize services for main process
   initServices(servicesNodeImpl);
   initRuntime(nodeRuntime);
