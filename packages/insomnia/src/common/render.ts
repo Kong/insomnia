@@ -884,7 +884,7 @@ export async function getRenderedRequestAndContext({
 
   const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups, workspace });
   request.headers = getOrInheritHeaders({ request, requestGroups, workspace });
-  request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  request.authentication = getOrInheritAuthentication({ request, requestGroups, workspace });
   // Only manually-authored cookies may contain live template syntax. Server-set cookie values
   // are excluded from rendering here too, not just in the Cookie Jar UI, so that a template
   // placed in a cookie by a response is never re-evaluated on a later request.

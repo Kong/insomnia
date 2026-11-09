@@ -54,9 +54,11 @@ export const getOrInheritAuthentication = ({
   request,
   // requestGroups is supposed to be of order leaf to root
   requestGroups,
+  workspace = {},
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
+  workspace?: Pick<Workspace, 'authentication'>;
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
@@ -71,6 +73,12 @@ export const getOrInheritAuthentication = ({
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
     return closestAuth;
+  }
+  // If workspace has authentication, use it as the next fallback
+  const workspaceAuth = getAuthObjectOrNull(workspace?.authentication);
+  const isWorkspaceAuthEnabled = workspaceAuth && isAuthEnabled(workspace?.authentication);
+  if (isWorkspaceAuthEnabled) {
+    return workspaceAuth;
   }
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };

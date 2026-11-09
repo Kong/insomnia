@@ -1109,6 +1109,98 @@ describe('getOrInheritAuthentication', () => {
 
     expect(networkUtils.getOrInheritAuthentication({ request, requestGroups })).toEqual({ type: 'none' });
   });
+
+  const basic = (username: string) => ({ type: 'basic', username, password: `${username}-pass` });
+
+  it('should use the request auth over folder and workspace auth', () => {
+    const request = { authentication: basic('request') };
+    const requestGroups = [{ authentication: basic('folder') }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual(basic('request'));
+  });
+
+  it('should use the folder auth over workspace auth when the request has none', () => {
+    const request = { authentication: {} };
+    const requestGroups = [{ authentication: {} }, { authentication: basic('folder') }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual(basic('folder'));
+  });
+
+  it('should fall back to the workspace auth when neither request nor folders set auth', () => {
+    const request = { authentication: {} };
+    const requestGroups = [{ authentication: {} }, { authentication: {} }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual(
+      basic('workspace'),
+    );
+  });
+
+  it('should fall back to the workspace auth for a request that is a direct child of the workspace', () => {
+    const request = { authentication: {} };
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups: [], workspace })).toEqual(
+      basic('workspace'),
+    );
+  });
+
+  it.each([
+    ['undefined', undefined],
+    ['an empty object', {}],
+    ['an object without a type field', { username: 'x' }],
+  ])('should treat request auth that is %s as inherit', (_label, requestAuth) => {
+    const request = { authentication: requestAuth };
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups: [], workspace })).toEqual(
+      basic('workspace'),
+    );
+  });
+
+  it('should skip a disabled request or folder auth and keep inheriting', () => {
+    const request = { authentication: { ...basic('request'), disabled: true } };
+    const requestGroups = [{ authentication: { ...basic('folder'), disabled: true } }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual(
+      basic('workspace'),
+    );
+  });
+
+  it("should stop inheritance when the request auth is { type: 'none' }", () => {
+    const request = { authentication: { type: 'none' } };
+    const requestGroups = [{ authentication: basic('folder') }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual({ type: 'none' });
+  });
+
+  it("should stop inheritance at a folder with { type: 'none' } before reaching the workspace", () => {
+    const request = { authentication: {} };
+    const requestGroups = [{ authentication: { type: 'none' } }];
+    const workspace = { authentication: basic('workspace') };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups, workspace })).toEqual({ type: 'none' });
+  });
+
+  it('should default to none when the workspace auth is empty, disabled or missing', () => {
+    const request = { authentication: {} };
+
+    expect(networkUtils.getOrInheritAuthentication({ request, requestGroups: [] })).toEqual({ type: 'none' });
+    expect(
+      networkUtils.getOrInheritAuthentication({ request, requestGroups: [], workspace: { authentication: {} } }),
+    ).toEqual({ type: 'none' });
+    expect(
+      networkUtils.getOrInheritAuthentication({
+        request,
+        requestGroups: [],
+        workspace: { authentication: { ...basic('workspace'), disabled: true } },
+      }),
+    ).toEqual({ type: 'none' });
+  });
 });
 
 describe('getOrInheritHeaders', () => {
@@ -1398,5 +1490,100 @@ describe('shouldSuppressUserAgent with workspace headers', () => {
     const request = { headers: [], disableUserAgentHeader: false };
     expect(networkUtils.shouldSuppressUserAgent({ request, workspace: { headers: [] } })).toBe(false);
     expect(networkUtils.shouldSuppressUserAgent({ request })).toBe(false);
+  });
+});
+
+describe('getRenderedRequest with collection-level headers and authentication', () => {
+  const basic = (username: string) => ({ type: 'basic', username, password: `${username}-pass` });
+  const setUp = async ({
+    workspaceHeaders = [],
+    workspaceAuth = {},
+    folderHeaders,
+    folderAuth,
+    requestHeaders = [],
+    requestAuth = {},
+    requestOverrides = {},
+  }: {
+    workspaceHeaders?: { name: string; value: string; disabled?: boolean }[];
+    workspaceAuth?: Record<string, unknown>;
+    folderHeaders?: { name: string; value: string }[];
+    folderAuth?: Record<string, unknown>;
+    requestHeaders?: { name: string; value: string }[];
+    requestAuth?: Record<string, unknown>;
+    requestOverrides?: Record<string, unknown>;
+  }) => {
+    const workspace = await services.workspace.create({ headers: workspaceHeaders, authentication: workspaceAuth });
+    let parentId = workspace._id;
+    if (folderHeaders || folderAuth) {
+      const folder = await services.requestGroup.create({
+        name: 'folder',
+        parentId: workspace._id,
+        metaSortKey: 0,
+        headers: folderHeaders || [],
+        authentication: folderAuth || {},
+      });
+      parentId = folder._id;
+    }
+    const request = Object.assign(models.request.init(), {
+      _id: `req_${Math.random().toString(36).slice(2)}`,
+      parentId,
+      url: 'http://localhost',
+      headers: requestHeaders,
+      authentication: requestAuth,
+      ...requestOverrides,
+    });
+    return getRenderedRequest({ request });
+  };
+
+  it('inherits workspace headers and auth for a request directly under the workspace', async () => {
+    const rendered = await setUp({
+      workspaceHeaders: [{ name: 'X-Workspace', value: 'w' }],
+      workspaceAuth: basic('workspace'),
+    });
+    expect(rendered.headers).toEqual([{ name: 'X-Workspace', value: 'w' }]);
+    expect(rendered.authentication).toEqual(basic('workspace'));
+  });
+
+  it('lets folder and request override workspace headers and auth', async () => {
+    const rendered = await setUp({
+      workspaceHeaders: [
+        { name: 'X-Level', value: 'workspace' },
+        { name: 'Content-Type', value: 'text/plain' },
+      ],
+      workspaceAuth: basic('workspace'),
+      folderHeaders: [{ name: 'X-Level', value: 'folder' }],
+      folderAuth: basic('folder'),
+      requestHeaders: [{ name: 'Content-Type', value: 'application/json' }],
+    });
+    expect(rendered.headers).toEqual([
+      { name: 'Content-Type', value: 'application/json' },
+      { name: 'X-Level', value: 'workspace, folder' },
+    ]);
+    expect(rendered.authentication).toEqual(basic('folder'));
+
+    const withRequestAuth = await setUp({ workspaceAuth: basic('workspace'), requestAuth: basic('request') });
+    expect(withRequestAuth.authentication).toEqual(basic('request'));
+  });
+
+  it('applies workspace headers and auth to GraphQL requests', async () => {
+    const rendered = await setUp({
+      workspaceHeaders: [{ name: 'X-Workspace', value: 'w' }],
+      workspaceAuth: { type: 'bearer', token: 'ws-token' },
+      requestOverrides: { method: 'POST', body: { mimeType: 'application/graphql', text: '{"query":"{ a }"}' } },
+    });
+    expect(rendered.headers).toContainEqual({ name: 'X-Workspace', value: 'w' });
+    expect(rendered.authentication).toEqual({ type: 'bearer', token: 'ws-token' });
+  });
+
+  it('suppresses the default user-agent when the only user-agent header is a disabled workspace one', async () => {
+    const workspace = await services.workspace.create({
+      headers: [{ name: 'User-Agent', value: 'ws', disabled: true }],
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_ws_disabled_ua',
+      parentId: workspace._id,
+      url: 'http://localhost',
+    });
+    expect((await getRenderedRequest({ request })).suppressUserAgent).toBe(true);
   });
 });
