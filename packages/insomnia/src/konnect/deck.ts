@@ -71,7 +71,8 @@ export function buildDeckAddCommand(pluginName: string, context: DeckCommandCont
   ].join('\n');
   return [
     '# 1. Export the current control plane configuration',
-    dumpCommand(context),
+    // The snippet references the route by id, so the dump must retain ids.
+    dumpCommand(context, true),
     '',
     '# 2. Add this plugin to kong.yaml and fill in its required config:',
     snippet,

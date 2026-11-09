@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Button } from 'react-aria-components';
 
 import type { KonnectPlugin } from '../../../konnect/api';
 import { buildDeckAddCommand, buildDeckEditCommand, type DeckCommandContext } from '../../../konnect/deck';
@@ -58,9 +59,9 @@ export const DeckCommandModal = (props: Props) => {
         >
           decK apply docs
         </Link>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
+        <Button className="btn" onPress={() => modalRef.current?.hide()}>
           Close
-        </button>
+        </Button>
       </ModalFooter>
     </Modal>
   );

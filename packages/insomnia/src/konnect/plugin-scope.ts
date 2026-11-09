@@ -67,7 +67,7 @@ export function getRequestProtocol(url: string): string | null {
  * separately: Insomnia cannot know which consumer will authenticate a request,
  * or evaluate a CEL condition locally.
  */
-export function selectEffectivePlugins(
+export function selectApplicablePlugins(
   plugins: KonnectPlugin[],
   syncedRoute: Pick<KonnectSyncedRoute, 'routeId' | 'serviceId'>,
   requestProtocol: string | null,

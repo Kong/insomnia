@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import type { Project, Request, Workspace } from 'insomnia-data';
 import { type ReactNode, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -17,7 +18,7 @@ import {
   type KonnectSyncedRoute,
   type PluginScope,
   resolveKonnectSyncedRoute,
-  selectEffectivePlugins,
+  selectApplicablePlugins,
 } from '../../../konnect/plugin-scope';
 import { useKonnectPlugins } from '../../hooks/use-konnect-plugins';
 import { Icon } from '../icon';
@@ -73,17 +74,21 @@ function SectionHeader({ title, description, action }: { title: string; descript
   );
 }
 
+type PluginRowScope = PluginScope | 'conditional';
+
 function PluginRow({
   plugin,
-  scopeLabel,
+  scope,
   syncedRoute,
   onShowDeck,
 }: {
   plugin: KonnectPlugin;
-  scopeLabel: string;
+  scope: PluginRowScope;
   syncedRoute: KonnectSyncedRoute;
   onShowDeck: (plugin: KonnectPlugin) => void;
 }) {
+  const isConditional = scope === 'conditional';
+  const scopeLabel = scope === 'conditional' ? 'Conditional' : SCOPE_META_LABELS[scope];
   const editUrl = getKonnectPluginEditUrl(syncedRoute.region, syncedRoute.controlPlaneId, plugin.name, plugin.id);
   const before = plugin.ordering?.before?.access ?? [];
   const after = plugin.ordering?.after?.access ?? [];
@@ -107,7 +112,7 @@ function PluginRow({
       }
     >
       <span
-        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${plugin.enabled ? 'bg-green-500' : 'bg-(--hl-md)'}`}
+        className={clsx('mt-1.5 h-2 w-2 shrink-0 rounded-full', plugin.enabled ? 'bg-green-500' : 'bg-(--hl-md)')}
         aria-hidden
       />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -116,11 +121,9 @@ function PluginRow({
           {plugin.instance_name && <span className="shrink-0 text-xs text-(--hl)">{plugin.name}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--hl)">
-          <span>{scopeLabel === 'Conditional' ? 'conditional' : scopeLabel}</span>
+          <span>{isConditional ? 'conditional' : scopeLabel}</span>
           {!plugin.enabled && <span className="text-(--color-danger)">disabled</span>}
-          {plugin.condition && (
-            <span title={plugin.condition}>{scopeLabel === 'Conditional' ? 'condition' : 'conditional'}</span>
-          )}
+          {plugin.condition && <span title={plugin.condition}>{isConditional ? 'condition' : 'conditional'}</span>}
           {plugin.consumer && <span>consumer-scoped</span>}
           {plugin.consumer_group && <span>consumer-group-scoped</span>}
           {before.length > 0 && <span>runs before {before.join(', ')}</span>}
@@ -182,20 +185,20 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
     return null;
   }
 
-  if (!activeRequest.konnectRouteKey || !activeWorkspace?.konnectServiceId) {
-    return (
-      <EmptyState
-        title="This request isn't linked to a Konnect route."
-        detail="Plugins can only be shown for requests synced from Kong Konnect."
-      />
-    );
-  }
-
   if (!activeProject.konnectRegion) {
     return (
       <EmptyState
         title="This project is missing its Konnect region."
         detail="Re-sync Konnect for this project, then reopen this tab."
+      />
+    );
+  }
+
+  if (!syncedRoute) {
+    return (
+      <EmptyState
+        title="This request isn't linked to a Konnect route."
+        detail="Plugins can only be shown for requests synced from Kong Konnect."
       />
     );
   }
@@ -219,16 +222,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
     );
   }
 
-  if (!syncedRoute) {
-    return (
-      <EmptyState
-        title="This request isn't linked to a Konnect route."
-        detail="Plugins can only be shown for requests synced from Kong Konnect."
-      />
-    );
-  }
-
-  const selection = selectEffectivePlugins(plugins, syncedRoute, getRequestProtocol(activeRequest.url));
+  const selection = selectApplicablePlugins(plugins, syncedRoute, getRequestProtocol(activeRequest.url));
   const suggestions =
     availabilityStatus === 'ready'
       ? SUGGESTED_PLUGINS.filter(
@@ -335,7 +329,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
               <PluginRow
                 key={plugin.id}
                 plugin={plugin}
-                scopeLabel={SCOPE_META_LABELS[group.scope]}
+                scope={group.scope}
                 syncedRoute={syncedRoute}
                 onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
               />
@@ -354,7 +348,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
             <PluginRow
               key={plugin.id}
               plugin={plugin}
-              scopeLabel="Conditional"
+              scope="conditional"
               syncedRoute={syncedRoute}
               onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
             />

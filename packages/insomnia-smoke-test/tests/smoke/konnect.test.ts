@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { type APIRequestContext, expect, type Page } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
@@ -77,6 +77,17 @@ test.describe('Konnect plugin info', () => {
     plugin({ id: 'plugin-global-auth', name: 'key-auth' }),
   ];
 
+  const fixtures = { controlPlanes: [controlPlane], services: [service], routes: [route], plugins };
+
+  async function setKonnectFixtures(
+    request: APIRequestContext,
+    overrides: Partial<typeof fixtures> & { failPlugins?: boolean; failAvailability?: boolean } = {},
+  ) {
+    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fixtures', {
+      data: { ...fixtures, ...overrides },
+    });
+  }
+
   async function openPluginsTab(page: Page, expectLoaded = true) {
     await page.getByRole('button', { name: 'Organizations' }).click();
     await page.getByRole('option', { name: 'Control Planes' }).click();
@@ -111,20 +122,11 @@ test.describe('Konnect plugin info', () => {
   }
 
   test.beforeEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fixtures', {
-      data: {
-        controlPlanes: [controlPlane],
-        services: [service],
-        routes: [route],
-        plugins,
-      },
-    });
+    await setKonnectFixtures(request);
   });
 
   test.afterEach(async ({ request }) => {
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fixtures', {
-      data: { controlPlanes: [], services: [], routes: [], plugins: [] },
-    });
+    await setKonnectFixtures(request, { controlPlanes: [], services: [], routes: [], plugins: [] });
   });
 
   test('shows the plugins that apply to a synced request', async ({ page }) => {
@@ -191,9 +193,7 @@ test.describe('Konnect plugin info', () => {
     await openPluginsTab(page);
     await expect.soft(page.getByText('key-auth', { exact: true })).toHaveCount(2);
 
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fail-next', {
-      data: { plugins: true },
-    });
+    await setKonnectFixtures(request, { failPlugins: true });
     await page.getByRole('button', { name: 'Refresh' }).click();
 
     await expect.soft(page.getByText('Failed to refresh plugins.')).toBeVisible();
@@ -214,9 +214,7 @@ test.describe('Konnect plugin info', () => {
 
   test('shows a retry state when plugins fail to load', async ({ page, request }) => {
     test.setTimeout(90_000);
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fail-next', {
-      data: { plugins: true },
-    });
+    await setKonnectFixtures(request, { failPlugins: true });
     await openPluginsTab(page, false);
 
     await expect.soft(page.getByText('Failed to load plugins')).toBeVisible();
@@ -234,9 +232,7 @@ test.describe('Konnect plugin info', () => {
     await openPluginsTab(page);
     await expect.soft(page.getByText('Suggested plugins')).toBeVisible();
 
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fail-next', {
-      data: { availablePlugins: true },
-    });
+    await setKonnectFixtures(request, { failAvailability: true });
     await page.getByRole('button', { name: 'Refresh' }).click();
 
     await expect.soft(page.getByText('Suggested plugins')).toBeHidden();
@@ -248,30 +244,8 @@ test.describe('Konnect plugin info', () => {
 
   test('shows an empty notice when no plugins apply', async ({ page, request }) => {
     test.setTimeout(90_000);
-    await request.post('http://127.0.0.1:4010/v1/test-utils/konnect/fixtures', {
-      data: { controlPlanes: [controlPlane], services: [service], routes: [route], plugins: [] },
-    });
-
-    await page.getByRole('button', { name: 'Organizations' }).click();
-    await page.getByRole('option', { name: 'Control Planes' }).click();
-    await page.getByRole('button', { name: 'Configure' }).click();
-    await page.getByLabel('Personal Access Token').fill('kpat_test');
-    await page.getByRole('button', { name: 'Connect & Sync' }).click();
-
-    await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
-    await page.getByTestId('project-node-E2E Control Plane').click();
-    await page.getByTestId('workspace-node-flights-svc').click();
-    await page
-      .getByLabel('Expand flights-svc')
-      .click({ timeout: 1000 })
-      .catch(() => {});
-    await page
-      .getByLabel('Expand flights-collection')
-      .click({ timeout: 1000 })
-      .catch(() => {});
-    await page.getByTestId('request-node-/flights').first().click();
-
-    await page.getByRole('tablist', { name: 'Request pane tabs' }).getByRole('tab', { name: 'Plugins' }).click();
+    await setKonnectFixtures(request, { plugins: [] });
+    await openPluginsTab(page);
 
     await expect.soft(page.getByText('No plugins apply to this request.')).toBeVisible();
   });

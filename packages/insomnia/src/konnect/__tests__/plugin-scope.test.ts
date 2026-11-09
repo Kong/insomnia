@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KonnectPlugin } from '../api';
-import { getRequestProtocol, resolveKonnectSyncedRoute, selectEffectivePlugins } from '../plugin-scope';
+import { getRequestProtocol, resolveKonnectSyncedRoute, selectApplicablePlugins } from '../plugin-scope';
 
 const syncedRoute = { routeId: 'route-1', serviceId: 'service-1' };
 
@@ -88,9 +88,9 @@ describe('getRequestProtocol', () => {
   });
 });
 
-describe('selectEffectivePlugins', () => {
+describe('selectApplicablePlugins', () => {
   it('groups plugins by route, service, and control plane scope', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-route', name: 'key-auth', route: { id: 'route-1' } }),
         plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
@@ -108,7 +108,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('keeps a route + service plugin in the route group', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [plugin({ id: 'p-both', name: 'key-auth', route: { id: 'route-1' }, service: { id: 'service-1' } })],
       syncedRoute,
       'http',
@@ -119,7 +119,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('excludes plugins scoped to another route or another service', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-other-route', name: 'key-auth', route: { id: 'route-2' } }),
         plugin({ id: 'p-other-service', name: 'cors', service: { id: 'service-2' } }),
@@ -133,7 +133,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('shows every applicable instance of the same plugin name', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-global', name: 'rate-limiting' }),
         plugin({ id: 'p-route', name: 'rate-limiting', route: { id: 'route-1' } }),
@@ -148,7 +148,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('shows service and global instances separately', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-global', name: 'rate-limiting' }),
         plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
@@ -166,7 +166,7 @@ describe('selectEffectivePlugins', () => {
     ['consumer group', { consumer_group: { id: 'group-1' } }],
     ['condition', { condition: 'http.path == "/flights"' }],
   ])('reports %s scoped instances as conditional', (_label, overrides) => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [plugin({ id: 'p-conditional', name: 'key-auth', route: { id: 'route-1' }, ...overrides })],
       syncedRoute,
       'http',
@@ -178,7 +178,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('keeps disabled plugins visible and counts them as configured', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [plugin({ id: 'p-disabled', name: 'cors', enabled: false })],
       syncedRoute,
       'http',
@@ -189,7 +189,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('excludes plugins whose protocols do not match the request', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] }),
         plugin({ id: 'p-http', name: 'cors', protocols: ['http', 'https'] }),
@@ -202,7 +202,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('does not filter by protocol when the request protocol is unknown', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] })],
       syncedRoute,
       null,
@@ -212,7 +212,7 @@ describe('selectEffectivePlugins', () => {
   });
 
   it('keeps every tied instance in API order', () => {
-    const result = selectEffectivePlugins(
+    const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-first', name: 'zz-plugin', route: { id: 'route-1' } }),
         plugin({ id: 'p-second', name: 'aa-plugin', route: { id: 'route-1' } }),

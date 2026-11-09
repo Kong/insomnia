@@ -67,6 +67,6 @@ describe('buildDeckAddCommand', () => {
     expect(command).toContain('    route: "route-1"');
     expect(command).toContain('    config: {}');
     expect(command).toContain('deck gateway apply kong.yaml');
-    expect(command).not.toContain('--with-id');
+    expect(command).toContain('--with-id');
   });
 });

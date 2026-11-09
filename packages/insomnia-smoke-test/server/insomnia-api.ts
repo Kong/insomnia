@@ -758,14 +758,8 @@ export default function setup(app: Application) {
     konnectRoutes = req.body.routes ?? [];
     konnectPlugins = req.body.plugins ?? [];
     konnectAvailablePlugins = req.body.availablePlugins ?? [...DEFAULT_KONNECT_AVAILABLE_PLUGINS];
-    konnectPluginsError = false;
-    konnectAvailablePluginsError = false;
-    res.json({ ok: true });
-  });
-
-  app.post('/v1/test-utils/konnect/fail-next', json(), (req, res) => {
-    konnectPluginsError = req.body.plugins === true;
-    konnectAvailablePluginsError = req.body.availablePlugins === true;
+    konnectPluginsError = req.body.failPlugins === true;
+    konnectAvailablePluginsError = req.body.failAvailability === true;
     res.json({ ok: true });
   });
 
