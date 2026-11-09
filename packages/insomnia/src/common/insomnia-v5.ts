@@ -425,6 +425,20 @@ export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): Workspace
   return 'mock-server';
 }
 
+function getCollectionOrSpecProperties(
+  file: InsomniaFile,
+): Pick<Workspace, 'headers' | 'preRequestScript' | 'afterResponseScript' | 'authentication'> {
+  if (file.type !== 'collection.insomnia.rest/5.0' && file.type !== 'spec.insomnia.rest/5.0') {
+    return {};
+  }
+  return {
+    headers: mapHeaders(file.headers),
+    preRequestScript: file.scripts?.preRequest || '',
+    afterResponseScript: file.scripts?.afterResponse || '',
+    authentication: file.authentication || {},
+  };
+}
+
 function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
   return {
     ...mapMetaToInsomniaMeta(
@@ -437,6 +451,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
     name: file.name || 'Imported API Collection',
     parentId: '',
     scope: insomniaSchemaTypeToScope(file.type),
+    ...getCollectionOrSpecProperties(file),
   };
 }
 
@@ -1213,7 +1228,7 @@ export async function getInsomniaV5DataExport({
       return collection;
     }
 
-    function getScriptFromResources(resource: Request | RequestGroup) {
+    function getScriptFromResources(resource: Request | RequestGroup | Workspace) {
       const hasPreRequest = !!resource?.preRequestScript;
       const hasAfterResponse = !!resource?.afterResponseScript;
 
@@ -1436,6 +1451,8 @@ export async function getInsomniaV5DataExport({
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
+        headers: mapHeaders(workspace.headers),
+        scripts: getScriptFromResources(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
             resource =>
@@ -1465,6 +1482,8 @@ export async function getInsomniaV5DataExport({
         schema_version: INSOMNIA_SCHEMA_VERSION,
         name: workspace.name,
         meta: mapWorkspaceMeta(workspace),
+        headers: mapHeaders(workspace.headers),
+        scripts: getScriptFromResources(workspace),
         collection: getCollectionFromResources(
           exportableResources.filter(
             resource =>

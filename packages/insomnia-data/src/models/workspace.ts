@@ -2,6 +2,7 @@ import { strings } from 'insomnia-data/common';
 import { z } from 'zod/v4';
 
 import { type BaseModel, createModelSchema } from './base-types';
+import { AuthenticationSchema, HeadersSchema } from './request';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -21,13 +22,23 @@ export const WorkspaceScopeKeys = {
   mcp: 'mcp',
 } as const;
 
-export const baseWorkspaceSchema = z.object({
-  name: z.string().default(`New ${strings.collection.singular}`),
-  description: z.string().default(''),
-  certificates: z.any().optional(), // deprecated
-  scope: z.enum(Object.values(WorkspaceScopeKeys)),
-  konnectServiceId: z.string().optional().nullable(),
+export const collectionWorkspaceSchema = z.object({
+  // collection-level auth, headers and scripts, inherited by every request in the workspace
+  headers: HeadersSchema.optional(),
+  preRequestScript: z.string().optional(),
+  afterResponseScript: z.string().optional(),
+  authentication: AuthenticationSchema.optional(),
 });
+export const baseWorkspaceSchema = z
+  .object({
+    name: z.string().default(`New ${strings.collection.singular}`),
+    description: z.string().default(''),
+    certificates: z.any().optional(), // deprecated
+    scope: z.enum(Object.values(WorkspaceScopeKeys)),
+    konnectServiceId: z.string().optional().nullable(),
+  })
+  .extend(collectionWorkspaceSchema.shape);
+
 export type BaseWorkspace = z.infer<typeof baseWorkspaceSchema>;
 
 export const schema = createModelSchema(type, prefix).extend(baseWorkspaceSchema.shape);
@@ -48,7 +59,13 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
 
 export const isMcp = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mcp;
 
-export const optionalKeys: (keyof BaseWorkspace)[] = ['konnectServiceId'];
+export const optionalKeys: (keyof BaseWorkspace)[] = [
+  'konnectServiceId',
+  'headers',
+  'preRequestScript',
+  'afterResponseScript',
+  'authentication',
+];
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
