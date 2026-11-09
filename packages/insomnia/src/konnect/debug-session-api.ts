@@ -84,7 +84,7 @@ export async function toDebugApiError(err: unknown): Promise<DebugApiError> {
         Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : undefined,
       );
     }
-    const responseText = await response.text();
+    const responseText = response.bodyUsed ? err.message || `HTTP ${status}` : await response.text();
     throw new DebugApiError('unknown', `Konnect error: ${responseText}`);
   }
   const message = err instanceof Error ? err.message : 'Could not reach Konnect.';
@@ -108,7 +108,7 @@ async function request<T>(
       headers: { Authorization: `Bearer ${ctx.pat}` },
     });
   } catch (err) {
-    throw toDebugApiError(err);
+    throw await toDebugApiError(err);
   }
 }
 

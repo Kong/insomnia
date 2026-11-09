@@ -31,7 +31,7 @@ describe('debug-api', () => {
     const impl = mockFetch(json({ data: [] }));
     await listDebugSessions(ctx);
     const [url, init] = impl.mock.calls[0];
-    expect(url).toMatch(/^https:\/\/us\..+\/v1\/control-planes\/cp-1\/o11y\/debug-sessions\?/);
+    expect(url).toMatch(/^https:\/\/us\..+\/v1\/control-planes\/cp-1\/o11y\/debug-sessions/);
     expect(init.headers.Authorization).toBe(`Bearer ${ctx.pat}`);
     expect(init.headers['X-Session-Id']).toBeUndefined();
   });
