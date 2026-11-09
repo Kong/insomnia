@@ -50,7 +50,7 @@ export async function renderRealtimeConnectPayload({
   const requestGroups = ancestors.filter(isRequestGroup);
   const workspace = ancestors.find(isWorkspace);
   const headers = getOrInheritHeaders({ request, requestGroups, workspace });
-  const authentication = getOrInheritAuthentication({ request, requestGroups });
+  const authentication = getOrInheritAuthentication({ request, requestGroups, workspace });
   const body = 'body' in request ? request.body : undefined;
 
   // Only manually-authored cookies may contain live template syntax. Server-set cookie values
