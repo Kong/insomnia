@@ -245,4 +245,40 @@ test.describe('Check vault used in environment', () => {
     await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
     await expect.soft(page.getByText('Error: vault is a reserved')).toBeVisible();
   });
+
+  test('switch JSON item to secret in global private sub environment', async ({ page }) => {
+    const pageErrors: Error[] = [];
+    page.on('pageerror', error => pageErrors.push(error));
+
+    // create new global private environment
+    await page.getByLabel('Create in project').click();
+    await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
+    await page.getByPlaceholder('Enter a name for your Environment').fill('JSON To Secret Environment');
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.getByTestId('AddPrivateSubEnvironment').click();
+    await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
+
+    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+    const firstRow = kvTable.getByRole('option').first();
+    const firstKey = firstRow.getByTestId('OneLineEditor').first();
+    await firstKey.click();
+    await page.keyboard.type('jsonKey');
+    await expect.soft(firstKey).toContainText('jsonKey');
+
+    // switch to JSON type, the empty value becomes {}
+    await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
+    await page.getByRole('menuitemradio', { name: 'JSON' }).click();
+    await expect.soft(firstRow.getByText('Click to Edit')).toBeVisible();
+
+    // switch JSON to Secret
+    await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
+    await page.getByRole('menuitemradio', { name: 'Secret' }).click();
+    await expect.soft(firstRow.getByRole('button', { name: 'Type Selection' })).toHaveText('Secret');
+    await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
+    // the original JSON value is kept as the decrypted secret value
+    await firstRow.locator('.fa-eye-slash').click();
+    await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('{}');
+
+    expect.soft(pageErrors).toEqual([]);
+  });
 });

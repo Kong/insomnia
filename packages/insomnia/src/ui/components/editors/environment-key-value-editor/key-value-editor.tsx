@@ -235,8 +235,7 @@ export const EnvironmentKVEditor = ({
       onChange([...persistedPairs, newPair]);
       return;
     }
-    // Mutate the persisted working copy in place so sequential calls (e.g. the secret
-    // type switch, which changes value then type) accumulate onto the same item.
+    // Mutate the persisted working copy in place so sequential calls accumulate onto the same item.
     const changedItemIdx = persistedPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = persistedPairs[changedItemIdx];
@@ -254,6 +253,22 @@ export const EnvironmentKVEditor = ({
       if (newValue === EnvironmentKvPairDataType.JSON && changedItem.value.trim() === '') {
         changedItem.value = JSON.stringify({});
       }
+    }
+    onChange(persistedPairs);
+  };
+
+  // Apply several property changes to one item with a single onChange. Type switches must use this:
+  // emitting an intermediate pair (e.g. an encrypted value still typed as JSON) makes
+  // getDataFromKVPair throw when it tries to JSON.parse that value.
+  const handleItemPatch = (id: string, patch: Partial<EnvironmentKvPairData>) => {
+    if (id === blankId) {
+      onChange([...persistedPairs, { ...blankPair, enabled: true, ...patch }]);
+      return;
+    }
+    const changedItem = persistedPairs.find(p => p.id === id);
+    if (changedItem) {
+      // enable item since user modifies the item unless manual disable it
+      Object.assign(changedItem, { enabled: true }, patch);
     }
     onChange(persistedPairs);
   };
@@ -276,26 +291,22 @@ export const EnvironmentKVEditor = ({
           noText: 'Cancel',
           onDone: async (yes: boolean) => {
             if (yes) {
-              handleItemChange(id, 'type', newType);
-              handleItemChange(id, 'isConfidential', true);
               // decrypt and save the value
-              handleItemChange(
-                id,
-                'value',
-                await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey),
-              );
+              handleItemPatch(id, {
+                type: newType,
+                isConfidential: true,
+                value: await getRuntime().crypto.decryptSecretValue(originValue, symmetricKey as JsonWebKey),
+              });
             }
           },
         });
       } else if (newType === EnvironmentKvPairDataType.SECRET) {
         // encrypt value if set to secret type
-        handleItemChange(
-          id,
-          'value',
-          await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey),
-        );
-        handleItemChange(id, 'type', newType);
-        handleItemChange(id, 'isConfidential', false);
+        handleItemPatch(id, {
+          type: newType,
+          isConfidential: false,
+          value: await getRuntime().crypto.encryptSecretValue(originValue, symmetricKey as JsonWebKey),
+        });
       } else {
         handleItemChange(id, 'type', newType);
       }
