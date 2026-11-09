@@ -64,6 +64,7 @@ export const optionalKeys: (keyof BaseWorkspace)[] = [
   'headers',
   'preRequestScript',
   'afterResponseScript',
+  'authentication',
 ];
 
 export const init = (): BaseWorkspace => ({

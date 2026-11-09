@@ -46,6 +46,7 @@ import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
 
 export type { SendActionRuntime };
 
@@ -53,9 +54,11 @@ export const getOrInheritAuthentication = ({
   request,
   // requestGroups is supposed to be of order leaf to root
   requestGroups,
+  workspace = {},
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
+  workspace?: Pick<Workspace, 'authentication'>;
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
@@ -71,20 +74,28 @@ export const getOrInheritAuthentication = ({
     // override auth with closest parent folder that has one set
     return closestAuth;
   }
+  // If workspace has authentication, use it as the next fallback
+  const workspaceAuth = getAuthObjectOrNull(workspace?.authentication);
+  const isWorkspaceAuthEnabled = workspaceAuth && isAuthEnabled(workspace?.authentication);
+  if (isWorkspaceAuthEnabled) {
+    return workspaceAuth;
+  }
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
 export function getOrInheritHeaders({
   request,
   requestGroups,
+  workspace = {},
 }: {
   request: Pick<Request, 'headers'>;
   requestGroups: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): RequestHeader[] {
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
-  // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups].reverse().concat(request);
+  // workspace headers, then parent folder from furthest to nearest, then request
+  const headerContexts = [workspace].concat([...requestGroups].reverse()).concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -114,16 +125,17 @@ export function getOrInheritHeaders({
 export function shouldSuppressUserAgent({
   request,
   requestGroups = [],
+  workspace = {},
 }: {
   request: Pick<Request | WebSocketRequest | SocketIORequest, 'headers' | 'disableUserAgentHeader'>;
   requestGroups?: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): boolean {
-  const userAgentHeaders = [...requestGroups, request]
+  const userAgentHeaders = [workspace, ...requestGroups, request]
     .flatMap(doc => doc.headers || [])
     .filter(h => h.name?.toLowerCase() === 'user-agent');
   return (
-    Boolean(request.disableUserAgentHeader) ||
-    (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
+    Boolean(request.disableUserAgentHeader) || (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
   );
 }
 
@@ -292,8 +304,9 @@ export const tryToExecutePreRequestScript = async (
   runtime?: SendActionRuntime,
   sensitiveValueCollector?: SensitiveValueCollector | null,
 ) => {
-  const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
-  const folderScripts = requestGroups
+  const ancestorsWithScripts = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc));
+  // Reverse the order so that workspace script runs first, then folder scripts from furthest to nearest, and finally request scripts
+  const ancestorScripts = ancestorsWithScripts
     .reverse()
     .filter(group => group?.preRequestScript)
     .map(
@@ -303,14 +316,14 @@ export const tryToExecutePreRequestScript = async (
       await fn${i}();
   `,
     );
-  const originalRequestGroups = requestGroups.filter(group => isRequestGroup(group));
+  const originalRequestGroups = ancestorsWithScripts.filter(group => isRequestGroup(group));
   const parentFolders = originalRequestGroups.map(group => ({
     id: group._id,
     name: group.name,
     environment: group.environment,
   }));
 
-  if (folderScripts.length === 0) {
+  if (ancestorScripts.length === 0) {
     return {
       request,
       environment,
@@ -327,7 +340,7 @@ export const tryToExecutePreRequestScript = async (
       parentFolders,
     };
   }
-  const joinedScript = [...folderScripts].join('\n');
+  const joinedScript = [...ancestorScripts].join('\n');
 
   const mutatedContext = await tryToExecuteScript({
     script: joinedScript,
@@ -574,9 +587,9 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
         },
         iterationData: userUploadEnvironment
           ? {
-            name: userUploadEnvironment.name,
-            data: userUploadEnvironment.data || {},
-          }
+              name: userUploadEnvironment.name,
+              data: userUploadEnvironment.data || {},
+            }
           : undefined,
         execution: {
           ...execution, // keep some existing properties in the after-response script from the pre-request script
@@ -741,8 +754,11 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  const requestGroups = context.ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
-  const folderScripts = requestGroups
+  const ancestorsWithScripts = context.ancestors.filter(
+    doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc),
+  );
+  // Reverse the order so that workspace script runs first, then folder scripts from furthest to nearest, and finally request scripts
+  const ancestorScripts = ancestorsWithScripts
     .reverse()
     .filter(group => group?.afterResponseScript)
     .map(
@@ -752,15 +768,15 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       await fn${i}();
   `,
     );
-  const originalRequestGroups = requestGroups.filter(group => isRequestGroup(group));
+  const originalRequestGroups = ancestorsWithScripts.filter(group => isRequestGroup(group));
 
-  if (folderScripts.length === 0) {
+  if (ancestorScripts.length === 0) {
     return {
       ...context,
       requestTestResults: new Array<RequestTestResult>(),
     };
   }
-  const joinedScript = [...folderScripts].join('\n');
+  const joinedScript = [...ancestorScripts].join('\n');
   const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
   if (!postMutatedContext || 'error' in postMutatedContext) {
     return {
@@ -904,7 +920,10 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
+  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(
+    renderedRequest,
+    finalUrl,
+  );
   if (authTimeline?.length) {
     timeline.push(...authTimeline);
   }

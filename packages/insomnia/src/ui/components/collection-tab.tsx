@@ -1,21 +1,15 @@
-import { useRef, useState } from 'react';
-import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useNavigate } from 'react-router';
 import { twMerge } from 'tailwind-merge';
 
-import { hasProtectedKvPairs } from '~/common/utils/environment-utils';
 import { getAuthObjectOrNull } from '~/network/authentication';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
-import { EnvironmentEditor, type EnvironmentEditorHandle } from '~/ui/components/editors/environment-editor';
-import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { RequestHeadersEditor } from '~/ui/components/editors/request-headers-editor';
 import { RequestScriptEditor } from '~/ui/components/editors/request-script-editor';
 import { MarkdownEditor } from '~/ui/components/markdown-editor';
 import { WorkspaceEnvironmentsEditor } from '~/ui/components/workspace-environments-editor';
 import { useWorkspacePatcher } from '~/ui/hooks/use-request';
-import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 
 import { ErrorBoundary } from './error-boundary';
@@ -52,15 +46,11 @@ export const CollectionTab = ({
   const { activeWorkspace, baseEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
 
   const patchWorkspace = useWorkspacePatcher();
-  const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
-  const { toggleEnvironmentType } = useToggleEnvironmentType();
   const gitVersion = useGitVCSVersion();
-  const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
 
   const uniqueKey = `${activeWorkspace._id}::${gitVersion}::${vcsVersion}`;
   const headers = activeWorkspace.headers || [];
   const headersCount = headers.filter(h => !h.disabled).length;
-  const allowSwitchEnvironment = !hasProtectedKvPairs(baseEnvironment.kvPairData);
   const workspaceAuth = getAuthObjectOrNull(activeWorkspace.authentication);
   const authIsNone = workspaceAuth === null;
 
@@ -186,7 +176,7 @@ export const CollectionTab = ({
               <RequestScriptEditor
                 historyKey={`${activeWorkspace._id}:pre-request-script`}
                 defaultValue={activeWorkspace.preRequestScript || ''}
-                onChange={preRequestScript => patchWorkspace({ workspaceId, preRequestScript })}
+                onChange={preRequestScript => patchWorkspace(workspaceId, { preRequestScript })}
               />
             </ErrorBoundary>
           </TabPanel>
@@ -195,7 +185,7 @@ export const CollectionTab = ({
               <RequestScriptEditor
                 historyKey={`${activeWorkspace._id}:after-response-script`}
                 defaultValue={activeWorkspace.afterResponseScript || ''}
-                onChange={afterResponseScript => patchWorkspace({ workspaceId, afterResponseScript })}
+                onChange={afterResponseScript => patchWorkspace(workspaceId, { afterResponseScript })}
               />
             </ErrorBoundary>
           </TabPanel>
@@ -214,7 +204,7 @@ export const CollectionTab = ({
           historyKey={`workspace-description::${workspaceId}`}
           placeholder="Write a description"
           defaultValue={activeWorkspace.description}
-          onChange={(description: string) => patchWorkspace({ workspaceId, description })}
+          onChange={(description: string) => patchWorkspace(workspaceId, { description })}
         />
       </TabPanel>
     </Tabs>

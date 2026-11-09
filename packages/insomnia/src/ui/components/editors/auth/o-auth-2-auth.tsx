@@ -2,6 +2,7 @@ import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentica
 import { services } from 'insomnia-data';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { useAuthentication } from '~/ui/hooks/use-request-authentication';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
 import {
@@ -17,14 +18,6 @@ import {
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
@@ -390,9 +383,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
 };
 
 export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: boolean; disabled?: boolean }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication } = useAuthentication();
   const [sessionCleared, setSessionCleared] = useState(false);
 
   const { basic, advanced } = getFieldsForGrantType(authentication as AuthTypeOAuth2);
@@ -515,9 +506,7 @@ const OAuth2TokenInput: FC<{
   label: string;
   property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>;
 }> = ({ token, label, property }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { _id } = useAuthentication();
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     await (token
       ? services.oAuth2Token.update(token, { [property]: value })
@@ -542,12 +531,7 @@ const OAuth2TokenInput: FC<{
           {label}
           {expiryLabel ? <em> {expiryLabel}</em> : null}
         </small>
-        <input
-          data-testid={`auth-field-${id}`}
-          value={token?.[property] || ''}
-          placeholder="n/a"
-          onChange={onChange}
-        />
+        <input data-testid={`auth-field-${id}`} value={token?.[property] || ''} placeholder="n/a" onChange={onChange} />
       </label>
     </div>
   );
@@ -596,9 +580,7 @@ const OAuth2Error: FC<{ token?: OAuth2Token }> = ({ token }) => {
 };
 
 const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
+  const { authentication, _id } = useAuthentication();
   const [token, setToken] = useState<OAuth2Token | undefined>();
   useEffect(() => {
     const fn = async () => {

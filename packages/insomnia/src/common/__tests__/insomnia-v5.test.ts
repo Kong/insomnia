@@ -896,6 +896,41 @@ spec:
     });
   });
 
+  describe('collection-level headers and scripts', () => {
+    beforeEach(async () => {
+      await services.environment.getOrCreateForParentId('wrk_test');
+    });
+
+    it('round-trips workspace headers and scripts through the v5 format', async () => {
+      await services.workspace.update('wrk_test', {
+        headers: [{ name: 'X-Collection', value: 'shared', description: 'for all requests' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+      });
+
+      const exported = await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false });
+      const parsed = YAML.parse(exported);
+      expect(parsed.headers).toEqual([{ name: 'X-Collection', value: 'shared', description: 'for all requests' }]);
+      expect(parsed.scripts).toEqual({ preRequest: 'console.log("before");', afterResponse: 'console.log("after");' });
+
+      const [workspace] = importInsomniaV5Data(exported);
+      expect(workspace).toMatchObject({
+        type: 'Workspace',
+        headers: [{ name: 'X-Collection', value: 'shared', description: 'for all requests' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+      });
+    });
+
+    it('omits headers and scripts from the export when the workspace has none', async () => {
+      const parsed = YAML.parse(
+        await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false }),
+      );
+      expect(parsed).not.toHaveProperty('headers');
+      expect(parsed).not.toHaveProperty('scripts');
+    });
+  });
+
   describe('confidentialKeys', () => {
     const kvPair = (name: string, value: string, isConfidential: boolean, enabled = true) => ({
       id: `envPair_${name}_${value}`,
