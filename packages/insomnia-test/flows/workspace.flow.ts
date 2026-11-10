@@ -748,11 +748,17 @@ export class WorkspaceFlow extends BaseFlow {
     const errors = summary === 'none' ? 0 : summary.errors;
     // The summary can update a beat before the panel's entry rows do, so
     // wait for the listed errors to catch up with the count it reports.
-    let entries = await specPage.getLintEntries();
+    // The panel re-renders while lint results stream in, so a row can vanish
+    // mid-read; treat that as "not settled yet" and let the poll retry.
+    let entries: Awaited<ReturnType<typeof specPage.getLintEntries>> = [];
     await expect
       .poll(
         async () => {
-          entries = await specPage.getLintEntries();
+          try {
+            entries = await specPage.getLintEntries();
+          } catch {
+            return -1;
+          }
           return entries.filter(entry => entry.severity === LintSeverity.Error).length;
         },
         { timeout: DEFAULT_TIMEOUT },
