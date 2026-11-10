@@ -31,7 +31,7 @@ describe('FieldEncryptionIssueModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    dismiss.mockResolvedValue();
+    dismiss.mockImplementation(async () => {});
     resetFailedFields.mockResolvedValue(2);
     container = document.createElement('div');
     document.body.append(container);
