@@ -28,8 +28,8 @@ const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
 
-const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
-  return async url => {
+const onAuthFailure = (credentialsId?: string | null, repoPath?: string): AuthFailureCallback => {
+  return async (url, auth) => {
     console.log(`[git-event] Auth Failure: ${url}`);
 
     try {
@@ -45,7 +45,7 @@ const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
         return;
       }
 
-      const authFailureCallback = provider.authFailureCallback(credentials);
+      const authFailureCallback = provider.authFailureCallback(credentials, url, auth, repoPath);
 
       return authFailureCallback;
     } catch (error) {
@@ -55,8 +55,27 @@ const onAuthFailure = (credentialsId?: string | null): AuthFailureCallback => {
   };
 };
 
-const onAuthSuccess: AuthSuccessCallback = message => {
-  console.log(`[git-event] Auth Success: ${message}`);
+const onAuthSuccess = (credentialsId?: string | null, repoPath?: string): AuthSuccessCallback => {
+  return async (url, auth) => {
+    console.log(`[git-event] Auth Success: ${url}`);
+
+    if (!credentialsId) {
+      return;
+    }
+
+    try {
+      const credentials = await services.gitCredentials.getById(credentialsId);
+      if (!credentials || !isGitCredentialsV2(credentials)) {
+        return;
+      }
+
+      const provider = gitRemoteProviderRegistry.get(credentials.provider);
+      await provider?.authSuccessCallback?.(credentials, url, auth, repoPath);
+    } catch (error) {
+      // Never fail a git operation that already authenticated successfully.
+      console.warn('[git-event] Auth success callback failed', error);
+    }
+  };
 };
 
 const onAuth =
@@ -142,8 +161,8 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string, repoPa
 export const gitCallbacks = (credentialsId?: string | null, repoPath?: string) => {
   return {
     onMessage,
-    onAuthFailure: onAuthFailure(credentialsId),
-    onAuthSuccess,
+    onAuthFailure: onAuthFailure(credentialsId, repoPath),
+    onAuthSuccess: onAuthSuccess(credentialsId, repoPath),
     onAuth: onAuth(credentialsId, repoPath),
   };
 };
