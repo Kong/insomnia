@@ -47,8 +47,10 @@ export function init(response?: MaybeResponse) {
         return response.elapsedTime || 0;
       },
 
-      getBody() {
-        return services.helpers.getResponseBodyBuffer(response);
+      getBody(): Promise<Buffer | string> {
+        return services.helpers
+          .getResponseBodyBuffer(response)
+          .then(result => (typeof result === 'string' ? result : Buffer.from(result)));
       },
 
       getBodyStream() {
@@ -77,15 +79,19 @@ export function init(response?: MaybeResponse) {
         return getResponseBodyStream(response);
       },
 
-      setBody(body: Buffer) {
+      setBody(body: Buffer | Uint8Array | string) {
         // Should never happen but just in case it does...
         if (!response.bodyPath) {
           throw new Error('Could not set body without existing body path');
         }
 
+        if (typeof body !== 'string' && !ArrayBuffer.isView(body)) {
+          throw new TypeError('response.setBody expects a Buffer, Uint8Array, or string');
+        }
+
         const fs = require('node:fs');
         fs.writeFileSync(response.bodyPath, body);
-        response.bytesContent = body.length;
+        response.bytesContent = Buffer.byteLength(body);
       },
 
       getHeader(name: string): string | string[] | null {

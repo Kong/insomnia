@@ -1,7 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
+
+const RESPONSE_BODY_PLUGIN = 'insomnia-plugin-graphql-response-body';
 
 test('can render schema and send GraphQL requests', async ({ app, page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
@@ -148,6 +153,51 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.locator('pre[role="presentation"]:has-text("bearer")').click();
   await page.locator('.app').press('Enter');
   await page.locator('text=Prettify GraphQL').click();
+  await page.click('[data-testid="request-pane"] >> text=Send');
+  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+  await expect.soft(statusTag).toContainText('200 OK');
+
+  const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
+    has: page.locator('.CodeMirror-activeline'),
+  });
+  await expect.soft(responseBody).toContainText('"bearer": "Gandalf"');
+});
+
+test('renders the GraphQL response as text when a response-hook plugin reads the body', async ({
+  app,
+  page,
+  dataPath,
+  insomnia,
+}) => {
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+  const text = await loadFixture('graphql.yaml');
+  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+  await page.getByLabel('Import').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await insomnia.navigationSidebar.clickRequestOrFolder('GraphQL request');
+  await page.getByRole('tab', { name: 'Body' }).click();
+  await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
+
+  const pluginDir = path.join(dataPath, 'plugins', RESPONSE_BODY_PLUGIN);
+  fs.mkdirSync(pluginDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(pluginDir, 'package.json'),
+    JSON.stringify({ name: RESPONSE_BODY_PLUGIN, version: '1.0.0', main: 'index.js', insomnia: {} }),
+  );
+  fs.writeFileSync(
+    path.join(pluginDir, 'index.js'),
+    `module.exports.responseHooks = [async context => {
+       const body = await context.response.getBody();
+       context.response.setBody(Buffer.from(body.toString('utf8')));
+     }];`,
+  );
+  await page.evaluate(() => (window as any).main.plugins.reloadPlugins());
+  await page.getByText('Plugin system updated').waitFor({ state: 'hidden', timeout: 20_000 });
+
   await page.click('[data-testid="request-pane"] >> text=Send');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
