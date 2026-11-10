@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
+import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
@@ -90,4 +91,33 @@ test("Verify OpenAPI Example Selection Prefers dataValue Skips serializedValue A
     ["state", "open"],
     ["tag", "red"],
   ]);
+});
+
+test("Verify Invalid OpenAPI 3.2 querystring Parameters Still Import Without Crashing", async ({
+  user,
+}) => {
+  const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await importFlow.importFile(
+    project,
+    path.join(import.meta.dirname, "invalid-querystring.yaml"),
+  );
+  const twice = await httpRequestFlow.get("Two querystring parameters");
+  const withSchema = await httpRequestFlow.get(
+    "Querystring with schema and style",
+  );
+  const mixed = await httpRequestFlow.get("Querystring together with query");
+
+  expect([twice?.method, withSchema?.method, mixed?.method]).toEqual([
+    HttpMethod.Get,
+    HttpMethod.Get,
+    HttpMethod.Get,
+  ]);
+  expect(twice?.params?.map(({ name }) => name)).toEqual(["a", "b"]);
+  expect(withSchema?.params).toEqual([]);
+  expect(mixed?.params?.map(({ name }) => name).sort()).toEqual(["a", "limit"]);
 });
