@@ -630,7 +630,7 @@ export const SpecView = ({
 
   const specPaneToolbar = apiSpec?.contents ? (
     <div className="flex h-10 shrink-0 items-center gap-2 overflow-hidden border-b border-solid border-(--hl-md) px-(--padding-sm)">
-      <span className="truncate text-sm text-(--hl) italic">
+      <span data-testid="spec-openapi-version" className="truncate text-sm text-(--hl) italic">
         {parsedSpec?.openapi ? `OpenAPI ${parsedSpec.openapi}` : ''}
       </span>
       <span className="flex-1" />
@@ -1136,6 +1136,7 @@ export const SpecView = ({
                             ({ method, jumpTo }) => (
                               <Button
                                 key={jumpTo.join('.')}
+                                data-testid={`spec-outline-webhook-method-${method.toUpperCase()}`}
                                 onPress={() => navigateToPath(jumpTo)}
                                 className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                               >

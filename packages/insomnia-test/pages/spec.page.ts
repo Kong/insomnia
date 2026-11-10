@@ -11,16 +11,10 @@ import { ProjectType } from "@package/enums/project-types";
 import { RulesetType } from "@package/enums/ruleset-type";
 import type { SpecFormat } from "@package/enums/spec-format";
 import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { ACTION_TIMEOUT, DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
-import type {
-  LintEntry,
-  PathItem} from "@package/models/collection";
-import {
-  Info,
-  License,
-  Specification,
-} from "@package/models/collection";
+import type { LintEntry, PathItem } from "@package/models/collection";
+import { Info, License, Specification } from "@package/models/collection";
 import { expect } from "@playwright/test";
 import type { Locator } from "playwright-core";
 
@@ -37,6 +31,20 @@ const METHOD_LABELS: Record<string, HttpMethod> = {
   OPTIONS: HttpMethod.Options,
 };
 
+/** One method badge in the spec outline: the method (from the badge's
+ * test id, e.g. `QUERY`) and the label it shows (e.g. `QRY`). */
+export interface OutlineMethodBadge {
+  method: string;
+  label: string;
+}
+
+/** One row of the outline's Webhooks section: the webhook name and the
+ * label of each method badge on the row. */
+export interface WebhookEntry {
+  name: string;
+  methods: string[];
+}
+
 export type OutlineSection =
   | "info"
   | "servers"
@@ -48,11 +56,17 @@ export type OutlineSection =
   | "schemas"
   | "securitySchemes";
 
-const OUTLINE_SECTIONS: Record<OutlineSection, { label: string; prefix: string }> = {
+const OUTLINE_SECTIONS: Record<
+  OutlineSection,
+  { label: string; prefix: string }
+> = {
   info: { label: "Info", prefix: "info." },
   servers: { label: "Servers", prefix: "servers." },
   paths: { label: "Paths", prefix: "paths." },
-  requestBodies: { label: "Request bodies", prefix: "components.requestBodies." },
+  requestBodies: {
+    label: "Request bodies",
+    prefix: "components.requestBodies.",
+  },
   responses: { label: "Responses", prefix: "components.responses." },
   parameters: { label: "Parameters", prefix: "components.parameters." },
   headers: { label: "Headers", prefix: "components.headers." },
@@ -72,6 +86,9 @@ export class SpecPage extends BasePage {
   // standalone Document workspace's UI lives in this same view).
   private readonly DEFAULT_RULESET_LABEL = "Default OAS Ruleset";
   private readonly FORMAT_BUTTON = 'button[aria-label="Spec format"]';
+  private readonly GENERATE_BUTTON = 'button[aria-label="Generate"]';
+  private readonly GENERATE_REQUESTS_ITEM =
+    '[aria-label="Generate menu"] [role^="menuitem"][aria-label="Requests"]';
   private readonly LINT_ENTRY_ROW = "div[aria-expanded]";
   private readonly LINT_PANEL = '[data-testid="lint-panel"]';
   private readonly LINT_PANEL_TOGGLE = '[data-testid="lint-panel-toggle"]';
@@ -86,6 +103,7 @@ export class SpecPage extends BasePage {
   private readonly SPEC_EDITOR = '[data-testid="CodeEditor"] .CodeMirror';
   private readonly TEST_RESULTS = '[aria-label="Test results"]';
   private readonly TEST_SUITES_LIST = '[aria-label="Test Suites"]';
+  private readonly WEBHOOK_ROWS = '[aria-label="Webhooks"] [role="row"]';
   private readonly UNIT_TESTS_LIST = '[aria-label="Unit tests"]';
   private readonly UPLOAD_RULESET_BUTTON =
     'button[aria-label="Upload custom ruleset"]';
@@ -183,7 +201,9 @@ export class SpecPage extends BasePage {
    * inside a poll).
    */
   async getLintEntries(): Promise<LintEntry[]> {
-    const rows = this.page.locator(this.LINT_PANEL).locator(this.LINT_ENTRY_ROW);
+    const rows = this.page
+      .locator(this.LINT_PANEL)
+      .locator(this.LINT_ENTRY_ROW);
     const rowCount = await rows.count();
     const entries: LintEntry[] = [];
 
@@ -207,7 +227,9 @@ export class SpecPage extends BasePage {
    * panel, without expanding any entry.
    */
   async getLintEntryCodes(): Promise<string[]> {
-    const rows = this.page.locator(this.LINT_PANEL).locator(this.LINT_ENTRY_ROW);
+    const rows = this.page
+      .locator(this.LINT_PANEL)
+      .locator(this.LINT_ENTRY_ROW);
     const rowCount = await rows.count();
     const codes: string[] = [];
 
@@ -251,7 +273,9 @@ export class SpecPage extends BasePage {
     // text rather than for the element.
     const label = this.page.getByTestId("spec-openapi-version");
     try {
-      await expect(label).toHaveText(/OpenAPI \d/, { timeout: DEFAULT_TIMEOUT });
+      await expect(label).toHaveText(/OpenAPI \d/, {
+        timeout: DEFAULT_TIMEOUT,
+      });
     } catch {
       return "";
     }
@@ -311,21 +335,26 @@ export class SpecPage extends BasePage {
       );
 
     const pathsButton = this.page.getByRole("button", { name: "Paths" });
-    await this.expandOutlineSection(pathsButton, '[data-key^="paths."]');
-    const pathRows = await this.page
-      .locator('[role="row"][data-key^="paths."]')
-      .evaluateAll((rows) =>
-        rows.map((row) => ({
-          path: row.dataset.key!.replace(/^paths\./, ""),
-          methods: Array.from(
-            row.querySelectorAll<HTMLElement>(
-              '[data-testid^="spec-outline-method-"]',
-            ),
-          ).map((button) =>
-            button.dataset.testid!.replace("spec-outline-method-", ""),
-          ),
-        })),
-      );
+    const hasPaths = (await pathsButton.count()) > 0;
+    if (hasPaths) {
+      await this.expandOutlineSection(pathsButton, '[data-key^="paths."]');
+    }
+    const pathRows = hasPaths
+      ? await this.page
+          .locator('[role="row"][data-key^="paths."]')
+          .evaluateAll((rows) =>
+            rows.map((row) => ({
+              path: row.dataset.key!.replace(/^paths\./, ""),
+              methods: Array.from(
+                row.querySelectorAll<HTMLElement>(
+                  '[data-testid^="spec-outline-method-"]',
+                ),
+              ).map((button) =>
+                button.dataset.testid!.replace("spec-outline-method-", ""),
+              ),
+            })),
+          )
+      : [];
 
     const info = new Info(
       infoData.title,
@@ -397,8 +426,10 @@ export class SpecPage extends BasePage {
    * Reads every test name currently listed under the open suite.
    */
   async getUnitTestNames(): Promise<string[]> {
-    return new TableComponent(this.page, this.page.locator(this.UNIT_TESTS_LIST))
-      .rows.allInnerTexts();
+    return new TableComponent(
+      this.page,
+      this.page.locator(this.UNIT_TESTS_LIST),
+    ).rows.allInnerTexts();
   }
 
   /**
@@ -441,9 +472,7 @@ export class SpecPage extends BasePage {
     }
     // Without a workspace id there's no way to tell which is expected, so
     // require the same outcome on consecutive reads before trusting it.
-    await this.waitForStableValue(() =>
-      info.or(emptyState).isVisible(),
-    );
+    await this.waitForStableValue(() => info.or(emptyState).isVisible());
   }
 
   /**
@@ -456,7 +485,9 @@ export class SpecPage extends BasePage {
    */
   async openTestsTab(): Promise<void> {
     await this.page.getByTestId("api-collection-tab-tests").click();
-    await expect(this.page.getByRole("button", { name: "New test suite" })).toBeVisible({
+    await expect(
+      this.page.getByRole("button", { name: "New test suite" }),
+    ).toBeVisible({
       timeout: DEFAULT_TIMEOUT,
     });
   }
@@ -576,11 +607,13 @@ export class SpecPage extends BasePage {
   async togglePreview(): Promise<boolean> {
     const wasOpen = await this.isPreviewOpen();
     await this.page.locator(this.PREVIEW_TOGGLE).click();
-    await (wasOpen ? expect(this.page.locator(this.PANE_TWO)).toBeHidden({
-        timeout: DEFAULT_TIMEOUT,
-      }) : expect(this.page.locator(this.PANE_TWO)).toBeVisible({
-        timeout: DEFAULT_TIMEOUT,
-      }));
+    await (wasOpen
+      ? expect(this.page.locator(this.PANE_TWO)).toBeHidden({
+          timeout: DEFAULT_TIMEOUT,
+        })
+      : expect(this.page.locator(this.PANE_TWO)).toBeVisible({
+          timeout: DEFAULT_TIMEOUT,
+        }));
     return !wasOpen;
   }
 
@@ -611,7 +644,10 @@ export class SpecPage extends BasePage {
   async getOutlineEntryKeys(section: OutlineSection): Promise<string[]> {
     const prefix = OUTLINE_SECTIONS[section].prefix;
     await this.expandOutlineSection(
-      this.page.getByRole("button", { name: OUTLINE_SECTIONS[section].label, exact: true }),
+      this.page.getByRole("button", {
+        name: OUTLINE_SECTIONS[section].label,
+        exact: true,
+      }),
       `[data-key^="${prefix}"]`,
     );
     return this.page
@@ -646,6 +682,114 @@ export class SpecPage extends BasePage {
       const { line } = cm.getCursor("from");
       return { line: line + 1, text: String(cm.getLine(line)).trim() };
     });
+  }
+
+  /**
+   * Reads the spec editor's full text, exactly as it is in the editor.
+   */
+  async getSpecText(): Promise<string> {
+    return this.readCodeMirror(this.page.locator(this.SPEC_EDITOR));
+  }
+
+  /**
+   * Reads the method badges on one Paths outline row, in row order — each
+   * badge's method (from its test id) and the label it displays.
+   */
+  async getPathMethodBadges(path: string): Promise<OutlineMethodBadge[]> {
+    await this.getOutlineEntryKeys("paths");
+    return this.page
+      .locator(`[role="row"][data-key="paths.${path}"]`)
+      .locator('[data-testid^="spec-outline-method-"]')
+      .evaluateAll((badges) =>
+        badges.map((badge) => ({
+          method: (badge as HTMLElement).dataset.testid!.replace(
+            "spec-outline-method-",
+            "",
+          ),
+          label: (badge.textContent ?? "").trim(),
+        })),
+      );
+  }
+
+  /**
+   * Clicks one method badge on a Paths outline row, which makes the editor
+   * select the matching operation. Takes the method as a string because a
+   * custom method (e.g. `PURGE`) is not an `HttpMethod`.
+   */
+  async clickPathMethodBadge(path: string, method: string): Promise<void> {
+    await this.getOutlineEntryKeys("paths");
+    await this.page
+      .locator(`[role="row"][data-key="paths.${path}"]`)
+      .getByTestId(`spec-outline-method-${method}`)
+      .click();
+  }
+
+  /**
+   * Expands the outline's Webhooks section (if collapsed) and reads every
+   * row: its name and the label of each method badge on it.
+   */
+  async getWebhookEntries(): Promise<WebhookEntry[]> {
+    await this.expandOutlineSection(
+      this.page.getByRole("button", { name: "Webhooks", exact: true }),
+      this.WEBHOOK_ROWS,
+    );
+    return this.page.locator(this.WEBHOOK_ROWS).evaluateAll((rows) =>
+      rows.map((row) => ({
+        name: (row as HTMLElement).dataset.key!,
+        methods: Array.from(row.querySelectorAll("button")).map((badge) =>
+          (badge.textContent ?? "").trim(),
+        ),
+      })),
+    );
+  }
+
+  /**
+   * Clicks a webhook's row in the outline, which makes the editor select
+   * that webhook.
+   */
+  async clickWebhookEntry(name: string): Promise<void> {
+    await this.getWebhookEntries();
+    await this.page
+      .locator(`${this.WEBHOOK_ROWS}[data-key="${name}"]`)
+      .locator("span.truncate")
+      .click();
+  }
+
+  /**
+   * Clicks one method badge on a webhook's outline row, which makes the
+   * editor select that operation.
+   */
+  async clickWebhookMethodBadge(name: string, method: string): Promise<void> {
+    await this.getWebhookEntries();
+    await this.page
+      .locator(`${this.WEBHOOK_ROWS}[data-key="${name}"]`)
+      .getByTestId(`spec-outline-webhook-method-${method}`)
+      .click();
+  }
+
+  /**
+   * Opens the toolbar's Generate menu, reads whether its Requests item is
+   * enabled, then closes the menu again without choosing anything.
+   */
+  async isGenerateRequestsEnabled(): Promise<boolean> {
+    await this.page.locator(this.GENERATE_BUTTON).click();
+    const item = this.page.locator(this.GENERATE_REQUESTS_ITEM);
+    await expect(item).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    const isDisabled = (await item.getAttribute("aria-disabled")) === "true";
+    await this.page.keyboard.press("Escape");
+    await expect(item).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    return !isDisabled;
+  }
+
+  /**
+   * Chooses Generate -> Requests from the toolbar and waits for the app to
+   * redirect to the collection's Debug view, where the generated requests
+   * are listed.
+   */
+  async clickGenerateRequests(): Promise<void> {
+    await this.page.locator(this.GENERATE_BUTTON).click();
+    await this.page.locator(this.GENERATE_REQUESTS_ITEM).click();
+    await expect(this.page).toHaveURL(/\/debug/, { timeout: ACTION_TIMEOUT });
   }
 
   private async expandOutlineSection(

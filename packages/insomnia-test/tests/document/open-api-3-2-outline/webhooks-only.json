@@ -1,0 +1,36 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Pet events",
+    "version": "1.0.0"
+  },
+  "webhooks": {
+    "pet.created": {
+      "post": {
+        "summary": "Pet created",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "pet.updated": {
+      "$ref": "#/components/pathItems/PetEvent"
+    }
+  },
+  "components": {
+    "pathItems": {
+      "PetEvent": {
+        "post": {
+          "summary": "Pet updated",
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}
