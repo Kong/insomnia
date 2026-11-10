@@ -1,0 +1,39 @@
+openapi: 3.2.0
+info:
+  title: Keywords
+  version: 1.0.0
+  summary: 3.2 keyword smoke test
+tags:
+  - { name: pets, summary: Pets, kind: nav }
+  - { name: cats, parent: pets, kind: nav }
+paths:
+  /pets:
+    post:
+      summary: Create an animal
+      tags: [cats]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Animal" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Animal:
+      oneOf:
+        - { $ref: "#/components/schemas/Cat" }
+        - { $ref: "#/components/schemas/Dog" }
+      discriminator:
+        propertyName: kind
+        defaultMapping: "#/components/schemas/Cat"
+    Cat:
+      type: object
+      properties:
+        kind: { type: string }
+        name:
+          type: string
+          xml: { nodeType: element }
+    Dog:
+      type: object
+      properties:
+        kind: { type: string }

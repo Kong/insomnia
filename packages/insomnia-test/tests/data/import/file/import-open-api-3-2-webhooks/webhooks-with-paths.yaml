@@ -1,0 +1,36 @@
+openapi: 3.1.0
+info: { title: Pet events, version: 1.0.0 }
+security:
+  - apiKey: []
+paths:
+  /pets:
+    get:
+      summary: List pets
+      responses:
+        "200": { description: OK }
+webhooks:
+  pet.created:
+    post:
+      summary: Pet created
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "200": { description: OK }
+  pet.deleted:
+    post:
+      summary: Pet deleted
+      security:
+        - webhookSignature: []
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }
+  securitySchemes:
+    apiKey: { type: apiKey, in: header, name: X-API-Key }
+    webhookSignature: { type: http, scheme: bearer }

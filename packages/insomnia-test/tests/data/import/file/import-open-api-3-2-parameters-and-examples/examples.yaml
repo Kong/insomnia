@@ -1,0 +1,44 @@
+openapi: 3.2.0
+info: { title: Examples, version: 1.0.0 }
+paths:
+  /pets:
+    post:
+      summary: Create with examples
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+            examples:
+              wire:
+                serializedValue: '{"name":"Wire"}'
+              remote:
+                externalValue: https://example.com/pet.json
+              current:
+                value: { name: Legacy }
+                dataValue: { name: Rex, status: available }
+      responses:
+        "200": { description: OK }
+  /flags:
+    get:
+      summary: Falsy and enum values
+      parameters:
+        - { name: active, in: query, schema: { type: boolean, example: false } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+        - { name: nick, in: query, schema: { type: string, default: "" } }
+        - { name: kind, in: query, schema: { const: fixed } }
+        - { name: state, in: query, schema: { enum: [open, closed] } }
+        - name: tag
+          in: query
+          schema: { type: string }
+          examples:
+            wire: { serializedValue: "tag=green" }
+            current: { value: blue, dataValue: red }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [available, sold] }

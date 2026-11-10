@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info: { title: Petstore Three Zero, version: 1.0.0 }
+paths:
+  /pets:
+    post:
+      summary: Add a pet
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [available, pending, sold] }
