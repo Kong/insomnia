@@ -1,0 +1,130 @@
+{
+  "openapi": "3.2.0",
+  "$self": "https://example.com/specs/petstore.yaml",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0",
+    "summary": "Lint fixture for OpenAPI 3.2",
+    "description": "Lint fixture",
+    "contact": {
+      "name": "QA",
+      "email": "qa@example.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "pets",
+      "kind": "nav"
+    },
+    {
+      "name": "cats",
+      "parent": "pets",
+      "summary": "Cats"
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "query": {
+        "operationId": "searchPets",
+        "tags": [
+          "pets"
+        ],
+        "parameters": [
+          {
+            "name": "qs",
+            "in": "querystring",
+            "content": {
+              "application/x-www-form-urlencoded": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "sample": {
+                    "dataValue": {
+                      "name": "Rex"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Operation description"
+      },
+      "additionalOperations": {
+        "PURGE": {
+          "operationId": "purgePets",
+          "responses": {
+            "204": {
+              "description": "No Content"
+            }
+          },
+          "description": "Operation description",
+          "tags": [
+            "pets"
+          ]
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "streamEvents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/event-stream": {
+                "itemSchema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Operation description",
+        "tags": [
+          "pets"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ]
+}

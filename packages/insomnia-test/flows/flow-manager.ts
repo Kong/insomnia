@@ -2,6 +2,7 @@ import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
 import { EnvironmentFlow } from "./environment.flow";
+import { EventStreamRequestFlow } from "./event-stream-request.flow";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
@@ -22,6 +23,7 @@ type FlowDeps = RequestFlows & {
 
 const flowRegistry = {
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
+  eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),

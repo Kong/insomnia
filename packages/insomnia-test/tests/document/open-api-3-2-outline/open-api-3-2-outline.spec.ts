@@ -103,3 +103,40 @@ test("Verify The Webhooks Sidebar Section Lists Dotted Names And Path Item $ref 
   expect(rowSelection.text).toContain('"pet.created"');
   expect(badgeSelection.text).toContain('"post"');
 });
+
+test("Verify Clicking A Paths Row Whose Path Contains A Dot Selects Its Line In The Editor", async ({
+  user,
+}) => {
+  test.fail();
+
+  const { workspaceFlow } = user.flowManager;
+  const { specPage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await workspaceFlow.createCollection(
+    project,
+    new Collection(
+      faker.string.alphanumeric(10),
+      JSON.stringify(
+        {
+          openapi: "3.2.0",
+          info: { title: faker.commerce.productName(), version: "1.0.0" },
+          paths: {
+            "/v1.0/pets": {
+              get: { responses: { "200": { description: "OK" } } },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    ),
+  );
+  await specPage.clickOutlineEntry("paths", "/v1.0/pets");
+  const selection = await specPage.getEditorSelection();
+
+  expect(selection.text).toContain("/v1.0/pets");
+});
