@@ -1,0 +1,76 @@
+openapi: 3.2.0
+info: { title: Sequential media types, version: 1.0.0 }
+paths:
+  /logs/jsonl:
+    get:
+      summary: JSONL log
+      responses:
+        "200":
+          description: OK
+          content:
+            application/jsonl:
+              itemSchema:
+                type: object
+                properties:
+                  id: { type: string }
+  /logs/json-seq:
+    get:
+      summary: JSON sequence log
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json-seq:
+              itemSchema:
+                type: object
+                properties:
+                  id: { type: string }
+  /logs/multipart:
+    get:
+      summary: Multipart mixed log
+      responses:
+        "200":
+          description: OK
+          content:
+            multipart/mixed:
+              itemSchema:
+                type: object
+                properties:
+                  id: { type: string }
+  /logs/ndjson:
+    get:
+      summary: NDJSON log
+      responses:
+        "200":
+          description: OK
+          content:
+            application/x-ndjson:
+              itemSchema:
+                type: object
+                properties:
+                  id: { type: string }
+  /events/any:
+    get:
+      summary: Wildcard event stream
+      responses:
+        "2XX":
+          description: OK
+          content:
+            text/event-stream:
+              itemSchema:
+                type: object
+  /events/with-accept:
+    get:
+      summary: Event stream with existing Accept
+      parameters:
+        - name: Accept
+          in: header
+          schema:
+            { type: string, default: "text/event-stream, application/json" }
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              itemSchema:
+                type: object
