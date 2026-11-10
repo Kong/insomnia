@@ -1,0 +1,22 @@
+swagger: "2.0"
+info: { title: Petstore Swagger, version: 1.0.0 }
+host: api.example.com
+basePath: /v1
+schemes: [https]
+paths:
+  /pets:
+    post:
+      summary: Add a swagger pet
+      consumes: [application/json]
+      parameters:
+        - in: body
+          name: body
+          schema: { $ref: "#/definitions/Pet" }
+      responses:
+        "200": { description: OK }
+definitions:
+  Pet:
+    type: object
+    properties:
+      name: { type: string }
+      parent: { $ref: "#/definitions/Pet" }
