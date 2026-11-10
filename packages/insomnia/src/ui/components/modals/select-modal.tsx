@@ -65,6 +65,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
           }}
         >
           <select
+            data-testid="select-modal-select"
             autoFocus
             onChange={event => setState(state => ({ ...state, value: event.target.value }))}
             value={value ?? undefined}

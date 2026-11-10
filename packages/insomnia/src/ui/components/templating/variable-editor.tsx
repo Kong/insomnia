@@ -106,6 +106,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue, onOpenSource
         <div className="form-control form-control--outlined">
           <input
             type="text"
+            data-testid="variable-custom-template"
             defaultValue={selected}
             onChange={event => {
               setSelected(event.target.value);

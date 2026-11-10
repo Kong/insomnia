@@ -158,13 +158,15 @@ export const test = baseTest.extend<{
 
       // Use a different name rather than the default trace.zip to avoid overwriting the trace.
       // Refer: https://github.com/microsoft/playwright/issues/35005
+      // Keep the title out of the file name: it can contain characters such as ":" that
+      // actions/upload-artifact rejects. outputDir is already unique per test and retry.
       // Discard the trace if not needed
       // The app may have been relaunched during the test (e.g. insomnia.relaunch()), which closes
       // the original Electron process and invalidates appContext. Guard against that here.
       try {
         await (isTrace
           ? appContext.tracing.stop({
-              path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
+              path: path.join(testInfo.outputDir, `trace-${testInfo.status}.zip`),
             })
           : appContext.tracing.stop());
       } catch {

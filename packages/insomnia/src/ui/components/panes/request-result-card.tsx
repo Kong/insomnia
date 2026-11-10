@@ -57,13 +57,14 @@ export const RequestResultCard: FC<Props> = ({
     <div data-testid={testId} className="m-3 rounded-sm border border-solid border-(--hl-md) p-3">
       <div className="flex items-start gap-2">
         <div
+          data-testid="runner-result-status"
           className={`inline-block w-22 shrink-0 rounded-sm px-2 py-[2px] text-center text-xs font-semibold text-white ${tag.className}`}
         >
           {tag.label}
         </div>
-        <div className="min-w-0 flex-1">
+        <div data-testid="runner-result-detail" className="min-w-0 flex-1">
           <div>
-            <span>{item.requestName}</span>
+            <span data-testid="runner-result-name">{item.requestName}</span>
             <span className="text-sm text-neutral-400">
               {' - '}
               {item.requestUrl.includes('{{') ? (
@@ -78,7 +79,11 @@ export const RequestResultCard: FC<Props> = ({
               </span>
             )}
           </div>
-          {showInlineStats && <div className="text-sm text-neutral-400">{stats}</div>}
+          {showInlineStats && (
+            <div data-testid="runner-result-stats" className="text-sm text-neutral-400">
+              {stats}
+            </div>
+          )}
           {showError && <div className="text-sm text-red-500">{errorMessage}</div>}
         </div>
         {showSkip && (

@@ -555,6 +555,8 @@ function SidebarDropIndicator({
     >
       {folderName ? (
         <span
+          data-testid="drop-indicator-folder-name"
+          data-valid={isValid}
           className={`absolute -top-2.5 left-0 z-10 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none whitespace-nowrap ${
             isValid
               ? 'bg-(--color-surprise) text-(--color-font-surprise)'
@@ -566,6 +568,8 @@ function SidebarDropIndicator({
         </span>
       ) : (
         <span
+          data-testid="drop-indicator-dot"
+          data-valid={isValid}
           className={`absolute -top-0.75 -left-0.75 block h-1.75 w-1.75 rounded-full ${
             isValid ? 'bg-(--color-surprise)' : 'bg-(--color-danger)'
           }`}

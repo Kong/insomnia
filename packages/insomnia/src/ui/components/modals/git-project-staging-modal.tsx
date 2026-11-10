@@ -1894,6 +1894,7 @@ const OriginalGitProjectStagingModal: FC<
                         <span className="font-light">{previewDiffItem.filepath}</span>
                         {showManualCommitForm && (
                           <BasicButton
+                            data-testid={previewDiffItem.staged ? 'unstage-this-file' : 'stage-this-file'}
                             onPress={() => {
                               previewDiffItem.staged
                                 ? unstageChanges([previewDiffItem.filepath])
@@ -1906,12 +1907,14 @@ const OriginalGitProjectStagingModal: FC<
                         <div className="ml-auto flex items-center gap-1 rounded-xs bg-(--hl-xs) p-0.5">
                           <Button
                             className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'text' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            data-selected={diffViewMode === 'text'}
                             onPress={() => setDiffViewMode('text')}
                           >
                             Text
                           </Button>
                           <Button
                             className={`rounded-xs px-2 py-1 text-xs font-medium transition-colors ${diffViewMode === 'visual' ? 'bg-(--hl-sm) text-(--color-font)' : 'text-(--hl)'}`}
+                            data-selected={diffViewMode === 'visual'}
                             onPress={() => setDiffViewMode('visual')}
                           >
                             Visual (Beta)

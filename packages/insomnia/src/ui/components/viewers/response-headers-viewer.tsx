@@ -34,9 +34,11 @@ export const ResponseHeadersViewer: FC<Props> = ({ headers, onCopyAll }) => {
         </thead>
         <tbody>
           {headers.map(header => (
-            <tr className="selectable" key={headerAsString(header)}>
-              <td className="force-wrap w-1/2">{header.name}</td>
-              <td className="force-wrap w-1/2">
+            <tr data-testid="response-header-row" className="selectable" key={headerAsString(header)}>
+              <td data-testid="response-header-name" className="force-wrap w-1/2">
+                {header.name}
+              </td>
+              <td data-testid="response-header-value" className="force-wrap w-1/2">
                 {validateURL(header) ? <Link href={header.value}>{header.value}</Link> : header.value}
               </td>
             </tr>
