@@ -46,10 +46,12 @@ vi.mock('../prompt-bridge', () => ({ requestPromptFromRenderer: vi.fn() }));
 vi.mock('../secure-read-file', () => ({ secureReadFile: vi.fn() }));
 
 import { parsePluginPermissions } from '~/common/plugins/permissions';
+import { getRegisteredUserPluginExportDiscovery } from '~/common/templating/user-plugin-export-discovery';
 
 import { requestPromptFromRenderer } from '../prompt-bridge';
 import {
   _testOnlyResetMigrationWarnings,
+  discoverUserPluginExportsForLoader,
   getPluginEntrySource,
   maybeWarnMissingManifest,
   readPluginModuleMap,
@@ -278,5 +280,11 @@ describe('resolveDbByKey — app.prompt', () => {
       defaultValue: 'cached value',
       inputType: 'password',
     });
+  });
+});
+
+describe('user plugin export discovery registration', () => {
+  it('registers the sandbox-backed discovery with the plugin loader', () => {
+    expect(getRegisteredUserPluginExportDiscovery()).toBe(discoverUserPluginExportsForLoader);
   });
 });
