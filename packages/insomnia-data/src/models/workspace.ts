@@ -3,6 +3,7 @@ import { z } from 'zod/v4';
 
 import { type BaseModel, createModelSchema } from './base-types';
 import { AuthenticationSchema, HeadersSchema } from './request';
+import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -100,3 +101,14 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
     }
   }
 };
+
+export function rewriteReferences(_workspace: Workspace, idMapping: Map<string, string>): Workspace {
+  return {
+    ..._workspace,
+    ...replaceIdsInFields(
+      _workspace,
+      ['authentication', 'headers', 'preRequestScript', 'afterResponseScript'],
+      idMapping,
+    ),
+  };
+}

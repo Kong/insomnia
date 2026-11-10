@@ -1,15 +1,30 @@
 {
   "collection": {
     "_id": "wrk_c5d5b5167b9049af8b53c5b6f076349b",
-    "afterResponseScript": "",
-    "authentication": {},
+    "afterResponseScript": "console.log('Collection after response script executed');",
+    "authentication": {
+      "type": "basic",
+      "username": "<Redacted by Insomnia>",
+      "password": "<Redacted by Insomnia>",
+      "disabled": false,
+      "useISO88591": "<Redacted by Insomnia>"
+    },
     "created": 1762508027498,
     "modified": 1762508027498,
     "isPrivate": false,
     "description": "",
-    "headers": [],
+    "headers": [
+      {
+        "name": "Authorization",
+        "value": "<Redacted by Insomnia>"
+      },
+      {
+        "name": "Auth",
+        "value": "<Redacted by Insomnia>"
+      }
+    ],
     "metaSortKey": 0,
-    "preRequestScript": "",
+    "preRequestScript": "console.log('Collection pre request script executed');",
     "type": "Workspace",
     "name": "CLI Run Collection Report Generation",
     "parentId": "",

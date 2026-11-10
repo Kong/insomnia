@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import type { ConsolaInstance } from 'consola';
-import { pick } from 'es-toolkit';
+import { omit, pick } from 'es-toolkit';
 import type {
   Environment,
   Request,
@@ -140,7 +140,7 @@ export class RunCollectionResultReport {
   }
   private getSafeData() {
     return {
-      collection: this.collection,
+      collection: this.collection ? pick(this.collection, insensitiveBaseModelKeys) : null,
       environment: this.environment ? pick(this.environment, [...insensitiveBaseModelKeys, 'isPrivate']) : null,
       proxy: this.proxy,
       executions: this.executions.map(exec => ({
@@ -241,7 +241,13 @@ export class RunCollectionResultReport {
     };
 
     return {
-      collection: this.collection,
+      collection: this.collection
+        ? {
+            ...this.collection,
+            headers: redactRequestHeaders(this.collection.headers),
+            authentication: redactAuth(this.collection.authentication),
+          }
+        : null,
       environment: redactEnvironment(this.environment),
       proxy: this.proxy,
       executions: this.executions.map(exec => ({

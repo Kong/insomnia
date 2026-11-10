@@ -1,0 +1,16 @@
+type: collection.insomnia.rest/5.0
+name: With Collection Props
+meta:
+  id: wrk_imported
+schema_version: "5.1"
+collection: []
+headers:
+  - name: X-Collection
+    value: shared
+scripts:
+  preRequest: console.log("before");
+  afterResponse: console.log("after");
+authentication:
+  type: basic
+  username: user
+  password: pass
