@@ -80,3 +80,29 @@ test("Verify A Webhooks-Only OpenAPI Document Without Paths Imports Its Webhook 
   });
   expect(JSON.parse(created!.body!.text!)).toEqual({ name: "string" });
 });
+
+test("Verify A Tag Named Webhooks Imports Alongside The Webhooks Folder As Two Same-Named Folders", async ({
+  user,
+}) => {
+  const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
+  const { workspacePage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await importFlow.importFile(
+    project,
+    path.join(import.meta.dirname, "webhooks-tag-collision.yaml"),
+  );
+  const folders = (await workspacePage.getNodes()).filter(
+    (node) => node.type === TreeNodeType.Folder && node.name === "Webhooks",
+  );
+  const created = await httpRequestFlow.get("Pet created");
+
+  expect(folders).toHaveLength(2);
+  expect(created).toMatchObject({
+    method: HttpMethod.Post,
+    url: "{{ _.webhook_url }}",
+  });
+});

@@ -66,3 +66,74 @@ test("Verify A Structurally Invalid OpenAPI 3.2 Spec Still Reports Real Lint Err
     )
     .toBeGreaterThan(0);
 });
+
+test("Verify An OpenAPI 3.2 Spec With An Example Value Of The Wrong Type Lints Clean", async ({
+  user,
+}) => {
+  const { specFlow, workspaceFlow } = user.flowManager;
+  const { specPage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await workspaceFlow.createCollection(
+    project,
+    new Collection(
+      faker.string.alphanumeric(10),
+      readSpec("mismatched-example-value-3.2.json"),
+    ),
+  );
+  const version = await specFlow.getOpenApiVersion();
+
+  await expect
+    .poll(() => specPage.getLintSummary(), { timeout: DEFAULT_TIMEOUT })
+    .toBe("none");
+  expect(version).toBe("OpenAPI 3.2.0");
+});
+
+test("Verify OpenAPI 3.2 Specs Breaking The querystring And additionalOperations Constraints Report oas3-schema Errors And Disable Generate Requests", async ({
+  user,
+}) => {
+  const { specFlow, workspaceFlow } = user.flowManager;
+  const { specPage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  const fixtures = [
+    "two-querystring-parameters-3.2.json",
+    "querystring-with-query-parameter-3.2.json",
+    "additional-operation-redefines-post-3.2.json",
+  ];
+  const results: {
+    fixture: string;
+    codes: string[];
+    errors: number;
+    generateEnabled: boolean;
+  }[] = [];
+  for (const fixture of fixtures) {
+    await workspaceFlow.createCollection(
+      project,
+      new Collection(faker.string.alphanumeric(10), readSpec(fixture)),
+    );
+    await specPage.expandLintPanel();
+    await expect
+      .poll(() => specPage.getLintEntryCodes(), { timeout: DEFAULT_TIMEOUT })
+      .toContain("oas3-schema");
+    const summary = await specPage.getLintSummary();
+    results.push({
+      fixture,
+      codes: await specPage.getLintEntryCodes(),
+      errors: summary === "none" ? 0 : summary.errors,
+      generateEnabled: await specFlow.isGenerateRequestsEnabled(),
+    });
+  }
+
+  for (const result of results) {
+    expect(result.codes).toContain("oas3-schema");
+    expect(result.errors).toBeGreaterThan(0);
+    expect(result.generateEnabled).toBe(false);
+  }
+});
