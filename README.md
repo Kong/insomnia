@@ -144,7 +144,7 @@ If you are on Windows and have problems, you may need to install [Windows Build 
 
 You can use any editor you'd like, but make sure to have support/plugins for the following tools:
 
-- [ESLint](http://eslint.org/) - For catching syntax problems and common errors
+- [ESLint](https://eslint.org/) - For catching syntax problems and common errors
 - [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) - For React components
 
 </details>
