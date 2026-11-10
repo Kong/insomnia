@@ -38,6 +38,12 @@ export interface OutlineMethodBadge {
   label: string;
 }
 
+/** One operation listed by the Swagger UI docs preview. */
+export interface PreviewOperation {
+  method: string;
+  path: string;
+}
+
 /** One row of the outline's Webhooks section: the webhook name and the
  * label of each method badge on the row. */
 export interface WebhookEntry {
@@ -96,6 +102,7 @@ export class SpecPage extends BasePage {
   private readonly NO_LINT_PROBLEMS = "No lint problems";
   private readonly PANE_ONE = '[data-panel-id="spec-pane-one"]';
   private readonly PANE_TWO = '[data-panel-id="pane-two"]';
+  private readonly PREVIEW_OPERATION = "#swagger-ui .opblock";
   private readonly PREVIEW_TOGGLE = '[data-testid="preview-toggle"]';
   private readonly REMOVE_RULESET_BUTTON =
     'button[aria-label="Remove custom ruleset"]';
@@ -438,6 +445,29 @@ export class SpecPage extends BasePage {
    */
   async isPreviewOpen(): Promise<boolean> {
     return this.page.locator(this.PANE_TWO).isVisible();
+  }
+
+  /**
+   * Opens the docs-preview pane if it is closed, waits for Swagger UI to
+   * render, and reads every listed operation (its method label and path)
+   * in display order.
+   */
+  async getPreviewOperations(): Promise<PreviewOperation[]> {
+    if (!(await this.isPreviewOpen())) {
+      await this.togglePreview();
+    }
+    const blocks = this.page.locator(this.PREVIEW_OPERATION);
+    await expect(blocks.first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return blocks.evaluateAll((elements) =>
+      elements.map((element) => ({
+        method: (
+          element.querySelector(".opblock-summary-method")?.textContent ?? ""
+        ).trim(),
+        path: (
+          element.querySelector(".opblock-summary-path")?.textContent ?? ""
+        ).trim(),
+      })),
+    );
   }
 
   /**

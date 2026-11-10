@@ -1,0 +1,20 @@
+openapi: 3.2.0
+$self: https://self-ref.example.com/specs/petstore.yaml
+info: { title: Self, version: 1.0.0 }
+paths:
+  /local:
+    post:
+      summary: Create with local ref
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [available, sold] }

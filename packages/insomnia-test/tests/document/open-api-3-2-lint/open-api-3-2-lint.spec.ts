@@ -37,6 +37,31 @@ test("Verify A Valid OpenAPI 3.2 Spec Lints Clean With No Errors Or Warnings", a
   expect(version).toBe("OpenAPI 3.2.0");
 });
 
+test("Verify OpenAPI 3.2 Security Schemes With oauth2MetadataUrl, Device Authorization And deprecated Lint Clean", async ({
+  user,
+}) => {
+  const { specFlow, workspaceFlow } = user.flowManager;
+  const { specPage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await workspaceFlow.createCollection(
+    project,
+    new Collection(
+      faker.string.alphanumeric(10),
+      readSpec("security-schemes-3.2.json"),
+    ),
+  );
+  const version = await specFlow.getOpenApiVersion();
+
+  await expect
+    .poll(() => specPage.getLintSummary(), { timeout: DEFAULT_TIMEOUT })
+    .toBe("none");
+  expect(version).toBe("OpenAPI 3.2.0");
+});
+
 test("Verify A Structurally Invalid OpenAPI 3.2 Spec Still Reports Real Lint Errors", async ({
   user,
 }) => {
@@ -105,6 +130,8 @@ test("Verify OpenAPI 3.2 Specs Breaking The querystring And additionalOperations
   const fixtures = [
     "two-querystring-parameters-3.2.json",
     "querystring-with-query-parameter-3.2.json",
+    "querystring-with-schema-3.2.json",
+    "querystring-with-style-3.2.json",
     "additional-operation-redefines-post-3.2.json",
   ];
   const results: {
