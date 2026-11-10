@@ -363,7 +363,7 @@ First launch → Local encryption key auto-generated
 
 ### 5.2 Decryption Failure Handling
 
-Decryption failures are rare with this approach. Temporary safeStorage unavailability is retried with backoff first and never reaches the user. There are two situations in which the user is told, and the application **must not silently fail** in either. Both use one modal (`FieldEncryptionIssueModal`, mounted with the other modals of the main window), which asks the main process for the status once when it is mounted (`fieldEncryption.getStatus`) and shows nothing when there is nothing to tell. It cannot be dismissed without choosing a button.
+Decryption failures are rare with this approach. Temporary safeStorage unavailability is retried with backoff first and never reaches the user. There are two situations in which the user is told, and the application **must not silently fail** in either. Both use one modal (`FieldEncryptionIssueModal`, mounted with the other modals of the main window), which asks the main process for the status once when it is mounted (`fieldEncryption.getStatus`) and shows nothing when there is nothing to tell. The calls (`getStatus`, `resetFailedFields`, `resetKey`, `dismiss`) go through the app's handler-based IPC (`FieldEncryptionIpcHandler`, reached as `fieldEncryption` from `ui/ipc.ts`). Its dispatcher calls any method of a registered handler for the renderer, so the class holds only these four methods; the controller they use is given to it from outside once the database is open (`provideFieldEncryptionController`), and the renderer cannot replace it. It cannot be dismissed without choosing a button.
 
 ```mermaid
 flowchart TD

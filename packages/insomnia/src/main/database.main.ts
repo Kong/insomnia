@@ -5,7 +5,7 @@ import { createNedbDatabase } from 'insomnia-data/node';
 import {
   confirmLocalKeyReset,
   createFieldEncryptionController,
-  registerFieldEncryptionHandlers,
+  provideFieldEncryptionController,
   restartApp,
   setAsideKey,
 } from './ipc/field-encryption';
@@ -29,7 +29,7 @@ export const mainDatabase: IDatabase = createNedbDatabase((nedbDatabase, interna
     );
 
     if (!config.inMemoryOnly) {
-      registerFieldEncryptionHandlers(
+      provideFieldEncryptionController(
         createFieldEncryptionController({
           // No key means the database was opened without encryption
           degraded: !fieldEncryptionKey,

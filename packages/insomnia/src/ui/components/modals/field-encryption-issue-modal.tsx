@@ -3,6 +3,8 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useRevalidator } from 'react-router';
 
 import type { FieldEncryptionFailure, FieldEncryptionStatus } from '~/main/ipc/field-encryption';
+import { showError } from '~/ui/components/modals';
+import { fieldEncryption } from '~/ui/ipc';
 
 import { Icon } from '../icon';
 
@@ -118,7 +120,7 @@ const DecryptionFailedDialog = ({ failures, onDone }: { failures: FieldEncryptio
           data-testid="field-encryption-continue"
           className={secondaryButtonClassName}
           isDisabled={busy}
-          onPress={() => run(() => window.main.fieldEncryption.dismiss(), { documentsChanged: false })}
+          onPress={() => run(() => fieldEncryption.dismiss(), { documentsChanged: false })}
         >
           Continue without decryption
         </Button>
@@ -126,7 +128,7 @@ const DecryptionFailedDialog = ({ failures, onDone }: { failures: FieldEncryptio
           data-testid="field-encryption-reset-fields"
           className={primaryButtonClassName}
           isDisabled={busy}
-          onPress={() => run(() => window.main.fieldEncryption.resetFailedFields(), { documentsChanged: true })}
+          onPress={() => run(() => fieldEncryption.resetFailedFields(), { documentsChanged: true })}
         >
           Reset affected fields
         </Button>
@@ -176,7 +178,7 @@ const DegradedDialog = ({ canResetKey, onDone }: { canResetKey: boolean; onDone:
             isDisabled={busy}
             onPress={() =>
               run(
-                () => window.main.fieldEncryption.resetKey(),
+                () => fieldEncryption.resetKey(),
                 // The app restarts when the user confirmed. If they declined, nothing happened.
                 confirmed => !confirmed && setBusy(false),
               )
@@ -189,7 +191,7 @@ const DegradedDialog = ({ canResetKey, onDone }: { canResetKey: boolean; onDone:
           data-testid="field-encryption-continue"
           className={primaryButtonClassName}
           isDisabled={busy}
-          onPress={() => run(() => window.main.fieldEncryption.dismiss(), onDone)}
+          onPress={() => run(() => fieldEncryption.dismiss(), onDone)}
         >
           Continue
         </Button>
@@ -208,10 +210,19 @@ export const FieldEncryptionIssueModal = () => {
 
   useEffect(() => {
     let isCurrent = true;
-    window.main.fieldEncryption
+    fieldEncryption
       .getStatus()
       .then(result => isCurrent && setStatus(result))
-      .catch(error => console.error('[field-encryption] Could not read the status', error));
+      .catch(error => {
+        // Saying nothing would leave the user believing that the encrypted fields work
+        console.error('[field-encryption] Could not read the status', error);
+        if (isCurrent) {
+          showError({
+            title: 'Could not read the encryption status of the local database',
+            error: error instanceof Error ? error : new Error(String(error)),
+          });
+        }
+      });
     return () => {
       isCurrent = false;
     };

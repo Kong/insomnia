@@ -1,18 +1,20 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { registerAllIpcHandlers as RegisterAllIpcHandlers } from '../base-ipc-handler';
+import type * as FieldEncryptionModule from '../field-encryption';
 import {
   type confirmLocalKeyReset as ConfirmLocalKeyReset,
   createFieldEncryptionController,
   type FieldEncryptionControllerDeps,
 } from '../field-encryption';
 
-const { fromWebContents } = vi.hoisted(() => ({ fromWebContents: vi.fn() }));
+const { fromWebContents, ipcMainHandle } = vi.hoisted(() => ({ fromWebContents: vi.fn(), ipcMainHandle: vi.fn() }));
 vi.mock('electron', () => ({
   app: { relaunch: vi.fn(), exit: vi.fn() },
   BrowserWindow: { fromWebContents },
   dialog: {},
 }));
-vi.mock('../electron', () => ({ ipcMainHandle: vi.fn() }));
+vi.mock('../electron', () => ({ ipcMainHandle }));
 
 const failure = (overrides: Partial<{ type: string; _id: string; path: string }> = {}) => ({
   type: 'Request',
@@ -77,6 +79,42 @@ describe('field encryption controller', () => {
     it('falls back to the type and id when no name is known, or the document cannot be found', async () => {
       const { controller } = setup({ findDocumentWithAncestors: vi.fn(async () => []) });
       expect(await controller.getStatus()).toMatchObject({ failures: [{ label: 'Request req_1' }] });
+    });
+
+    it('still lists the field, under its type and id, when the name of its document cannot be looked up', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { controller } = setup({
+        findDocumentWithAncestors: vi.fn(async () => {
+          throw new Error('initModel failed');
+        }),
+      });
+
+      expect(await controller.getStatus()).toEqual({
+        kind: 'decryptionFailed',
+        failures: [{ ...failure(), label: 'Request req_1' }],
+      });
+      expect(consoleError).toHaveBeenCalled();
+      consoleError.mockRestore();
+    });
+
+    it('loses only the name of the document whose lookup failed, not the others', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { controller } = setup({
+        refreshFailures: vi.fn(async () => [failure(), failure({ _id: 'req_2' })]),
+        findDocumentWithAncestors: vi.fn(async (_type: string, id: string) => {
+          if (id === 'req_1') {
+            throw new Error('initModel failed');
+          }
+          return [{ name: 'Second request' }];
+        }),
+      });
+
+      expect(await controller.getStatus()).toMatchObject({
+        failures: [
+          { _id: 'req_1', label: 'Request req_1' },
+          { _id: 'req_2', label: 'Second request' },
+        ],
+      });
     });
 
     it('looks a document up once, however many of its fields failed', async () => {
@@ -229,5 +267,117 @@ describe('confirmLocalKeyReset()', () => {
     const showMessageBox = answer(0);
     await confirmLocalKeyReset({} as never, showMessageBox);
     expect(showMessageBox.mock.calls[0][0]).toBe(window);
+  });
+});
+
+describe('the IPC handler', () => {
+  const sender = { id: 'main-window-contents' } as never;
+  let handlerModule: typeof FieldEncryptionModule;
+  let registerAllIpcHandlers: typeof RegisterAllIpcHandlers;
+
+  const fakeController = () => ({
+    getStatus: vi.fn(async () => ({ kind: 'ok' }) as const),
+    resetFailedFields: vi.fn(async () => 3),
+    resetKey: vi.fn(async (_sender?: unknown) => true),
+    dismiss: vi.fn(async () => {}),
+  });
+
+  /** What the renderer reaches: the `main.invoke` handler that `registerAllIpcHandlers` registers. */
+  const rendererInvoke = (...args: unknown[]) => {
+    const registered = ipcMainHandle.mock.calls.find(([channel]) => channel === 'main.invoke');
+    return Promise.resolve().then(() => registered![1]({ sender }, ...args));
+  };
+
+  beforeEach(async () => {
+    // The controller is kept in module state, so each test starts from a fresh module. The setup file also loaded it.
+    vi.resetModules();
+    ipcMainHandle.mockClear();
+    handlerModule = await import('../field-encryption');
+    ({ registerAllIpcHandlers } = await import('../base-ipc-handler'));
+  });
+
+  it('is reached on the fieldEncryption channel and answers from the controller it was given', async () => {
+    const controller = fakeController();
+    handlerModule.provideFieldEncryptionController(controller as never);
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+    expect(await rendererInvoke('fieldEncryption', 'getStatus')).toEqual({ kind: 'ok' });
+    expect(await rendererInvoke('fieldEncryption', 'resetFailedFields')).toBe(3);
+    await rendererInvoke('fieldEncryption', 'dismiss');
+    expect(controller.getStatus).toHaveBeenCalledTimes(1);
+    expect(controller.resetFailedFields).toHaveBeenCalledTimes(1);
+    expect(controller.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the window that asked to resetKey, so the confirmation is shown on top of it', async () => {
+    const controller = fakeController();
+    handlerModule.provideFieldEncryptionController(controller as never);
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+    expect(await rendererInvoke('fieldEncryption', 'resetKey')).toBe(true);
+    expect(controller.resetKey).toHaveBeenCalledWith(sender);
+  });
+
+  it('does not pass the arguments of the renderer on: the controller decides from its own state', async () => {
+    const controller = fakeController();
+    handlerModule.provideFieldEncryptionController(controller as never);
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+    await rendererInvoke('fieldEncryption', 'resetFailedFields', { degraded: false }, 'anything');
+    await rendererInvoke('fieldEncryption', 'dismiss', 'anything');
+    expect(controller.resetFailedFields).toHaveBeenCalledWith();
+    expect(controller.dismiss).toHaveBeenCalledWith();
+  });
+
+  it('refuses to answer before the database has given it a controller', async () => {
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    await expect(rendererInvoke('fieldEncryption', 'getStatus')).rejects.toThrow('not available yet');
+    await expect(rendererInvoke('fieldEncryption', 'resetKey')).rejects.toThrow('not available yet');
+  });
+
+  it('can be replaced when the database is opened again', async () => {
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    const first = fakeController();
+    const second = fakeController();
+    handlerModule.provideFieldEncryptionController(first as never);
+    handlerModule.provideFieldEncryptionController(second as never);
+
+    await rendererInvoke('fieldEncryption', 'dismiss');
+    expect(first.dismiss).not.toHaveBeenCalled();
+    expect(second.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  describe('what the renderer can reach', () => {
+    // The dispatcher calls any function of a registered handler for the renderer, so the class may hold nothing but API
+    it('has exactly the four methods of the API, and nothing that changes what they use', () => {
+      expect(Object.getOwnPropertyNames(handlerModule.FieldEncryptionIpcHandler.prototype).sort()).toEqual([
+        'constructor',
+        'dismiss',
+        'getStatus',
+        'resetFailedFields',
+        'resetKey',
+      ]);
+      expect(Object.getOwnPropertyNames(handlerModule.fieldEncryptionIpcHandler)).toEqual(['channel']);
+    });
+
+    it.each(['provideFieldEncryptionController', 'getController', 'controller', 'channel', 'register', 'nope'])(
+      'cannot call or replace %s',
+      async name => {
+        const controller = fakeController();
+        handlerModule.provideFieldEncryptionController(controller as never);
+        registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+        await expect(
+          rendererInvoke('fieldEncryption', name, { getStatus: async () => ({ kind: 'ok' }) }),
+        ).rejects.toThrow(new TypeError(`Method ${name} is not a function`));
+        // still the controller of the main process
+        expect(await rendererInvoke('fieldEncryption', 'resetFailedFields')).toBe(3);
+      },
+    );
+
+    it('does not answer on another channel', async () => {
+      registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+      await expect(rendererInvoke('fieldencryption', 'getStatus')).rejects.toThrow('No IPC handler registered');
+    });
   });
 });

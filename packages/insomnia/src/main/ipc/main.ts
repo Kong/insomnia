@@ -96,7 +96,6 @@ import type { CookiesBridgeAPI } from './cookies';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
-import type { fieldEncryptionBridgeAPI } from './field-encryption';
 import type { gRPCBridgeAPI } from './grpc';
 import { resolveUserDataFolder } from './path-guard';
 import type { secretStorageBridgeAPI } from './secret-storage';
@@ -283,7 +282,6 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
-  fieldEncryption: fieldEncryptionBridgeAPI;
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;

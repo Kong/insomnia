@@ -21,7 +21,6 @@ import { servicesProxy } from '~/ui/renderer-services-proxy';
 import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
-import type { fieldEncryptionBridgeAPI } from './main/ipc/field-encryption';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
@@ -143,13 +142,6 @@ const secretStorage: secretStorageBridgeAPI = {
   deleteSecret: key => invokeWithNormalizedError('secretStorage.deleteSecret', key),
   encryptString: raw => invokeWithNormalizedError('secretStorage.encryptString', raw),
   decryptString: cipherText => invokeWithNormalizedError('secretStorage.decryptString', cipherText),
-};
-
-const fieldEncryption: fieldEncryptionBridgeAPI = {
-  getStatus: () => invokeWithNormalizedError('fieldEncryption.getStatus'),
-  resetFailedFields: () => invokeWithNormalizedError('fieldEncryption.resetFailedFields'),
-  resetKey: () => invokeWithNormalizedError('fieldEncryption.resetKey'),
-  dismiss: () => invokeWithNormalizedError('fieldEncryption.dismiss'),
 };
 
 const electronStorage: electronStorageBridgeAPI = {
@@ -299,7 +291,6 @@ const main: Window['main'] = {
   curl,
   secretStorage,
   electronStorage,
-  fieldEncryption,
   trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),

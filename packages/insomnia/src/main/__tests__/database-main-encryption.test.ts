@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { mainDatabase as MainDatabase } from '../database.main';
 import type {
   createFieldEncryptionController as CreateFieldEncryptionController,
-  registerFieldEncryptionHandlers as RegisterFieldEncryptionHandlers,
+  provideFieldEncryptionController as ProvideFieldEncryptionController,
 } from '../ipc/field-encryption';
 import type { getLocalEncryptionKey as GetLocalEncryptionKey } from '../local-encryption-key';
 
@@ -33,7 +33,7 @@ vi.mock('../local-encryption-key', () => ({ getLocalEncryptionKey: vi.fn(), loca
 vi.mock('../ipc/field-encryption', () => ({
   confirmLocalKeyReset: vi.fn(),
   createFieldEncryptionController: vi.fn(() => ({})),
-  registerFieldEncryptionHandlers: vi.fn(),
+  provideFieldEncryptionController: vi.fn(),
   restartApp: vi.fn(),
   setAsideKey: vi.fn(),
 }));
@@ -42,7 +42,7 @@ describe('mainDatabase.init()', () => {
   let mainDatabase: typeof MainDatabase;
   let getLocalEncryptionKey: typeof GetLocalEncryptionKey;
   let createFieldEncryptionController: typeof CreateFieldEncryptionController;
-  let registerFieldEncryptionHandlers: typeof RegisterFieldEncryptionHandlers;
+  let provideFieldEncryptionController: typeof ProvideFieldEncryptionController;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -50,7 +50,7 @@ describe('mainDatabase.init()', () => {
     vi.resetModules();
     ({ mainDatabase } = await import('../database.main'));
     ({ getLocalEncryptionKey } = await import('../local-encryption-key'));
-    ({ createFieldEncryptionController, registerFieldEncryptionHandlers } = await import('../ipc/field-encryption'));
+    ({ createFieldEncryptionController, provideFieldEncryptionController } = await import('../ipc/field-encryption'));
   });
 
   it('passes the local encryption key to the database', async () => {
@@ -103,12 +103,12 @@ describe('mainDatabase.init()', () => {
   describe('what the renderer is told about encryption', () => {
     const controllerDeps = () => vi.mocked(createFieldEncryptionController).mock.calls[0][0];
 
-    it('registers the handlers, and the database is not degraded when there is a key', async () => {
+    it('gives the controller to the IPC handler, and the database is not degraded when there is a key', async () => {
       vi.mocked(getLocalEncryptionKey).mockResolvedValue(generateKeySync('aes', { length: 256 }));
 
       await mainDatabase.init();
 
-      expect(registerFieldEncryptionHandlers).toHaveBeenCalledTimes(1);
+      expect(provideFieldEncryptionController).toHaveBeenCalledTimes(1);
       expect(controllerDeps().degraded).toBe(false);
       expect(controllerDeps().refreshFailures).toBe(refreshFieldDecryptionFailures);
       expect(controllerDeps().resetFailures).toBe(resetFieldDecryptionFailures);
@@ -123,10 +123,10 @@ describe('mainDatabase.init()', () => {
       expect(controllerDeps().degraded).toBe(true);
     });
 
-    it('registers nothing for an in-memory instance, which has no key and is not degraded', async () => {
+    it('gives the handler nothing for an in-memory instance, which has no key and is not degraded', async () => {
       await mainDatabase.init({ inMemoryOnly: true });
 
-      expect(registerFieldEncryptionHandlers).not.toHaveBeenCalled();
+      expect(provideFieldEncryptionController).not.toHaveBeenCalled();
     });
   });
 });

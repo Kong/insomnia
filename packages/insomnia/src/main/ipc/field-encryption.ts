@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, type MessageBoxOptions, type WebContents } from 'electron';
 
 import { setAsideLocalEncryptionKey } from '../local-encryption-key';
-import { ipcMainHandle } from './electron';
+import { BaseIpcHandler } from './base-ipc-handler';
 
 /** A field of a document that holds encrypted data which could not be decrypted. */
 export interface FieldEncryptionFailure {
@@ -24,20 +24,6 @@ export type FieldEncryptionStatus =
   | { kind: 'degraded'; canResetKey: boolean }
   /** The key works, but these fields were encrypted with another key or are damaged. */
   | { kind: 'decryptionFailed'; failures: FieldEncryptionFailure[] };
-
-export interface fieldEncryptionBridgeAPI {
-  getStatus: () => Promise<FieldEncryptionStatus>;
-  /** Clears the fields that could not be decrypted. Resolves the number of fields that were cleared. */
-  resetFailedFields: () => Promise<number>;
-  /**
-   * Asks the user to confirm in a native dialog, then sets the local encryption key aside and restarts the app, which
-   * then creates a new key. Only in degraded mode, and only when there is a key file. Resolves false when the user
-   * declined, and does not resolve when the app restarts.
-   */
-  resetKey: () => Promise<boolean>;
-  /** The user chose to continue as is: the dialog is not shown again until the app is restarted. */
-  dismiss: () => Promise<void>;
-}
 
 interface DocumentSummary {
   name?: unknown;
@@ -72,11 +58,19 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
     const getLabel = ({ type, _id }: { type: string; _id: string }) => {
       const documentKey = JSON.stringify([type, _id]);
       if (!labels.has(documentKey)) {
+        const fallback = `${type} ${_id}`;
         labels.set(
           documentKey,
           // Documents such as a stored OAuth 2 token have no name of their own: what the user knows them by is the
-          // request they belong to
-          deps.findDocumentWithAncestors(type, _id).then(docs => docs.map(getName).find(Boolean) ?? `${type} ${_id}`),
+          // request they belong to. The name only helps the user, so when it cannot be found, the dialog still lists the
+          // field under its type and id: failing here would hide the problem instead.
+          deps
+            .findDocumentWithAncestors(type, _id)
+            .then(docs => docs.map(getName).find(Boolean) ?? fallback)
+            .catch(error => {
+              console.error(`[field-encryption] Could not look up the name of ${fallback}`, error);
+              return fallback;
+            }),
         );
       }
       return labels.get(documentKey)!;
@@ -134,12 +128,57 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
   };
 };
 
-export const registerFieldEncryptionHandlers = (controller: ReturnType<typeof createFieldEncryptionController>) => {
-  ipcMainHandle('fieldEncryption.getStatus', () => controller.getStatus());
-  ipcMainHandle('fieldEncryption.resetFailedFields', () => controller.resetFailedFields());
-  ipcMainHandle('fieldEncryption.resetKey', event => controller.resetKey(event.sender));
-  ipcMainHandle('fieldEncryption.dismiss', () => controller.dismiss());
+type FieldEncryptionController = ReturnType<typeof createFieldEncryptionController>;
+
+// The handler is registered when the app is ready, but the controller needs the database, which is opened after that.
+// Kept outside the handler class on purpose: the IPC dispatcher calls any method of a registered handler for the
+// renderer, so everything on the class has to be API, and this setter is not.
+let controller: FieldEncryptionController | undefined;
+
+/** Gives the handler the controller of the main database. Called when the database has been opened. */
+export const provideFieldEncryptionController = (provided: FieldEncryptionController) => {
+  controller = provided;
 };
+
+const getController = () => {
+  if (!controller) {
+    throw new Error('The encryption status of the local database is not available yet');
+  }
+  return controller;
+};
+
+/**
+ * What the renderer may ask about the encryption of the local database, reached as `fieldEncryption` from `ui/ipc.ts`.
+ * Every method here can be called by the renderer, so this class must hold nothing else.
+ */
+export class FieldEncryptionIpcHandler extends BaseIpcHandler {
+  channel = 'fieldEncryption';
+
+  getStatus(_: WebContents) {
+    return getController().getStatus();
+  }
+
+  /** Clears the fields that could not be decrypted. Resolves the number of fields that were cleared. */
+  resetFailedFields(_: WebContents) {
+    return getController().resetFailedFields();
+  }
+
+  /**
+   * Asks the user to confirm in a native dialog, then sets the local encryption key aside and restarts the app, which
+   * then creates a new key. Only in degraded mode, and only when there is a key file. Resolves false when the user
+   * declined, and does not resolve when the app restarts.
+   */
+  resetKey(sender: WebContents) {
+    return getController().resetKey(sender);
+  }
+
+  /** The user chose to continue as is: the dialog is not shown again until the app is restarted. */
+  dismiss(_: WebContents) {
+    return getController().dismiss();
+  }
+}
+
+export const fieldEncryptionIpcHandler = new FieldEncryptionIpcHandler();
 
 const CANCEL = 0;
 
