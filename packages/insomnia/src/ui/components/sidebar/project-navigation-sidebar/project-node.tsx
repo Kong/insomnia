@@ -12,6 +12,7 @@ import { Icon } from '../../icon';
 import { KonnectProjectIcon } from './konnect-project-icon/konnect-project-icon';
 import { ACTIVE_BORDER_CLASS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
 import { type ProjectFlatItem } from './types';
+import { UncommittedChangesIndicator } from './uncommitted-changes-indicator';
 interface ProjectNodeProps {
   item: ProjectFlatItem;
   storageRules: StorageRules;
@@ -85,13 +86,11 @@ export const ProjectNode = ({
         <span className="min-w-0 flex-1 truncate text-base text-[rgb(var(--color-font-rgb),0.8)]">{projectName}</span>
       </div>
       {projectPresence.length > 0 && <AvatarGroup size="small" maxAvatars={3} items={projectPresence} />}
+      {hasUncommittedOrUnpushedChanges && <UncommittedChangesIndicator />}
       {projectId !== models.project.SCRATCHPAD_PROJECT_ID && (
         <ProjectDropdown
           organizationId={organizationId}
-          project={{
-            ...doc,
-            hasUncommittedOrUnpushedChanges,
-          }}
+          project={doc}
           storageRules={storageRules}
           sortOrder={sortOrder}
           onSortOrderChange={onSortOrderChange}
