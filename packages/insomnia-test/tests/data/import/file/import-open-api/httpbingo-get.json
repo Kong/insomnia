@@ -1,0 +1,29 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HTTPBingo Sample",
+    "version": "1.0.0"
+  },
+  "servers": [{ "url": "https://httpbingo.org" }],
+  "paths": {
+    "/get": {
+      "get": {
+        "summary": "Simple GET echo endpoint",
+        "operationId": "getEcho",
+        "parameters": [
+          {
+            "name": "foo",
+            "in": "query",
+            "schema": { "type": "string" },
+            "example": "bar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  }
+}
