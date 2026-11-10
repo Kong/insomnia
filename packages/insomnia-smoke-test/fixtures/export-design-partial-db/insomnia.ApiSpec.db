@@ -1,0 +1,1 @@
+{"_id":"spc_design_partial","type":"ApiSpec","parentId":"wrk_design_partial","modified":1792400000000,"created":1792400000000,"fileName":"OpenAPI","contentType":"yaml","contents":"openapi: 3.0.0\ninfo:\n  title: Spec\n  version: 1.0.0\npaths: {}\n"}

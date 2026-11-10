@@ -1,0 +1,1 @@
+{"_id":"mcp-req_broken","type":"McpRequest","parentId":"wrk_mcp_broken","modified":1792400000000,"created":1792400000000,"name":"MCP Request","url":"http://localhost:4010","description":"","transportType":"streamable-http","headers":[],"authentication":null,"env":[],"roots":[],"mcpStdioAccess":false,"subscribeResources":[],"connected":false,"sslValidation":true}

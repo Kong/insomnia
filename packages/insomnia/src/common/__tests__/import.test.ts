@@ -567,7 +567,11 @@ describe('export/import round-trip is deterministic', () => {
   // Exports a workspace to v5 YAML, imports it into a fresh project, and
   // returns the single workspace that was created from the import.
   const roundTrip = async (workspaceId: string) => {
-    const exported = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: true });
+    const { yaml: exported, errors } = await getInsomniaV5DataExport({
+      workspaceId,
+      includePrivateEnvironments: true,
+    });
+    expect(errors).toEqual([]);
     expect(exported).not.toBe('');
 
     const scanResult = await importUtil.scanResources([{ contentStr: exported }]);

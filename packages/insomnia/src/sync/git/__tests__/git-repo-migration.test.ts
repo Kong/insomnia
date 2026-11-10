@@ -9,7 +9,7 @@ import { database as db } from '../../../common/database';
 import { CURRENT_MIGRATION_VERSION, migrateRepoStructureIfNeeded } from '../git-repo-migration';
 
 vi.mock('../../../common/insomnia-v5', () => ({
-  getInsomniaV5DataExport: vi.fn().mockResolvedValue(''),
+  getInsomniaV5DataExport: vi.fn().mockResolvedValue({ yaml: '', errors: [] }),
 }));
 
 const mkDir = (dirPath: string) => fs.promises.mkdir(dirPath, { recursive: true });
@@ -97,7 +97,7 @@ describe('migrateRepoStructureIfNeeded', () => {
 
   it('writes workspace YAML to disk', async () => {
     const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
-    vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: My Workspace\n');
+    vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce({ yaml: 'name: My Workspace\n', errors: [] });
 
     await services.gitRepository.create({ _id: 'git_repo_e' });
     await services.project.create({ _id: 'proj_e', name: 'Test Project' });
@@ -123,7 +123,7 @@ describe('migrateRepoStructureIfNeeded', () => {
     const outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-git-migration-outside-'));
     try {
       const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
-      vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: Escaping Workspace\n');
+      vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce({ yaml: 'name: Escaping Workspace\n', errors: [] });
 
       await fs.promises.symlink(outsideDir, path.join(baseDir, 'linked-dir'));
 
@@ -157,7 +157,7 @@ describe('migrateRepoStructureIfNeeded', () => {
       const outsideDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'insomnia-git-migration-outside-'));
       try {
         const { getInsomniaV5DataExport } = await import('../../../common/insomnia-v5');
-        vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce('name: Tmp Symlink Workspace\n');
+        vi.mocked(getInsomniaV5DataExport).mockResolvedValueOnce({ yaml: 'name: Tmp Symlink Workspace\n', errors: [] });
 
         const outsideFile = path.join(outsideDir, 'victim.txt');
         await fs.promises.writeFile(outsideFile, 'original');

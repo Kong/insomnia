@@ -42,13 +42,19 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
     await scratchDb.update(doc);
   }
 
-  const exportedContent = await getInsomniaV5DataExport({
+  const { yaml: exportedContent, errors: exportErrors } = await getInsomniaV5DataExport({
     workspaceId: workspace._id,
     includePrivateEnvironments: false,
     db: scratchDb,
   });
 
-  return exportedContent || null;
+  // Same rule as the flush path in RepoFileWatcher: an incomplete export is not written,
+  // so the restored file stays as it is and the change is not undiscardable.
+  if (exportErrors.length > 0 || !exportedContent.trim()) {
+    return null;
+  }
+
+  return exportedContent;
 }
 
 // Whether `content` declares itself an Insomnia file on its first line (eg. `type: collection.insomnia.rest/5.0`).
