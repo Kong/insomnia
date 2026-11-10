@@ -744,31 +744,41 @@ export class WorkspaceFlow extends BaseFlow {
         { timeout: DEFAULT_TIMEOUT },
       )
       .toBeGreaterThanOrEqual(minLintErrors);
-    const summary = await specPage.getLintSummary();
-    const errors = summary === 'none' ? 0 : summary.errors;
-    // The summary can update a beat before the panel's entry rows do, so
-    // wait for the listed errors to catch up with the count it reports.
-    // The panel re-renders while lint results stream in, so a row can vanish
-    // mid-read; treat that as "not settled yet" and let the poll retry.
-    let entries: Awaited<ReturnType<typeof specPage.getLintEntries>> = [];
+    // The summary and the entry rows update asynchronously as the lint pass
+    // reruns, and the panel re-renders while results stream in (a row can
+    // vanish mid-read). Re-read both together on every tick and only accept a
+    // snapshot where they agree and that is unchanged since the previous tick,
+    // so a stale summary can never be paired with settled rows.
+    type LintState = NonNullable<Collection['lint']>;
+    let settled: LintState | undefined;
+    let previous = '';
     await expect
       .poll(
         async () => {
           try {
-            entries = await specPage.getLintEntries();
+            const summary = await specPage.getLintSummary();
+            const entries = await specPage.getLintEntries();
+            const errors = summary === 'none' ? 0 : summary.errors;
+            const warnings = summary === 'none' ? 0 : summary.warnings;
+            const listedErrors = entries.filter(entry => entry.severity === LintSeverity.Error).length;
+            const listedWarnings = entries.length - listedErrors;
+            const snapshot = JSON.stringify({ errors, warnings, entries });
+            const isStable = snapshot === previous;
+            previous = snapshot;
+            const agrees = errors === listedErrors && warnings === listedWarnings;
+            if (isStable && agrees && errors >= minLintErrors) {
+              settled = { errors, warnings, entries };
+            }
+            return settled !== undefined;
           } catch {
-            return -1;
+            previous = '';
+            return false;
           }
-          return entries.filter(entry => entry.severity === LintSeverity.Error).length;
         },
-        { timeout: DEFAULT_TIMEOUT },
+        { timeout: DEFAULT_TIMEOUT * 2, intervals: [500] },
       )
-      .toBe(errors);
-    return {
-      errors,
-      warnings: summary === 'none' ? 0 : summary.warnings,
-      entries,
-    };
+      .toBe(true);
+    return settled!;
   }
 
   /**
