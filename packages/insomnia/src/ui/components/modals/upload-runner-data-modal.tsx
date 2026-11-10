@@ -47,17 +47,19 @@ export const genPreviewTableData = (uploadData: UploadDataType[]) => {
 };
 
 export const parseCsvUploadData = (content: string) => {
-  const csvRows = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' }).data;
+  const { data: csvRows, errors } = Papa.parse<string[]>(content, { skipEmptyLines: true, delimiter: ',' });
+  // short rows are supported, only structural errors invalidate the file
+  const structural = errors.find(error => error.code !== 'TooFewFields' && error.code !== 'TooManyFields');
+  if (structural) {
+    throw new Error(`CSV file can not be parsed: ${structural.message ?? structural.code}`);
+  }
   // at least 2 rows required for csv, first row as variable names
   if (csvRows.length < 2) {
     return null;
   }
   const [csvHeaders, ...csvContentRows] = csvRows;
   const uploadData = csvContentRows.map(contentRow =>
-    csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
-      acc[cur] = contentRow[idx] ?? '';
-      return acc;
-    }, {}),
+    Object.fromEntries(csvHeaders.map((header, idx) => [header, contentRow[idx] ?? ''])),
   );
   return { headers: csvHeaders, data: uploadData };
 };
