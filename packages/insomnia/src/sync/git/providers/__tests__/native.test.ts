@@ -1,7 +1,14 @@
 import type { GitCredentials } from 'insomnia-data';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 
-import { NativeProvider } from '../native';
+import {
+  cancelNativeSignIn,
+  FILL_TIMEOUT_MS,
+  NativeProvider,
+  type NativeSignInStatus,
+  onNativeSignInStatus,
+  SIGN_IN_NOTICE_DELAY_MS,
+} from '../native';
 
 const { spawnMock } = vi.hoisted(() => ({ spawnMock: vi.fn() }));
 
@@ -18,6 +25,8 @@ interface SpawnCall {
 interface Response {
   code?: number;
   stdout?: string;
+  /** Never exit on its own, like a helper waiting for the user to sign in. */
+  hang?: boolean;
 }
 
 const URL = 'https://dev.azure.com/org/project/_git/repo';
@@ -26,6 +35,9 @@ const credential = { provider: 'native' } as unknown as GitCredentials;
 
 let calls: SpawnCall[];
 let fillResponses: Response[];
+let nextPid = 1000;
+/** Finishers for fills started with `hang: true`, in spawn order. */
+let hangingFills: ((stdout: string) => void)[];
 
 const fillOutput = (username: string, password: string, extra = '') =>
   `protocol=https\nhost=dev.azure.com\npath=org/project/_git/repo\nusername=${username}\npassword=${password}\n${extra}`;
@@ -33,6 +45,7 @@ const fillOutput = (username: string, password: string, extra = '') =>
 beforeEach(() => {
   calls = [];
   fillResponses = [];
+  hangingFills = [];
   spawnMock.mockReset();
   spawnMock.mockImplementation((_cmd: string, args: string[], options: { cwd?: string }) => {
     const action = args[1] as Action;
@@ -44,6 +57,7 @@ beforeEach(() => {
     // Minimal stand-in for the ChildProcess surface NativeProvider uses.
     const listeners: Record<string, (value: any) => void> = {};
     return {
+      pid: nextPid++,
       on: (event: string, listener: (value: any) => void) => {
         listeners[event] = listener;
       },
@@ -58,6 +72,13 @@ beforeEach(() => {
           call.stdin += data;
         },
         end: () => {
+          if (response.hang) {
+            hangingFills.push(stdout => {
+              listeners['stdout:data']?.(Buffer.from(stdout));
+              listeners.close?.(0);
+            });
+            return;
+          }
           setImmediate(() => {
             if (response.stdout) {
               listeners['stdout:data']?.(Buffer.from(response.stdout));
@@ -293,5 +314,99 @@ describe('NativeProvider', () => {
 
       expect(retryAuth).toEqual({ username: 'user', password: 'd' });
     });
+  });
+});
+
+describe('NativeProvider interactive sign-in', () => {
+  let statuses: NativeSignInStatus[];
+  let unsubscribe: () => void;
+  let killSpy: MockInstance<typeof process.kill>;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    statuses = [];
+    unsubscribe = onNativeSignInStatus(status => statuses.push(status));
+    killSpy = vi.spyOn(process, 'kill').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    unsubscribe();
+    killSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('does not report fills that finish quickly', async () => {
+    fillResponses.push({ stdout: fillOutput('user', 'token') });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    await provider.authCallback(credential, URL);
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS * 2);
+
+    expect(statuses).toEqual([]);
+  });
+
+  it('times out a fill that waits too long and stops its process group', async () => {
+    fillResponses.push({ hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const authPromise = provider.authCallback(credential, URL);
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS);
+    expect(statuses).toEqual([{ id: expect.any(String), host: 'dev.azure.com', state: 'pending' }]);
+
+    await vi.advanceTimersByTimeAsync(FILL_TIMEOUT_MS);
+
+    expect(await authPromise).toEqual({ cancel: true });
+    expect(statuses.map(status => status.state)).toEqual(['pending', 'timeout']);
+    if (process.platform !== 'win32') {
+      expect(killSpy).toHaveBeenCalledWith(-1 * (nextPid - 1), 'SIGTERM');
+    }
+  });
+
+  it('shares one fill between concurrent requests and cancels all of them together', async () => {
+    fillResponses.push({ hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const first = provider.authCallback(credential, URL);
+    const second = provider.authCallback(credential, URL);
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS);
+
+    expect(calls.map(call => call.action)).toEqual(['fill']);
+    expect(statuses).toHaveLength(1);
+
+    cancelNativeSignIn(statuses[0].id);
+
+    expect(await first).toEqual({ cancel: true });
+    expect(await second).toEqual({ cancel: true });
+    expect(statuses.map(status => status.state)).toEqual(['pending', 'canceled']);
+  });
+
+  it('reports completion when a slow fill succeeds, then starts a fresh fill next time', async () => {
+    fillResponses.push({ hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const authPromise = provider.authCallback(credential, URL);
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS);
+    cancelNativeSignIn('unknown-id');
+    hangingFills[0](fillOutput('user', 'token'));
+
+    expect(await authPromise).toEqual({ username: 'user', password: 'token' });
+    expect(statuses.map(status => status.state)).toEqual(['pending', 'completed']);
+
+    fillResponses.push({ stdout: fillOutput('user', 'token2') });
+    expect(await provider.authCallback(credential, URL)).toEqual({ username: 'user', password: 'token2' });
+    expect(calls.map(call => call.action)).toEqual(['fill', 'fill']);
+  });
+
+  it('cancels the git operation when the retry fill is canceled', async () => {
+    fillResponses.push({ stdout: fillOutput('user', 'stale') }, { hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const auth = await provider.authCallback(credential, URL);
+    const retryPromise = provider.authFailureCallback(credential, URL, auth);
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS);
+    cancelNativeSignIn(statuses[0].id);
+
+    expect(await retryPromise).toEqual({ cancel: true });
+    expect(calls.map(call => call.action)).toEqual(['fill', 'reject', 'fill']);
   });
 });

@@ -1,4 +1,5 @@
-import { spawn } from 'node:child_process';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 
 import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
@@ -81,41 +82,221 @@ const parseCredentialOutput = (output: string): CredentialAttributes =>
     return acc;
   }, []);
 
+const serializeCredential = (attributes: CredentialAttributes) =>
+  `${attributes.map(([key, value]) => `${key}=${value}`).join('\n')}\n\n`;
+
 /**
- * Run `git credential <action>` with the given attributes on stdin.
- * Resolves with the exit code (null when git could not be spawned) and stdout.
+ * `fill` may wait for an interactive sign-in (e.g. Git Credential Manager opening
+ * a browser), so it gets a generous timeout. approve/reject only talk to storage.
+ */
+export const FILL_TIMEOUT_MS = 5 * 60 * 1000;
+const STORE_TIMEOUT_MS = 30 * 1000;
+/** A fill still running after this long is most likely waiting for the user to sign in. */
+export const SIGN_IN_NOTICE_DELAY_MS = 1500;
+/** Grace period between SIGTERM and SIGKILL when stopping a credential process. */
+const KILL_GRACE_MS = 3000;
+
+type GitCredentialOutcome = 'exited' | 'spawn-error' | 'timeout' | 'canceled';
+
+interface GitCredentialResult {
+  outcome: GitCredentialOutcome;
+  code: number | null;
+  stdout: string;
+}
+
+interface RunningGitCredential {
+  result: Promise<GitCredentialResult>;
+  cancel: () => void;
+}
+
+/**
+ * Stop the credential process and everything it started. Helpers such as Git
+ * Credential Manager run as children of git, so killing git alone would leave
+ * them (and their sign-in windows) behind.
+ */
+const killProcessTree = (proc: ChildProcess) => {
+  const { pid } = proc;
+  if (!pid) {
+    return;
+  }
+
+  if (process.platform === 'win32') {
+    spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true }).on('error', err => {
+      console.warn('[NativeProvider] Failed to stop git credential process:', err.message);
+    });
+    return;
+  }
+
+  // POSIX: the process was spawned detached, i.e. as the leader of its own process group.
+  const killGroup = (signal: NodeJS.Signals) => {
+    try {
+      process.kill(-pid, signal);
+    } catch {
+      // The group is already gone.
+    }
+  };
+  killGroup('SIGTERM');
+  setTimeout(() => killGroup('SIGKILL'), KILL_GRACE_MS).unref?.();
+};
+
+/**
+ * Run `git credential <action>` with the given attributes on stdin. The result
+ * settles when git exits, when it cannot be spawned, on timeout, or on cancel.
  */
 const runGitCredential = (
   action: GitCredentialAction,
   attributes: CredentialAttributes,
-  repoPath?: string,
-): Promise<{ code: number | null; stdout: string }> =>
-  new Promise(resolve => {
+  { repoPath, timeoutMs }: { repoPath?: string; timeoutMs: number },
+): RunningGitCredential => {
+  let stop: (outcome: 'timeout' | 'canceled') => void = () => {};
+
+  const result = new Promise<GitCredentialResult>(resolve => {
     const output: string[] = [];
+    let settled = false;
+    const settle = (value: GitCredentialResult) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      }
+    };
 
     const proc = spawn('git', ['credential', action], {
       ...(repoPath ? { cwd: repoPath } : {}),
       stdio: ['pipe', 'pipe', 'ignore'],
       windowsHide: true,
+      // Own process group on POSIX so the whole tree can be stopped (see killProcessTree).
+      detached: process.platform !== 'win32',
     });
+
+    stop = outcome => {
+      if (settled) {
+        return;
+      }
+      console.warn(`[NativeProvider] git credential ${action} ${outcome === 'timeout' ? 'timed out' : 'was canceled'}`);
+      killProcessTree(proc);
+      settle({ outcome, code: null, stdout: '' });
+    };
+    const timer = setTimeout(() => stop('timeout'), timeoutMs);
 
     proc.on('error', err => {
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, err.message);
-      resolve({ code: null, stdout: '' });
+      settle({ outcome: 'spawn-error', code: null, stdout: '' });
     });
 
     proc.on('close', code => {
-      resolve({ code, stdout: output.join('') });
+      settle({ outcome: 'exited', code, stdout: output.join('') });
     });
 
-    proc.stdout.on('data', (data: Buffer) => output.push(data.toString()));
+    proc.stdout?.on('data', (data: Buffer) => output.push(data.toString()));
 
-    proc.stdin.on('error', err => {
+    proc.stdin?.on('error', err => {
       console.warn(`[NativeProvider] Failed to write to git credential ${action}:`, err.message);
     });
-    proc.stdin.write(`${attributes.map(([key, value]) => `${key}=${value}`).join('\n')}\n\n`);
-    proc.stdin.end();
+    proc.stdin?.write(serializeCredential(attributes));
+    proc.stdin?.end();
   });
+
+  return { result, cancel: () => stop('canceled') };
+};
+
+const runStoreAction = async (action: 'approve' | 'reject', credential: CredentialAttributes, repoPath?: string) => {
+  const { outcome, code } = await runGitCredential(action, credential, { repoPath, timeoutMs: STORE_TIMEOUT_MS })
+    .result;
+  if (outcome === 'exited' && code !== 0) {
+    console.warn(`[NativeProvider] git credential ${action} exited with code ${code}`);
+  }
+};
+
+/**
+ * Status of a `git credential fill` that is waiting for the user, e.g. to finish
+ * signing in through Git Credential Manager. `pending` is only reported once a
+ * fill has run longer than SIGN_IN_NOTICE_DELAY_MS, and a final state is only
+ * reported for fills that were reported as pending.
+ */
+export interface NativeSignInStatus {
+  id: string;
+  host: string;
+  state: 'pending' | 'completed' | 'canceled' | 'timeout';
+}
+
+type NativeSignInStatusListener = (status: NativeSignInStatus) => void;
+
+const signInStatusListeners = new Set<NativeSignInStatusListener>();
+
+export const onNativeSignInStatus = (listener: NativeSignInStatusListener) => {
+  signInStatusListeners.add(listener);
+  return () => {
+    signInStatusListeners.delete(listener);
+  };
+};
+
+const emitSignInStatus = (status: NativeSignInStatus) => {
+  for (const listener of signInStatusListeners) {
+    try {
+      listener(status);
+    } catch (error) {
+      console.warn('[NativeProvider] Sign-in status listener failed', error);
+    }
+  }
+};
+
+interface FillRequest {
+  id: string;
+  result: Promise<GitCredentialResult>;
+  cancel: () => void;
+}
+
+/** In-flight fills keyed by working directory + query, shared by concurrent callers. */
+const inFlightFills = new Map<string, FillRequest>();
+
+/**
+ * Cancel a pending fill (e.g. from the sign-in notice in the UI). Every caller
+ * sharing that fill receives a canceled result.
+ */
+export const cancelNativeSignIn = (id: string) => {
+  for (const request of inFlightFills.values()) {
+    if (request.id === id) {
+      request.cancel();
+    }
+  }
+};
+
+/**
+ * Run `git credential fill`, reusing an identical fill that is already running so
+ * concurrent git operations trigger a single sign-in.
+ */
+const requestFill = (query: CredentialAttributes, repoPath?: string): Promise<GitCredentialResult> => {
+  const key = `${repoPath ?? ''}\n${serializeCredential(query)}`;
+  const existing = inFlightFills.get(key);
+  if (existing) {
+    return existing.result;
+  }
+
+  const id = randomUUID();
+  const host = getAttribute(query, 'host') ?? '';
+  const running = runGitCredential('fill', query, { repoPath, timeoutMs: FILL_TIMEOUT_MS });
+
+  let noticeShown = false;
+  const noticeTimer = setTimeout(() => {
+    noticeShown = true;
+    emitSignInStatus({ id, host, state: 'pending' });
+  }, SIGN_IN_NOTICE_DELAY_MS);
+
+  const result = running.result.then(fillResult => {
+    clearTimeout(noticeTimer);
+    inFlightFills.delete(key);
+    if (noticeShown) {
+      const state =
+        fillResult.outcome === 'timeout' ? 'timeout' : fillResult.outcome === 'canceled' ? 'canceled' : 'completed';
+      emitSignInStatus({ id, host, state });
+    }
+    return fillResult;
+  });
+
+  inFlightFills.set(key, { id, result, cancel: running.cancel });
+  return result;
+};
 
 /**
  * Native Git Credential Provider
@@ -225,10 +406,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return;
     }
 
-    const { code } = await runGitCredential('approve', credential, repoPath);
-    if (code !== 0) {
-      console.warn(`[NativeProvider] git credential approve exited with code ${code}`);
-    }
+    await runStoreAction('approve', credential, repoPath);
   }
 
   async authFailureCallback(
@@ -259,10 +437,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     this.filledCredentials.delete(key);
 
     // Tell the helper the credential is invalid so it is not returned again.
-    const { code } = await runGitCredential('reject', credential, repoPath);
-    if (code !== 0) {
-      console.warn(`[NativeProvider] git credential reject exited with code ${code}`);
-    }
+    await runStoreAction('reject', credential, repoPath);
 
     if (this.releaseRetried(key)) {
       console.log('[NativeProvider] Auth failed after retry. Check your system git credential manager.');
@@ -273,7 +448,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     // the stale credential has been rejected.
     console.log('[NativeProvider] Credential rejected by the server, requesting a new one');
     const nextAuth = await this.fill(url, query, repoPath);
-    if (!nextAuth.username && !nextAuth.password) {
+    if (nextAuth.cancel || (!nextAuth.username && !nextAuth.password)) {
       return { cancel: true };
     }
     this.markRetried(credentialKey(url, nextAuth, repoPath));
@@ -281,9 +456,13 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
   }
 
   private async fill(url: string, query: CredentialAttributes, repoPath?: string): Promise<GitAuth> {
-    const { code, stdout } = await runGitCredential('fill', query, repoPath);
-    if (code !== 0) {
-      if (code !== null) {
+    const { outcome, code, stdout } = await requestFill(query, repoPath);
+    if (outcome === 'timeout' || outcome === 'canceled') {
+      // Stop the git operation instead of retrying without credentials.
+      return { cancel: true };
+    }
+    if (outcome !== 'exited' || code !== 0) {
+      if (outcome === 'exited') {
         console.warn(`[NativeProvider] git credential fill exited with code ${code}`);
       }
       return emptyAuth();

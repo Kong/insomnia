@@ -1,6 +1,8 @@
 import { services } from 'insomnia-data';
 
-import { type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import type { NativeSignInStatus } from '~/sync/git/providers/native';
+import { queue, type RAToastContent, showToast } from '~/ui/components/toast-notification';
+import { git } from '~/ui/ipc';
 import * as themes from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
@@ -32,6 +34,47 @@ window.main.on('toggle-preferences-shortcuts', () => {
 
 window.main.on('show-toast', (_, options: { content: RAToastContent; options?: { timeout?: number } }) => {
   showToast(options.content, options.options);
+});
+
+// Toasts for System Git Credentials sign-ins that are waiting for the user, keyed by sign-in id.
+const nativeSignInToasts = new Map<string, string>();
+
+window.main.on('git.native-sign-in-status', (_, status: NativeSignInStatus) => {
+  if (status.state === 'pending') {
+    const key = showToast(
+      {
+        icon: 'key',
+        title: 'Waiting for git sign-in',
+        description: `Complete the sign-in for ${status.host} in your browser or credential manager window.`,
+        status: 'info',
+        action: {
+          label: 'Cancel sign-in',
+          onPress: () => git.cancelNativeSignIn(status.id),
+        },
+      },
+      { timeout: null },
+    );
+    nativeSignInToasts.set(status.id, key);
+    return;
+  }
+
+  const key = nativeSignInToasts.get(status.id);
+  nativeSignInToasts.delete(status.id);
+  if (key) {
+    queue.close(key);
+  }
+
+  if (status.state === 'timeout') {
+    showToast(
+      {
+        icon: 'key',
+        title: 'Git sign-in timed out',
+        description: `Insomnia stopped waiting for the sign-in to ${status.host}. Try the git operation again.`,
+        status: 'warning',
+      },
+      { timeout: 8000 },
+    );
+  }
 });
 
 window.main.on('plugins.uiAlert', (_, options: Record<string, any>) => {

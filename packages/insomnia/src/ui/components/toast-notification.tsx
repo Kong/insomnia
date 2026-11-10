@@ -26,6 +26,10 @@ export interface RAToastContent {
     url: string;
     external: boolean;
   };
+  action?: {
+    label: string;
+    onPress: () => void;
+  };
   status?: Status;
   time?: string;
 }
@@ -175,6 +179,17 @@ export const Toaster = () => (
                   <span className="underline">{toast.content.link.label}</span>
                   {toast.content.link.external && <FontAwesomeIcon icon="arrow-up-right-from-square" className="size-3" />}
                 </Link>
+              )}
+              {toast.content.action && (
+                <Button
+                  onPress={() => {
+                    toast.content.action?.onPress();
+                    queue.close(toast.key);
+                  }}
+                  className="w-fit text-xs text-(--color-surprise) underline hover:opacity-80 focus:outline-none"
+                >
+                  {toast.content.action.label}
+                </Button>
               )}
             </div>
           </div>
