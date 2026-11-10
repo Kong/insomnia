@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
 
+import { getGitRuntime } from '../git-runtime';
 import type { GitRemoteProvider, NativeProviderConfig, ValidationResult } from './types';
 
 /**
@@ -55,10 +56,10 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     }
   }
 
-  authCallback(_credential: GitCredentials, url?: string, repoPath?: string): Promise<GitAuth> {
+  async authCallback(_credential: GitCredentials, url?: string, repoPath?: string): Promise<GitAuth> {
     if (!url) {
       console.warn('[NativeProvider] No URL provided to authCallback — cannot query credential manager');
-      return Promise.resolve({ username: '', password: '' });
+      return { username: '', password: '' };
     }
 
     let parsed: URL;
@@ -66,14 +67,14 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       parsed = new URL(url);
     } catch {
       console.warn(`[NativeProvider] Invalid URL passed to authCallback: ${url}`);
-      return Promise.resolve({ username: '', password: '' });
+      return { username: '', password: '' };
     }
 
     const { protocol, host } = parsed;
 
     if (!host) {
       console.warn(`[NativeProvider] URL has no host field — cannot query credential manager: ${url}`);
-      return Promise.resolve({ username: '', password: '' });
+      return { username: '', password: '' };
     }
 
     // 'https:' → 'https'
@@ -84,11 +85,18 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     // entries per host (honoured by helpers that have credential.useHttpPath set).
     const path = parsed.pathname.replace(/^\/+/, '');
 
+    const git = await getGitRuntime();
+    if (!git.available) {
+      console.warn(`[NativeProvider] System git is unavailable (${git.reason}) — cannot query credential manager`);
+      return { username: '', password: '' };
+    }
+
     return new Promise(resolve => {
       const output: string[] = [];
 
-      const proc = spawn('git', ['credential', 'fill'], {
+      const proc = spawn(git.command, ['credential', 'fill'], {
         ...(repoPath ? { cwd: repoPath } : {}),
+        env: git.env,
         stdio: ['pipe', 'pipe', 'ignore'],
         windowsHide: true,
       });
