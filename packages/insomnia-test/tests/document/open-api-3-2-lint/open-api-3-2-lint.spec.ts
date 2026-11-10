@@ -17,7 +17,7 @@ const readSpec = (fileName: string) =>
 test("Verify A Valid OpenAPI 3.2 Spec Lints Clean With No Errors Or Warnings", async ({
   user,
 }) => {
-  const { workspaceFlow } = user.flowManager;
+  const { specFlow, workspaceFlow } = user.flowManager;
   const { specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
@@ -29,9 +29,12 @@ test("Verify A Valid OpenAPI 3.2 Spec Lints Clean With No Errors Or Warnings", a
     new Collection(faker.string.alphanumeric(10), readSpec("valid-3.2.json")),
   );
 
+  const version = await specFlow.getOpenApiVersion();
+
   await expect
     .poll(() => specPage.getLintSummary(), { timeout: DEFAULT_TIMEOUT })
     .toBe("none");
+  expect(version).toBe("OpenAPI 3.2.0");
 });
 
 test("Verify A Structurally Invalid OpenAPI 3.2 Spec Still Reports Real Lint Errors", async ({
