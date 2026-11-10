@@ -485,6 +485,40 @@ describe('manifest-declared module grants (C3)', () => {
       }),
     ).rejects.toThrow("Module 'events' not permitted by manifest");
   });
+
+  const urlTag =
+    "module.exports.templateTags = [{ name: 'r', run: function () { var url = require('url'); return url.parse('http://h/p?a=1').hostname + '|' + (url.URL === URL); } }];";
+
+  it('a plugin granted "url" can require it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: urlTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['url'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('h|true');
+  });
+
+  it('a plugin declaring the node:url alias can require it', async () => {
+    const actual = await runTagInSandbox({
+      pluginSource: urlTag,
+      tagName: 'r',
+      envelope: envelope([], resolveTemplateTagModules(['node:url'])),
+      bridge: noBridge,
+    });
+    expect(actual).toBe('h|true');
+  });
+
+  it('a plugin without the grant is denied "url" with the manifest message', async () => {
+    await expect(
+      runTagInSandbox({
+        pluginSource: urlTag,
+        tagName: 'r',
+        envelope: envelope([], resolveTemplateTagModules()),
+        bridge: noBridge,
+      }),
+    ).rejects.toThrow("Module 'url' not permitted by manifest");
+  });
 });
 
 describe('ambient globals — sandbox stdlib (M2)', () => {
