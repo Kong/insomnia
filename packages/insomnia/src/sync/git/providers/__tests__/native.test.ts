@@ -208,6 +208,36 @@ describe('NativeProvider', () => {
       expect(calls.map(call => call.action)).toEqual(['fill']);
     });
 
+    it('does not let a concurrent operation reset the retry budget', async () => {
+      fillResponses.push(
+        { stdout: fillOutput('user', 'stale') },
+        { stdout: fillOutput('user', 'retried') },
+        { stdout: fillOutput('user', 'other') },
+      );
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      const first = await provider.authCallback(credential, URL);
+      const retryAuth = await provider.authFailureCallback(credential, URL, first);
+      // Another operation on the same remote starts authenticating in between.
+      await provider.authCallback(credential, URL);
+
+      expect(await provider.authFailureCallback(credential, URL, retryAuth)).toEqual({ cancel: true });
+      expect(calls.map(call => call.action)).toEqual(['fill', 'reject', 'fill', 'fill', 'reject']);
+    });
+
+    it('rejects a failed credential even when another operation consumed its fill output', async () => {
+      fillResponses.push({ stdout: fillOutput('user', 'stale') }, { stdout: fillOutput('user', 'fresh') });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      const auth = await provider.authCallback(credential, URL);
+      // A concurrent operation that used the same credential succeeded and approved it.
+      await provider.authSuccessCallback(credential, URL, auth);
+      await provider.authFailureCallback(credential, URL, auth);
+
+      expect(calls.map(call => call.action)).toEqual(['fill', 'approve', 'reject', 'fill']);
+      expect(calls[2].stdin).toBe(`${QUERY.trimEnd()}\nusername=user\npassword=stale\n\n`);
+    });
+
     it('allows a retry again on the next authentication attempt', async () => {
       fillResponses.push(
         { stdout: fillOutput('user', 'a') },

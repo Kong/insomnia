@@ -15,11 +15,11 @@ type CredentialAttributes = [key: string, value: string][];
 type GitCredentialAction = 'fill' | 'approve' | 'reject';
 
 /**
- * How many times a rejected credential is replaced by a fresh `git credential fill`
- * within a single authentication attempt. One retry lets the helper start a new
- * login after a stale token was rejected; more would risk login loops.
+ * Key for a credential used against a remote. A rejected credential is replaced
+ * by a fresh `git credential fill` at most once: one retry lets the helper start a
+ * new login after a stale token was rejected; more would risk login loops.
  */
-const MAX_AUTH_RETRIES = 1;
+const credentialKey = (url: string, auth: GitAuth) => `${url}\n${auth.username ?? ''}\n${auth.password ?? ''}`;
 
 const emptyAuth = (): GitAuth => ({ username: '', password: '' });
 
@@ -136,15 +136,19 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
   readonly supportsAutoRenew = false;
 
   /**
-   * Full `git credential fill` output of the credential last handed to
-   * isomorphic-git, keyed by remote URL. It is passed back verbatim to
-   * approve/reject so helper-specific attributes (e.g. `password_expiry_utc`,
-   * `oauth_refresh_token`) are preserved, as the git CLI does.
+   * Full `git credential fill` output of credentials handed to isomorphic-git,
+   * keyed by remote URL + username + password (see credentialKey) so concurrent
+   * operations on the same remote do not overwrite each other. It is passed back
+   * verbatim to approve/reject so helper-specific attributes (e.g.
+   * `password_expiry_utc`, `oauth_refresh_token`) are preserved, as the git CLI does.
    */
   private readonly filledCredentials = new Map<string, CredentialAttributes>();
 
-  /** Number of fresh fills done after auth failures, keyed by remote URL. */
-  private readonly authRetries = new Map<string, number>();
+  /**
+   * Credentials obtained by a retry after a rejection (see credentialKey). If one
+   * of these is rejected too, the operation gives up instead of retrying again.
+   */
+  private readonly retriedCredentials = new Set<string>();
 
   constructor(config: NativeProviderConfig) {
     this.config = config;
@@ -184,15 +188,17 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return emptyAuth();
     }
 
-    // A new authentication attempt starts here (first 401 of a request).
-    this.authRetries.delete(url);
     return this.fill(url, query, repoPath);
   }
 
   async authSuccessCallback(_credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string) {
-    this.authRetries.delete(url);
+    const key = credentialKey(url, auth);
+    this.retriedCredentials.delete(key);
 
-    const credential = this.takeFilledCredential(url, auth);
+    // Only approve what `fill` returned. Another operation that used the same
+    // credential may already have approved (and forgotten) it.
+    const credential = this.filledCredentials.get(key);
+    this.filledCredentials.delete(key);
     if (!credential) {
       return;
     }
@@ -214,13 +220,21 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return { cancel: true };
     }
 
-    const credential = this.takeFilledCredential(url, auth);
-    if (!credential) {
+    if (!auth?.username && !auth?.password) {
       // The credential manager had nothing for this remote — nothing to reject or retry.
-      this.authRetries.delete(url);
       console.log('[NativeProvider] Auth failed. Check your system git credential manager.');
       return { cancel: true };
     }
+
+    const key = credentialKey(url, auth);
+    // Fall back to the failed credential itself when another operation that used
+    // it already consumed the remembered fill output.
+    const credential = this.filledCredentials.get(key) ?? [
+      ...query,
+      ['username', auth.username ?? ''],
+      ['password', auth.password ?? ''],
+    ];
+    this.filledCredentials.delete(key);
 
     // Tell the helper the credential is invalid so it is not returned again.
     const { code } = await runGitCredential('reject', credential, repoPath);
@@ -228,28 +242,23 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       console.warn(`[NativeProvider] git credential reject exited with code ${code}`);
     }
 
-    const retries = this.authRetries.get(url) ?? 0;
-    if (retries >= MAX_AUTH_RETRIES) {
-      this.authRetries.delete(url);
+    if (this.retriedCredentials.delete(key)) {
       console.log('[NativeProvider] Auth failed after retry. Check your system git credential manager.');
       return { cancel: true };
     }
-    this.authRetries.set(url, retries + 1);
 
     // Ask again: helpers such as Git Credential Manager start a new login once
     // the stale credential has been rejected.
     console.log('[NativeProvider] Credential rejected by the server, requesting a new one');
     const nextAuth = await this.fill(url, query, repoPath);
     if (!nextAuth.username && !nextAuth.password) {
-      this.authRetries.delete(url);
       return { cancel: true };
     }
+    this.retriedCredentials.add(credentialKey(url, nextAuth));
     return nextAuth;
   }
 
   private async fill(url: string, query: CredentialAttributes, repoPath?: string): Promise<GitAuth> {
-    this.filledCredentials.delete(url);
-
     const { code, stdout } = await runGitCredential('fill', query, repoPath);
     if (code !== 0) {
       if (code !== null) {
@@ -268,31 +277,8 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     // `fill` echoes the full credential, but fall back to the query for any
     // identifying attribute it omitted so approve/reject target the same entry.
     const missing = query.filter(([key]) => key !== 'path' && getAttribute(filled, key) === undefined);
-    this.filledCredentials.set(url, [...missing, ...filled]);
+    this.filledCredentials.set(credentialKey(url, { username, password }), [...missing, ...filled]);
 
     return { username, password };
-  }
-
-  /**
-   * Take (and forget) the remembered fill result for `url`, provided it is the
-   * credential isomorphic-git actually used.
-   */
-  private takeFilledCredential(url: string, auth?: GitAuth): CredentialAttributes | null {
-    const credential = this.filledCredentials.get(url);
-    this.filledCredentials.delete(url);
-
-    if (!credential) {
-      return null;
-    }
-
-    if (
-      auth &&
-      ((auth.username ?? '') !== (getAttribute(credential, 'username') ?? '') ||
-        (auth.password ?? '') !== (getAttribute(credential, 'password') ?? ''))
-    ) {
-      return null;
-    }
-
-    return credential;
   }
 }
