@@ -13,11 +13,14 @@ export const initializeLogging = () => {
   // It surfaces as an 'error' event after the write is dispatched, so it
   // escapes any try/catch around the console.log call itself.  Without a
   // handler it becomes an uncaught exception that crashes the main process.
-  process.stdout.on('error', (err: NodeJS.ErrnoException) => {
-    if (err.code !== 'EPIPE') {
-      throw err;
-    }
-  });
+  // stderr matters too: electron-log's console transport writes error/warn there.
+  for (const stream of [process.stdout, process.stderr]) {
+    stream.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code !== 'EPIPE') {
+        throw err;
+      }
+    });
+  }
 
   if (isDevelopment()) {
     // Disable file logging during development
