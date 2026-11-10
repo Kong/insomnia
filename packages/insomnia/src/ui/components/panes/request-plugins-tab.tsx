@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { Project, Request, Workspace } from 'insomnia-data';
+import type { Project, Workspace } from 'insomnia-data';
 import { type ReactNode, useState } from 'react';
 import { Button } from 'react-aria-components';
 
@@ -15,6 +15,7 @@ import {
 import { SUGGESTED_PLUGINS } from '../../../konnect/plugin-catalog';
 import {
   getPluginScopes,
+  type KonnectLinkedRequest,
   type KonnectSyncedRoute,
   type PluginScope,
   resolveKonnectSyncedRoute,
@@ -25,7 +26,7 @@ import { Icon } from '../icon';
 import { DeckCommandModal } from '../modals/deck-command-modal';
 
 interface Props {
-  activeRequest: Pick<Request, 'konnectRouteKey'>;
+  activeRequest: KonnectLinkedRequest;
   activeWorkspace: Pick<Workspace, 'konnectServiceId'> | null | undefined;
   activeProject: Pick<Project, 'konnectControlPlaneId' | 'konnectRegion' | 'name'> | null | undefined;
 }

@@ -40,6 +40,19 @@ test.describe('Konnect plugin info', () => {
     service: { id: 'svc-e2e' },
   };
 
+  const grpcRoute = {
+    id: 'route-grpc-e2e',
+    name: 'hello-grpc',
+    methods: null,
+    paths: ['/hello.HelloService/SayHello'],
+    protocols: ['grpc'],
+    hosts: null,
+    headers: null,
+    snis: null,
+    expression: null,
+    service: { id: 'svc-e2e' },
+  };
+
   const plugin = (overrides: Record<string, unknown>) => ({
     instance_name: null,
     enabled: true,
@@ -75,6 +88,7 @@ test.describe('Konnect plugin info', () => {
       condition: 'http.path == "/flights"',
       consumer: { id: 'consumer-e2e' },
     }),
+    plugin({ id: 'plugin-grpc-auth', name: 'key-auth', route: { id: 'route-grpc-e2e' }, protocols: ['grpc'] }),
     plugin({ id: 'plugin-other-route', name: 'basic-auth', route: { id: 'route-other' } }),
     plugin({
       id: 'plugin-other-route-transformer',
@@ -84,7 +98,7 @@ test.describe('Konnect plugin info', () => {
     plugin({ id: 'plugin-global-auth', name: 'key-auth' }),
   ];
 
-  const fixtures = { controlPlanes: [controlPlane], services: [service], routes: [route], plugins };
+  const fixtures = { controlPlanes: [controlPlane], services: [service], routes: [route, grpcRoute], plugins };
 
   async function setKonnectFixtures(
     request: APIRequestContext,
@@ -95,6 +109,10 @@ test.describe('Konnect plugin info', () => {
     });
   }
 
+  async function dismissKonnectOnboarding(page: Page) {
+    await page.getByRole('button', { name: 'Got It' }).click({ timeout: 3000 }).catch(() => {});
+  }
+
   async function openPluginsTab(page: Page, expectLoaded = true) {
     await page.getByRole('button', { name: 'Organizations' }).click();
     await page.getByRole('option', { name: 'Control Planes' }).click();
@@ -103,6 +121,7 @@ test.describe('Konnect plugin info', () => {
     await page.getByRole('button', { name: 'Connect & Sync' }).click();
 
     await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
+    await dismissKonnectOnboarding(page);
     await page.getByTestId('project-node-E2E Control Plane').click();
     await page.getByTestId('workspace-node-flights-svc').click();
     await page
@@ -117,6 +136,7 @@ test.describe('Konnect plugin info', () => {
     const requestRow = page.getByTestId('request-node-/flights').first();
     await expect.soft(requestRow).toBeVisible();
     await requestRow.click();
+    await dismissKonnectOnboarding(page);
     const tabs = page.getByRole('tablist', { name: 'Request pane tabs' });
     await tabs.getByRole('tab', { name: 'Plugins' }).click();
     if (!expectLoaded) {
@@ -156,6 +176,7 @@ test.describe('Konnect plugin info', () => {
     await page.getByRole('button', { name: 'Connect & Sync' }).click();
 
     await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
+    await dismissKonnectOnboarding(page);
     await page.getByTestId('project-node-E2E Control Plane').click();
     await page.getByTestId('workspace-node-flights-svc').click();
 
@@ -173,6 +194,7 @@ test.describe('Konnect plugin info', () => {
     await requestRow.click();
 
     const pluginsTab = page.getByRole('tablist', { name: 'Request pane tabs' }).getByRole('tab', { name: 'Plugins' });
+    await dismissKonnectOnboarding(page);
     await pluginsTab.click();
 
     await expect.soft(page.getByText('Konnect plugins')).toBeVisible();
@@ -197,6 +219,40 @@ test.describe('Konnect plugin info', () => {
     await page.getByRole('button', { name: 'Refresh' }).click();
     await expect.poll(() => pluginRequests.length).toBe(2);
     await expect.poll(() => availablePluginRequests.length).toBe(2);
+  });
+
+  test('shows the Plugins tab for a synced gRPC request', async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.getByRole('button', { name: 'Organizations' }).click();
+    await page.getByRole('option', { name: 'Control Planes' }).click();
+    await page.getByRole('button', { name: 'Configure' }).click();
+    await page.getByLabel('Personal Access Token').fill('kpat_test');
+    await page.getByRole('button', { name: 'Connect & Sync' }).click();
+
+    await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
+    await dismissKonnectOnboarding(page);
+    await page.getByTestId('project-node-E2E Control Plane').click();
+    await page.getByTestId('workspace-node-flights-svc').click();
+    await page
+      .getByLabel('Expand flights-svc')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+    await page
+      .getByLabel('Expand hello-grpc')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+
+    const requestRow = page.getByTestId('request-node-/hello.HelloService/SayHello').first();
+    await expect.soft(requestRow).toBeVisible();
+    await requestRow.click();
+
+    const pluginsTab = page.getByRole('tablist', { name: 'Request pane tabs' }).getByRole('tab', { name: 'Plugins' });
+    await dismissKonnectOnboarding(page);
+    await pluginsTab.click();
+
+    await expect.soft(page.getByText('Konnect plugins')).toBeVisible();
+    await expect.soft(page.getByText('key-auth', { exact: true })).toHaveCount(2);
+    await expect.soft(page.getByText('Route', { exact: true })).toBeVisible();
   });
 
   test('keeps cached plugins when a refresh fails', async ({ page, request }) => {

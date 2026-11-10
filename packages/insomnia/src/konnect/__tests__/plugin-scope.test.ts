@@ -50,6 +50,16 @@ describe('resolveKonnectSyncedRoute', () => {
     ).toEqual(expect.objectContaining({ routeId: 'route-1', protocol: 'https' }));
   });
 
+  it('resolves a gRPC route key', () => {
+    expect(
+      resolveKonnectSyncedRoute(
+        { konnectRouteKey: 'route-1:grpc:/hello.HelloService/SayHello:grpc' },
+        { konnectServiceId: 'service-1' },
+        { konnectControlPlaneId: 'cp-1', konnectRegion: 'us', name: 'CP' },
+      ),
+    ).toEqual(expect.objectContaining({ routeId: 'route-1', protocol: 'grpc' }));
+  });
+
   it.each<
     [
       string,
@@ -178,5 +188,18 @@ describe('selectApplicablePlugins', () => {
     );
 
     expect(result.appliedNames).toEqual(['cors']);
+  });
+
+  it('keeps plugins that support gRPC', () => {
+    const result = selectApplicablePlugins(
+      [
+        plugin({ id: 'p-grpc', name: 'key-auth', protocols: ['grpc'] }),
+        plugin({ id: 'p-http', name: 'cors', protocols: ['http'] }),
+      ],
+      { ...syncedRoute, protocol: 'grpc' },
+    );
+
+    expect(result.plugins.map(plugin => plugin.id)).toEqual(['p-grpc']);
+    expect(result.appliedNames).toEqual(['key-auth']);
   });
 });

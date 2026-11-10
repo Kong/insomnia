@@ -1,4 +1,4 @@
-import type { Project, Request, Workspace } from 'insomnia-data';
+import type { Project, Workspace } from 'insomnia-data';
 
 import type { KonnectPlugin } from './api';
 
@@ -35,6 +35,10 @@ export function getPluginScopes(plugin: KonnectPlugin): PluginScope[] {
   return scopes.length > 0 ? scopes : ['global'];
 }
 
+export interface KonnectLinkedRequest {
+  konnectRouteKey?: string | null;
+}
+
 /**
  * Resolves the Konnect route behind a synced request. `konnectRouteKey` is a
  * composite key (`${route.id}:${method}:${pathSegment}:${protocol}`). The route
@@ -42,7 +46,7 @@ export function getPluginScopes(plugin: KonnectPlugin): PluginScope[] {
  * contain `:` safe.
  */
 export function resolveKonnectSyncedRoute(
-  request: Pick<Request, 'konnectRouteKey'>,
+  request: KonnectLinkedRequest,
   workspace: Pick<Workspace, 'konnectServiceId'> | null | undefined,
   project: Pick<Project, 'konnectControlPlaneId' | 'konnectRegion' | 'name'> | null | undefined,
 ): KonnectSyncedRoute | null {
