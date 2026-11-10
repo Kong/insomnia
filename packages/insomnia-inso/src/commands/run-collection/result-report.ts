@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import nodePath from 'node:path';
 
 import type { ConsolaInstance } from 'consola';
-import { omit, pick } from 'es-toolkit';
+import { pick } from 'es-toolkit';
 import type {
   Environment,
   Request,
