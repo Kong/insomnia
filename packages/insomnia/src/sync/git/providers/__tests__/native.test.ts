@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } fr
 import {
   cancelNativeSignIn,
   FILL_TIMEOUT_MS,
+  type NativeCredentialError,
   NativeProvider,
   type NativeSignInStatus,
+  onNativeCredentialError,
   onNativeSignInStatus,
   SIGN_IN_NOTICE_DELAY_MS,
 } from '../native';
@@ -13,6 +15,7 @@ import {
 const { spawnMock } = vi.hoisted(() => ({ spawnMock: vi.fn() }));
 
 vi.mock('node:child_process', () => ({ spawn: spawnMock }));
+
 
 type Action = 'fill' | 'approve' | 'reject';
 
@@ -25,6 +28,9 @@ interface SpawnCall {
 interface Response {
   code?: number;
   stdout?: string;
+  stderr?: string;
+  /** Fail to start, like git missing from PATH. */
+  spawnError?: boolean;
   /** Never exit on its own, like a helper waiting for the user to sign in. */
   hang?: boolean;
 }
@@ -40,6 +46,11 @@ let nextPid = 1000;
 let throwOnSpawn = false;
 /** Finishers for fills started with `hang: true`, in spawn order. */
 let hangingFills: ((stdout: string) => void)[];
+let credentialErrors: NativeCredentialError[];
+let unsubscribeCredentialErrors: () => void;
+/** Each test gets its own wall-clock time so credential error de-duplication does not leak between tests. */
+let clock = Date.now();
+let dateNowSpy: MockInstance<typeof Date.now>;
 
 const fillOutput = (username: string, password: string, extra = '') =>
   `protocol=https\nhost=dev.azure.com\npath=org/project/_git/repo\nusername=${username}\npassword=${password}\n${extra}`;
@@ -48,6 +59,10 @@ beforeEach(() => {
   calls = [];
   fillResponses = [];
   hangingFills = [];
+  credentialErrors = [];
+  unsubscribeCredentialErrors = onNativeCredentialError(error => credentialErrors.push(error));
+  clock += 60_000;
+  dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(clock);
   spawnMock.mockReset();
   spawnMock.mockImplementation((cmd: string, args: string[], options: { cwd?: string }) => {
     // Stopping a credential process on Windows spawns `taskkill`; it is not a credential action.
@@ -76,6 +91,11 @@ beforeEach(() => {
           listeners[`stdout:${event}`] = listener;
         },
       },
+      stderr: {
+        on: (event: string, listener: (value: any) => void) => {
+          listeners[`stderr:${event}`] = listener;
+        },
+      },
       stdin: {
         on: vi.fn(),
         write: (data: string) => {
@@ -90,8 +110,15 @@ beforeEach(() => {
             return;
           }
           setImmediate(() => {
+            if (response.spawnError) {
+              listeners.error?.(new Error('spawn git ENOENT'));
+              return;
+            }
             if (response.stdout) {
               listeners['stdout:data']?.(Buffer.from(response.stdout));
+            }
+            if (response.stderr) {
+              listeners['stderr:data']?.(Buffer.from(response.stderr));
             }
             listeners.close?.(response.code ?? 0);
           });
@@ -99,6 +126,11 @@ beforeEach(() => {
       },
     };
   });
+});
+
+afterEach(() => {
+  unsubscribeCredentialErrors();
+  dateNowSpy.mockRestore();
 });
 
 describe('NativeProvider', () => {
@@ -113,11 +145,52 @@ describe('NativeProvider', () => {
       expect(calls).toEqual([{ action: 'fill', stdin: QUERY, cwd: '/repo' }]);
     });
 
-    it('returns empty credentials when fill fails', async () => {
-      fillResponses.push({ code: 128 });
+    it('runs git with terminal prompts disabled', async () => {
+      fillResponses.push({ stdout: fillOutput('user', 'token') });
       const provider = new NativeProvider({ type: 'native', displayName: 'System' });
 
-      expect(await provider.authCallback(credential, URL)).toEqual({ username: '', password: '' });
+      await provider.authCallback(credential, URL);
+
+      expect(spawnMock).toHaveBeenCalledWith(
+        'git',
+        ['credential', 'fill'],
+        expect.objectContaining({ env: expect.objectContaining({ GIT_TERMINAL_PROMPT: '0' }) }),
+      );
+    });
+
+    it('cancels and reports missing credentials, with the helper output, when fill fails', async () => {
+      fillResponses.push({
+        code: 128,
+        stderr: "fatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled\n",
+      });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      expect(await provider.authCallback(credential, URL)).toEqual({ cancel: true });
+      expect(credentialErrors).toEqual([
+        {
+          host: 'dev.azure.com',
+          reason: 'no-credentials',
+          detail: "fatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled",
+        },
+      ]);
+    });
+
+    it('cancels and reports when git cannot be started', async () => {
+      fillResponses.push({ spawnError: true });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      expect(await provider.authCallback(credential, URL)).toEqual({ cancel: true });
+      expect(credentialErrors).toEqual([{ host: 'dev.azure.com', reason: 'git-not-found', detail: undefined }]);
+    });
+
+    it('reports a failure shared by concurrent requests once', async () => {
+      fillResponses.push({ code: 1 });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      await Promise.all([provider.authCallback(credential, URL), provider.authCallback(credential, URL)]);
+
+      expect(calls.map(call => call.action)).toEqual(['fill']);
+      expect(credentialErrors).toHaveLength(1);
     });
 
     it('returns empty credentials without spawning git for invalid URLs', async () => {
@@ -171,9 +244,9 @@ describe('NativeProvider', () => {
       const provider = new NativeProvider({ type: 'native', displayName: 'System' });
 
       const auth = await provider.authCallback(credential, URL);
-      await provider.authSuccessCallback(credential, URL, auth);
+      await provider.authSuccessCallback(credential, URL, { username: '', password: '' });
 
-      expect(auth).toEqual({ username: '', password: '' });
+      expect(auth).toEqual({ cancel: true });
       expect(calls.map(call => call.action)).toEqual(['fill']);
     });
   });
@@ -218,6 +291,7 @@ describe('NativeProvider', () => {
 
       expect(result).toEqual({ cancel: true });
       expect(calls.map(call => call.action)).toEqual(['fill', 'reject', 'fill', 'reject']);
+      expect(credentialErrors).toEqual([{ host: 'dev.azure.com', reason: 'rejected' }]);
     });
 
     it('cancels when the retry fill returns nothing', async () => {
@@ -226,17 +300,16 @@ describe('NativeProvider', () => {
 
       const auth = await provider.authCallback(credential, URL);
       expect(await provider.authFailureCallback(credential, URL, auth)).toEqual({ cancel: true });
+      expect(credentialErrors).toEqual([{ host: 'dev.azure.com', reason: 'rejected', detail: undefined }]);
     });
 
-    it('cancels without rejecting when the credential manager had nothing', async () => {
-      fillResponses.push({ code: 128 });
+    it('cancels without rejecting when the failed request carried no credentials', async () => {
       const provider = new NativeProvider({ type: 'native', displayName: 'System' });
 
-      const auth = await provider.authCallback(credential, URL);
-      const result = await provider.authFailureCallback(credential, URL, auth);
+      const result = await provider.authFailureCallback(credential, URL, { username: '', password: '' });
 
       expect(result).toEqual({ cancel: true });
-      expect(calls.map(call => call.action)).toEqual(['fill']);
+      expect(calls).toEqual([]);
     });
 
     it('does not let a concurrent operation reset the retry budget', async () => {
@@ -413,6 +486,10 @@ describe('NativeProvider interactive sign-in', () => {
 
     const auth = await provider.authCallback(credential, URL);
     const retryPromise = provider.authFailureCallback(credential, URL, auth);
+    // Wait for reject to finish and the retry fill to start before moving the clock.
+    while (calls.length < 3) {
+      await new Promise(resolve => setImmediate(resolve));
+    }
     await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS);
     cancelNativeSignIn(statuses[0].id);
 
@@ -451,6 +528,14 @@ describe('NativeProvider interactive sign-in', () => {
     await Promise.all([background, interactive]);
   });
 
+  it('does not report credential errors for background operations', async () => {
+    fillResponses.push({ code: 1, stderr: 'fatal: no credentials\n' });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    expect(await provider.authCallback(credential, URL, undefined, { interactive: false })).toEqual({ cancel: true });
+    expect(credentialErrors).toEqual([]);
+  });
+
   it('rejects a stale credential but does not retry in background operations', async () => {
     fillResponses.push({ stdout: fillOutput('user', 'stale') });
     const provider = new NativeProvider({ type: 'native', displayName: 'System' });
@@ -466,7 +551,7 @@ describe('NativeProvider interactive sign-in', () => {
     throwOnSpawn = true;
     const provider = new NativeProvider({ type: 'native', displayName: 'System' });
 
-    expect(await provider.authCallback(credential, URL)).toEqual({ username: '', password: '' });
+    expect(await provider.authCallback(credential, URL)).toEqual({ cancel: true });
     await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS * 2);
     expect(statuses).toEqual([]);
 

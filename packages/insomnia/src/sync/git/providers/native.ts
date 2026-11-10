@@ -32,6 +32,14 @@ const emptyAuth = (): GitAuth => ({ username: '', password: '' });
 const getAttribute = (attributes: CredentialAttributes, key: string) =>
   attributes.find(([attributeKey]) => attributeKey === key)?.[1];
 
+const getHost = (attributes: CredentialAttributes) => getAttribute(attributes, 'host') ?? '';
+
+type FillOutcome =
+  | { kind: 'filled'; auth: GitAuth }
+  /** Timed out or canceled by the user. */
+  | { kind: 'stopped' }
+  | { kind: 'failed'; reason: NativeCredentialError['reason']; detail?: string };
+
 /**
  * Build the `git credential` query for a remote URL, e.g.
  * 'https://github.com/owner/repo.git' → protocol=https, host=github.com, path=owner/repo.git
@@ -102,7 +110,19 @@ interface GitCredentialResult {
   outcome: GitCredentialOutcome;
   code: number | null;
   stdout: string;
+  stderr: string;
 }
+
+/** Keep logged helper output short; it is only diagnostic. */
+const MAX_STDERR_LENGTH = 2000;
+
+/** Last non-empty line of stderr, e.g. "fatal: could not read Username for 'https://host': terminal prompts disabled". */
+const summarizeStderr = (stderr: string) =>
+  stderr
+    .split('\n')
+    .map(line => line.trim())
+    .findLast(Boolean)
+    ?.slice(0, 300);
 
 interface RunningGitCredential {
   result: Promise<GitCredentialResult>;
@@ -152,6 +172,7 @@ const runGitCredential = (
 
   const result = new Promise<GitCredentialResult>(resolve => {
     const output: string[] = [];
+    const errorOutput: string[] = [];
     let settled = false;
     // `stop` is assigned once the process exists; until then a timeout is a no-op.
     const timer = setTimeout(() => stop('timeout'), timeoutMs);
@@ -167,8 +188,9 @@ const runGitCredential = (
     try {
       proc = spawn('git', ['credential', action], {
         ...(repoPath ? { cwd: repoPath } : {}),
-        ...(env ? { env: { ...process.env, ...env } } : {}),
-        stdio: ['pipe', 'pipe', 'ignore'],
+        // There is no terminal to prompt in: fail fast with a clear message instead.
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...env },
+        stdio: ['pipe', 'pipe', 'pipe'],
         windowsHide: true,
         // Own process group on POSIX so the whole tree can be stopped (see killProcessTree).
         detached: process.platform !== 'win32',
@@ -176,7 +198,7 @@ const runGitCredential = (
     } catch (err) {
       // spawn can also throw synchronously (e.g. EINVAL/EACCES on Windows).
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, (err as Error).message);
-      settle({ outcome: 'spawn-error', code: null, stdout: '' });
+      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '' });
       return;
     }
 
@@ -186,19 +208,24 @@ const runGitCredential = (
       }
       console.warn(`[NativeProvider] git credential ${action} ${outcome === 'timeout' ? 'timed out' : 'was canceled'}`);
       killProcessTree(proc);
-      settle({ outcome, code: null, stdout: '' });
+      settle({ outcome, code: null, stdout: '', stderr: '' });
     };
 
     proc.on('error', err => {
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, err.message);
-      settle({ outcome: 'spawn-error', code: null, stdout: '' });
+      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '' });
     });
 
     proc.on('close', code => {
-      settle({ outcome: 'exited', code, stdout: output.join('') });
+      const stderr = errorOutput.join('').slice(-MAX_STDERR_LENGTH);
+      if (code !== 0 && stderr.trim()) {
+        console.warn(`[NativeProvider] git credential ${action} stderr:\n${stderr.trim()}`);
+      }
+      settle({ outcome: 'exited', code, stdout: output.join(''), stderr });
     });
 
     proc.stdout?.on('data', (data: Buffer) => output.push(data.toString()));
+    proc.stderr?.on('data', (data: Buffer) => errorOutput.push(data.toString()));
 
     proc.stdin?.on('error', err => {
       console.warn(`[NativeProvider] Failed to write to git credential ${action}:`, err.message);
@@ -251,6 +278,50 @@ const emitSignInStatus = (status: NativeSignInStatus) => {
   }
 };
 
+/**
+ * Why System Git Credentials could not provide credentials, reported so the UI
+ * can explain what to do (the git operation itself fails with a generic
+ * authentication error).
+ */
+export interface NativeCredentialError {
+  host: string;
+  reason: 'git-not-found' | 'no-credentials' | 'rejected';
+  /** Last line of the credential helper's stderr, if any. */
+  detail?: string;
+}
+
+type NativeCredentialErrorListener = (error: NativeCredentialError) => void;
+
+const credentialErrorListeners = new Set<NativeCredentialErrorListener>();
+
+export const onNativeCredentialError = (listener: NativeCredentialErrorListener) => {
+  credentialErrorListeners.add(listener);
+  return () => {
+    credentialErrorListeners.delete(listener);
+  };
+};
+
+/** Concurrent git operations fail together; report each problem once. */
+const CREDENTIAL_ERROR_DEDUPE_MS = 5000;
+const lastCredentialErrors = new Map<string, number>();
+
+const emitCredentialError = (error: NativeCredentialError) => {
+  const key = `${error.host}\n${error.reason}`;
+  const now = Date.now();
+  if (now - (lastCredentialErrors.get(key) ?? Number.NEGATIVE_INFINITY) < CREDENTIAL_ERROR_DEDUPE_MS) {
+    return;
+  }
+  lastCredentialErrors.set(key, now);
+
+  for (const listener of credentialErrorListeners) {
+    try {
+      listener(error);
+    } catch (listenerError) {
+      console.warn('[NativeProvider] Credential error listener failed', listenerError);
+    }
+  }
+};
+
 interface FillRequest {
   id: string;
   result: Promise<GitCredentialResult>;
@@ -296,7 +367,7 @@ const requestFill = (
   }
 
   const id = randomUUID();
-  const host = getAttribute(query, 'host') ?? '';
+  const host = getHost(query);
   const running = runGitCredential('fill', query, {
     repoPath,
     timeoutMs: FILL_TIMEOUT_MS,
@@ -424,7 +495,17 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return emptyAuth();
     }
 
-    return this.fill(url, query, repoPath, options?.interactive ?? true);
+    const interactive = options?.interactive ?? true;
+    const result = await this.fill(url, query, repoPath, interactive);
+    if (result.kind === 'filled') {
+      return result.auth;
+    }
+    // Background operations fail quietly; the user is told on their next action.
+    if (result.kind === 'failed' && interactive) {
+      emitCredentialError({ host: getHost(query), reason: result.reason, detail: result.detail });
+    }
+    // Stop here: retrying the request without credentials cannot succeed.
+    return { cancel: true };
   }
 
   async authSuccessCallback(_credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string) {
@@ -476,6 +557,9 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
 
     if (this.releaseRetried(key)) {
       console.log('[NativeProvider] Auth failed after retry. Check your system git credential manager.');
+      if (interactive) {
+        emitCredentialError({ host: getHost(query), reason: 'rejected' });
+      }
       return { cancel: true };
     }
 
@@ -487,12 +571,21 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     // Ask again: helpers such as Git Credential Manager start a new login once
     // the stale credential has been rejected.
     console.log('[NativeProvider] Credential rejected by the server, requesting a new one');
-    const nextAuth = await this.fill(url, query, repoPath, interactive);
-    if (nextAuth.cancel || (!nextAuth.username && !nextAuth.password)) {
-      return { cancel: true };
+    const result = await this.fill(url, query, repoPath, interactive);
+    if (result.kind === 'filled') {
+      this.markRetried(credentialKey(url, result.auth, repoPath));
+      return result.auth;
     }
-    this.markRetried(credentialKey(url, nextAuth, repoPath));
-    return nextAuth;
+
+    if (result.kind === 'failed') {
+      // The stored credential was rejected and the helper had nothing new to offer.
+      emitCredentialError({
+        host: getHost(query),
+        reason: result.reason === 'no-credentials' ? 'rejected' : result.reason,
+        detail: result.detail,
+      });
+    }
+    return { cancel: true };
   }
 
   private async fill(
@@ -500,24 +593,33 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     query: CredentialAttributes,
     repoPath: string | undefined,
     interactive: boolean,
-  ): Promise<GitAuth> {
-    const { outcome, code, stdout } = await requestFill(query, repoPath, interactive);
-    if (outcome === 'timeout' || outcome === 'canceled') {
-      // Stop the git operation instead of retrying without credentials.
-      return { cancel: true };
-    }
-    if (outcome !== 'exited' || code !== 0) {
-      if (outcome === 'exited') {
-        console.warn(`[NativeProvider] git credential fill exited with code ${code}`);
+  ): Promise<FillOutcome> {
+    const { outcome, code, stdout, stderr } = await requestFill(query, repoPath, interactive);
+    switch (outcome) {
+      case 'timeout':
+      case 'canceled': {
+        // Already reported through the sign-in status.
+        return { kind: 'stopped' };
       }
-      return emptyAuth();
+      case 'spawn-error': {
+        // git itself could not be started (e.g. not installed or not on PATH).
+        return { kind: 'failed', reason: 'git-not-found' };
+      }
+      default: {
+        break;
+      }
+    }
+
+    if (code !== 0) {
+      console.warn(`[NativeProvider] git credential fill exited with code ${code}`);
+      return { kind: 'failed', reason: 'no-credentials', detail: summarizeStderr(stderr) };
     }
 
     const filled = parseCredentialOutput(stdout);
     const username = getAttribute(filled, 'username') ?? '';
     const password = getAttribute(filled, 'password') ?? '';
     if (!username && !password) {
-      return emptyAuth();
+      return { kind: 'failed', reason: 'no-credentials', detail: summarizeStderr(stderr) };
     }
 
     // `fill` echoes the full credential, but fall back to the query for any
@@ -525,6 +627,6 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     const missing = query.filter(([key]) => key !== 'path' && getAttribute(filled, key) === undefined);
     this.filledCredentials.set(credentialKey(url, { username, password }, repoPath), [...missing, ...filled]);
 
-    return { username, password };
+    return { kind: 'filled', auth: { username, password } };
   }
 }

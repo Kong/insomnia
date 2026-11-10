@@ -1,6 +1,6 @@
 import { services } from 'insomnia-data';
 
-import type { NativeSignInStatus } from '~/sync/git/providers/native';
+import type { NativeCredentialError, NativeSignInStatus } from '~/sync/git/providers/native';
 import { queue, type RAToastContent, showToast } from '~/ui/components/toast-notification';
 import { git } from '~/ui/ipc';
 import * as themes from '~/ui/plugins/misc';
@@ -95,4 +95,32 @@ window.main.on('ui.prompt', (_, id: string, options: Record<string, any>) => {
       window.main.notifyPromptResult(id, null);
     },
   });
+});
+
+const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (host: string) => RAToastContent> = {
+  'git-not-found': () => ({
+    title: 'Git not found',
+    description: 'System Git Credentials uses the git installed on this computer. Install git, then try again.',
+  }),
+  'no-credentials': host => ({
+    title: 'No git credentials found',
+    description: `Your system git credential manager has no credentials for ${host}. Install Git Credential Manager to sign in from Insomnia, or use an Access Token credential instead.`,
+  }),
+  'rejected': host => ({
+    title: 'Git credentials rejected',
+    description: `${host} rejected the credentials from your system git credential manager. Update them in your credential manager, or use an Access Token credential instead.`,
+  }),
+};
+
+window.main.on('git.native-credential-error', (_, error: NativeCredentialError) => {
+  const content = nativeCredentialErrorMessages[error.reason](error.host);
+  showToast(
+    {
+      ...content,
+      icon: 'key',
+      status: 'warning',
+      description: error.detail ? `${content.description} (${error.detail})` : content.description,
+    },
+    { timeout: null },
+  );
 });
