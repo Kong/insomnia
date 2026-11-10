@@ -104,13 +104,6 @@ CodeMirror.defineOption(
         container: hintsContainer,
         closeCharacters: COMPLETION_CLOSE_KEYS,
         completeSingle: false,
-        extraKeys: {
-          Tab: (_cm, widget) => {
-            // Override default behavior and don't select hint on Tab
-            widget.close();
-            return CodeMirror.Pass;
-          },
-        },
         // Good for debugging
         // closeOnUnfocus: false,
       });
