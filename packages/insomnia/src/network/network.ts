@@ -135,8 +135,7 @@ export function shouldSuppressUserAgent({
     .flatMap(doc => doc.headers || [])
     .filter(h => h.name?.toLowerCase() === 'user-agent');
   return (
-    Boolean(request.disableUserAgentHeader) ||
-    (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
+    Boolean(request.disableUserAgentHeader) || (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
   );
 }
 
@@ -259,6 +258,35 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
   const workspace = await services.workspace.getById(mcpRequest.parentId);
   invariant(workspace, 'failed to find workspace');
   const workspaceId = workspace._id;
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await services.settings.get();
+  invariant(settings, 'failed to create settings');
+
+  const responseId = generateId('res');
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
+
+  return {
+    environment,
+    settings,
+    clientCertificates: [] as ClientCertificate[],
+    caCert: undefined,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  };
+};
+
+export const fetchWorkspaceData = async (workspaceId: string) => {
+  const workspace = await services.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace ' + workspaceId);
+
   const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
@@ -588,9 +616,9 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
         },
         iterationData: userUploadEnvironment
           ? {
-            name: userUploadEnvironment.name,
-            data: userUploadEnvironment.data || {},
-          }
+              name: userUploadEnvironment.name,
+              data: userUploadEnvironment.data || {},
+            }
           : undefined,
         execution: {
           ...execution, // keep some existing properties in the after-response script from the pre-request script
@@ -921,7 +949,10 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
+  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(
+    renderedRequest,
+    finalUrl,
+  );
   if (authTimeline?.length) {
     timeline.push(...authTimeline);
   }
