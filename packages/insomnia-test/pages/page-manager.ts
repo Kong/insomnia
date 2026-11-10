@@ -7,8 +7,10 @@ import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
+import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { EventStreamRequestPage } from "./event-stream-request.page";
+import { ExportPage } from "./export.page";
 import { HttpRequestPage } from "./http-request.page";
 import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
@@ -17,10 +19,14 @@ import { SpecPage } from "./spec.page";
 import { WorkspacePage } from "./workspace.page";
 
 const pageRegistry = {
+  cookiePage: (page: Page): CookiePage =>
+    new CookiePage(page),
   environmentPage: (page: Page): EnvironmentPage =>
     new EnvironmentPage(page),
   eventStreamRequestPage: (page: Page): EventStreamRequestPage =>
     new EventStreamRequestPage(page),
+  exportPage: (page: Page): ExportPage =>
+    new ExportPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
