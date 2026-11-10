@@ -1,0 +1,44 @@
+{
+  "name": "insomnia-test",
+  "version": "1.0.0",
+  "scripts": {
+    "lint": "eslint . --ext .js,.ts --cache",
+    "type-check": "tsc --noEmit",
+    "mock-server": "node misc/server/index.ts"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "devDependencies": {
+    "@electron/asar": "^3.4.1",
+    "@faker-js/faker": "^10.5.0",
+    "@getinsomnia/srp-js": "1.0.0-alpha.1",
+    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/proto-loader": "^0.7.13",
+    "@grpc/reflection": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "@playwright/test": "1.63.0",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^4.17.21",
+    "@types/node": "^24.2.1",
+    "@types/oidc-provider": "^8.8.1",
+    "@types/ws": "^8.18.1",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "electron": "^43.2.0",
+    "express": "^4.22.3",
+    "express-basic-auth": "^1.2.1",
+    "git-http-backend": "^1.1.2",
+    "graphql": "^16.10.0",
+    "graphql-http": "^1.22.4",
+    "insomnia-api": "*",
+    "monocart-coverage-reports": "^2.13.0",
+    "node-forge": "^1.4.0",
+    "oidc-provider": "^8.8.1",
+    "socket.io": "^4.8.3",
+    "ws": "^8.21.1",
+    "zod": "^3.25.75"
+  },
+  "dependencies": {
+    "express-rate-limit": "^8.7.3"
+  }
+}
