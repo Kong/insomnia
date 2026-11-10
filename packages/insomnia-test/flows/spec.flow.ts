@@ -1,6 +1,7 @@
 import { step } from "@package/misc/step";
 import type {
   OutlineMethodBadge,
+  PreviewOperation,
   WebhookEntry,
 } from "@package/pages/spec.page";
 
@@ -33,6 +34,15 @@ export class SpecFlow extends BaseFlow {
   @step()
   async getOpenApiVersion(): Promise<string> {
     return this.pageManager.specPage.getOpenApiVersion();
+  }
+
+  /**
+   * Opens the docs preview (if closed) and reads the operations Swagger UI
+   * lists for the open collection's spec.
+   */
+  @step()
+  async getPreviewOperations(): Promise<PreviewOperation[]> {
+    return this.pageManager.specPage.getPreviewOperations();
   }
 
   /**
