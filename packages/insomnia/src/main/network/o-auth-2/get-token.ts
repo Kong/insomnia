@@ -38,13 +38,14 @@ import {
   fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
+  fetchWorkspaceData,
   responseTransform,
   sendCurlAndWriteTimeline,
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../network/network';
 
-const { isRequestGroup, isRequestGroupId } = models.requestGroup;
+const { isRequestGroup } = models.requestGroup;
 
 export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
 export const GRANT_TYPE_IMPLICIT = 'implicit';
@@ -604,19 +605,30 @@ const transformNewAccessTokenToOauthModel = (
   };
 };
 
+const fetchInitializedData = async (id: string) => {
+  const resolvers = [
+    { matches: models.request.isRequestId, fetch: fetchRequestData },
+    { matches: models.mcpRequest.isMcpRequestId, fetch: fetchMcpRequestData },
+    { matches: models.requestGroup.isRequestGroupId, fetch: fetchRequestGroupData },
+    { matches: models.workspace.isWorkspaceId, fetch: fetchWorkspaceData },
+  ];
+  const resolver = resolvers.find(({ matches }) => matches(id));
+  if (!resolver) {
+    throw new Error(`Unsupported parent type for OAuth2 token request: ${id}`);
+  }
+  return resolver.fetch(id);
+};
+
 const sendAccessTokenRequest = async (
-  requestOrGroupId: string,
+  requestOrGroupOrWorkspaceId: string,
   authentication: AuthTypeOAuth2,
   params: RequestParameter[],
   headers: RequestHeader[],
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  const initializedData = isRequestGroupId(requestOrGroupId)
-    ? await fetchRequestGroupData(requestOrGroupId)
-    : models.mcpRequest.isMcpRequestId(requestOrGroupId)
-      ? await fetchMcpRequestData(requestOrGroupId)
-      : await fetchRequestData(requestOrGroupId);
+  console.log(`[network] Sending with settings req=${requestOrGroupOrWorkspaceId}`);
+
+  const initializedData = await fetchInitializedData(requestOrGroupOrWorkspaceId);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;
@@ -639,8 +651,8 @@ const sendAccessTokenRequest = async (
       mimeType: 'application/x-www-form-urlencoded',
       params,
     },
-    _id: requestOrGroupId + '.other',
-    parentId: requestOrGroupId,
+    _id: requestOrGroupOrWorkspaceId + '.other',
+    parentId: requestOrGroupOrWorkspaceId,
     type: models.request.type,
     modified: Date.now(),
     created: Date.now(),
