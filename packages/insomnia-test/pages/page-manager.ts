@@ -8,6 +8,7 @@ import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
 import { EnvironmentPage } from "./environment.page";
+import { EventStreamRequestPage } from "./event-stream-request.page";
 import { HttpRequestPage } from "./http-request.page";
 import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
@@ -18,6 +19,8 @@ import { WorkspacePage } from "./workspace.page";
 const pageRegistry = {
   environmentPage: (page: Page): EnvironmentPage =>
     new EnvironmentPage(page),
+  eventStreamRequestPage: (page: Page): EventStreamRequestPage =>
+    new EventStreamRequestPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
   // Global dialogs reachable from any page, so components rather than pages.

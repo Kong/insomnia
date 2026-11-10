@@ -25,6 +25,11 @@ interface KeyValuePair {
   disabled?: boolean;
 }
 
+export interface RequestBody {
+  contentType: string;
+  content: string;
+}
+
 export abstract class RequestPage extends BasePage {
   protected readonly PANE = REQUEST_PANE;
 
@@ -172,6 +177,74 @@ export abstract class RequestPage extends BasePage {
   @throwOnDialog()
   async send(): Promise<void> {
     await this.sendButtonLocator.click();
+  }
+
+  /**
+   * Clicks the Connect/Disconnect button to open a connection (for
+   * streaming request types) and waits for it to flip to "Disconnect".
+   * If an error dialog (e.g. "Failed to Render Request") appears instead,
+   * throws using its text rather than waiting out the full timeout for a
+   * button that will never appear.
+   */
+  async connect({
+    expectConnected = true,
+  }: { expectConnected?: boolean } = {}): Promise<void> {
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click();
+    if (!expectConnected) return;
+
+    const disconnectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Disconnect", exact: true });
+    const dialog = this.page.getByRole("dialog").first();
+    await disconnectButton
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
+  }
+
+  /**
+   * Reads back the currently selected body content type and its
+   * content. Returns undefined when no body type is selected or the
+   * selected type matches the given "no body" sentinel value.
+   */
+  protected async getContentTypeBody(
+    noBodyValue: string,
+  ): Promise<RequestBody | undefined> {
+    await this.switchTab("content-type");
+    const panel = this.page.locator(this.TABPANEL);
+    const raw = await new SelectComponent(this.page, panel).nativeValue(panel);
+    if (!raw || raw === noBodyValue) return undefined;
+    const editor = panel.locator(".CodeMirror").first();
+    if ((await editor.count()) === 0) return undefined;
+    const content = await this.readCodeMirror(editor);
+    return { contentType: raw, content };
+  }
+
+  /**
+   * Reads back the request's current headers.
+   */
+  async getHeaders(): Promise<RequestHeader[]> {
+    return this.readKeyValuePairs("headers");
+  }
+
+  /**
+   * Sets the request body: selects the given content type, then writes
+   * the body content into the CodeMirror editor if one is present for
+   * that body type (some body types, e.g. "No Body", have no editor).
+   */
+  protected async setContentTypeBody(body: RequestBody): Promise<void> {
+    await this.selectBodyType(body.contentType);
+
+    const panel = this.page.locator(this.TABPANEL);
+    const editor = panel.locator(".CodeMirror").first();
+    if ((await editor.count()) === 0) return;
+    await this.setCodeMirrorValue(editor, body.content);
   }
 
   /**
