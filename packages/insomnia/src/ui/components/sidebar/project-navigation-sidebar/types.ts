@@ -68,6 +68,7 @@ export interface PinnedRequestFlatItem extends Omit<CollectionChildFlatItem, 'ki
 export interface PinnedHeaderFlatItem {
   kind: 'pinnedHeader';
   hidden: boolean;
+  workspaceId: string;
   doc: { _id: string; name: string };
 }
 

@@ -107,6 +107,7 @@ export const Row: FC<Props> = ({
         >
           {isFile ? (
             <FileInputButton
+              data-testid="body-param-file"
               showFileName
               showFileIcon
               className="btn btn--outlined btn--super-super-compact wide ellipsis"

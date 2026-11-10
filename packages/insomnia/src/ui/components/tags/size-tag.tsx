@@ -34,6 +34,7 @@ export const SizeTag: FC<Props> = memo(({ bytesRead, bytesContent, small, classN
   );
   return (
     <div
+      data-testid="response-size-tag"
       className={classnames(
         'tag',
         {

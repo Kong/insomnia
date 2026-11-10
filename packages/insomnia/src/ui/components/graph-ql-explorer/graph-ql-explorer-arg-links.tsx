@@ -14,8 +14,10 @@ export const GraphQLExplorerArgLinks: FC<Props> = ({ args, onNavigate }) => (
   <>
     {args
       ? args.map(a => (
-          <div key={a.name} className="graphql-explorer__defs__arg">
-            <span className="info">{a.name}</span>: <GraphQLExplorerTypeLink onNavigate={onNavigate} type={a.type} />
+          <div key={a.name} className="graphql-explorer__defs__arg" data-testid="graphql-explorer-def-arg">
+            <span className="info" data-testid="graphql-explorer-arg-name">
+              {a.name}
+            </span>: <GraphQLExplorerTypeLink onNavigate={onNavigate} type={a.type} />
             {a.deprecationReason && (
               <Tooltip
                 message={`The argument "${a.name}" is deprecated. ${a.deprecationReason}`}

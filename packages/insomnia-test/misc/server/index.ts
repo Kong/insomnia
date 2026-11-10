@@ -1,0 +1,300 @@
+
+import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createServer } from 'node:https';
+import { tmpdir } from 'node:os';
+import nodePath from 'node:path';
+
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import backend from 'git-http-backend';
+import { createHandler } from 'graphql-http/lib/use/http';
+
+import { certPath } from '../certs.ts';
+import { basicAuthRouter } from './basic-auth.ts';
+import cloudSyncApi from './cloud-sync-api.ts';
+import githubApi from './github-api.ts';
+import gitlabApi from './gitlab-api.ts';
+import { schema } from './graphql.ts';
+import { startGRPCServer } from './grpc.ts';
+import grpcReflectionApi from './grpc-reflection-api.ts';
+import insomniaApi from './insomnia-api.ts';
+import { mockApi } from './mock-api.ts';
+import { mtlsRouter } from './mtls.ts';
+import { oauthRoutes } from './oauth.ts';
+import simpleCrud from './simple-crud.ts';
+import { startSocketIOServer } from './socket-io.ts';
+import { startWebSocketServer } from './websocket.ts';
+
+const app = express();
+app.use(cookieParser() as any);
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} ${new Date().toISOString()}`);
+  next();
+});
+// Account/session state, `_admin/*` hooks, Cloud Sync GraphQL, vault and
+// collaborators. Falls through to the routes below for anything it doesn't own.
+app.use(mockApi);
+const port = 4010;
+const httpsPort = 4011;
+const grpcPort = 50_051;
+const rawParser = bodyParser.raw({
+  inflate: true,
+  type: '*/*',
+});
+
+app.get('/pets/:id', (req, res) => {
+  res.status(200).send({ id: req.params.id });
+});
+
+// Server-sent events: writes a couple of events and closes, so a test can assert the event-stream
+// response pane without holding a connection open for the rest of the run.
+app.get('/sse', (_req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+  res.write('data: hello-from-sse-1\n\n');
+  res.write('data: hello-from-sse-2\n\n');
+  res.end();
+});
+
+app.get('/large-json', (_req, res) => {
+  const items = Array.from({ length: 100_000 }, (_, i) => ({
+    id: i,
+    name: `item-${i}`,
+    value: 'x'.repeat(100),
+  }));
+  res.status(200).json({ items });
+});
+
+async function echoHandler(req: any, res: any) {
+  res.status(200).send({
+    method: req.method,
+    headers: req.headers,
+    data: req.body.toString(),
+    cookies: req.cookies,
+    args: req.query,
+  });
+}
+
+app.all('/echo', rawParser, echoHandler);
+
+// httpbin-style POST echo: query args, raw body, parsed JSON and headers.
+app.all('/post', rawParser, (req, res) => {
+  if (req.method !== 'POST' && req.method !== 'QUERY') {
+    res.status(405).end();
+    return;
+  }
+  const raw = Buffer.isBuffer(req.body) ? req.body.toString() : '';
+  let json: unknown = null;
+  try {
+    json = JSON.parse(raw);
+  } catch {}
+  res.status(200).json({
+    args: req.query,
+    data: raw,
+    files: {},
+    form: {},
+    headers: req.headers,
+    json,
+    origin: req.socket.remoteAddress || '127.0.0.1',
+    url: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+  });
+});
+
+app.get('/sleep', (_req, res) => {
+  res.status(200).send({ sleep: true });
+});
+
+app.get('/cookies', (_req, res) => {
+  res
+    .status(200)
+    .header('content-type', 'text/plain')
+    .cookie('insomnia-test-cookie', 'value123')
+    .type('text/plain')
+    .send(String(_req.headers['cookie']));
+});
+
+app.use('/file', express.static(nodePath.join(import.meta.dirname, '../fixtures/files')));
+app.use('/auth/basic', basicAuthRouter);
+app.use('/protected', mtlsRouter);
+app.use(grpcReflectionApi);
+
+githubApi(app);
+gitlabApi(app);
+insomniaApi(app);
+simpleCrud(app);
+cloudSyncApi(app);
+
+app.get('/delay/seconds/:duration', (req, res) => {
+  const delaySec = Number.parseInt(req.params.duration || '2');
+  setTimeout(() => {
+    res.type('text/plain').send(`Delayed by ${delaySec} seconds`);
+  }, delaySec * 1000);
+});
+
+oauthRoutes(port).then(router => app.use('/oidc', router));
+
+app.get('/', (_req, res) => {
+  res.status(200).send();
+});
+
+app.all('/graphqlTest', createHandler({ schema: schema as any }));
+
+app.use(express.json()); // Used to parse JSON bodies
+
+// SSE routes
+let subscribers: { id: string; response: express.Response }[] = [];
+app.get('/events', (request, response) => {
+  const headers = {
+    'Content-Type': 'text/event-stream',
+    'Connection': 'keep-alive',
+    'Cache-Control': 'no-cache',
+  };
+  response.writeHead(200, headers);
+  const subscriberId = crypto.randomUUID();
+  const data = `data: ${JSON.stringify({ id: subscriberId })}\n\n`;
+  response.write(data);
+  const subscriber = {
+    id: subscriberId,
+    response,
+  };
+  subscribers.push(subscriber);
+  setInterval(() => {
+    // const id = subscriberId;
+    const data = JSON.stringify({ message: 'Time: ' + new Date().toISOString().slice(11, 19) });
+    // response.write('id: ' + id + '\n');
+    response.write('data: ' + data + '\n\n');
+  }, 1000);
+  request.on('close', () => {
+    console.log(`${subscriberId} Connection closed`);
+    subscribers = subscribers.filter(sub => sub.id !== subscriberId);
+  });
+});
+app.post('/send-event', (request, response) => {
+  // Requires middleware to parse JSON body
+  console.log('Received event', request.body);
+  subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
+  response.json({ success: true });
+});
+// auto update endpoints, use INSOMNIA_UPDATES_URL=http://localhost:4010 npm run dev for testing.
+// GET /builds/check/* is answered by mockApi (mock-api.ts), which runs first.
+app.get('/updates/win', (request, response) => {
+  return response.json({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@11.6.1/Insomnia.Core-11.6.1.zip',
+    name: '11.6.1',
+  });
+});
+// mock endpoint for azure oauth config, used in external vault integration test
+app.get('/v1/oauth/azure/config', (_req, res) => {
+  res.status(200).send({
+    clientID: 'test_client_id',
+    clientRedirectURI: 'https://login.microsoftonline.com',
+  });
+});
+
+// Local test server only; the limit is high enough to never affect tests, it just bounds fs-touching routes.
+// (cast: this package resolves its own copy of @types/express, which differs from the one express-rate-limit sees)
+const gitRouteLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 10_000,
+  standardHeaders: true,
+  legacyHeaders: false,
+}) as unknown as express.RequestHandler;
+
+const GIT_FIXTURE_ROOT = nodePath.join(import.meta.dirname, '../fixtures/git-repo');
+let currentGitTmpDir: string | null = null;
+
+// Create a fresh per-test copy of the git fixture repo
+app.post('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
+  if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
+    rmSync(currentGitTmpDir, { recursive: true, force: true });
+  }
+  currentGitTmpDir = mkdtempSync(nodePath.join(tmpdir(), 'insomnia-git-'));
+  cpSync(GIT_FIXTURE_ROOT, currentGitTmpDir, { recursive: true });
+  res.json({ success: true });
+});
+
+// Remove the per-test copy
+app.delete('/v1/test-utils/git/setup', gitRouteLimiter, (_req, res) => {
+  if (currentGitTmpDir && existsSync(currentGitTmpDir)) {
+    rmSync(currentGitTmpDir, { recursive: true, force: true });
+  }
+  currentGitTmpDir = null;
+  res.json({ success: true });
+});
+
+// Git smart HTTP server backed by git-http-backend — accepts real pushes.
+// Falls back to the fixture root if no per-test dir is set up.
+app.use('/git', gitRouteLimiter, (req, res) => {
+  const root = currentGitTmpDir ?? GIT_FIXTURE_ROOT;
+  // req.url has the '/git' prefix stripped by Express, e.g. '/git-server.git/info/refs?...'
+  const repoPath = nodePath.join(root, req.url.split('?')[0].split('/')[1]);
+
+  req.pipe(
+    backend(req.url, (err, service) => {
+      if (err) {
+        res.status(500).end(err.message);
+        return;
+      }
+      res.setHeader('content-type', service.type);
+      const ps = spawn(service.cmd, service.args.concat(repoPath), {
+        env: { ...process.env, GIT_HTTP_EXPORT_ALL: '1' },
+      });
+      ps.stderr.on('data', d => console.error('[git]', String(d)));
+      ps.stdout.pipe(service.createStream()).pipe(ps.stdin);
+    }),
+  ).pipe(res);
+});
+
+// Anything nothing above answered: the app probes many endpoints and expects
+// a harmless 200 `{}` (CORS preflights get a 204).
+app.use((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.status(204).end();
+    return;
+  }
+  res.status(200).json({});
+});
+
+startWebSocketServer(
+  app.listen(port, '::', () => {
+    console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at http://127.0.0.1:${port}`);
+    console.log(`Listening at http://[::1]:${port}`);
+    console.log(`Listening at ws://localhost:${port}`);
+  }),
+);
+
+startWebSocketServer(
+  createServer(
+    {
+      cert: readFileSync(certPath('mtls-server-cert.pem')),
+      key: readFileSync(certPath('mtls-server-key.pem')),
+      ca: readFileSync(certPath('mtls-ca.pem')),
+      requestCert: true,
+      // Intentional: the mTLS test server must accept connections without a valid client cert so that
+      // routes (see mtls.ts) can respond with their own 401; it never talks to anything but local tests.
+      // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+      rejectUnauthorized: false, // lgtm[js/disabling-certificate-validation]
+    },
+    app,
+  ).listen(httpsPort, '::', () => {
+    console.log(`Listening at https://localhost:${httpsPort}`);
+    console.log(`Listening at https://127.0.0.1:${httpsPort}`);
+    console.log(`Listening at https://[::1]:${httpsPort}`);
+    console.log(`Listening at wss://localhost:${httpsPort}`);
+  }),
+);
+
+startSocketIOServer();
+
+startGRPCServer(grpcPort);

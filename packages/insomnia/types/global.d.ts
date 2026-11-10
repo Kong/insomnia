@@ -43,6 +43,7 @@ declare global {
     _dataServices?: Services;
     // Under contextIsolation the services Proxy can't cross the bridge; the preload exposes this flat invoke instead and the renderer rebuilds the Proxy.
     _dataServicesInvoke?: (serviceName: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
+    _mainInvoke?: (domain: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;

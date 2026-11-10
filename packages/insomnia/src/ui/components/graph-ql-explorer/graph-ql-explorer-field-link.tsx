@@ -20,7 +20,7 @@ export const GraphQLExplorerFieldLink: FC<Props> = ({ field, onNavigate }) => {
   return (
     <Fragment>
       {parentName ? <span>{parentName}.</span> : null}
-      <a href="#" onClick={handleClick} className="success">
+      <a href="#" onClick={handleClick} className="success" data-testid="graphql-explorer-field-link">
         {name}
       </a>
     </Fragment>

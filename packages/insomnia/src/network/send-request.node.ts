@@ -5,6 +5,7 @@ import type { BaseModel, Environment, Settings, UserUploadEnvironment } from 'in
 import { database, initDatabase, services } from 'insomnia-data';
 import { createNedbDatabase } from 'insomnia-data/node';
 
+import { wrapAroundIterationOverIterationData } from '../common/iteration-data';
 import {
   defaultSendActionRuntime,
   fetchRequestData,
@@ -22,19 +23,6 @@ interface SettingsOverride {
   dataFolders?: Settings['dataFolders'];
   timeout?: Settings['timeout'];
 }
-const wrapAroundIterationOverIterationData = (
-  list?: UserUploadEnvironment[],
-  currentIteration?: number,
-): UserUploadEnvironment | undefined => {
-  if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
-    return undefined;
-  }
-  if (list.length >= currentIteration + 1) {
-    return list[currentIteration];
-  }
-  return list[(currentIteration + 1) % list.length];
-};
-
 export async function getSendRequestCallbackMemDb(
   environmentId: string,
   memDB: any,

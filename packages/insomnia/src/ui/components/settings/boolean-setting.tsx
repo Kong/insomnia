@@ -27,7 +27,7 @@ export const BooleanSetting: FC<{
   return (
     <>
       <div className="">
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" data-testid={`setting-${setting}`}>
           <input
             checked={Boolean(settings[setting])}
             name={setting}
