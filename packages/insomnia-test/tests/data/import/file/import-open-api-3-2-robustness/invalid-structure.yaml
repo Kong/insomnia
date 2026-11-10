@@ -1,0 +1,20 @@
+openapi: 3.2.0
+info: { title: Broken, version: 1.0.0 }
+paths:
+  /pets:
+    get:
+      summary: Missing responses
+    post:
+      summary: Create a pet
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "201": { description: Created }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }

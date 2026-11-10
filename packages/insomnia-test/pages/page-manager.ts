@@ -9,6 +9,7 @@ import type { Page } from "playwright-core";
 import type { BasePage } from "./base.page";
 import { EnvironmentPage } from "./environment.page";
 import { HttpRequestPage } from "./http-request.page";
+import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
@@ -20,6 +21,8 @@ const pageRegistry = {
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
+  importPage: (page: Page): ImportPage =>
+    new ImportPage(page),
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
   responsePage: (page: Page): ResponsePage =>

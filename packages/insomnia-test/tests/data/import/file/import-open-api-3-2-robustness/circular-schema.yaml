@@ -1,0 +1,19 @@
+openapi: 3.2.0
+info: { title: Tree, version: 1.0.0 }
+paths:
+  /nodes:
+    post:
+      summary: Create a node
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Node" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        value: { type: string }
+        next: { $ref: "#/components/schemas/Node" }
