@@ -11,17 +11,28 @@ export interface KonnectSyncedRoute {
   protocol: string;
 }
 
-export type PluginScope = 'route' | 'service' | 'global';
-
-export interface PluginGroup {
-  scope: PluginScope;
-  plugins: KonnectPlugin[];
-}
+export type PluginScope = 'route' | 'service' | 'consumer' | 'consumer-group' | 'global';
 
 export interface PluginSelection {
-  groups: PluginGroup[];
-  conditional: KonnectPlugin[];
+  plugins: KonnectPlugin[];
   appliedNames: string[];
+}
+
+export function getPluginScopes(plugin: KonnectPlugin): PluginScope[] {
+  const scopes: PluginScope[] = [];
+  if (plugin.route) {
+    scopes.push('route');
+  }
+  if (plugin.service) {
+    scopes.push('service');
+  }
+  if (plugin.consumer) {
+    scopes.push('consumer');
+  }
+  if (plugin.consumer_group) {
+    scopes.push('consumer-group');
+  }
+  return scopes.length > 0 ? scopes : ['global'];
 }
 
 /**
@@ -58,14 +69,10 @@ export function resolveKonnectSyncedRoute(
 }
 
 /**
- * Returns every applicable plugin instance, grouped by scope. It deliberately
- * does not resolve precedence or shadowing: the effective instance can depend
- * on consumer identity and runtime conditions, so show all configured
- * instances and let the user reason about overrides.
- *
- * Consumer/consumer-group scoped and conditional plugins are reported
- * separately: Insomnia cannot know which consumer will authenticate a request,
- * or evaluate a CEL condition locally.
+ * Returns every applicable plugin instance in API order. It deliberately does
+ * not resolve precedence or shadowing: the effective instance can depend on
+ * consumer identity and runtime conditions, so show all configured instances
+ * and let the user reason about overrides.
  */
 export function selectApplicablePlugins(
   plugins: KonnectPlugin[],
@@ -84,24 +91,8 @@ export function selectApplicablePlugins(
     return true;
   });
 
-  const conditional: KonnectPlugin[] = [];
-  const groups: PluginGroup[] = [
-    { scope: 'route', plugins: [] },
-    { scope: 'service', plugins: [] },
-    { scope: 'global', plugins: [] },
-  ];
-  for (const plugin of applicable) {
-    if (plugin.consumer || plugin.consumer_group || plugin.condition) {
-      conditional.push(plugin);
-      continue;
-    }
-    const scope: PluginScope = plugin.route ? 'route' : plugin.service ? 'service' : 'global';
-    groups.find(group => group.scope === scope)!.plugins.push(plugin);
-  }
-
   return {
-    groups,
-    conditional,
+    plugins: applicable,
     appliedNames: [...new Set(applicable.map(plugin => plugin.name))],
   };
 }

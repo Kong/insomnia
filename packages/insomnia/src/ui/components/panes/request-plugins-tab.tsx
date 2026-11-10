@@ -14,6 +14,7 @@ import {
 } from '../../../konnect/links';
 import { SUGGESTED_PLUGINS } from '../../../konnect/plugin-catalog';
 import {
+  getPluginScopes,
   type KonnectSyncedRoute,
   type PluginScope,
   resolveKonnectSyncedRoute,
@@ -31,15 +32,11 @@ interface Props {
 
 type DeckModalState = { mode: 'edit'; plugin: KonnectPlugin } | { mode: 'add'; pluginName: string };
 
-const GROUP_LABELS: Record<PluginScope, string> = {
-  route: 'Plugins on this Route',
-  service: 'Plugins on this Service',
-  global: 'Plugins on this Control Plane',
-};
-
-const SCOPE_META_LABELS: Record<PluginScope, string> = {
-  route: 'Route-scoped',
-  service: 'Service-scoped',
+const SCOPE_LABELS: Record<PluginScope, string> = {
+  route: 'Route',
+  service: 'Service',
+  consumer: 'Consumer',
+  'consumer-group': 'Consumer Group',
   global: 'Global',
 };
 
@@ -73,21 +70,15 @@ function SectionHeader({ title, description, action }: { title: string; descript
   );
 }
 
-type PluginRowScope = PluginScope | 'conditional';
-
 function PluginRow({
   plugin,
-  scope,
   syncedRoute,
   onShowDeck,
 }: {
   plugin: KonnectPlugin;
-  scope: PluginRowScope;
   syncedRoute: KonnectSyncedRoute;
   onShowDeck: (plugin: KonnectPlugin) => void;
 }) {
-  const isConditional = scope === 'conditional';
-  const scopeLabel = scope === 'conditional' ? 'Conditional' : SCOPE_META_LABELS[scope];
   const editUrl = getKonnectPluginEditUrl(syncedRoute.region, syncedRoute.controlPlaneId, plugin.name, plugin.id);
   const before = plugin.ordering?.before?.access ?? [];
   const after = plugin.ordering?.after?.access ?? [];
@@ -120,11 +111,10 @@ function PluginRow({
           {plugin.instance_name && <span className="shrink-0 text-xs text-(--hl)">{plugin.name}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--hl)">
-          <span>{isConditional ? 'conditional' : scopeLabel}</span>
-          {!plugin.enabled && <span className="text-(--color-danger)">disabled</span>}
-          {plugin.condition && <span title={plugin.condition}>{isConditional ? 'condition' : 'conditional'}</span>}
-          {plugin.consumer && <span>consumer-scoped</span>}
-          {plugin.consumer_group && <span>consumer-group-scoped</span>}
+          {getPluginScopes(plugin).map(scope => (
+            <span key={scope}>{SCOPE_LABELS[scope]}</span>
+          ))}
+          {plugin.condition && <span title={plugin.condition}>Condition</span>}
           {before.length > 0 && <span>runs before {before.join(', ')}</span>}
           {after.length > 0 && <span>runs after {after.join(', ')}</span>}
         </div>
@@ -228,13 +218,10 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
           plugin => !selection.appliedNames.includes(plugin.name) && availableSuggestionNames?.includes(plugin.name),
         ).slice(0, 6)
       : [];
-  const appliedCount = selection.groups.reduce(
-    (count, group) => count + group.plugins.filter(plugin => plugin.enabled).length,
-    0,
-  );
-  const conditionalCount = selection.conditional.filter(plugin => plugin.enabled).length;
-  const hasAppliedPlugins =
-    selection.groups.some(group => group.plugins.length > 0) || selection.conditional.length > 0;
+  const allPlugins = selection.plugins;
+  const enabledCount = allPlugins.filter(plugin => plugin.enabled).length;
+  const conditionCount = allPlugins.filter(plugin => plugin.enabled && plugin.condition).length;
+  const hasPlugins = allPlugins.length > 0;
   const pluginsUrl = getKonnectPluginsUrl(syncedRoute.region, syncedRoute.controlPlaneId);
   const deckContext = {
     controlPlaneName: syncedRoute.controlPlaneName,
@@ -248,15 +235,13 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
         <div className="flex flex-col gap-2 p-4 @min-[42rem]:flex-row @min-[42rem]:items-center @min-[42rem]:justify-between">
           <div className="min-w-0 flex-1">
             <h3 className="text-xs font-bold text-(--hl) uppercase">Konnect plugins</h3>
-            {appliedCount === 0 && conditionalCount === 0 ? (
-              <p className="text-xs text-(--hl)">
-                Plugins are grouped by scope; Insomnia does not resolve plugin precedence.
-              </p>
+            {enabledCount === 0 ? (
+              <p className="text-xs text-(--hl)">Insomnia does not resolve plugin precedence.</p>
             ) : (
               <p className="text-xs text-(--hl)">
-                {appliedCount} enabled plugin {appliedCount === 1 ? 'instance applies' : 'instances apply'} to this
-                request{conditionalCount > 0 ? `, plus ${conditionalCount} conditional` : ''}. Grouped by scope;
-                Insomnia does not resolve plugin precedence.
+                {enabledCount} enabled plugin {enabledCount === 1 ? 'instance' : 'instances'}
+                {conditionCount > 0 ? `, ${conditionCount} conditional` : ''}. Insomnia does not resolve plugin
+                precedence.
               </p>
             )}
             <Button
@@ -308,7 +293,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
         </div>
       )}
 
-      {!hasAppliedPlugins && (
+      {!hasPlugins && (
         <div className="mx-4 my-3 flex items-start gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xs) px-3 py-2">
           <Icon icon="info-circle" className="mt-0.5 shrink-0 text-(--hl)" />
           <div className="flex min-w-0 flex-col gap-0.5">
@@ -320,40 +305,14 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
         </div>
       )}
 
-      {selection.groups.map(group =>
-        group.plugins.length > 0 ? (
-          <section key={group.scope}>
-            <SectionHeader title={GROUP_LABELS[group.scope]} />
-            {group.plugins.map(plugin => (
-              <PluginRow
-                key={plugin.id}
-                plugin={plugin}
-                scope={group.scope}
-                syncedRoute={syncedRoute}
-                onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
-              />
-            ))}
-          </section>
-        ) : null,
-      )}
-
-      {selection.conditional.length > 0 && (
-        <section>
-          <SectionHeader
-            title="Conditional"
-            description="These plugins only run for a specific consumer or when their condition matches. Insomnia can't verify that from the request alone."
-          />
-          {selection.conditional.map(plugin => (
-            <PluginRow
-              key={plugin.id}
-              plugin={plugin}
-              scope="conditional"
-              syncedRoute={syncedRoute}
-              onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
-            />
-          ))}
-        </section>
-      )}
+      {allPlugins.map(plugin => (
+        <PluginRow
+          key={plugin.id}
+          plugin={plugin}
+          syncedRoute={syncedRoute}
+          onShowDeck={target => setDeckModal({ mode: 'edit', plugin: target })}
+        />
+      ))}
 
       {suggestions.length > 0 && (
         <section>

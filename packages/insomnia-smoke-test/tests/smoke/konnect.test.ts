@@ -68,6 +68,13 @@ test.describe('Konnect plugin info', () => {
       name: 'cors',
       ordering: { before: { access: ['key-auth'] } },
     }),
+    plugin({
+      id: 'plugin-route-conditional',
+      name: 'request-termination',
+      route: { id: 'route-e2e' },
+      condition: 'http.path == "/flights"',
+      consumer: { id: 'consumer-e2e' },
+    }),
     plugin({ id: 'plugin-other-route', name: 'basic-auth', route: { id: 'route-other' } }),
     plugin({
       id: 'plugin-other-route-transformer',
@@ -172,6 +179,10 @@ test.describe('Konnect plugin info', () => {
     await expect.soft(page.getByText('key-auth', { exact: true })).toHaveCount(2);
     await expect.soft(page.getByText('rate-limiting', { exact: true })).toBeVisible();
     await expect.soft(page.getByText('cors', { exact: true })).toBeVisible();
+    await expect.soft(page.getByText('request-termination', { exact: true })).toBeVisible();
+    await expect.soft(page.getByText('Condition', { exact: true })).toBeVisible();
+    await expect.soft(page.getByText('Consumer', { exact: true })).toBeVisible();
+    await expect.soft(page.getByText('5 enabled plugin instances, 1 conditional.')).toBeVisible();
     await expect.soft(page.getByText('basic-auth')).toBeHidden();
     await expect.soft(page.getByText('Suggested plugins')).toBeVisible();
     await expect.soft(page.getByText('Datakit', { exact: true })).toBeVisible();

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KonnectPlugin } from '../api';
-import { resolveKonnectSyncedRoute, selectApplicablePlugins } from '../plugin-scope';
+import { getPluginScopes, resolveKonnectSyncedRoute, selectApplicablePlugins } from '../plugin-scope';
 
 const syncedRoute = { routeId: 'route-1', serviceId: 'service-1', protocol: 'http' };
 
@@ -87,8 +87,27 @@ describe('resolveKonnectSyncedRoute', () => {
   });
 });
 
+describe('getPluginScopes', () => {
+  it('returns every configured scope', () => {
+    const scopedPlugin = plugin({
+      id: 'p-scoped',
+      name: 'key-auth',
+      route: { id: 'route-1' },
+      service: { id: 'service-1' },
+      consumer: { id: 'consumer-1' },
+      consumer_group: { id: 'group-1' },
+    });
+
+    expect(getPluginScopes(scopedPlugin)).toEqual(['route', 'service', 'consumer', 'consumer-group']);
+  });
+
+  it('falls back to the control plane scope', () => {
+    expect(getPluginScopes(plugin({ id: 'p-global', name: 'cors' }))).toEqual(['global']);
+  });
+});
+
 describe('selectApplicablePlugins', () => {
-  it('groups plugins by route, service, and control plane scope', () => {
+  it('returns applicable plugins in API order', () => {
     const result = selectApplicablePlugins(
       [
         plugin({ id: 'p-route', name: 'key-auth', route: { id: 'route-1' } }),
@@ -98,21 +117,7 @@ describe('selectApplicablePlugins', () => {
       syncedRoute,
     );
 
-    expect(result.groups).toEqual([
-      { scope: 'route', plugins: [expect.objectContaining({ id: 'p-route' })] },
-      { scope: 'service', plugins: [expect.objectContaining({ id: 'p-service' })] },
-      { scope: 'global', plugins: [expect.objectContaining({ id: 'p-global' })] },
-    ]);
-  });
-
-  it('keeps a route + service plugin in the route group', () => {
-    const result = selectApplicablePlugins(
-      [plugin({ id: 'p-both', name: 'key-auth', route: { id: 'route-1' }, service: { id: 'service-1' } })],
-      syncedRoute,
-    );
-
-    expect(result.groups[0].plugins).toHaveLength(1);
-    expect(result.groups[1].plugins).toHaveLength(0);
+    expect(result.plugins.map(plugin => plugin.id)).toEqual(['p-route', 'p-service', 'p-global']);
   });
 
   it('excludes plugins scoped to another route or another service', () => {
@@ -124,7 +129,7 @@ describe('selectApplicablePlugins', () => {
       syncedRoute,
     );
 
-    expect(result.groups.every(group => group.plugins.length === 0)).toBe(true);
+    expect(result.plugins).toEqual([]);
     expect(result.appliedNames).toEqual([]);
   });
 
@@ -137,46 +142,29 @@ describe('selectApplicablePlugins', () => {
       syncedRoute,
     );
 
-    expect(result.groups[0].plugins).toEqual([expect.objectContaining({ id: 'p-route' })]);
-    expect(result.groups[2].plugins).toEqual([expect.objectContaining({ id: 'p-global' })]);
+    expect(result.plugins.map(plugin => plugin.id)).toEqual(['p-global', 'p-route']);
     expect(result.appliedNames).toEqual(['rate-limiting']);
-  });
-
-  it('shows service and global instances separately', () => {
-    const result = selectApplicablePlugins(
-      [
-        plugin({ id: 'p-global', name: 'rate-limiting' }),
-        plugin({ id: 'p-service', name: 'rate-limiting', service: { id: 'service-1' } }),
-      ],
-      syncedRoute,
-    );
-
-    expect(result.groups[1].plugins).toEqual([expect.objectContaining({ id: 'p-service' })]);
-    expect(result.groups[2].plugins).toEqual([expect.objectContaining({ id: 'p-global' })]);
   });
 
   it.each([
     ['consumer', { consumer: { id: 'consumer-1' } }],
     ['consumer group', { consumer_group: { id: 'group-1' } }],
     ['condition', { condition: 'http.path == "/flights"' }],
-  ])('reports %s scoped instances as conditional', (_label, overrides) => {
-    const result = selectApplicablePlugins(
-      [plugin({ id: 'p-conditional', name: 'key-auth', route: { id: 'route-1' }, ...overrides })],
-      syncedRoute,
-    );
+  ])('keeps %s scoped plugins', (_label, overrides) => {
+    const scopedPlugin = plugin({ id: 'p-scoped', name: 'key-auth', route: { id: 'route-1' }, ...overrides });
+    const result = selectApplicablePlugins([scopedPlugin], syncedRoute);
 
-    expect(result.conditional).toEqual([expect.objectContaining({ id: 'p-conditional' })]);
-    expect(result.groups[0].plugins).toHaveLength(0);
+    expect(result.plugins).toEqual([scopedPlugin]);
     expect(result.appliedNames).toEqual(['key-auth']);
   });
 
-  it('keeps disabled plugins visible and counts them as configured', () => {
+  it('keeps disabled plugins visible', () => {
     const result = selectApplicablePlugins(
       [plugin({ id: 'p-disabled', name: 'cors', enabled: false })],
       syncedRoute,
     );
 
-    expect(result.groups[2].plugins).toEqual([expect.objectContaining({ id: 'p-disabled', enabled: false })]);
+    expect(result.plugins).toEqual([expect.objectContaining({ id: 'p-disabled', enabled: false })]);
     expect(result.appliedNames).toEqual(['cors']);
   });
 
@@ -190,20 +178,5 @@ describe('selectApplicablePlugins', () => {
     );
 
     expect(result.appliedNames).toEqual(['cors']);
-  });
-
-  it('keeps every tied instance in API order', () => {
-    const result = selectApplicablePlugins(
-      [
-        plugin({ id: 'p-first', name: 'zz-plugin', route: { id: 'route-1' } }),
-        plugin({ id: 'p-second', name: 'aa-plugin', route: { id: 'route-1' } }),
-      ],
-      syncedRoute,
-    );
-
-    expect(result.groups[0].plugins).toEqual([
-      expect.objectContaining({ id: 'p-first' }),
-      expect.objectContaining({ id: 'p-second' }),
-    ]);
   });
 });
