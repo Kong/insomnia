@@ -40,7 +40,7 @@ test("Verify A text/event-stream Response Imports As An Event Stream Request Wit
 test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 2XX And Existing Accept Event Streams Are Handled", async ({
   user,
 }) => {
-  const { eventStreamRequestFlow, httpRequestFlow, importFlow, workspaceFlow } =
+  const { eventStreamRequestFlow, importFlow, workspaceFlow } =
     user.flowManager;
 
   const project = await workspaceFlow.createProject(
@@ -51,10 +51,10 @@ test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 
     project,
     path.join(import.meta.dirname, "sequential-media-types.yaml"),
   );
-  const jsonl = await httpRequestFlow.get("JSONL log");
-  const jsonSeq = await httpRequestFlow.get("JSON sequence log");
-  const multipart = await httpRequestFlow.get("Multipart mixed log");
-  const ndjson = await httpRequestFlow.get("NDJSON log");
+  const jsonl = await eventStreamRequestFlow.get("JSONL log");
+  const jsonSeq = await eventStreamRequestFlow.get("JSON sequence log");
+  const multipart = await eventStreamRequestFlow.get("Multipart mixed log");
+  const ndjson = await eventStreamRequestFlow.get("NDJSON log");
   const wildcard = await eventStreamRequestFlow.get("Wildcard event stream");
   const withAccept = await eventStreamRequestFlow.get(
     "Event stream with existing Accept",
@@ -62,6 +62,7 @@ test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 
 
   for (const plain of [jsonl, jsonSeq, multipart, ndjson]) {
     expect(plain).toMatchObject({ method: HttpMethod.Get });
+    expect(plain!.headers).not.toHaveLength(0);
     expect(plain!.headers).not.toContainEqual(
       expect.objectContaining({ value: "text/event-stream" }),
     );

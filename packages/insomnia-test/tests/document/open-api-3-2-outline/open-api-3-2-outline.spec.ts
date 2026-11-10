@@ -107,7 +107,7 @@ test("Verify The Webhooks Sidebar Section Lists Dotted Names And Path Item $ref 
 test("Verify Clicking A Paths Row Whose Path Contains A Dot Selects Its Line In The Editor", async ({
   user,
 }) => {
-  test.fail();
+  test.fail(true, "INS-4287");
 
   const { workspaceFlow } = user.flowManager;
   const { specPage } = user.pageManager;
