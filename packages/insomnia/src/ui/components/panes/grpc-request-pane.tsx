@@ -36,6 +36,7 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { KongLogo } from '../kong-logo';
 import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { ErrorModal } from '../modals/error-modal';
@@ -402,7 +403,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                   className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="plugins"
                 >
-                  Plugins
+                  <span>Plugins</span>
+                  <span className="flex h-6 min-w-6 shrink-0 items-center justify-center">
+                    <KongLogo width={14} height={13} />
+                  </span>
                 </Tab>
               )}
             </TabList>
