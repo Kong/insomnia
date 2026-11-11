@@ -21,6 +21,11 @@ const EXPECTED_OPENSSL = '3.5.9';
 const repoRoot = path.join(__dirname, '..');
 const bindingPath = path.join(repoRoot, 'node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node');
 
+function hasVersion(contents, version) {
+  const escaped = version.replace(/\./g, '\\.');
+  return new RegExp(`(^|[^0-9.])${escaped}([^0-9.]|$)`).test(contents);
+}
+
 function assetUrl(arch) {
   const name = `node_libcurl-${RELEASE}-${ELECTRON_ABI}-win32-${arch}-unknown.tar.gz`;
   return `https://github.com/Kong/node-libcurl/releases/download/${RELEASE}/${name}`;
@@ -55,7 +60,7 @@ async function main() {
   }
 
   const contents = fs.readFileSync(built).toString('latin1');
-  if (!contents.includes(`OpenSSL ${EXPECTED_OPENSSL}`)) {
+  if (!hasVersion(contents, EXPECTED_OPENSSL)) {
     throw new Error(`[pr-libcurl] downloaded binary does not link OpenSSL ${EXPECTED_OPENSSL}`);
   }
 

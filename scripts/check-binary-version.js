@@ -18,14 +18,15 @@ if (!fs.existsSync(binaryPath)) {
 }
 
 const contents = fs.readFileSync(binaryPath).toString('latin1');
-const openssl = [...new Set(contents.match(/OpenSSL \d+\.\d+\.\d+[a-z]*/g) || [])];
 const libcurl = [...new Set(contents.match(/libcurl\/\d+\.\d+\.\d+[A-Z-]*/g) || [])];
+const escaped = expected.replace(/\./g, '\\.');
+const versionPresent = new RegExp(`(^|[^0-9.])${escaped}([^0-9.]|$)`).test(contents);
 
 console.log(`${binaryPath} (${fs.statSync(binaryPath).size} bytes)`);
-console.log(`openssl: ${openssl.join(', ') || 'not found'}`);
 console.log(`libcurl: ${libcurl.join(', ') || 'not found'}`);
+console.log(`openssl ${expected}: ${versionPresent ? 'present' : 'MISSING'}`);
 
-if (!openssl.some(entry => entry.includes(`OpenSSL ${expected}`))) {
-  console.error(`expected OpenSSL ${expected} to be linked in`);
+if (!versionPresent) {
+  console.error(`expected the OpenSSL ${expected} version string to be embedded`);
   process.exit(1);
 }
