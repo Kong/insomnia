@@ -17,7 +17,9 @@ const readSpec = (fileName: string) =>
 test("Verify A Valid OpenAPI 3.2 Spec Lints Clean With No Errors Or Warnings", async ({
   user,
 }) => {
-  const { specFlow, workspaceFlow } = user.flowManager;
+  test.fail(true, "INS-4295");
+
+  const { httpRequestFlow, specFlow, workspaceFlow } = user.flowManager;
   const { specPage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
@@ -35,6 +37,14 @@ test("Verify A Valid OpenAPI 3.2 Spec Lints Clean With No Errors Or Warnings", a
     .poll(() => specPage.getLintSummary(), { timeout: DEFAULT_TIMEOUT })
     .toBe("none");
   expect(version).toBe("OpenAPI 3.2.0");
+
+  await specFlow.generateRequests();
+  const searchPets = await httpRequestFlow.get("Search pets");
+
+  expect(searchPets).toBeDefined();
+  expect(searchPets!.params).toEqual([
+    expect.objectContaining({ name: "name", value: "", disabled: true }),
+  ]);
 });
 
 test("Verify OpenAPI 3.2 Security Schemes With oauth2MetadataUrl, Device Authorization And deprecated Lint Clean", async ({

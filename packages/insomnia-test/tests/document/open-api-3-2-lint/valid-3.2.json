@@ -25,6 +25,7 @@
   "paths": {
     "/pets": {
       "query": {
+        "summary": "Search pets",
         "operationId": "searchPets",
         "tags": ["pets"],
         "parameters": [
