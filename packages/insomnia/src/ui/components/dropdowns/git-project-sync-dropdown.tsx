@@ -641,6 +641,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     () => {
       gitIntervalFetchFetcher.submit({
         projectId,
+        background: true,
       });
     },
     1000 * 60 * 5,

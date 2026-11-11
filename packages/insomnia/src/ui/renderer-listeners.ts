@@ -44,8 +44,8 @@ window.main.on('git.native-sign-in-status', (_, status: NativeSignInStatus) => {
     const key = showToast(
       {
         icon: 'key',
-        title: 'Waiting for git sign-in',
-        description: `Complete the sign-in for ${status.host} in your browser or credential manager window.`,
+        title: 'Waiting for your git credential manager',
+        description: `Your system git credential manager is handling credentials for ${status.host}. If a sign-in window or browser tab opened, complete the sign-in there.`,
         status: 'info',
         action: {
           label: 'Cancel sign-in',

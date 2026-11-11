@@ -36,6 +36,8 @@ const credential = { provider: 'native' } as unknown as GitCredentials;
 let calls: SpawnCall[];
 let fillResponses: Response[];
 let nextPid = 1000;
+/** Make the next spawn throw synchronously, like spawn does for some invalid arguments on Windows. */
+let throwOnSpawn = false;
 /** Finishers for fills started with `hang: true`, in spawn order. */
 let hangingFills: ((stdout: string) => void)[];
 
@@ -48,6 +50,10 @@ beforeEach(() => {
   hangingFills = [];
   spawnMock.mockReset();
   spawnMock.mockImplementation((_cmd: string, args: string[], options: { cwd?: string }) => {
+    if (throwOnSpawn) {
+      throwOnSpawn = false;
+      throw new Error('spawn EINVAL');
+    }
     const action = args[1] as Action;
     const call: SpawnCall = { action, stdin: '', cwd: options.cwd };
     calls.push(call);
@@ -408,5 +414,60 @@ describe('NativeProvider interactive sign-in', () => {
 
     expect(await retryPromise).toEqual({ cancel: true });
     expect(calls.map(call => call.action)).toEqual(['fill', 'reject', 'fill']);
+  });
+
+  it('does not open sign-ins or show the notice for background operations', async () => {
+    fillResponses.push({ hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const authPromise = provider.authCallback(credential, URL, undefined, { interactive: false });
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS * 2);
+
+    expect(statuses).toEqual([]);
+    expect(spawnMock).toHaveBeenCalledWith(
+      'git',
+      ['credential', 'fill'],
+      expect.objectContaining({ env: expect.objectContaining({ GCM_INTERACTIVE: 'never', GIT_TERMINAL_PROMPT: '0' }) }),
+    );
+
+    hangingFills[0](fillOutput('user', 'token'));
+    expect(await authPromise).toEqual({ username: 'user', password: 'token' });
+  });
+
+  it('does not share a background fill with an interactive one', async () => {
+    fillResponses.push({ hang: true }, { hang: true });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    const background = provider.authCallback(credential, URL, undefined, { interactive: false });
+    const interactive = provider.authCallback(credential, URL);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(calls.map(call => call.action)).toEqual(['fill', 'fill']);
+    hangingFills.forEach(finish => finish(fillOutput('user', 'token')));
+    await Promise.all([background, interactive]);
+  });
+
+  it('rejects a stale credential but does not retry in background operations', async () => {
+    fillResponses.push({ stdout: fillOutput('user', 'stale') });
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+    const options = { interactive: false };
+
+    const auth = await provider.authCallback(credential, URL, undefined, options);
+    expect(await provider.authFailureCallback(credential, URL, auth, undefined, options)).toEqual({ cancel: true });
+
+    expect(calls.map(call => call.action)).toEqual(['fill', 'reject']);
+  });
+
+  it('handles spawn throwing synchronously without leaving the fill pending', async () => {
+    throwOnSpawn = true;
+    const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+    expect(await provider.authCallback(credential, URL)).toEqual({ username: '', password: '' });
+    await vi.advanceTimersByTimeAsync(SIGN_IN_NOTICE_DELAY_MS * 2);
+    expect(statuses).toEqual([]);
+
+    // The next fill for the same remote starts a new process.
+    fillResponses.push({ stdout: fillOutput('user', 'token') });
+    expect(await provider.authCallback(credential, URL)).toEqual({ username: 'user', password: 'token' });
   });
 });

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
 
-import type { GitRemoteProvider, NativeProviderConfig, ValidationResult } from './types';
+import type { GitAuthOptions, GitRemoteProvider, NativeProviderConfig, ValidationResult } from './types';
 
 /**
  * A credential in git's credential protocol format: ordered `key=value`
@@ -146,13 +146,15 @@ const killProcessTree = (proc: ChildProcess) => {
 const runGitCredential = (
   action: GitCredentialAction,
   attributes: CredentialAttributes,
-  { repoPath, timeoutMs }: { repoPath?: string; timeoutMs: number },
+  { repoPath, timeoutMs, env }: { repoPath?: string; timeoutMs: number; env?: NodeJS.ProcessEnv },
 ): RunningGitCredential => {
   let stop: (outcome: 'timeout' | 'canceled') => void = () => {};
 
   const result = new Promise<GitCredentialResult>(resolve => {
     const output: string[] = [];
     let settled = false;
+    // `stop` is assigned once the process exists; until then a timeout is a no-op.
+    const timer = setTimeout(() => stop('timeout'), timeoutMs);
     const settle = (value: GitCredentialResult) => {
       if (!settled) {
         settled = true;
@@ -161,13 +163,22 @@ const runGitCredential = (
       }
     };
 
-    const proc = spawn('git', ['credential', action], {
-      ...(repoPath ? { cwd: repoPath } : {}),
-      stdio: ['pipe', 'pipe', 'ignore'],
-      windowsHide: true,
-      // Own process group on POSIX so the whole tree can be stopped (see killProcessTree).
-      detached: process.platform !== 'win32',
-    });
+    let proc: ChildProcess;
+    try {
+      proc = spawn('git', ['credential', action], {
+        ...(repoPath ? { cwd: repoPath } : {}),
+        ...(env ? { env: { ...process.env, ...env } } : {}),
+        stdio: ['pipe', 'pipe', 'ignore'],
+        windowsHide: true,
+        // Own process group on POSIX so the whole tree can be stopped (see killProcessTree).
+        detached: process.platform !== 'win32',
+      });
+    } catch (err) {
+      // spawn can also throw synchronously (e.g. EINVAL/EACCES on Windows).
+      console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, (err as Error).message);
+      settle({ outcome: 'spawn-error', code: null, stdout: '' });
+      return;
+    }
 
     stop = outcome => {
       if (settled) {
@@ -177,7 +188,6 @@ const runGitCredential = (
       killProcessTree(proc);
       settle({ outcome, code: null, stdout: '' });
     };
-    const timer = setTimeout(() => stop('timeout'), timeoutMs);
 
     proc.on('error', err => {
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, err.message);
@@ -247,7 +257,7 @@ interface FillRequest {
   cancel: () => void;
 }
 
-/** In-flight fills keyed by working directory + query, shared by concurrent callers. */
+/** In-flight fills keyed by mode + working directory + query, shared by concurrent callers. */
 const inFlightFills = new Map<string, FillRequest>();
 
 /**
@@ -263,11 +273,23 @@ export const cancelNativeSignIn = (id: string) => {
 };
 
 /**
- * Run `git credential fill`, reusing an identical fill that is already running so
- * concurrent git operations trigger a single sign-in.
+ * Environment for fills that must not interact with the user (background git
+ * operations): Git Credential Manager does not open sign-ins, and git does not
+ * try to prompt on a terminal. Stored credentials are still returned.
  */
-const requestFill = (query: CredentialAttributes, repoPath?: string): Promise<GitCredentialResult> => {
-  const key = `${repoPath ?? ''}\n${serializeCredential(query)}`;
+const NON_INTERACTIVE_ENV = { GCM_INTERACTIVE: 'never', GIT_TERMINAL_PROMPT: '0' };
+
+/**
+ * Run `git credential fill`, reusing an identical fill that is already running so
+ * concurrent git operations trigger a single sign-in. Non-interactive fills never
+ * report a sign-in status.
+ */
+const requestFill = (
+  query: CredentialAttributes,
+  repoPath: string | undefined,
+  interactive: boolean,
+): Promise<GitCredentialResult> => {
+  const key = `${interactive ? 'interactive' : 'background'}\n${repoPath ?? ''}\n${serializeCredential(query)}`;
   const existing = inFlightFills.get(key);
   if (existing) {
     return existing.result;
@@ -275,13 +297,19 @@ const requestFill = (query: CredentialAttributes, repoPath?: string): Promise<Gi
 
   const id = randomUUID();
   const host = getAttribute(query, 'host') ?? '';
-  const running = runGitCredential('fill', query, { repoPath, timeoutMs: FILL_TIMEOUT_MS });
+  const running = runGitCredential('fill', query, {
+    repoPath,
+    timeoutMs: FILL_TIMEOUT_MS,
+    ...(interactive ? {} : { env: NON_INTERACTIVE_ENV }),
+  });
 
   let noticeShown = false;
-  const noticeTimer = setTimeout(() => {
-    noticeShown = true;
-    emitSignInStatus({ id, host, state: 'pending' });
-  }, SIGN_IN_NOTICE_DELAY_MS);
+  const noticeTimer = interactive
+    ? setTimeout(() => {
+        noticeShown = true;
+        emitSignInStatus({ id, host, state: 'pending' });
+      }, SIGN_IN_NOTICE_DELAY_MS)
+    : undefined;
 
   const result = running.result.then(fillResult => {
     clearTimeout(noticeTimer);
@@ -385,13 +413,18 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     }
   }
 
-  async authCallback(_credential: GitCredentials, url?: string, repoPath?: string): Promise<GitAuth> {
+  async authCallback(
+    _credential: GitCredentials,
+    url?: string,
+    repoPath?: string,
+    options?: GitAuthOptions,
+  ): Promise<GitAuth> {
     const query = toCredentialQuery(url);
     if (!url || !query) {
       return emptyAuth();
     }
 
-    return this.fill(url, query, repoPath);
+    return this.fill(url, query, repoPath, options?.interactive ?? true);
   }
 
   async authSuccessCallback(_credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string) {
@@ -414,7 +447,9 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     url?: string,
     auth?: GitAuth,
     repoPath?: string,
+    options?: GitAuthOptions,
   ): Promise<GitAuth> {
+    const interactive = options?.interactive ?? true;
     const query = toCredentialQuery(url);
     if (!url || !query) {
       return { cancel: true };
@@ -444,10 +479,15 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return { cancel: true };
     }
 
+    if (!interactive) {
+      // A background operation cannot start a new sign-in; the next user-initiated one will.
+      return { cancel: true };
+    }
+
     // Ask again: helpers such as Git Credential Manager start a new login once
     // the stale credential has been rejected.
     console.log('[NativeProvider] Credential rejected by the server, requesting a new one');
-    const nextAuth = await this.fill(url, query, repoPath);
+    const nextAuth = await this.fill(url, query, repoPath, interactive);
     if (nextAuth.cancel || (!nextAuth.username && !nextAuth.password)) {
       return { cancel: true };
     }
@@ -455,8 +495,13 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     return nextAuth;
   }
 
-  private async fill(url: string, query: CredentialAttributes, repoPath?: string): Promise<GitAuth> {
-    const { outcome, code, stdout } = await requestFill(query, repoPath);
+  private async fill(
+    url: string,
+    query: CredentialAttributes,
+    repoPath: string | undefined,
+    interactive: boolean,
+  ): Promise<GitAuth> {
+    const { outcome, code, stdout } = await requestFill(query, repoPath, interactive);
     if (outcome === 'timeout' || outcome === 'canceled') {
       // Stop the git operation instead of retrying without credentials.
       return { cancel: true };
