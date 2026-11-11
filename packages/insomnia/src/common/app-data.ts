@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type {
+  ApiSpec,
   BaseModel,
   ChangeBufferEvent,
   CollectionWorkspaceChildren,
@@ -40,6 +41,7 @@ const COLLECTION_CHILDREN_DOC_TYPES: string[] = [
   ...COLLECTION_REQUEST_DOC_TYPES,
   ...COLLECTION_REQUEST_META_DOC_TYPES,
   models.requestGroupMeta.type,
+  models.apiSpec.type,
 ];
 
 const WORKSPACE_CHILD_DOC_TYPES: string[] = [
@@ -231,6 +233,9 @@ function updateCollectionChildrenWithUpdatedDoc(
     return requestGroupMetas
       ? { ...collectionChildren, dataMetas: { ...collectionChildren.dataMetas, requestGroupMetas } }
       : null;
+  }
+  if (doc.type === models.apiSpec.type) {
+    return { ...collectionChildren, data: { ...collectionChildren.data, apiSpec: doc as ApiSpec } };
   }
   return null;
 }
