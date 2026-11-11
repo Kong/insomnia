@@ -199,11 +199,16 @@ async function main() {
     const { ok, detail } = await curlGet(`https://localhost:${weak.port}/`, { SSL_VERIFYPEER: 1, SSL_VERIFYHOST: 0, CAINFO: certs.ca }, false);
     record('1024-bit server certificate accepted with full verification (security level 1)', ok, detail);
     weak.child.kill();
+    await new Promise(resolve => setTimeout(resolve, 500));
   } else {
     skip('1024-bit certificate check', 'openssl s_server failed to start');
   }
 
-  fs.rmSync(dir, { recursive: true, force: true });
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+  } catch (err) {
+    console.log(`note: could not remove ${dir}: ${err.code || err.message}`);
+  }
 }
 
 app.whenReady().then(async () => {
