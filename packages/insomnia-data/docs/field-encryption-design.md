@@ -21,7 +21,7 @@ An audit of all 40+ data models identified 12+ models containing sensitive field
 | OAuth2Token                                     | `accessToken`, `refreshToken`, `identityToken`                                                                                                  | 1             |
 | CookieJar                                       | `cookies[].value`                                                                                                                               | 2             |
 | GrpcRequest                                     | `reflectionApi.apiKey`                                                                                                                          | 2             |
-| RequestGroup (folder) / WebSocketRequest / SocketIORequest / McpRequest | Same authentication fields as Request. They share the `AuthenticationSchema`, so the same marks cover them                                     | 2             |
+| Workspace (collection-level authentication) / RequestGroup (folder) / WebSocketRequest / SocketIORequest / McpRequest | Same authentication fields as Request. They share the `AuthenticationSchema`, so the same marks cover them                                     | 2             |
 | RequestVersion                                  | `compressedRequest` — gzip + base64 snapshot of the full request (including `authentication`), written on every send of a changed request      | 1             |
 
 **Characteristics:** Sensitive fields are mostly `string` types, often nested inside `authentication` objects or array elements.

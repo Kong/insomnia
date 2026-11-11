@@ -151,7 +151,21 @@ describe('getEncryptedFieldPathsByType()', () => {
         ],
         "WebSocketRequestMeta": [],
         "WebSocketResponse": [],
-        "Workspace": [],
+        "Workspace": [
+          "authentication.accessKeyId",
+          "authentication.accessToken",
+          "authentication.clientSecret",
+          "authentication.consumerSecret",
+          "authentication.key",
+          "authentication.password",
+          "authentication.privateKey",
+          "authentication.refreshToken",
+          "authentication.secretAccessKey",
+          "authentication.sessionToken",
+          "authentication.token",
+          "authentication.tokenSecret",
+          "authentication.value",
+        ],
         "WorkspaceMeta": [],
       }
     `);
@@ -210,8 +224,14 @@ describe('getEncryptedFieldPathsForType()', () => {
     expect(getEncryptedFieldPathsForType('GrpcRequest')).toEqual(['reflectionApi.apiKey']);
   });
 
+  // The collection-level authentication of a workspace is the same shared schema as the one of a request or a folder
+  it('covers the collection-level authentication of a workspace like the one of a folder', () => {
+    expect(getEncryptedFieldPathsForType('Workspace')).toContain('authentication.password');
+    expect(getEncryptedFieldPathsForType('Workspace')).toEqual(getEncryptedFieldPathsForType('RequestGroup'));
+  });
+
   it('returns an empty list for types without encrypted fields, unknown types and Object.prototype names', () => {
-    expect(getEncryptedFieldPathsForType('Workspace')).toEqual([]);
+    expect(getEncryptedFieldPathsForType('WorkspaceMeta')).toEqual([]);
     expect(getEncryptedFieldPathsForType('NotAType')).toEqual([]);
     expect(getEncryptedFieldPathsForType('toString')).toEqual([]);
     expect(getEncryptedFieldPathsForType('__proto__')).toEqual([]);
