@@ -145,10 +145,10 @@ test("Verify A Structurally Invalid OpenAPI 3.2 Document Still Imports With Its 
     path.join(import.meta.dirname, "invalid-structure.yaml"),
   );
 
-  const missingResponses = await httpRequestFlow.get("Missing responses");
+  const list = await httpRequestFlow.get("List pets");
   const create = await httpRequestFlow.get("Create a pet");
 
-  expect(missingResponses?.method).toBe(HttpMethod.Get);
+  expect(list?.method).toBe(HttpMethod.Get);
   expect(create?.method).toBe(HttpMethod.Post);
   expect(JSON.parse(create!.body!.text!)).toEqual({ name: "string" });
 });

@@ -1,9 +1,9 @@
 openapi: 3.2.0
-info: { title: Broken, version: 1.0.0 }
+info: { version: 1.0.0 }
 paths:
   /pets:
     get:
-      summary: Missing responses
+      summary: List pets
     post:
       summary: Create a pet
       requestBody:
