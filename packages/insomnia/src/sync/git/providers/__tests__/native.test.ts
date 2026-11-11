@@ -49,7 +49,11 @@ beforeEach(() => {
   fillResponses = [];
   hangingFills = [];
   spawnMock.mockReset();
-  spawnMock.mockImplementation((_cmd: string, args: string[], options: { cwd?: string }) => {
+  spawnMock.mockImplementation((cmd: string, args: string[], options: { cwd?: string }) => {
+    // Stopping a credential process on Windows spawns `taskkill`; it is not a credential action.
+    if (cmd !== 'git') {
+      return { on: vi.fn() };
+    }
     if (throwOnSpawn) {
       throwOnSpawn = false;
       throw new Error('spawn EINVAL');

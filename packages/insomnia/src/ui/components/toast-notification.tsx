@@ -186,7 +186,7 @@ export const Toaster = () => (
                     toast.content.action?.onPress();
                     queue.close(toast.key);
                   }}
-                  className="w-fit text-xs text-(--color-surprise) underline hover:opacity-80 focus:outline-none"
+                  className="w-fit text-xs text-(--color-surprise) underline hover:opacity-80"
                 >
                   {toast.content.action.label}
                 </Button>
