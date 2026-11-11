@@ -112,10 +112,17 @@ interface GitCredentialResult {
   code: number | null;
   stdout: string;
   stderr: string;
+  /** For `spawn-error`: why git could not be started. */
+  spawnError?: { code?: string; message: string };
 }
 
 /** Keep logged helper output short; it is only diagnostic. */
 const MAX_STDERR_LENGTH = 2000;
+
+const toSpawnError = (err: unknown): { code?: string; message: string } => ({
+  code: (err as NodeJS.ErrnoException).code,
+  message: (err as Error).message,
+});
 
 /** Last non-empty line of stderr, e.g. "fatal: could not read Username for 'https://host': terminal prompts disabled". */
 const summarizeStderr = (stderr: string) =>
@@ -173,7 +180,8 @@ const runGitCredential = (
 
   const result = new Promise<GitCredentialResult>(resolve => {
     const output: string[] = [];
-    const errorOutput: string[] = [];
+    // Only the tail of stderr is kept, so a chatty helper cannot grow memory while it runs.
+    let errorTail = '';
     let settled = false;
     // `stop` is assigned once the process exists; until then a timeout is a no-op.
     const timer = setTimeout(() => stop('timeout'), timeoutMs);
@@ -201,7 +209,7 @@ const runGitCredential = (
     } catch (err) {
       // spawn can also throw synchronously (e.g. EINVAL/EACCES on Windows).
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, (err as Error).message);
-      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '' });
+      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '', spawnError: toSpawnError(err) });
       return;
     }
 
@@ -216,11 +224,11 @@ const runGitCredential = (
 
     proc.on('error', err => {
       console.warn(`[NativeProvider] Failed to spawn git credential ${action}:`, err.message);
-      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '' });
+      settle({ outcome: 'spawn-error', code: null, stdout: '', stderr: '', spawnError: toSpawnError(err) });
     });
 
     proc.on('close', code => {
-      const stderr = errorOutput.join('').slice(-MAX_STDERR_LENGTH);
+      const stderr = errorTail;
       if (code !== 0 && stderr.trim()) {
         console.warn(`[NativeProvider] git credential ${action} stderr:\n${stderr.trim()}`);
       }
@@ -228,7 +236,9 @@ const runGitCredential = (
     });
 
     proc.stdout?.on('data', (data: Buffer) => output.push(data.toString()));
-    proc.stderr?.on('data', (data: Buffer) => errorOutput.push(data.toString()));
+    proc.stderr?.on('data', (data: Buffer) => {
+      errorTail = (errorTail + data.toString()).slice(-MAX_STDERR_LENGTH);
+    });
 
     proc.stdin?.on('error', err => {
       console.warn(`[NativeProvider] Failed to write to git credential ${action}:`, err.message);
@@ -288,7 +298,7 @@ const emitSignInStatus = (status: NativeSignInStatus) => {
  */
 export interface NativeCredentialError {
   host: string;
-  reason: 'git-not-found' | 'no-credentials' | 'rejected';
+  reason: 'git-not-found' | 'git-failed-to-start' | 'no-credentials' | 'rejected';
   /** Last line of the credential helper's stderr, if any. */
   detail?: string;
 }
@@ -597,7 +607,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     repoPath: string | undefined,
     interactive: boolean,
   ): Promise<FillOutcome> {
-    const { outcome, code, stdout, stderr } = await requestFill(query, repoPath, interactive);
+    const { outcome, code, stdout, stderr, spawnError } = await requestFill(query, repoPath, interactive);
     switch (outcome) {
       case 'timeout':
       case 'canceled': {
@@ -605,8 +615,10 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
         return { kind: 'stopped' };
       }
       case 'spawn-error': {
-        // git itself could not be started (e.g. not installed or not on PATH).
-        return { kind: 'failed', reason: 'git-not-found' };
+        // git itself could not be started: not installed / not on PATH (ENOENT), or present but not runnable.
+        return spawnError?.code === 'ENOENT'
+          ? { kind: 'failed', reason: 'git-not-found' }
+          : { kind: 'failed', reason: 'git-failed-to-start', detail: spawnError?.message };
       }
       default: {
         break;

@@ -102,6 +102,11 @@ const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (ho
     title: 'Git not found',
     description: 'System Git Credentials uses the git installed on this computer. Install git, then try again.',
   }),
+  'git-failed-to-start': () => ({
+    title: "Couldn't start git",
+    description:
+      'System Git Credentials could not run the git installed on this computer. Check that git works and that Insomnia is allowed to run it, then try again.',
+  }),
   'no-credentials': host => ({
     title: "Couldn't get git credentials",
     description: `Your system git credential manager didn't provide credentials for ${host}. Try again, or use an Access Token credential instead. To sign in from Insomnia, use Git Credential Manager.`,

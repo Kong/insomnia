@@ -35,8 +35,8 @@ interface Response {
   code?: number;
   stdout?: string;
   stderr?: string;
-  /** Fail to start, like git missing from PATH. */
-  spawnError?: boolean;
+  /** Fail to start. Defaults to ENOENT, like git missing from PATH. */
+  spawnError?: boolean | { code: string; message: string };
   /** Never exit on its own, like a helper waiting for the user to sign in. */
   hang?: boolean;
 }
@@ -118,7 +118,11 @@ beforeEach(() => {
           }
           setImmediate(() => {
             if (response.spawnError) {
-              listeners.error?.(new Error('spawn git ENOENT'));
+              const { code, message } =
+                response.spawnError === true
+                  ? { code: 'ENOENT', message: 'spawn git ENOENT' }
+                  : (response.spawnError as { code: string; message: string });
+              listeners.error?.(Object.assign(new Error(message), { code }));
               return;
             }
             if (response.stdout) {
@@ -198,6 +202,16 @@ describe('NativeProvider', () => {
 
       expect(await provider.authCallback(credential, URL)).toEqual({ cancel: true });
       expect(credentialErrors).toEqual([{ host: 'dev.azure.com', reason: 'git-not-found', detail: undefined }]);
+    });
+
+    it('does not claim git is missing when it exists but cannot be started', async () => {
+      fillResponses.push({ spawnError: { code: 'EACCES', message: 'spawn git EACCES' } });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      expect(await provider.authCallback(credential, URL)).toEqual({ cancel: true });
+      expect(credentialErrors).toEqual([
+        { host: 'dev.azure.com', reason: 'git-failed-to-start', detail: 'spawn git EACCES' },
+      ]);
     });
 
     it('reports a failure shared by concurrent requests once', async () => {
