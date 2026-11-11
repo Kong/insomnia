@@ -1,0 +1,24 @@
+openapi: 3.2.0
+info: { title: Path parameters, version: 1.0.0 }
+servers:
+  - url: https://api.example.com
+paths:
+  /pets:
+    parameters:
+      - name: X-Trace
+        in: header
+        required: true
+        schema: { type: string, default: path-level }
+    get:
+      summary: Operation header with different casing
+      parameters:
+        - name: x-trace
+          in: header
+          required: true
+          schema: { type: string, default: operation-level }
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              itemSchema: { type: object }
