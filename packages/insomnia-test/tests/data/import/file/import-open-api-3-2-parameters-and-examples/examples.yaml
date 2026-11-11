@@ -14,7 +14,6 @@ paths:
               remote:
                 externalValue: https://example.com/pet.json
               current:
-                value: { name: Legacy }
                 dataValue: { name: Rex, status: available }
       responses:
         "200": { description: OK }
@@ -32,7 +31,7 @@ paths:
           schema: { type: string }
           examples:
             wire: { serializedValue: "tag=green" }
-            current: { value: blue, dataValue: red }
+            current: { dataValue: red }
       responses:
         "200": { description: OK }
 components:
