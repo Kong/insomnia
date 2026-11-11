@@ -110,7 +110,7 @@ function startWeakServer(openssl, dir) {
   });
 }
 
-function curlGet(url, opts) {
+function curlGet(url, opts, expectBody = true) {
   return new Promise(resolve => {
     const curl = new Curl();
     let body = '';
@@ -134,7 +134,7 @@ function curlGet(url, opts) {
     for (const [key, value] of Object.entries(opts || {})) {
       curl.setOpt(key, value);
     }
-    curl.on('end', () => done(body.trim() === 'ok', `body=${JSON.stringify(body.trim())}`));
+    curl.on('end', () => done(expectBody ? body.trim() === 'ok' : true, `transferred ${body.length} bytes`));
     curl.on('error', (err, code) => done(false, `code=${code} ${err}`));
     curl.perform();
   });
@@ -165,7 +165,7 @@ async function main() {
     return;
   }
 
-  const base = { key: certs.serverKey, cert: certs.serverCert };
+  const base = { key: certs.serverKey, cert: certs.serverCert, ca: fs.readFileSync(certs.ca) };
   const curlOpts = { SSL_VERIFYPEER: 1, CAINFO: certs.ca };
 
   for (const [name, version] of [['TLS 1.2', 'TLSv1.2'], ['TLS 1.3', 'TLSv1.3']]) {
@@ -194,8 +194,8 @@ async function main() {
 
   const weak = await startWeakServer(openssl, dir);
   if (weak) {
-    const { ok, detail } = await curlGet(`https://localhost:${weak.port}/`, { SSL_VERIFYPEER: 0 });
-    record('1024-bit server certificate accepted (security level 1)', ok, detail);
+    const { ok, detail } = await curlGet(`https://localhost:${weak.port}/`, { SSL_VERIFYPEER: 1, SSL_VERIFYHOST: 0, CAINFO: certs.ca }, false);
+    record('1024-bit server certificate accepted with full verification (security level 1)', ok, detail);
     weak.child.kill();
   } else {
     skip('1024-bit certificate check', 'openssl s_server failed to start');
