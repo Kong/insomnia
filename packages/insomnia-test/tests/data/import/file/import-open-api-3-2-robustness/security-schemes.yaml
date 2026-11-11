@@ -10,6 +10,27 @@ paths:
         - legacyKey: []
       responses:
         "200": { description: OK }
+  /auth-code:
+    get:
+      summary: Auth code secured
+      security:
+        - authCode: [read]
+      responses:
+        "200": { description: OK }
+  /device:
+    get:
+      summary: Device flow secured
+      security:
+        - deviceFlow: [read]
+      responses:
+        "200": { description: OK }
+  /legacy:
+    get:
+      summary: Deprecated key secured
+      security:
+        - legacyKey: []
+      responses:
+        "200": { description: OK }
 components:
   securitySchemes:
     authCode:
