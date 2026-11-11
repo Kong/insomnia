@@ -151,6 +151,16 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
       }
     }
   });
+  const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
+    parentId: { $in: workspaceIds },
+  });
+  apiSpecs.forEach(apiSpec => {
+    const workspaceId = apiSpec.parentId;
+    const workspaceData = allRequestsAndMetaByWorkspaceId.get(workspaceId);
+    if (workspaceData) {
+      workspaceData.data.apiSpec = apiSpec;
+    }
+  });
 
   return allRequestsAndMetaByWorkspaceId;
 };
@@ -158,14 +168,11 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
 export const getAllDesignChildrenByWorkspaceIds = async (workspaceIds: string[]) => {
   const map = new Map<string, DesignWorkspaceChildren>();
   if (workspaceIds.length > 0) {
-    const apiSpecs = await database.find<ApiSpec>(models.apiSpec.type, {
-      parentId: { $in: workspaceIds },
-    });
     const designRequestsAndMetas = await getAllCollectionChildrenAndMetasByWorkspaceIds(workspaceIds);
     workspaceIds.forEach(workspaceId => {
       map.set(workspaceId, {
         data: {
-          apiSpec: apiSpecs.find(apiSpec => apiSpec.parentId === workspaceId),
+          apiSpec: designRequestsAndMetas.get(workspaceId)?.data.apiSpec,
           requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.data.requestsAndGroups || [],
         },
         dataMetas: {
