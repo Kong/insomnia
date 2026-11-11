@@ -50,6 +50,15 @@ describe('getMethodsFromOpenApiPathItem', () => {
       ]);
     });
 
+    it.each([
+      ['percent-encoded', '#/components/pathItems/Pets%2Ev1', 'Pets.v1'],
+      ['JSON Pointer escaped', '#/components/pathItems/Pets~1v1~0', 'Pets/v1~'],
+    ])('decodes a %s component name', (_label, $ref, name) => {
+      const result = getMethodsFromOpenApiPathItem(PETS, { $ref }, { [name]: { get: operation } });
+
+      expect(result).toEqual([{ method: 'get', jumpTo: ['components', 'pathItems', name, 'get'] }]);
+    });
+
     it('prefers the methods defined next to the $ref', () => {
       const result = getMethodsFromOpenApiPathItem(
         PETS,
@@ -64,6 +73,7 @@ describe('getMethodsFromOpenApiPathItem', () => {
       ['an external file', './paths/pets.yaml'],
       ['a non pathItems pointer', '#/paths/~1other'],
       ['a missing target', '#/components/pathItems/Missing'],
+      ['a malformed percent escape', '#/components/pathItems/Pets%E0%A4%A'],
     ])('returns nothing for %s', (_label, $ref) => {
       expect(getMethodsFromOpenApiPathItem(PETS, { $ref }, pathItems)).toEqual([]);
     });
