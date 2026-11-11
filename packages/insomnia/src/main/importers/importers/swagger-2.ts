@@ -338,7 +338,7 @@ const prepareBody = (
 
     if (type === 'object') {
       const { schema } = bodyParameter as OpenAPIV2.ParameterObject;
-      if (schema.$ref) {
+      if (schema.$ref?.startsWith('#/')) {
         const definition = resolve$ref(document, schema.$ref);
         text = JSON.stringify(example(definition), null, 2);
       } else {

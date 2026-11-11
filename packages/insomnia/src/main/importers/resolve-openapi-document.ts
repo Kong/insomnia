@@ -1,57 +1,44 @@
-import dns from 'node:dns/promises';
+import { bundle } from '@scalar/json-magic/bundle';
+import { fetchUrls } from '@scalar/json-magic/bundle/plugins/browser';
+import { dereference, validate } from '@scalar/openapi-parser';
 
-import { dereference, load, validate } from '@scalar/openapi-parser';
-import { fetchUrls } from '@scalar/openapi-parser/plugins/fetch-urls';
+import { fetchPublicHttps } from '../safe-fetch';
 
-import { isPrivateOrLoopbackHost } from '../private-host';
-
-const REMOTE_REF_TIMEOUT_MS = 10_000;
-
-/**
- * Fetches a remote `$ref` with the same SSRF policy as Spectral linting (main/lint-process.mjs):
- * https only, public hosts only (also after DNS resolution), no redirects, with a timeout.
- */
-export const fetchRemoteRef = async (href: string): Promise<Response> => {
-  const url = new URL(href);
-  const hostname = url.hostname.toLowerCase();
-  if (url.protocol !== 'https:' || !hostname || isPrivateOrLoopbackHost(hostname)) {
-    throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
-  }
-  const records = await dns.lookup(hostname, { all: true });
-  if (records.some(({ address }) => isPrivateOrLoopbackHost(address.toLowerCase()))) {
-    throw new Error(`Failed to fetch "${href}". The host resolves to a private or loopback address.`);
-  }
-  const response = await fetch(href, { redirect: 'error', signal: AbortSignal.timeout(REMOTE_REF_TIMEOUT_MS) });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
-  }
-  return response;
-};
+type OpenApiInput = Parameters<typeof validate>[0];
 
 /**
- * Loads remote `$ref`s, validates and dereferences an OpenAPI / Swagger document.
+ * Bundles remote `$ref`s, then validates and dereferences an OpenAPI / Swagger document.
+ * Remote `$ref`s are fetched with the SSRF policy of `fetchPublicHttps` (https only, public hosts only
+ * - also at connection time -, no redirects, with a timeout); a `$ref` that cannot be fetched is left as is.
  * Validation and reference errors are only logged: the document is always dereferenced as far as possible,
  * so one unresolvable reference or a structural error does not leave every other `$ref` unresolved.
+ *
+ * Note: bundling resolves remote `$ref`s into the passed document in place.
  */
 export const resolveOpenApiDocument = async <T>(document: T, logPrefix: string): Promise<T> => {
   try {
-    const { filesystem, errors: loadErrors } = await load(document as Record<string, unknown>, {
-      plugins: [fetchUrls({ fetch: fetchRemoteRef })],
+    const bundled = await bundle(document as Record<string, unknown>, {
+      // `fetchUrls` turns any fetch failure into an unresolved reference instead of aborting the bundle.
+      // Only the URL is forwarded: the plugin's 2nd argument (request init) must not reach the safe fetch.
+      plugins: [fetchUrls({ fetch: href => fetchPublicHttps(String(href)) as unknown as Promise<Response> })],
+      treeShake: true,
     });
-    if (loadErrors?.length) {
-      console.log(`${logPrefix} Failed to load external references`, loadErrors);
-    }
 
-    const { valid, errors: validationErrors } = await validate(filesystem);
+    const { valid, errors: validationErrors } = await validate(bundled as OpenApiInput);
     if (!valid) {
       console.log(`${logPrefix} Import file validation failed`, validationErrors);
     }
 
-    const { schema, errors: dereferenceErrors } = await dereference(filesystem);
+    const { schema, errors: dereferenceErrors } = await dereference(bundled as OpenApiInput);
     if (dereferenceErrors?.length) {
       console.log(`${logPrefix} Failed to resolve references`, dereferenceErrors);
     }
-    return (schema ?? document) as T;
+    if (schema) {
+      // Bundled remote documents live in `x-ext`; they are inlined by now.
+      delete (schema as Record<string, unknown>)['x-ext'];
+      return schema as T;
+    }
+    return document;
   } catch (err) {
     console.log(`${logPrefix} Failed to resolve the document`, err);
     return document;

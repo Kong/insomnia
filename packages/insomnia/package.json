@@ -69,6 +69,7 @@
     "@rjsf/core": "6.8.0",
     "@rjsf/utils": "6.8.0",
     "@rjsf/validator-ajv8": "6.8.0",
+    "@scalar/json-magic": "0.17.0",
     "@scalar/openapi-parser": "0.29.19",
     "@sentry/electron": "^7.17.0",
     "@stoplight/spectral-core": "^1.22.0",

@@ -499,7 +499,8 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
  * If multiple types are available, the one for which an example can be generated will be selected first (i.e. application/json)
  */
 const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['body'] => {
-  const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
+  // `content` is missing when the request body is an unresolved (e.g. blocked remote) `$ref`
+  const { content = {} } = (endpointSchema.requestBody || {}) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
   const supportedMimeType = mimeTypes.find(reqMimeType => {

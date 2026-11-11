@@ -1,10 +1,9 @@
-import dns from 'node:dns/promises';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { fetchPublicHttps } from '../safe-fetch';
 import { resolveOpenApiDocument } from './resolve-openapi-document';
 
-vi.mock('node:dns/promises', () => ({ default: { lookup: vi.fn() } }));
+vi.mock('../safe-fetch', () => ({ fetchPublicHttps: vi.fn() }));
 
 const REMOTE_ERROR = { type: 'object', properties: { code: { type: 'integer' } } };
 const PET = { type: 'object', properties: { name: { type: 'string' } } };
@@ -32,44 +31,43 @@ const getSchemas = (document: any) => {
 };
 
 describe('resolveOpenApiDocument', () => {
-  const fetchMock = vi.fn();
+  const fetchMock = vi.mocked(fetchPublicHttps);
 
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.mocked(dns.lookup).mockResolvedValue([{ address: '93.184.215.14', family: 4 }] as any);
-    fetchMock.mockResolvedValue(new Response(JSON.stringify(REMOTE_ERROR)));
-    vi.stubGlobal('fetch', fetchMock);
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify(REMOTE_ERROR)) as any);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     fetchMock.mockReset();
   });
 
-  it('resolves local and public https remote references', async () => {
+  it('resolves local and remote references', async () => {
     const result = await resolveOpenApiDocument(buildDoc('https://example.com/error.json'), '[test]');
 
     expect(getSchemas(result)).toEqual({ body: PET, error: REMOTE_ERROR });
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://example.com/error.json',
-      expect.objectContaining({ redirect: 'error' }),
-    );
+    expect(fetchMock).toHaveBeenCalledWith('https://example.com/error.json');
+    expect(result).not.toHaveProperty('x-ext');
   });
 
-  it.each([
-    ['http URLs', 'http://example.com/error.json', undefined],
-    ['private hosts', 'https://192.168.0.1/error.json', undefined],
-    ['hosts resolving to a private address', 'https://internal.example.com/error.json', '127.0.0.1'],
-  ])('does not fetch %s but still resolves local references', async (_label, remoteRef, resolvedAddress) => {
-    if (resolvedAddress) {
-      vi.mocked(dns.lookup).mockResolvedValue([{ address: resolvedAddress, family: 4 }] as any);
-    }
+  it('leaves a remote reference unresolved when it is refused by the fetch policy, but still resolves local references', async () => {
+    fetchMock.mockRejectedValue(new Error('Only https URLs to public hosts are allowed.'));
+    const remoteRef = 'http://example.com/error.json';
 
     const result = await resolveOpenApiDocument(buildDoc(remoteRef), '[test]');
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getSchemas(result)).toEqual({ body: PET, error: { $ref: remoteRef } });
+  });
+
+  it('leaves a remote reference unresolved when the response is not ok', async () => {
+    fetchMock.mockResolvedValue(new Response('not found', { status: 404 }) as any);
+    const remoteRef = 'https://example.com/missing.json';
+
+    const result = await resolveOpenApiDocument(buildDoc(remoteRef), '[test]');
+
     expect(getSchemas(result)).toEqual({ body: PET, error: { $ref: remoteRef } });
   });
 

@@ -548,4 +548,31 @@ describe('openapi-3', () => {
       expect(depth).toBeLessThan(10);
     });
   });
+
+  describe('unresolved remote $ref', () => {
+    it('should still import operations whose requestBody is a blocked remote $ref', async () => {
+      const openApiDoc = {
+        openapi: '3.0.3',
+        info: { title: 'Remote body API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/remote': {
+            post: {
+              requestBody: { $ref: 'http://example.com/body.json' },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+          '/local': {
+            get: { responses: { 200: { description: 'ok' } } },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+
+      const requests = result?.filter(item => item._type === 'request') ?? [];
+      expect(requests).toHaveLength(2);
+      expect(requests.find(request => request.url.endsWith('/remote'))?.body).toEqual({});
+    });
+  });
 });
