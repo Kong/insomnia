@@ -44,7 +44,13 @@ test("Verify $self Triggers No Network Access And Keeps Local $ref Resolved", as
   );
 
   expect(
-    fetchedUrls.filter((url) => url.includes("self-ref.example.com")),
+    fetchedUrls.filter((url) => {
+      try {
+        return new URL(url).hostname === "self-ref.example.com";
+      } catch {
+        return false;
+      }
+    }),
   ).toEqual([]);
   expect(JSON.parse(local!.body!.text!)).toEqual({
     name: "string",
