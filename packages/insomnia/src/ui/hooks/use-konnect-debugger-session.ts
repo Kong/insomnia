@@ -65,7 +65,6 @@ export function useKonnectDebuggerSession({
   );
 
   const [sessionId, setSessionId] = useState<string | null>(konnectDebugSessionId || null);
-  // const [isDebugSessionMissing, setDebugSessionMissing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   // Adopt a debug session by updating the query cache, local state, and project data.
@@ -148,8 +147,8 @@ export function useKonnectDebuggerSession({
     queryClient,
   );
 
-  const { mutateAsync: startAsync, reset: resetStart } = startMutation;
-  const { mutateAsync: stopAsync, reset: resetStop } = stopMutation;
+  const { mutateAsync: startAsync, reset: resetStart, error: startError } = startMutation;
+  const { mutateAsync: stopAsync, reset: resetStop, error: stopError } = stopMutation;
 
   const startDebugSession = useCallback(
     async (durationSecs: number) => {
@@ -183,11 +182,11 @@ export function useKonnectDebuggerSession({
   const errors = [
     isFetchingDebugSession ? null : debugSessionError,
     isFetchingTraces ? null : tracesError,
-    asDebugError(startMutation.error),
-    asDebugError(stopMutation.error),
+    asDebugError(startError),
+    asDebugError(stopError),
   ];
   const authError = errors.find(error => error && AUTH_KINDS.has(error.kind)) ?? null;
-  const mutationError = asDebugError(startMutation.error) || asDebugError(stopMutation.error);
+  const mutationError = asDebugError(startError) || asDebugError(stopError);
 
   return {
     ctx,
