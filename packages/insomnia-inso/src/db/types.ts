@@ -42,4 +42,9 @@ export const emptyDb = (): Database => ({
   Settings: [],
 });
 
-export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;
+export type DbAdapter = (
+  dir: string,
+  filterTypes?: (keyof Database)[],
+  /** The local encryption key as the user has it: base64 text or JWK JSON. Only used by the NeDB adapter. */
+  encryptionKey?: string,
+) => Promise<Database | null>;

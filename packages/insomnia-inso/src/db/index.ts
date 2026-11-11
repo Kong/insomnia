@@ -10,6 +10,8 @@ import { emptyDb } from './types';
 interface Options {
   pathToSearch: string;
   filterTypes?: (keyof Database)[];
+  /** The local encryption key as the user has it: base64 text or JWK JSON. Only used when the data is read from NeDB. */
+  encryptionKey?: string;
 }
 
 export const isFile = async (path: string) => {
@@ -19,7 +21,7 @@ export const isFile = async (path: string) => {
     return false;
   }
 };
-export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
+export const loadDb = async ({ pathToSearch, filterTypes, encryptionKey }: Options) => {
   // if path to file is provided try to it is an insomnia export file
   const isFilePath = await isFile(pathToSearch);
   if (isFilePath) {
@@ -39,7 +41,7 @@ export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   }
 
   // try load from nedb
-  const nedb = await neDbAdapter(pathToSearch, filterTypes);
+  const nedb = await neDbAdapter(pathToSearch, filterTypes, encryptionKey);
   if (nedb) {
     logger.debug(`Data store configured from app data directory  at \`${pathToSearch}\``);
     return nedb;
