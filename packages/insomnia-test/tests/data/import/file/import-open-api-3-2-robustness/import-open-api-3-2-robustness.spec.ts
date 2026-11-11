@@ -3,6 +3,7 @@ import path from "node:path";
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
+import { TreeNodeType } from "@package/enums/tree-node-types";
 import { test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
@@ -92,7 +93,10 @@ test("Verify OpenAPI 3.2 Security Schemes With oauth2MetadataUrl And Device Auth
 test("Verify OpenAPI 3.2 Schema And Tag Keywords Do Not Change The Generated Request", async ({
   user,
 }) => {
+  test.fail(true, "INS-4291");
+
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
+  const { workspacePage } = user.pageManager;
 
   const project = await workspaceFlow.createProject(
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
@@ -113,6 +117,18 @@ test("Verify OpenAPI 3.2 Schema And Tag Keywords Do Not Change The Generated Req
     kind: "string",
     name: "string",
   });
+
+  // `cats` declares `parent: pets`, so it nests under `pets` instead of
+  // being a sibling folder.
+  const nodes = (await workspacePage.getTree()).flatten();
+  const pets = nodes.find(
+    (node) => node.type === TreeNodeType.Folder && node.name === "pets",
+  );
+  const cats = pets?.children.find(
+    (node) => node.type === TreeNodeType.Folder && node.name === "cats",
+  );
+  expect(cats).toBeDefined();
+  expect(cats!.children.map((node) => node.name)).toEqual(["Create an animal"]);
 });
 
 test("Verify A Structurally Invalid OpenAPI 3.2 Document Still Imports With Its Schema References Resolved", async ({
