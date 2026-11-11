@@ -1,9 +1,12 @@
+import { TreeNodeType } from "@package/enums/tree-node-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { step } from "@package/misc/step";
 import type {
   OutlineMethodBadge,
   PreviewOperation,
   WebhookEntry,
 } from "@package/pages/spec.page";
+import { expect } from "@playwright/test";
 
 import { BaseFlow } from "./base.flow";
 
@@ -11,11 +14,23 @@ export class SpecFlow extends BaseFlow {
   /**
    * Generates requests from the open collection's spec through the
    * toolbar's Generate -> Requests action. The requests land in the same
-   * collection.
+   * collection. Waits until the tree lists more requests than before the
+   * click: the app lands on the Debug URL before the generation (lint,
+   * scan, import) has finished, and a later step must not race its shared
+   * import cache.
    */
   @step()
   async generateRequests(): Promise<void> {
+    const countRequests = async () =>
+      (await this.pageManager.workspacePage.getTree())
+        .flatten()
+        .filter((node) => node.type === TreeNodeType.Request).length;
+
+    const before = await countRequests();
     await this.pageManager.specPage.clickGenerateRequests();
+    await expect
+      .poll(countRequests, { timeout: DEFAULT_TIMEOUT * 2 })
+      .toBeGreaterThan(before);
   }
 
   /**
