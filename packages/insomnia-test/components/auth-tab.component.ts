@@ -163,6 +163,55 @@ export class AuthTabComponent extends TabPanelComponent {
   }
 
   /**
+   * Reads the auth type shown by the Auth tab's type dropdown (e.g.
+   * "OAuth 2.0", "API Key", "None").
+   */
+  async getAuthType(): Promise<string> {
+    await this.switchTab("auth");
+    const button = this.page.locator(this.AUTH_TYPE_BUTTON);
+    await expect(button).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+    return (await button.innerText()).trim();
+  }
+
+  /**
+   * Reads back the OAuth 2.0 grant type and the URL, client ID and scope
+   * fields currently shown. Fields that the selected grant type doesn't
+   * render come back as `undefined`.
+   */
+  async getOAuth2Fields(): Promise<
+    Partial<
+      Pick<
+        AuthTypeOAuth2,
+        | "grantType"
+        | "authorizationUrl"
+        | "accessTokenUrl"
+        | "clientId"
+        | "scope"
+      >
+    >
+  > {
+    await this.switchTab("auth");
+    await expect(this.fieldByLabel("Grant-Type")).toBeVisible({
+      timeout: DEFAULT_TIMEOUT,
+    });
+    await this.expandOAuth2AdvancedOptions();
+    const read = async (label: string) => {
+      const editor = this.oauth2FieldEditor(label);
+      return (await editor.count()) === 0
+        ? undefined
+        : await this.readCodeMirror(editor);
+    };
+    return {
+      grantType: (await this.fieldByLabel("Grant-Type").inputValue()) as
+        | AuthTypeOAuth2["grantType"],
+      authorizationUrl: await read("Authorization URL"),
+      accessTokenUrl: await read("Access Token URL"),
+      clientId: await read("Client ID"),
+      scope: await read("Scope"),
+    };
+  }
+
+  /**
    * Sets the Bearer Token's token, switching the auth type to Bearer
    * Token first.
    */
