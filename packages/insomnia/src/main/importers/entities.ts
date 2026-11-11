@@ -14,6 +14,7 @@ export interface Parameter extends Comment {
   fileName?: string;
   disabled?: boolean;
   type?: 'file' | string;
+  multiline?: boolean | string;
 }
 
 export interface PathParameters {

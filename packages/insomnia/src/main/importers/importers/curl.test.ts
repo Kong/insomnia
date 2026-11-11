@@ -195,12 +195,57 @@ describe('curl', () => {
     },
     {
       // https://github.com/Kong/insomnia/issues/6731
-      name: 'should drop the ;type= modifier from a --form file value',
+      name: 'should strip the ;type= modifier from a --form file value and keep it as the part media type',
       curl: "curl -X POST https://example.com -F 'data=@/tmp/dex.json;type=application/json'",
       expected: {
         body: {
           mimeType: 'multipart/form-data',
-          params: [{ name: 'data', fileName: '/tmp/dex.json', type: 'file' }],
+          params: [{ name: 'data', fileName: '/tmp/dex.json', type: 'file', multiline: 'application/json' }],
+        },
+      },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/10747
+      name: 'should preserve the ;type= modifier of a --form text value',
+      curl: "curl -X POST https://example.com -F 'field=value;type=application/json'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'field', value: 'value', type: 'text', multiline: 'application/json' }],
+        },
+      },
+    },
+    {
+      // https://github.com/Kong/insomnia/issues/10747
+      name: 'should unquote a double quoted --form text value and preserve its ;type= modifier',
+      curl: `curl -X POST https://example.com --form 'param="{\\"uploadType\\": \\"2\\"}";type=application/json' --form 'file=@"/tmp/abc.xml"'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [
+            { name: 'param', value: '{"uploadType": "2"}', type: 'text', multiline: 'application/json' },
+            { name: 'file', fileName: '/tmp/abc.xml', type: 'file' },
+          ],
+        },
+      },
+    },
+    {
+      name: 'should keep media type parameters of a --form ;type= modifier',
+      curl: "curl -X POST https://example.com -F 'page=@index.html;type=text/html; charset=utf-8'",
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'page', fileName: 'index.html', type: 'file', multiline: 'text/html; charset=utf-8' }],
+        },
+      },
+    },
+    {
+      name: 'should not treat a semicolon inside a quoted --form text value as a modifier',
+      curl: `curl -X POST https://example.com -F 'field="a;b=c"'`,
+      expected: {
+        body: {
+          mimeType: 'multipart/form-data',
+          params: [{ name: 'field', value: 'a;b=c', type: 'text' }],
         },
       },
     },
