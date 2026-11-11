@@ -33,6 +33,7 @@ const {
   webSocketRequest,
   socketIORequest,
   mcpRequest,
+  workspace,
 } = models;
 
 export const MetaSchema = z.object({
@@ -443,6 +444,14 @@ export const CollectionSchema = z.object({
   certificates: z.array(CACertificateSchema).optional(),
   testSuites: z.array(TestSuiteSchema).optional(),
   spec: SpecSchema.optional(),
+  headers: workspace.collectionWorkspaceSchema.shape.headers,
+  scripts: z
+    .object({
+      preRequest: workspace.collectionWorkspaceSchema.shape.preRequestScript,
+      afterResponse: workspace.collectionWorkspaceSchema.shape.afterResponseScript,
+    })
+    .optional(),
+  authentication: workspace.collectionWorkspaceSchema.shape.authentication,
 });
 
 export const ApiSpecSchema = z.object({
@@ -456,6 +465,14 @@ export const ApiSpecSchema = z.object({
   spec: SpecSchema.optional().default({ contents: {} }),
   testSuites: z.array(TestSuiteSchema).optional(),
   certificates: z.array(CACertificateSchema).optional(),
+  headers: workspace.collectionWorkspaceSchema.shape.headers,
+  scripts: z
+    .object({
+      preRequest: workspace.collectionWorkspaceSchema.shape.preRequestScript,
+      afterResponse: workspace.collectionWorkspaceSchema.shape.afterResponseScript,
+    })
+    .optional(),
+  authentication: workspace.collectionWorkspaceSchema.shape.authentication,
 });
 
 export const MockServerSchema = z.object({
