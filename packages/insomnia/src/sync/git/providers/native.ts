@@ -15,11 +15,16 @@ type CredentialAttributes = [key: string, value: string][];
 type GitCredentialAction = 'fill' | 'approve' | 'reject';
 
 /**
- * Key for a credential used against a remote. A rejected credential is replaced
- * by a fresh `git credential fill` at most once: one retry lets the helper start a
- * new login after a stale token was rejected; more would risk login loops.
+ * Key for a credential used against a remote from a given repository. The repository
+ * is part of the key because its local git config can select a different credential
+ * helper, so identical credentials may still carry different helper attributes.
+ *
+ * A rejected credential is replaced by a fresh `git credential fill` at most once:
+ * one retry lets the helper start a new login after a stale token was rejected;
+ * more would risk login loops.
  */
-const credentialKey = (url: string, auth: GitAuth) => `${url}\n${auth.username ?? ''}\n${auth.password ?? ''}`;
+const credentialKey = (url: string, auth: GitAuth, repoPath?: string) =>
+  `${repoPath ?? ''}\n${url}\n${auth.username ?? ''}\n${auth.password ?? ''}`;
 
 const emptyAuth = (): GitAuth => ({ username: '', password: '' });
 
@@ -137,18 +142,35 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
 
   /**
    * Full `git credential fill` output of credentials handed to isomorphic-git,
-   * keyed by remote URL + username + password (see credentialKey) so concurrent
-   * operations on the same remote do not overwrite each other. It is passed back
+   * keyed by repository + remote URL + username + password (see credentialKey) so
+   * concurrent operations do not overwrite each other. It is passed back
    * verbatim to approve/reject so helper-specific attributes (e.g.
    * `password_expiry_utc`, `oauth_refresh_token`) are preserved, as the git CLI does.
    */
   private readonly filledCredentials = new Map<string, CredentialAttributes>();
 
   /**
-   * Credentials obtained by a retry after a rejection (see credentialKey). If one
-   * of these is rejected too, the operation gives up instead of retrying again.
+   * Number of operations currently holding a credential obtained by a retry after a
+   * rejection (see credentialKey). Operations that retried at the same time share the
+   * same credential, so each one counts. If a retried credential is rejected too, that
+   * operation gives up instead of retrying again.
    */
-  private readonly retriedCredentials = new Set<string>();
+  private readonly retriedCredentials = new Map<string, number>();
+
+  private markRetried(key: string) {
+    this.retriedCredentials.set(key, (this.retriedCredentials.get(key) ?? 0) + 1);
+  }
+
+  /** Releases one retry holder of `key`; returns whether there was one. */
+  private releaseRetried(key: string) {
+    const count = this.retriedCredentials.get(key) ?? 0;
+    if (count <= 1) {
+      this.retriedCredentials.delete(key);
+    } else {
+      this.retriedCredentials.set(key, count - 1);
+    }
+    return count > 0;
+  }
 
   constructor(config: NativeProviderConfig) {
     this.config = config;
@@ -192,8 +214,8 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
   }
 
   async authSuccessCallback(_credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string) {
-    const key = credentialKey(url, auth);
-    this.retriedCredentials.delete(key);
+    const key = credentialKey(url, auth, repoPath);
+    this.releaseRetried(key);
 
     // Only approve what `fill` returned. Another operation that used the same
     // credential may already have approved (and forgotten) it.
@@ -226,7 +248,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       return { cancel: true };
     }
 
-    const key = credentialKey(url, auth);
+    const key = credentialKey(url, auth, repoPath);
     // Fall back to the failed credential itself when another operation that used
     // it already consumed the remembered fill output.
     const credential = this.filledCredentials.get(key) ?? [
@@ -242,7 +264,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
       console.warn(`[NativeProvider] git credential reject exited with code ${code}`);
     }
 
-    if (this.retriedCredentials.delete(key)) {
+    if (this.releaseRetried(key)) {
       console.log('[NativeProvider] Auth failed after retry. Check your system git credential manager.');
       return { cancel: true };
     }
@@ -254,7 +276,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     if (!nextAuth.username && !nextAuth.password) {
       return { cancel: true };
     }
-    this.retriedCredentials.add(credentialKey(url, nextAuth));
+    this.markRetried(credentialKey(url, nextAuth, repoPath));
     return nextAuth;
   }
 
@@ -277,7 +299,7 @@ export class NativeProvider implements GitRemoteProvider<NativeProviderConfig> {
     // `fill` echoes the full credential, but fall back to the query for any
     // identifying attribute it omitted so approve/reject target the same entry.
     const missing = query.filter(([key]) => key !== 'path' && getAttribute(filled, key) === undefined);
-    this.filledCredentials.set(credentialKey(url, { username, password }), [...missing, ...filled]);
+    this.filledCredentials.set(credentialKey(url, { username, password }, repoPath), [...missing, ...filled]);
 
     return { username, password };
   }

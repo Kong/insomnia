@@ -225,6 +225,44 @@ describe('NativeProvider', () => {
       expect(calls.map(call => call.action)).toEqual(['fill', 'reject', 'fill', 'fill', 'reject']);
     });
 
+    it('gives each of several operations that retried together its own retry budget', async () => {
+      fillResponses.push(
+        { stdout: fillOutput('user', 'stale') },
+        { stdout: fillOutput('user', 'stale') },
+        { stdout: fillOutput('user', 'retried') },
+        { stdout: fillOutput('user', 'retried') },
+        { stdout: fillOutput('user', 'unexpected') },
+      );
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      const firstAuth = await provider.authCallback(credential, URL);
+      const secondAuth = await provider.authCallback(credential, URL);
+      const firstRetry = await provider.authFailureCallback(credential, URL, firstAuth);
+      const secondRetry = await provider.authFailureCallback(credential, URL, secondAuth);
+
+      // Both operations were handed the same retried credential and both are rejected again.
+      expect(await provider.authFailureCallback(credential, URL, firstRetry)).toEqual({ cancel: true });
+      expect(await provider.authFailureCallback(credential, URL, secondRetry)).toEqual({ cancel: true });
+      expect(calls.filter(call => call.action === 'fill')).toHaveLength(4);
+    });
+
+    it('keeps fill output of different repositories apart even for identical credentials', async () => {
+      const fillA = fillOutput('user', 'token', 'oauth_refresh_token=a\n');
+      const fillB = fillOutput('user', 'token', 'oauth_refresh_token=b\n');
+      fillResponses.push({ stdout: fillA }, { stdout: fillB });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      const authA = await provider.authCallback(credential, URL, '/repo-a');
+      const authB = await provider.authCallback(credential, URL, '/repo-b');
+      await provider.authSuccessCallback(credential, URL, authA, '/repo-a');
+      await provider.authSuccessCallback(credential, URL, authB, '/repo-b');
+
+      expect(calls.slice(2)).toEqual([
+        { action: 'approve', stdin: `${fillA}\n`, cwd: '/repo-a' },
+        { action: 'approve', stdin: `${fillB}\n`, cwd: '/repo-b' },
+      ]);
+    });
+
     it('rejects a failed credential even when another operation consumed its fill output', async () => {
       fillResponses.push({ stdout: fillOutput('user', 'stale') }, { stdout: fillOutput('user', 'fresh') });
       const provider = new NativeProvider({ type: 'native', displayName: 'System' });
