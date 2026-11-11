@@ -295,6 +295,10 @@ export class WorkspaceFlow extends BaseFlow {
       .poll(
         async () => {
           try {
+            // Lint results can arrive after the initial expand above (the
+            // toggle only renders once there are messages), so re-expand on
+            // every tick; it is a no-op when the panel is already open.
+            await specPage.expandLintPanel();
             const summary = await specPage.getLintSummary();
             const entries = await specPage.getLintEntries();
             const errors = summary === 'none' ? 0 : summary.errors;
