@@ -58,6 +58,34 @@ export class HttpRequestFlow extends BaseFlow {
   }
 
   /**
+   * Opens an existing request by name and reads back what its Auth tab
+   * shows: the auth type label, plus the OAuth 2.0 fields when that type
+   * is selected. Returns `undefined` if the request isn't in the tree.
+   */
+  @step()
+  async getAuthentication(name: string): Promise<
+    | {
+        type: string;
+        oauth2?: Awaited<ReturnType<HttpRequestPage["auth"]["getOAuth2Fields"]>>;
+      }
+    | undefined
+  > {
+    const workspace = this.pageManager.workspacePage;
+    const httpRequestPage = this.pageManager.httpRequestPage;
+
+    const node = await workspace.findItemNode({ name }, TreeNodeType.Request);
+    if (!node) return undefined;
+
+    await workspace.openRequestNode(node);
+    await httpRequestPage.navigate();
+
+    const type = await httpRequestPage.auth.getAuthType();
+    return type === "OAuth 2.0"
+      ? { type, oauth2: await httpRequestPage.auth.getOAuth2Fields() }
+      : { type };
+  }
+
+  /**
    * Sends `request` and returns the resulting response, locating it in the
    * standalone project tree.
    */
