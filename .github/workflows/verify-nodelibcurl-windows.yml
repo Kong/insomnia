@@ -45,3 +45,39 @@ jobs:
             npm-debug.log
           if-no-files-found: ignore
           retention-days: 3
+
+  e2e-windows:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: windows-latest
+    env:
+      NODE_OPTIONS: '--max_old_space_size=6144'
+      CI: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show installed binary
+        run: node scripts/check-binary-version.js node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node 3.5.9
+      - name: Build app
+        run: npm run app-build
+      - name: Run mTLS smoke test through the app
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke tests/smoke/mtls.test.ts
+      - name: Upload traces
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: insomnia-e2e-traces
+          path: packages/insomnia-smoke-test/traces
+          if-no-files-found: ignore
+          retention-days: 3
