@@ -402,8 +402,8 @@ const convertQueryStringParameters = (parameters: QueryStringParameterObject[] =
   return parameters.flatMap(({ required, content }) => {
     const mediaType = content?.['application/x-www-form-urlencoded'];
     const schema = mediaType?.schema as OpenAPIV3.SchemaObject | undefined;
-    const properties = schema?.properties;
-    if (!properties || !isPlainObject(properties)) {
+    const { properties, required: requiredProperties } = collectObjectSchema(schema);
+    if (!schema || Object.keys(properties).length === 0) {
       return [];
     }
     // Property values come from the media type example, otherwise from an example generated for the whole schema
@@ -416,10 +416,26 @@ const convertQueryStringParameters = (parameters: QueryStringParameterObject[] =
       const value = Object.hasOwn(exampleValues, propertyName)
         ? exampleValues[propertyName]
         : generateParameterExample(propertySchema as OpenAPIV3.SchemaObject);
-      const disabled = required !== true || !schema.required?.includes(propertyName);
+      const disabled = required !== true || !requiredProperties.includes(propertyName);
       return flattenQueryStringProperty(propertyName, value, disabled, mediaType?.encoding?.[propertyName]);
     });
   });
+};
+
+/**
+ * Collect the effective `properties` and `required` of an object schema, including those composed through `allOf`.
+ */
+const collectObjectSchema = (schema?: OpenAPIV3.SchemaObject): { properties: Record<string, unknown>; required: string[] } => {
+  const properties: Record<string, unknown> = isPlainObject(schema?.properties) ? { ...schema?.properties } : {};
+  const required: string[] = Array.isArray(schema?.required) ? [...schema.required] : [];
+  for (const subSchema of schema?.allOf ?? []) {
+    if (isPlainObject(subSchema)) {
+      const collected = collectObjectSchema(subSchema as OpenAPIV3.SchemaObject);
+      Object.assign(properties, collected.properties);
+      required.push(...collected.required);
+    }
+  }
+  return { properties, required };
 };
 
 const ARRAY_DELIMITERS: Record<string, string> = { form: ',', spaceDelimited: ' ', pipeDelimited: '|' };
@@ -434,11 +450,24 @@ const flattenQueryStringProperty = (
   disabled: boolean,
   encoding?: { style?: string; explode?: boolean },
 ) => {
+  const style = encoding?.style ?? 'form';
+  const explode = encoding?.explode ?? style === 'form';
+  if (isPlainObject(value)) {
+    // `deepObject` is the only style that uses bracket notation: `filter[role]=admin`
+    if (style === 'deepObject') {
+      return flattenParameter(name, value, disabled);
+    }
+    // form objects: `role=admin` when exploded, otherwise `filter=role,admin`
+    if (explode) {
+      return Object.entries(value as Record<string, unknown>).flatMap(([key, child]) =>
+        flattenParameter(key, child, disabled),
+      );
+    }
+    return flattenParameter(name, Object.entries(value as Record<string, unknown>).flat().join(ARRAY_DELIMITERS[style] ?? ','), disabled);
+  }
   if (!Array.isArray(value)) {
     return flattenParameter(name, value, disabled);
   }
-  const style = encoding?.style ?? 'form';
-  const explode = encoding?.explode ?? style === 'form';
   if (explode) {
     return value.length === 0 ? flattenParameter(name, '', disabled) : value.flatMap(item => flattenParameter(name, item, disabled));
   }
@@ -471,8 +500,11 @@ const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => 
   );
 
   // A 2xx `text/event-stream` response makes the request an Insomnia Event Stream request, which is detected by this Accept header
-  if (hasEventStreamResponse(endpointSchema) && !paramHeaders.some(header => header.name.toLowerCase() === 'accept')) {
-    paramHeaders = [{ name: 'Accept', disabled: false, value: 'text/event-stream' }, ...paramHeaders];
+  // Header names are case-insensitive, but the detection is case-sensitive, so a declared `accept` is renamed to `Accept`
+  if (hasEventStreamResponse(endpointSchema)) {
+    paramHeaders = paramHeaders.some(header => header.name.toLowerCase() === 'accept')
+      ? paramHeaders.map(header => (header.name.toLowerCase() === 'accept' ? { ...header, name: 'Accept' } : header))
+      : [{ name: 'Accept', disabled: false, value: 'text/event-stream' }, ...paramHeaders];
   }
 
   const noContentTypeHeader = !paramHeaders?.find(header => header.name === 'Content-Type');
