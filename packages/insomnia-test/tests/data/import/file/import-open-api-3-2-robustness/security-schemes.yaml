@@ -31,6 +31,13 @@ paths:
         - legacyKey: []
       responses:
         "200": { description: OK }
+  /machine:
+    get:
+      summary: Client credentials secured
+      security:
+        - machine: [read]
+      responses:
+        "200": { description: OK }
 components:
   securitySchemes:
     authCode:
@@ -46,6 +53,13 @@ components:
       flows:
         deviceAuthorization:
           deviceAuthorizationUrl: https://auth.example.com/device
+          tokenUrl: https://auth.example.com/token
+          scopes: { read: Read access }
+    machine:
+      type: oauth2
+      oauth2MetadataUrl: https://auth.example.com/.well-known/oauth-authorization-server
+      flows:
+        clientCredentials:
           tokenUrl: https://auth.example.com/token
           scopes: { read: Read access }
     legacyKey:

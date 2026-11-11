@@ -57,6 +57,7 @@ test("Verify OpenAPI 3.2 Security Schemes With oauth2MetadataUrl And Device Auth
     "Auth code secured",
     "Device flow secured",
     "Deprecated key secured",
+    "Client credentials secured",
   ]) {
     expect(await httpRequestFlow.get(name)).toMatchObject({
       method: HttpMethod.Get,
@@ -77,6 +78,19 @@ test("Verify OpenAPI 3.2 Security Schemes With oauth2MetadataUrl And Device Auth
       },
     });
   }
+
+  expect(
+    await httpRequestFlow.getAuthentication("Client credentials secured"),
+  ).toEqual({
+    type: "OAuth 2.0",
+    oauth2: {
+      grantType: "client_credentials",
+      authorizationUrl: undefined,
+      accessTokenUrl: "https://auth.example.com/token",
+      clientId: "{{ _.oauth2ClientId }}",
+      scope: "read",
+    },
+  });
 
   // deviceAuthorization has no Insomnia grant type, so the importer sets no
   // Auth and the request keeps the default "Inherit from parent".
