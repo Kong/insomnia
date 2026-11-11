@@ -17,7 +17,19 @@ const STANDARD_METHODS = ['get', 'put', 'post', 'delete', 'options', 'head', 'pa
 
 const LOCAL_PATH_ITEM_REF = /^#\/components\/pathItems\/([^/]+)$/;
 
-const getOwnMethods = (pathItem: PathItemObject, location: string[]): PathItemMethod[] => [
+// A `$ref` fragment is a URI-encoded JSON Pointer: percent-decode first, then unescape `~1` / `~0` in the name.
+// Malformed percent escapes are kept as-is instead of throwing.
+const decodeRef = ($ref: string) => {
+  try {
+    return decodeURIComponent($ref);
+  } catch {
+    return $ref;
+  }
+};
+
+const unescapeJsonPointer = (token: string) => token.replace(/~1/g, '/').replace(/~0/g, '~');
+
+const getOwnMethods =(pathItem: PathItemObject, location: string[]): PathItemMethod[] => [
   ...STANDARD_METHODS.filter(method => pathItem[method]).map(method => ({
     method,
     jumpTo: [...location, method],
@@ -42,7 +54,8 @@ export const getMethodsFromOpenApiPathItem = (
   }
 
   // Only local `#/components/pathItems/<name>` references are resolved, and only one level deep
-  const name = LOCAL_PATH_ITEM_REF.exec(pathItem.$ref)?.[1];
+  const encodedName = LOCAL_PATH_ITEM_REF.exec(decodeRef(pathItem.$ref))?.[1];
+  const name = encodedName && unescapeJsonPointer(encodedName);
   const referenced = name ? pathItems?.[name] : undefined;
   return name && referenced ? getOwnMethods(referenced, ['components', 'pathItems', name]) : [];
 };
