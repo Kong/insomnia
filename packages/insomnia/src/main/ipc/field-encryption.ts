@@ -1,4 +1,7 @@
+import type { KeyObject } from 'node:crypto';
+
 import { app, BrowserWindow, dialog, type MessageBoxOptions, type WebContents } from 'electron';
+import { exportFieldEncryptionKey, type FieldEncryptionKeyExport } from 'insomnia-data/node';
 
 import { setAsideLocalEncryptionKey } from '../local-encryption-key';
 import { BaseIpcHandler } from './base-ipc-handler';
@@ -30,8 +33,8 @@ interface DocumentSummary {
 }
 
 export interface FieldEncryptionControllerDeps {
-  /** True when the database was opened without the local encryption key. */
-  degraded: boolean;
+  /** The key the database was opened with. Undefined when it was opened without encryption (degraded mode). */
+  key: KeyObject | undefined;
   /** The fields that still hold ciphertext that could not be decrypted, checked against the current data. */
   refreshFailures: () => Promise<{ type: string; _id: string; path: string }[]>;
   resetFailures: () => Promise<number>;
@@ -87,7 +90,7 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
       if (decided) {
         return { kind: 'ok' };
       }
-      if (deps.degraded) {
+      if (!deps.key) {
         return { kind: 'degraded', canResetKey: deps.keyFileExists() };
       }
       const failures = await deps.refreshFailures();
@@ -98,7 +101,7 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
     },
 
     resetFailedFields: async () => {
-      if (deps.degraded) {
+      if (!deps.key) {
         throw new Error('Fields cannot be reset while the database runs without encryption');
       }
       const cleared = await deps.resetFailures();
@@ -107,7 +110,7 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
     },
 
     resetKey: async (sender?: WebContents) => {
-      if (!deps.degraded) {
+      if (deps.key) {
         throw new Error('The encryption key can only be reset when it could not be used');
       }
       if (!deps.keyFileExists()) {
@@ -124,6 +127,17 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
 
     dismiss: async () => {
       decided = true;
+    },
+
+    /** Whether there is a key to give out. Does not reveal it. */
+    isKeyAvailable: async () => !!deps.key,
+
+    /** The key in both forms the user can hand to other tools. Rejects when this session has no key. */
+    getKey: async (): Promise<FieldEncryptionKeyExport> => {
+      if (!deps.key) {
+        throw new Error('There is no local encryption key in this session');
+      }
+      return exportFieldEncryptionKey(deps.key);
     },
   };
 };
@@ -175,6 +189,19 @@ export class FieldEncryptionIpcHandler extends BaseIpcHandler {
   /** The user chose to continue as is: the dialog is not shown again until the app is restarted. */
   dismiss(_: WebContents) {
     return getController().dismiss();
+  }
+
+  /** Whether this session has a local encryption key that can be copied or exported. Does not reveal the key. */
+  isKeyAvailable(_: WebContents) {
+    return getController().isKeyAvailable();
+  }
+
+  /**
+   * The local encryption key as JWK JSON text and as its base64, for the user to copy or save. Only called when the user
+   * asks for the key. Rejects in degraded mode, where there is no key.
+   */
+  getKey(_: WebContents) {
+    return getController().getKey();
   }
 }
 
