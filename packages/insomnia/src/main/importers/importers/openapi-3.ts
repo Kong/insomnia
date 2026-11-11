@@ -406,19 +406,43 @@ const convertQueryStringParameters = (parameters: QueryStringParameterObject[] =
     if (!properties || !isPlainObject(properties)) {
       return [];
     }
-    // Property values come from the media type example when it declares them
+    // Property values come from the media type example, otherwise from an example generated for the whole schema
+    // (so `example` / `default` on the enclosing object schema are honored before falling back to each property)
     const mediaTypeExample = getExampleValue(mediaType);
-    const exampleValues = isPlainObject(mediaTypeExample) ? (mediaTypeExample as Record<string, unknown>) : {};
-    return Object.entries(properties).flatMap(([propertyName, propertySchema]) =>
-      flattenParameter(
-        propertyName,
-        exampleValues[propertyName] !== undefined
-          ? exampleValues[propertyName]
-          : generateParameterExample(propertySchema as OpenAPIV3.SchemaObject),
-        required !== true || !schema.required?.includes(propertyName),
-      ),
-    );
+    const exampleSource = mediaTypeExample !== undefined ? mediaTypeExample : generateParameterExample(schema);
+    const exampleValues = isPlainObject(exampleSource) ? (exampleSource as Record<string, unknown>) : {};
+    return Object.entries(properties).flatMap(([propertyName, propertySchema]) => {
+      // own-property check so names such as `toString` don't resolve to `Object.prototype` members
+      const value = Object.hasOwn(exampleValues, propertyName)
+        ? exampleValues[propertyName]
+        : generateParameterExample(propertySchema as OpenAPIV3.SchemaObject);
+      const disabled = required !== true || !schema.required?.includes(propertyName);
+      return flattenQueryStringProperty(propertyName, value, disabled, mediaType?.encoding?.[propertyName]);
+    });
   });
+};
+
+const ARRAY_DELIMITERS: Record<string, string> = { form: ',', spaceDelimited: ' ', pipeDelimited: '|' };
+
+/**
+ * `application/x-www-form-urlencoded` arrays default to `style: form` + `explode: true`, i.e. one repeated
+ * `name=value` pair per item. With `explode: false` (or a delimited style) the items are joined into a single value.
+ */
+const flattenQueryStringProperty = (
+  name: string,
+  value: unknown,
+  disabled: boolean,
+  encoding?: { style?: string; explode?: boolean },
+) => {
+  if (!Array.isArray(value)) {
+    return flattenParameter(name, value, disabled);
+  }
+  const style = encoding?.style ?? 'form';
+  const explode = encoding?.explode ?? style === 'form';
+  if (explode) {
+    return value.length === 0 ? flattenParameter(name, '', disabled) : value.flatMap(item => flattenParameter(name, item, disabled));
+  }
+  return flattenParameter(name, value.join(ARRAY_DELIMITERS[style] ?? ','), disabled);
 };
 
 const hasEventStreamResponse = (endpointSchema: OpenAPIV3.PathItemObject) => {
