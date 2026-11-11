@@ -485,8 +485,13 @@ test.describe('Lint via CLI modal', () => {
 
     const dialog = await openLintCliModal(insomnia.page);
     await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+  });
 
-    // A custom ruleset is only applied by inso when passed explicitly.
+  // A custom ruleset is only applied by inso when passed explicitly.
+  test('local project: command passes the uploaded custom ruleset via --ruleset', async ({ insomnia, dataPath }) => {
+    await openPetStoreDesignDoc(insomnia.page);
+
+    await openLintCliModal(insomnia.page);
     const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, insomnia.page);
     expect.soft(rulesetPath.startsWith(path.join(dataPath, 'projects') + path.sep)).toBe(true);
     expect.soft(rulesetPath.endsWith('.spectral.yaml')).toBe(true);
@@ -521,7 +526,14 @@ test.describe('Lint via CLI modal', () => {
 
       const dialog = await openLintCliModal(page);
       await expect.soft(dialog).toContainText(`inso lint spec -w "${dataPath}" spc_`);
+    });
 
+    test('cloud project: command passes the uploaded custom ruleset via --ruleset', async ({ insomnia, dataPath }) => {
+      const page = insomnia.page;
+      await page.getByTestId('workspace-grid').getByLabel('Design Project').click();
+      await page.waitForURL(/\/workspace\/.+\/debug/, { timeout: 30_000 });
+
+      await openLintCliModal(page);
       const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, page);
       expect.soft(rulesetPath.startsWith(path.join(dataPath, 'projects') + path.sep)).toBe(true);
       expect.soft(rulesetPath.endsWith('.spectral.yaml')).toBe(true);
@@ -553,7 +565,12 @@ test.describe('Lint via CLI modal', () => {
       await expect
         .soft(dialog)
         .toContainText(`inso lint spec -w "${path.join(mirrorDir, 'lint_test_spec.yaml')}" spc_`);
+    });
 
+    test('git project: command passes the mirrored .spectral.yaml via --ruleset', async ({ insomnia, dataPath }) => {
+      const mirrorDir = await gitRepoMirrorPath(dataPath);
+
+      await openLintCliModal(insomnia.page);
       const rulesetPath = await uploadRulesetAndReadLintCliRulesetPath(insomnia, insomnia.page);
       expect.soft(rulesetPath).toBe(path.join(mirrorDir, '.spectral.yaml'));
       await expect.poll(() => fs.existsSync(rulesetPath), { timeout: 10_000 }).toBe(true);
