@@ -15,6 +15,7 @@ jobs:
   verify:
     permissions:
       contents: read
+      packages: read
     runs-on: windows-latest
     env:
       NODE_OPTIONS: '--max_old_space_size=6144'
@@ -29,6 +30,8 @@ jobs:
           node-version-file: '.nvmrc'
       - name: Install dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Show installed binary
         run: node scripts/check-binary-version.js node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node 3.5.9
       - name: Verify OpenSSL version and TLS behaviour in Electron
