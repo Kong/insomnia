@@ -85,7 +85,7 @@ export async function toDebugApiError(err: unknown): Promise<DebugApiError> {
       );
     }
     const responseText = response.bodyUsed ? err.message || `HTTP ${status}` : await response.text();
-    throw new DebugApiError('unknown', `Konnect error: ${responseText}`);
+    throw new DebugApiError('unknown', `${responseText}`);
   }
   const message = err instanceof Error ? err.message : 'Could not reach Konnect.';
   return new DebugApiError('network', message);

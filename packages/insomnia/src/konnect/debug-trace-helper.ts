@@ -256,3 +256,29 @@ export function getRouteIdsFromTraceDetail(detail: DebugTraceDetail): Set<string
   }
   return routeIds;
 }
+
+interface ParsedKonnectError {
+  title?: string;
+  detail?: string;
+  traceId?: string;
+  raw: string;
+}
+
+// Parse Konnect JSON error message
+export const parseKonnectError = (message: string): ParsedKonnectError | null => {
+  try {
+    const json = JSON.parse(message);
+    if (!json || typeof json !== 'object' || Array.isArray(json)) {
+      return null;
+    }
+    const title = typeof json.title === 'string' ? json.title : '';
+    const detail = typeof json.detail === 'string' ? json.detail : '';
+    if (!title && !detail) {
+      return null;
+    }
+    const instance = typeof json.instance === 'string' ? json.instance : undefined;
+    return { title, detail, traceId: instance, raw: JSON.stringify(json, null, 2) };
+  } catch {
+    return null;
+  }
+};

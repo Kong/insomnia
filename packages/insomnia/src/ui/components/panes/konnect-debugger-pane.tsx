@@ -9,6 +9,7 @@ import {
   flattenVisible,
   getRouteIdsFromTraceDetail,
   getTracePath,
+  parseKonnectError,
   type SpanNode,
   summarizeTrace,
   type TraceSummaryBreakdown,
@@ -173,6 +174,8 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   const hasSession = !!debugSession;
   const showEmptyState = !hasSession && !isStartingOrStopping;
 
+  const reRunDebugSession = () => startDebugSession(durationSecs);
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden text-sm">
       <MetadataPane
@@ -181,7 +184,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
         region={typeof konnectRegion === 'string' ? konnectRegion : null}
         debugSessionId={debuggerSessionId}
       />
-      <StatusBanners debug={konnectDebuggerSession} />
+      <StatusBanners debug={konnectDebuggerSession} onRetry={reRunDebugSession} />
       <div className="flex shrink-0 flex-row flex-wrap items-center gap-3 border-b border-solid border-(--hl-md) px-3 py-2">
         {!isCapturing && (
           <>
@@ -300,6 +303,35 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   );
 };
 
+const MutationErrorMessage = ({ message }: { message: string }) => {
+  const parsed = useMemo(() => parseKonnectError(message), [message]);
+  const [expanded, setExpanded] = useState(false);
+
+  if (!parsed) {
+    return `Konnect error: ${message}`;
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      {parsed.title && <p className="font-semibold text-(--color-font)">{parsed.title}</p>}
+      <p className="text-(--hl)">{parsed.detail}</p>
+      <Button
+        onPress={() => setExpanded(value => !value)}
+        aria-expanded={expanded}
+        className="flex items-center gap-1 text-(--hl) hover:text-(--color-font)"
+      >
+        <Icon icon={expanded ? 'chevron-down' : 'chevron-right'} className="h-2.5 w-2.5" />
+        {expanded ? 'Hide details' : 'Show details'}
+      </Button>
+      {expanded && (
+        <pre className="max-h-48 overflow-auto rounded-xs p-2 text-xs break-all whitespace-pre-wrap select-text">
+          {parsed.raw}
+        </pre>
+      )}
+    </div>
+  );
+};
+
 const RetryButton = ({ onPress }: { onPress: () => void }) => (
   <Button
     onPress={onPress}
@@ -321,31 +353,69 @@ const StatusBanner = ({
   <div
     role={type === 'error' ? 'alert' : 'status'}
     className={classnames(
-      'flex shrink-0 items-center gap-2 border-b border-solid border-(--hl-md) px-3 py-1.5',
-      type === 'error' && 'text-(--color-danger)',
-      type === 'warning' && 'text-(--color-warning)',
+      'flex shrink-0 items-start gap-2 border-b border-solid border-(--hl-md) p-2 text-(--color-font)',
+      type === 'error' && 'bg-(--color-danger)/15',
+      type === 'warning' && 'bg-(--color-warning)/15',
       type === 'info' && 'text-(--hl)',
     )}
   >
-    <Icon icon={type === 'info' ? 'circle-info' : 'triangle-exclamation'} />
+    <Icon icon={type === 'info' ? 'circle-info' : 'triangle-exclamation'} className="mt-1" />
     <span className="flex-1">{children}</span>
     {action}
   </div>
 );
 
-const StatusBanners = ({ debug }: { debug: ReturnType<typeof useKonnectDebuggerSession> }) => {
-  const { debugSession, debugSessionState, hasKonnectPat, authError, retryDebugSession, mutationError } = debug;
+const StatusBanners = ({
+  debug,
+  onRetry,
+}: {
+  debug: ReturnType<typeof useKonnectDebuggerSession>;
+  onRetry: () => void;
+}) => {
+  const { debugSession, debugSessionState, debugSessionAction, hasKonnectPat, authError, mutationError } = debug;
   const startedAtText = formatStartedAt(debugSession?.startedAt ?? null);
   const [isKonnectSettingsModalOpen, setIsKonnectSettingsModalOpen] = useState(false);
   const konnectSyncEnabled = useKonnectSyncEnabled();
 
+  if (!hasKonnectPat) {
+    return (
+      <StatusBanner type="error">
+        No Konnect token found. Connect one from the Konnect sync bar in the sidebar.
+      </StatusBanner>
+    );
+  }
+
+  if (authError) {
+    return (
+      <StatusBanner
+        type="error"
+        action={
+          <Button
+            onPress={() => setIsKonnectSettingsModalOpen(true)}
+            className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-white/40 px-4 py-2 text-sm text-white transition-colors hover:bg-white/10 aria-pressed:bg-white/10"
+          >
+            Configure
+          </Button>
+        }
+      >
+        <p>{authError.message}</p>
+      </StatusBanner>
+    );
+  }
+
+  if (mutationError) {
+    return (
+      <StatusBanner type="error" action={<RetryButton onPress={onRetry} />}>
+        <MutationErrorMessage message={mutationError.message} />
+      </StatusBanner>
+    );
+  }
+
+  if (debugSessionAction === 'starting') {
+    return <StatusBanner type="info">Starting debug session…</StatusBanner>;
+  }
   return (
     <>
-      {!hasKonnectPat && (
-        <StatusBanner type="error">
-          No Konnect token found. Connect one from the Konnect sync bar in the sidebar.
-        </StatusBanner>
-      )}
       {debugSessionState === 'active' && (
         <StatusBanner type="info">
           {startedAtText ? (
@@ -357,26 +427,7 @@ const StatusBanners = ({ debug }: { debug: ReturnType<typeof useKonnectDebuggerS
           )}
         </StatusBanner>
       )}
-      {authError && (
-        <StatusBanner
-          type="error"
-          action={
-            <Button
-              onPress={() => setIsKonnectSettingsModalOpen(true)}
-              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-white/40 px-4 py-2 text-sm text-white transition-colors hover:bg-white/10 aria-pressed:bg-white/10"
-            >
-              Configure
-            </Button>
-          }
-        >
-          <p>{authError.message}</p>
-        </StatusBanner>
-      )}
-      {mutationError && (
-        <StatusBanner type="error" action={<RetryButton onPress={retryDebugSession} />}>
-          {mutationError.message}
-        </StatusBanner>
-      )}
+
       {debug.sessionDeleted && (
         <StatusBanner type="warning">Current debug session was deleted in Konnect.</StatusBanner>
       )}
