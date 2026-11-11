@@ -3,7 +3,8 @@ import { Button } from 'react-aria-components';
 
 import { fieldEncryption } from '~/ui/ipc';
 
-import { showError } from '../modals';
+import { showError, showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 
 // 'unknown': the main process could not tell, so the buttons stay off rather than offer something that may not work
 type KeyState = 'loading' | 'available' | 'unavailable' | 'unknown';
@@ -47,6 +48,36 @@ export const LocalEncryptionKeyPanel = () => {
     return () => clearTimeout(timer);
   }, [copied]);
 
+  // The inso CLI writes encrypted values back to the data it reads. Used on another machine, the key would encrypt that
+  // machine's database with a key its Insomnia does not have, so the user is told before the key leaves this panel.
+  const confirmThenRun = (run: () => Promise<void>) =>
+    showModal(AskModal, {
+      title: 'Keep this key secure and use it on this machine only',
+      message: (
+        <div className="flex flex-col gap-2">
+          <p className="m-0">
+            This key only encrypts and decrypts the Insomnia database on this machine. Use it only when you run the inso
+            CLI on this machine.
+          </p>
+          <p className="m-0 font-semibold">
+            Do not use it on any other machine. Otherwise the Insomnia database on another machine may no longer be
+            decryptable.
+          </p>
+          <p className="m-0">
+            Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens.
+          </p>
+        </div>
+      ),
+      centered: true,
+      yesText: 'I understand, continue',
+      noText: 'Cancel',
+      onDone: async (confirmed: boolean) => {
+        if (confirmed) {
+          await run();
+        }
+      },
+    });
+
   const copyKey = async () => {
     try {
       const { base64 } = await fieldEncryption.getKey();
@@ -89,7 +120,7 @@ export const LocalEncryptionKeyPanel = () => {
           data-testid="local-encryption-key-copy"
           className={buttonClassName}
           isDisabled={buttonsDisabled}
-          onPress={copyKey}
+          onPress={() => confirmThenRun(copyKey)}
         >
           {copied ? (
             <span>
@@ -103,7 +134,7 @@ export const LocalEncryptionKeyPanel = () => {
           data-testid="local-encryption-key-export"
           className={buttonClassName}
           isDisabled={buttonsDisabled}
-          onPress={exportKey}
+          onPress={() => confirmThenRun(exportKey)}
         >
           Export Key
         </Button>
@@ -118,9 +149,6 @@ export const LocalEncryptionKeyPanel = () => {
           Could not check whether a local encryption key is available.
         </p>
       )}
-      <p className="m-0 text-(--hl)">
-        Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens.
-      </p>
     </div>
   );
 };

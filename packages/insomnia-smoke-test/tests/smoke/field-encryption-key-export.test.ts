@@ -2,7 +2,7 @@ import { createDecipheriv, createSecretKey } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 import { copyFixtureDatabase } from '../../playwright/paths';
 import { test as baseTest } from '../../playwright/test';
@@ -49,6 +49,8 @@ const test = baseTest.extend({
   },
 });
 
+const confirmationButton = (page: Page, name: string) => page.getByRole('dialog').getByRole('button', { name });
+
 test.describe('Local Encryption Key in Preferences', () => {
   test.beforeEach(async ({ page }) => {
     await page.getByTestId('settings-button').click();
@@ -60,6 +62,7 @@ test.describe('Local Encryption Key in Preferences', () => {
     expect.soft(encryptedToken).not.toContain(bearerToken);
 
     await page.getByTestId('local-encryption-key-copy').click();
+    await confirmationButton(page, 'I understand, continue').click();
     await expect.soft(page.getByTestId('local-encryption-key-copy')).toContainText('Copied');
 
     const clipboardText = await app.evaluate(({ clipboard }) => clipboard.readText());
@@ -77,6 +80,7 @@ test.describe('Local Encryption Key in Preferences', () => {
       await mockSaveDialogForFile(app, exportPath);
 
       await page.getByTestId('local-encryption-key-export').click();
+      await confirmationButton(page, 'I understand, continue').click();
       await expect.poll(() => fs.existsSync(exportPath)).toBe(true);
 
       const keyBytes = keyFromJwk(fs.readFileSync(exportPath, 'utf8'));
@@ -94,11 +98,43 @@ test.describe('Local Encryption Key in Preferences', () => {
       await mockSaveDialogForFile(app, exportPath);
 
       await page.getByTestId('local-encryption-key-copy').click();
+      await confirmationButton(page, 'I understand, continue').click();
       await page.getByTestId('local-encryption-key-export').click();
+      await confirmationButton(page, 'I understand, continue').click();
       await expect.poll(() => fs.existsSync(exportPath)).toBe(true);
 
       const copied = await app.evaluate(({ clipboard }) => clipboard.readText());
       expect.soft(Buffer.from(copied, 'base64').toString('utf8')).toBe(fs.readFileSync(exportPath, 'utf8'));
+    } finally {
+      cleanupExportDir(tempDir);
+    }
+  });
+
+  test('the key is only handed out after the user has read the warning, and Cancel hands out nothing', async ({
+    page,
+    app,
+  }) => {
+    const tempDir = createTempExportDir();
+    try {
+      const exportPath = path.join(tempDir, 'insomnia-encryption-key.json');
+      await mockSaveDialogForFile(app, exportPath);
+      await app.evaluate(({ clipboard }) => clipboard.writeText('clipboard before'));
+
+      await page.getByTestId('local-encryption-key-copy').click();
+      await expect.soft(page.getByRole('dialog').getByText('Do not use it on any other machine')).toBeVisible();
+      await expect
+        .soft(page.getByRole('dialog').getByText('Keep this key secure. Anyone with this key can decrypt'))
+        .toBeVisible();
+      await confirmationButton(page, 'Cancel').click();
+
+      await page.getByTestId('local-encryption-key-export').click();
+      await expect
+        .soft(page.getByRole('dialog').getByText('only when you run the inso CLI on this machine'))
+        .toBeVisible();
+      await confirmationButton(page, 'Cancel').click();
+
+      expect.soft(await app.evaluate(({ clipboard }) => clipboard.readText())).toBe('clipboard before');
+      expect.soft(fs.existsSync(exportPath)).toBe(false);
     } finally {
       cleanupExportDir(tempDir);
     }
