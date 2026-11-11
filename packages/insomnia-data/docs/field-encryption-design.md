@@ -332,7 +332,7 @@ export const CookieSchema = z.object({
 
 **Trade-off:** Union paths are merged by field name, not by discriminator. A name that is a secret in one variant but not in another (Hawk `key` is a secret; API Key auth's `key` is the header name) is encrypted in both. This over-encrypts a harmless value in exchange for a simple path syntax with no discriminator-aware rules.
 
-**Models not yet on Zod:** ClientCertificate, CloudCredential, OAuth2Token, GitCredentials and RequestVersion are still plain interfaces. Phase 10 (section 7) migrates them to Zod schemas following the existing `createModelSchema` pattern so all models use one mechanism. Until a model is migrated, it exports a literal `encryptedFields: string[]`, which is merged into the same map and removed once the model is migrated. A model must not have both a `schema` and `encryptedFields`, and a test checks that the first segment of every literal path is a field of the model's `init()` result, to catch typos while the arrays are hand-maintained.
+**Models not yet on Zod:** ClientCertificate, CloudCredential, OAuth2Token, GitCredentials and RequestVersion are still plain interfaces. A follow-up (7.1, not part of the first release) migrates them to Zod schemas following the existing `createModelSchema` pattern so all models use one mechanism. Until a model is migrated, it exports a literal `encryptedFields: string[]`, which is merged into the same map and removed once the model is migrated. A model must not have both a `schema` and `encryptedFields`, and a test checks that the first segment of every literal path is a field of the model's `init()` result, to catch typos while the arrays are hand-maintained.
 
 A snapshot unit test of the derived map (every type, including those with no encrypted fields) makes every change to the set of encrypted fields visible in code review, and a new model type appears in it as well. A further test runs every model's real paths through the hooks (encrypt, decrypt, wrong key, tampered and lookalike values), so a path that matches nothing is caught.
 
@@ -421,20 +421,22 @@ To support inso CLI and other tooling that needs to decrypt `.db` files, a new s
 **UI Elements:**
 
 - **"Local Encryption Key"** section header with brief explanation: "This key is used to encrypt sensitive fields in your local database. You may need it for CLI usage."
-- **"Copy Key"** button — copies the local encryption key (base64 JWK) to clipboard
-- **"Export Key"** button — downloads the key as a `.json` file (e.g., `insomnia-encryption-key.json`)
+- **"Copy Key"** button — copies the key to the clipboard as the base64 of its JWK JSON text. That is one token without quotes or braces, so it can be pasted into a shell command or an environment variable as it is.
+- **"Export Key"** button — opens a save dialog and writes the key as a JWK JSON object (`{"kty":"oct","k":"..."}`) to a `.json` file (default name `insomnia-encryption-key.json`).
 - **Security notice:** "Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens."
 
-**Availability:** Always available (key exists from first launch).
+**Where the key comes from:** the main process holds the key the database was opened with. The `fieldEncryption` IPC handler gets two more methods: `isKeyAvailable()`, which resolves a boolean and does not reveal the key, and `getKey()`, which resolves `{ jwk, base64 }` (both forms come from one helper in `insomnia-data`, so the format is defined in one place) and rejects when there is no key. The panel calls `isKeyAvailable()` when it is shown and `getKey()` only when a button is pressed; it then writes the clipboard and the file in the renderer, as the existing Vault Key panel does. Accepted trade-off: the key passes through renderer memory for that moment, and a compromised renderer could call `getKey()`; it already has full database access through `database.invoke`, so this adds the ability to decrypt a copy of the `.db` files offline.
+
+**Availability:** the section is always shown. In degraded mode (4.2.1) no key is loaded in this session, so there is nothing to give out: both buttons are disabled and the panel says so.
 
 **inso CLI usage with the exported key:**
 
-Most CI/CD workflows use git sync (YAML files) or export files, which contain plaintext and are **not affected**. For the rare case of reading encrypted `.db` files directly, the exported key can be passed to inso CLI:
+Most CI/CD workflows use git sync (YAML files) or export files, which contain plaintext and are **not affected**. For the rare case of reading encrypted `.db` files directly, the key can be passed to inso CLI. `--encryption-key` and `INSOMNIA_ENCRYPTION_KEY` accept either form: the base64 text that "Copy Key" puts on the clipboard, or the JWK JSON that "Export Key" writes.
 
 ```bash
-inso run collection "My Collection" --workingDir ./data --encryption-key "JWK_STRING"
+inso run collection "My Collection" --workingDir ./data --encryption-key "BASE64_KEY"
 # Or use an environment variable
-INSOMNIA_ENCRYPTION_KEY="JWK_STRING" inso run collection "My Collection"
+INSOMNIA_ENCRYPTION_KEY="BASE64_KEY" inso run collection "My Collection"
 ```
 
 ## 6. Data Migration Plan
@@ -497,7 +499,7 @@ If any of steps 1–4 fails, the "first launch when protection fails" path in 4.
 
 ## 7. Implementation Plan
 
-Phases define commit boundaries on the feature branch, ordered so that each phase only depends on earlier ones. All phases ship together in a single release. This plan covers the baseline; the optimizations in [field-encryption-performance.md](./field-encryption-performance.md) follow afterwards.
+Phases define commit boundaries on the feature branch, ordered so that each phase only depends on earlier ones. Phases 1–9 ship together in a single release. This plan covers the baseline; the optimizations in [field-encryption-performance.md](./field-encryption-performance.md) and the Zod migration of the remaining models are follow-ups (7.1).
 
 | Phase   | Content | Notes |
 | ------- | ------- | ----- |
@@ -507,10 +509,18 @@ Phases define commit boundaries on the feature branch, ordered so that each phas
 | Phase 4 | **Key lifecycle** (4.2.1, 6.3): `ElectronStorage.setItemDurable` / `getItemStrict`; async safeStorage wrapper (retry with backoff, `shouldReEncrypt` write-back); key persisted and verified before first use; degraded mode; wired into `database.main.ts` | From this phase on, encryption is active in the app |
 | Phase 5 | **User-facing error handling**: failure report exposed to the renderer via IPC; decryption failure dialog and degraded mode dialog (5.2); startup error when a datastore fails to load (4.3.1) | Adds `refreshFieldDecryptionFailures()` / `resetFieldDecryptionFailures()` to the database internals, `ElectronStorage.renameItem` and `setAsideLocalEncryptionKey` for the key reset |
 | Phase 6 | **Migration verification** (section 6): end-to-end test on the plaintext `insomnia-legacy-db` smoke-test fixture — first launch encrypts all sensitive fields, data intact, interruption safe | Migration itself needs no code beyond Phases 3–4. Three tests, all on a copy of the fixture: (1) Vitest on real NeDB files (the fixture plus one document with a secret on every encrypted path of every model; checks ciphertext on disk, document ids and non-sensitive fields unchanged, and the states a kill leaves behind: datastores partly rewritten, a half-written `<file>~`, only `<file>~`); (2) Vitest on the real `mainDatabase.init()` with only safeStorage replaced (the key is on disk before any datastore is encrypted; nothing is encrypted when the key cannot be protected, saved or verified, and the next launch encrypts); (3) a Playwright smoke test that starts the real app, checks the files and the data the app reads, restarts, and checks again |
-| Phase 7 | **Benchmark harness + baseline measurement** ([field-encryption-performance.md](./field-encryption-performance.md) section 6) | "No encryption" = `init()` without `fieldEncryptionKey` |
+| Phase 7 | **Key export/copy in Preferences** (5.3) | |
 | Phase 8 | **inso CLI** `--encryption-key` / `INSOMNIA_ENCRYPTION_KEY` (5.3), reusing `createFieldEncryptionHooks()` in `ne-db-adapter.ts` | |
-| Phase 9 | **Key export/copy in Preferences** (5.3) | |
-| Phase 10 | **Migrate ClientCertificate / CloudCredential / OAuth2Token / GitCredentials / RequestVersion to Zod**, replacing their temporary `encryptedFields` arrays | Independent of Phases 3–9; path map snapshot must stay unchanged |
+| Phase 9 | **Benchmark harness + baseline measurement** ([field-encryption-performance.md](./field-encryption-performance.md) section 6) | "No encryption" = `init()` without `fieldEncryptionKey`. Placed last so the baseline measures the finished feature, and right before the optimizations it is the baseline for |
+
+### 7.1 Follow-ups (not part of this release)
+
+These are separate pieces of work that come after Phase 9. They are listed here so they are not lost; nothing in Phases 1–9 depends on them.
+
+| Item | Content | Notes |
+| ---- | ------- | ----- |
+| Performance optimizations | O1–O5 in [field-encryption-performance.md](./field-encryption-performance.md), measured against the Phase 9 baseline | Do not change the stored format (performance doc section 5) |
+| Migrate to Zod | **Migrate ClientCertificate / CloudCredential / OAuth2Token / GitCredentials / RequestVersion to Zod**, replacing their temporary `encryptedFields` arrays | Independent of Phases 3–9; path map snapshot must stay unchanged |
 
 ## 8. Open Questions
 
