@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { faker } from "@faker-js/faker";
@@ -7,7 +8,7 @@ import { test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-test("Verify OpenAPI 3.0 And 3.1 Documents Still Import With Enum Fields Taking The First Enum Value", async ({
+test("Verify OpenAPI 3.0 And 3.1 Documents Still Import From Clipboard With Enum Fields Taking The First Enum Value", async ({
   user,
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
@@ -16,13 +17,13 @@ test("Verify OpenAPI 3.0 And 3.1 Documents Still Import With Enum Fields Taking 
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  await importFlow.importFile(
+  await importFlow.importClipboard(
     project,
-    path.join(import.meta.dirname, "petstore-3.0.yaml"),
+    fs.readFileSync(path.join(import.meta.dirname, "petstore-3.0.yaml"), "utf8"),
   );
-  await importFlow.importFile(
+  await importFlow.importClipboard(
     project,
-    path.join(import.meta.dirname, "petstore-3.1.yaml"),
+    fs.readFileSync(path.join(import.meta.dirname, "petstore-3.1.yaml"), "utf8"),
   );
 
   const threeZero = await httpRequestFlow.get("Add a pet");
@@ -40,7 +41,7 @@ test("Verify OpenAPI 3.0 And 3.1 Documents Still Import With Enum Fields Taking 
   }
 });
 
-test("Verify A Swagger 2.0 Document Still Imports With Its Self-Referencing Definition Resolved", async ({
+test("Verify A Swagger 2.0 Document Still Imports From Clipboard With Its Self-Referencing Definition Resolved", async ({
   user,
 }) => {
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
@@ -49,9 +50,9 @@ test("Verify A Swagger 2.0 Document Still Imports With Its Self-Referencing Defi
     new Project(faker.string.alphanumeric(10), ProjectType.Local),
   );
 
-  await importFlow.importFile(
+  await importFlow.importClipboard(
     project,
-    path.join(import.meta.dirname, "petstore-swagger-2.0.yaml"),
+    fs.readFileSync(path.join(import.meta.dirname, "petstore-swagger-2.0.yaml"), "utf8"),
   );
 
   const create = await httpRequestFlow.get("Add a swagger pet");
