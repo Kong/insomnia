@@ -1,0 +1,16 @@
+openapi: 3.2.0
+info: { title: Accept header parameter, version: 1.0.0 }
+paths:
+  /events/json-accept:
+    get:
+      summary: Event stream with JSON Accept
+      parameters:
+        - name: Accept
+          in: header
+          schema: { type: string, default: application/json }
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              itemSchema: { type: object }

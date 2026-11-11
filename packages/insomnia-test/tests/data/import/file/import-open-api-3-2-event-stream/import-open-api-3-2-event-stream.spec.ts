@@ -80,3 +80,31 @@ test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 
     expect.objectContaining({ name: "Accept", value: "text/event-stream" }),
   );
 });
+
+test("Verify An Accept Header Parameter Is Ignored So A text/event-stream Response Still Imports As An Event Stream Request", async ({
+  user,
+}) => {
+  test.fail(true, "INS-4297");
+
+  const { eventStreamRequestFlow, importFlow, workspaceFlow } =
+    user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await importFlow.importFile(
+    project,
+    path.join(import.meta.dirname, "accept-header-parameter.yaml"),
+  );
+  const stream = await eventStreamRequestFlow.get(
+    "Event stream with JSON Accept",
+  );
+
+  expect(stream!.headers).toContainEqual(
+    expect.objectContaining({ name: "Accept", value: "text/event-stream" }),
+  );
+  expect(stream!.headers).not.toContainEqual(
+    expect.objectContaining({ name: "Accept", value: "application/json" }),
+  );
+});
