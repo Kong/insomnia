@@ -497,9 +497,10 @@ describe('openapi-3', () => {
   });
 
   describe('circular $ref', () => {
-    it('should import a schema that references itself without recursing forever', async () => {
-      const openApiDoc: OpenAPIV3.Document = {
-        openapi: '3.0.3',
+    // 3.2.0 is not supported by swagger-parser: it left every $ref unresolved, so generated bodies were `null`
+    it.each(['3.0.3', '3.2.0'])('should import a schema that references itself without recursing forever (%s)', async openapi => {
+      const openApiDoc = {
+        openapi,
         info: { title: 'Tree API', version: '1.0.0' },
         servers: [{ url: 'https://api.example.com' }],
         paths: {
