@@ -103,8 +103,8 @@ const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (ho
     description: 'System Git Credentials uses the git installed on this computer. Install git, then try again.',
   }),
   'no-credentials': host => ({
-    title: 'No git credentials found',
-    description: `Your system git credential manager has no credentials for ${host}. Install Git Credential Manager to sign in from Insomnia, or use an Access Token credential instead.`,
+    title: "Couldn't get git credentials",
+    description: `Your system git credential manager didn't provide credentials for ${host}. Try again, or use an Access Token credential instead. To sign in from Insomnia, use Git Credential Manager.`,
   }),
   'rejected': host => ({
     title: 'Git credentials rejected',
@@ -112,9 +112,19 @@ const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (ho
   }),
 };
 
+// Credential error toasts stay until dismissed; keep at most one per host and reason
+// so repeated failures do not stack up.
+const nativeCredentialErrorToasts = new Map<string, string>();
+
 window.main.on('git.native-credential-error', (_, error: NativeCredentialError) => {
+  const toastId = `${error.host}\n${error.reason}`;
+  const openKey = nativeCredentialErrorToasts.get(toastId);
+  if (openKey && queue.visibleToasts.some(toast => toast.key === openKey)) {
+    return;
+  }
+
   const content = nativeCredentialErrorMessages[error.reason](error.host);
-  showToast(
+  const key = showToast(
     {
       ...content,
       icon: 'key',
@@ -123,4 +133,5 @@ window.main.on('git.native-credential-error', (_, error: NativeCredentialError) 
     },
     { timeout: null },
   );
+  nativeCredentialErrorToasts.set(toastId, key);
 });

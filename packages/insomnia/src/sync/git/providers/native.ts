@@ -1,5 +1,6 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
 
 import type { GitCredentials } from 'insomnia-data';
 import type { GitAuth } from 'isomorphic-git';
@@ -187,7 +188,9 @@ const runGitCredential = (
     let proc: ChildProcess;
     try {
       proc = spawn('git', ['credential', action], {
-        ...(repoPath ? { cwd: repoPath } : {}),
+        // A missing cwd makes spawn fail with ENOENT, which looks like git is missing.
+        // Fall back to the global/system git config instead of failing.
+        ...(repoPath && existsSync(repoPath) ? { cwd: repoPath } : {}),
         // There is no terminal to prompt in: fail fast with a clear message instead.
         env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...env },
         stdio: ['pipe', 'pipe', 'pipe'],

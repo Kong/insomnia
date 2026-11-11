@@ -1,3 +1,5 @@
+import type * as NodeFs from 'node:fs';
+
 import type { GitCredentials } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 
@@ -12,9 +14,13 @@ import {
   SIGN_IN_NOTICE_DELAY_MS,
 } from '../native';
 
-const { spawnMock } = vi.hoisted(() => ({ spawnMock: vi.fn() }));
+const { spawnMock, missingPaths } = vi.hoisted(() => ({ spawnMock: vi.fn(), missingPaths: new Set<string>() }));
 
 vi.mock('node:child_process', () => ({ spawn: spawnMock }));
+vi.mock('node:fs', async importOriginal => ({
+  ...(await importOriginal<typeof NodeFs>()),
+  existsSync: (path: string) => !missingPaths.has(path),
+}));
 
 
 type Action = 'fill' | 'approve' | 'reject';
@@ -59,6 +65,7 @@ beforeEach(() => {
   calls = [];
   fillResponses = [];
   hangingFills = [];
+  missingPaths.clear();
   credentialErrors = [];
   unsubscribeCredentialErrors = onNativeCredentialError(error => credentialErrors.push(error));
   clock += 60_000;
@@ -173,6 +180,16 @@ describe('NativeProvider', () => {
           detail: "fatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled",
         },
       ]);
+    });
+
+    it('runs without cwd when the repository directory does not exist', async () => {
+      missingPaths.add('/gone');
+      fillResponses.push({ stdout: fillOutput('user', 'token') });
+      const provider = new NativeProvider({ type: 'native', displayName: 'System' });
+
+      expect(await provider.authCallback(credential, URL, '/gone')).toEqual({ username: 'user', password: 'token' });
+      expect(calls[0].cwd).toBeUndefined();
+      expect(credentialErrors).toEqual([]);
     });
 
     it('cancels and reports when git cannot be started', async () => {
