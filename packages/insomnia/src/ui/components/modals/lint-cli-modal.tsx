@@ -1,9 +1,11 @@
-import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { isWindows } from 'insomnia-data/common';
 
-import { CopyButton } from '../base/copy-button';
-import { Link } from '../base/link';
-import { Icon } from '../icon';
-import { INSO_CLI_DOCS_URL } from './cli-preview-modal';
+import { CLICommandModal } from './cli-preview-modal';
+
+// Wraps a path in double quotes for pasting into a terminal. POSIX shells still expand `$`, backticks and
+// backslashes inside double quotes, so escape those. Windows paths use backslashes as separators (and can't contain `"`).
+export const quotePathArgument = (value: string, windows = isWindows) =>
+  windows ? `"${value}"` : `"${value.replace(/(["\\$`])/g, '\\$1')}"`;
 
 export const LintCLIModal = ({
   onClose,
@@ -16,66 +18,16 @@ export const LintCLIModal = ({
   rulesetPath?: string;
   workingDir?: string;
 }) => {
-  const workingDirArgument = workingDir ? ` -w "${workingDir}"` : '';
-  const rulesetArgument = rulesetPath ? ` --ruleset "${rulesetPath}"` : '';
+  const workingDirArgument = workingDir ? ` -w ${quotePathArgument(workingDir)}` : '';
+  const rulesetArgument = rulesetPath ? ` --ruleset ${quotePathArgument(rulesetPath)}` : '';
   const cliCommand = `inso lint spec${workingDirArgument} ${apiSpecId.slice(0, 10)}${rulesetArgument}`;
 
   return (
-    <ModalOverlay
-      isOpen
-      isDismissable
-      onOpenChange={isOpen => {
-        !isOpen && onClose();
-      }}
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
-    >
-      <Modal className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)">
-        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-hidden">
-          {({ close }) => (
-            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-              <div className="flex items-center justify-between gap-2">
-                <Heading slot="title" className="text-2xl">
-                  Lint via CLI
-                </Heading>
-                <Button
-                  className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                  onPress={close}
-                >
-                  <Icon icon="x" />
-                </Button>
-              </div>
-              <div className="h-full w-full flex-row p-2">
-                <div className="pb-4">Copy this command to lint your spec in the terminal</div>
-                <div className="flex max-h-32 min-h-[2em] flex-col overflow-y-auto border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1">
-                  <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto font-mono">
-                    <span className="min-w-0 break-all">{cliCommand}</span>
-                    <CopyButton
-                      size="small"
-                      content={cliCommand}
-                      title="Copy Command"
-                      confirmMessage=""
-                      className="sticky top-0 self-start"
-                    >
-                      <i className="fa fa-copy" />
-                    </CopyButton>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <Link href={INSO_CLI_DOCS_URL} className="underline">
-                  Learn more about Inso CLI
-                </Link>
-                <Button
-                  className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--hl) transition-colors hover:no-underline"
-                  onPress={close}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </Dialog>
-      </Modal>
-    </ModalOverlay>
+    <CLICommandModal
+      onClose={onClose}
+      title="Lint via CLI"
+      description="Copy this command to lint your spec in the terminal"
+      command={cliCommand}
+    />
   );
 };
