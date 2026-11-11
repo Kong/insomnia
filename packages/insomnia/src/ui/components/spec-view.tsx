@@ -156,6 +156,7 @@ export const SpecView = ({
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
   const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);
+  const [lintCLIRulesetPath, setLintCLIRulesetPath] = useState<string | undefined>();
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
   const storageRules = useOrganizationStorageRule(organizationId);
@@ -517,6 +518,25 @@ export const SpecView = ({
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleOpenLintCLIModal = async () => {
+    let compiledPath: string | undefined;
+    // Git projects use the repo's .spectral.yaml, which the RepoFileWatcher keeps in sync. Otherwise make sure the
+    // compiled ruleset file exists and is current before handing its path to inso.
+    if (rulesetContent && !(isConnectedGitProject && gitSyncRulesetPath)) {
+      try {
+        ({ compiledPath } = await window.main.refreshCompiledRuleset({ projectId, rulesetContent }));
+      } catch (err) {
+        showError({
+          title: 'Lint via CLI Failed',
+          message: `Failed to prepare ruleset: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        return;
+      }
+    }
+    setLintCLIRulesetPath(compiledPath);
+    setIsLintCLIModalOpen(true);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -951,7 +971,7 @@ export const SpecView = ({
             <span aria-hidden="true" className="text-(--hl) select-none">
               |
             </span>
-            <Button data-testid="lint-via-cli" className="underline" onPress={() => setIsLintCLIModalOpen(true)}>
+            <Button data-testid="lint-via-cli" className="underline" onPress={handleOpenLintCLIModal}>
               Lint via CLI
             </Button>
           </>
@@ -1414,7 +1434,7 @@ export const SpecView = ({
                 rulesetContent
                   ? isConnectedGitProject && gitSyncRulesetPath
                     ? gitSyncRulesetPath
-                    : window.path.join(appDataDir, 'projects', projectId, '.spectral.yaml')
+                    : lintCLIRulesetPath
                   : undefined
               }
             />
