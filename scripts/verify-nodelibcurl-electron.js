@@ -70,7 +70,9 @@ function makeCerts(openssl, dir) {
   fs.writeFileSync(p('client.ext'), 'basicConstraints=CA:FALSE\nkeyUsage=digitalSignature\nextendedKeyUsage=clientAuth\n');
   run(['x509', '-req', '-in', 'client.csr', '-CA', 'ca.crt', '-CAkey', 'ca.key', '-CAcreateserial', '-out', 'client.crt', '-days', '1', '-extfile', 'client.ext']);
 
-  run(['req', '-x509', '-newkey', 'rsa:1024', '-keyout', 'weak.key', '-out', 'weak.crt', '-days', '1', '-nodes', '-subj', '/CN=localhost', '-addext', san]);
+  run(['req', '-newkey', 'rsa:1024', '-keyout', 'weak.key', '-out', 'weak.csr', '-nodes', '-subj', '/CN=localhost']);
+  fs.writeFileSync(p('weak.ext'), `basicConstraints=CA:FALSE\nsubjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n`);
+  run(['x509', '-req', '-in', 'weak.csr', '-CA', 'ca.crt', '-CAkey', 'ca.key', '-CAcreateserial', '-out', 'weak.crt', '-days', '1', '-extfile', 'weak.ext']);
 
   return {
     ca: p('ca.crt'),
