@@ -948,5 +948,58 @@ describe('openapi-3', () => {
       ]);
       expect(request.headers).toContainEqual({ name: 'X-Trace', value: 'abc', disabled: true });
     });
+
+    it('should use the enclosing querystring schema example before per-property examples, ignoring inherited members', async () => {
+      const request = await importRequest({
+        parameters: [
+          {
+            name: 'filter',
+            in: 'querystring',
+            content: {
+              'application/x-www-form-urlencoded': {
+                schema: {
+                  type: 'object',
+                  example: { limit: 25 },
+                  properties: { limit: { type: 'integer' }, offset: { type: 'integer' }, toString: { type: 'string' } },
+                },
+              },
+            },
+          },
+        ],
+      });
+
+      expect(request.parameters).toEqual([
+        { name: 'limit', value: '25', disabled: true },
+        { name: 'offset', value: '0', disabled: true },
+        { name: 'toString', value: 'string', disabled: true },
+      ]);
+    });
+
+    it('should serialize querystring array properties as repeated parameters unless explode is false', async () => {
+      const request = await importRequest({
+        parameters: [
+          {
+            name: 'filter',
+            in: 'querystring',
+            content: {
+              'application/x-www-form-urlencoded': {
+                schema: {
+                  type: 'object',
+                  properties: { tag: { type: 'array' }, id: { type: 'array' } },
+                },
+                example: { tag: ['dog', 'cat'], id: [1, 2] },
+                encoding: { id: { explode: false } },
+              },
+            },
+          },
+        ],
+      });
+
+      expect(request.parameters).toEqual([
+        { name: 'tag', value: 'dog', disabled: true },
+        { name: 'tag', value: 'cat', disabled: true },
+        { name: 'id', value: '1,2', disabled: true },
+      ]);
+    });
   });
 });
