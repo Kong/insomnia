@@ -1,5 +1,6 @@
 import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
+import type { z } from 'zod/v4';
 
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
@@ -8,13 +9,15 @@ import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.update';
 
-interface WorkspacePatch {
+type CollectionWorkspaceData = z.infer<typeof models.workspace.collectionWorkspaceSchema>;
+export type WorkspacePatch = {
   workspaceId: string;
   name?: string;
   fileName?: string;
   mockServerType?: string;
   mockServerUrl?: string;
-}
+  description?: string;
+} & CollectionWorkspaceData;
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = (await request.json()) as WorkspacePatch;
@@ -61,7 +64,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     });
   }
 
-  patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
+  patch.name =
+    patch.name || workspace.name || (workspace.scope === 'collection' ? 'My API Collection' : 'my-spec.yaml');
 
   await services.workspace.update(workspace, patch);
 
