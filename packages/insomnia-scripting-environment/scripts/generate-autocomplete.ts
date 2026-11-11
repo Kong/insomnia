@@ -28,13 +28,16 @@ interface Snippet {
   value: string;
 }
 
+// Members that exist on the object but throw when called from a script.
+const UNSUPPORTED_MEMBERS = new Set(['insomnia.vault.set', 'insomnia.vault.unset', 'insomnia.vault.clear']);
+
 function walk(obj: object, path: string): Snippet[] {
   let snippets: Snippet[] = [];
   const refs = new Set<unknown>();
   const record = obj as Record<string, unknown>;
 
   for (const key in obj) {
-    if (key.startsWith('_')) {
+    if (key.startsWith('_') || UNSUPPORTED_MEMBERS.has(`${path}.${key}`)) {
       continue;
     }
 
