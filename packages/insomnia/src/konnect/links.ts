@@ -3,6 +3,7 @@ import { getKongDocsOrigin, getKonnectCloudOrigin } from '../common/constants';
 export const getPluginHubUrl = () => `${getKongDocsOrigin()}/plugins/`;
 export const getPluginPriorityDocsUrl = () => `${getKongDocsOrigin()}/gateway/entities/plugin/#plugin-priority`;
 export const getDeckApplyDocsUrl = () => `${getKongDocsOrigin()}/deck/gateway/apply/`;
+export const getDebugSessionsUrl = () => `${getKongDocsOrigin()}/observability/debugger/`;
 
 const encodePathSegment = (value: string) => encodeURIComponent(value);
 
