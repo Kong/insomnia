@@ -14,6 +14,7 @@ import {
   summarizeTrace,
   type TraceSummaryBreakdown,
 } from '~/konnect/debug-trace-helper';
+import { getDebugSessionsUrl } from '~/konnect/links';
 import {
   findRouteRequestForTrace,
   type KonnectRouteRequest,
@@ -251,7 +252,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
 
         <Button
           // FIXME Update the link for debugger integration when it's ready
-          onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
+          onClick={() => window.main.openInBrowser(getDebugSessionsUrl())}
           className="ml-auto cursor-pointer border-0 bg-transparent p-0 text-(--hl) underline"
         >
           Learn more
