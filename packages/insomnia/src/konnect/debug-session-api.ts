@@ -173,7 +173,7 @@ function normalizeTraceDetail(traceId: string, raw: Raw): DebugTraceDetail {
 }
 
 export async function listNodeIds(ctx: DebugSessionApiContext): Promise<string[]> {
-  const body = await request<Raw>(ctx, 'GET', `/v2/control-planes/${ctx.controlPlaneId}/nodes?size=100`);
+  const body = await request<Raw>(ctx, 'GET', `/v2/control-planes/${ctx.controlPlaneId}/nodes`);
   const nodes: Raw[] = Array.isArray(body?.items) ? body.items : Array.isArray(body?.data) ? body.data : [];
   return nodes.map(node => String(node.id)).filter(Boolean);
 }
