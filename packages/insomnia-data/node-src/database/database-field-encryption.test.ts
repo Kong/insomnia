@@ -452,6 +452,39 @@ describe('options', () => {
   });
 });
 
+describe('hooks per datastore', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('runs the hooks for exactly the types that have encrypted fields, and loads the other types as they are', async () => {
+    const pathsByType = models.getEncryptedFieldPathsByType();
+    const types = Object.keys(pathsByType);
+    for (const type of types) {
+      writeLines(type, [{ _id: `${type}_1`, type, parentId: 'wrk_1', name: `A ${type}` }]);
+    }
+    const lookedUp = new Set<string>();
+    const getPaths = models.getEncryptedFieldPathsForType;
+    vi.spyOn(models, 'getEncryptedFieldPathsForType').mockImplementation(type => {
+      lookedUp.add(type);
+      return getPaths(type);
+    });
+
+    await open({ key });
+
+    const typesWithEncryptedFields = Object.entries(pathsByType)
+      .filter(([, paths]) => paths.length > 0)
+      .map(([type]) => type);
+    expect(typesWithEncryptedFields.length).toBeGreaterThan(0);
+    expect(typesWithEncryptedFields.length).toBeLessThan(types.length);
+    expect([...lookedUp].sort()).toEqual(typesWithEncryptedFields.sort());
+    // The startup repairs may remove documents that belong to nothing, so check what the load rewrote into the files
+    for (const type of types) {
+      expect(readFile(type), `${type} must be loaded and rewritten`).toContain(`"name":"A ${type}"`);
+    }
+  });
+});
+
 describe('degraded mode: no key', () => {
   it('loads encrypted values verbatim without losing them, and the next keyed launch decrypts and encrypts', async () => {
     writeLines('Request', [encryptWith(key, request({ _id: 'req_encrypted' }))]);

@@ -32,6 +32,7 @@ import {
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
   type FieldDecryptionFailure,
+  getHooksForType,
   reconcileFieldDecryptionFailures,
 } from './field-encryption/hooks';
 import { forEachEncryptedLeaf } from './field-encryption/paths';
@@ -276,11 +277,9 @@ export const createNedbDatabase = <O = initOptions>(
 
       fieldDecryptionFailureReport = createFieldDecryptionFailureReport();
       const encryptionEnabled = !!fieldEncryptionKey && !config.inMemoryOnly;
-      if (encryptionEnabled) {
-        // Derive the encrypted path table now, so a broken model schema fails init() instead of the first hook call
-        models.getEncryptedFieldPathsByType();
-      }
-      // The same hooks go into every datastore of this instance through defaultConfig
+      // Derive the encrypted path table now, so a broken model schema fails init() instead of the first hook call
+      const encryptedFieldPaths = encryptionEnabled ? models.getEncryptedFieldPathsByType() : undefined;
+      // The same hooks serve every datastore that has encrypted fields (see configForType)
       const encryptionHooks = encryptionEnabled
         ? createFieldEncryptionHooks(fieldEncryptionKey, {
             getEncryptedFieldPaths: models.getEncryptedFieldPathsForType,
@@ -295,8 +294,14 @@ export const createNedbDatabase = <O = initOptions>(
         ...config,
         // Not overridable: init() waits for every load below, and a datastore that was never loaded never answers a query
         autoload: true,
-        ...encryptionHooks,
       };
+
+      // Only the datastores that have encrypted fields get the hooks: every other line is read and written exactly as
+      // without encryption, instead of being parsed and serialized again for nothing
+      const configForType = (type: AllTypes): NeDB.DataStoreOptions => ({
+        ...defaultConfig,
+        ...getHooksForType(encryptionHooks, type, t => encryptedFieldPaths?.[t as AllTypes] ?? []),
+      });
 
       if (!dbPath) {
         dbPath = process.env['INSOMNIA_DATA_PATH'] || getTempPath('userData');
@@ -304,179 +309,179 @@ export const createNedbDatabase = <O = initOptions>(
 
       nedbBucket = {
         ApiSpec: new NeDB<ApiSpec>({
-          ...defaultConfig,
+          ...configForType('ApiSpec'),
           filename: fsPath.join(dbPath, 'insomnia.ApiSpec.db'),
         }),
         CaCertificate: new NeDB({
-          ...defaultConfig,
+          ...configForType('CaCertificate'),
           filename: fsPath.join(dbPath, 'insomnia.CaCertificate.db'),
         }),
         ClientCertificate: new NeDB<ClientCertificate>({
-          ...defaultConfig,
+          ...configForType('ClientCertificate'),
           filename: fsPath.join(dbPath, 'insomnia.ClientCertificate.db'),
         }),
         CloudCredential: new NeDB<CloudProviderCredential>({
-          ...defaultConfig,
+          ...configForType('CloudCredential'),
           filename: fsPath.join(dbPath, 'insomnia.CloudCredential.db'),
         }),
         CookieJar: new NeDB<CookieJar>({
-          ...defaultConfig,
+          ...configForType('CookieJar'),
           filename: fsPath.join(dbPath, 'insomnia.CookieJar.db'),
         }),
         Environment: new NeDB<Environment>({
-          ...defaultConfig,
+          ...configForType('Environment'),
           filename: fsPath.join(dbPath, 'insomnia.Environment.db'),
         }),
         GitCredentials: new NeDB({
-          ...defaultConfig,
+          ...configForType('GitCredentials'),
           filename: fsPath.join(dbPath, 'insomnia.GitCredentials.db'),
         }),
         GitRepository: new NeDB<GitRepository>({
-          ...defaultConfig,
+          ...configForType('GitRepository'),
           filename: fsPath.join(dbPath, 'insomnia.GitRepository.db'),
         }),
         GrpcRequest: new NeDB({
-          ...defaultConfig,
+          ...configForType('GrpcRequest'),
           filename: fsPath.join(dbPath, 'insomnia.GrpcRequest.db'),
         }),
         GrpcRequestMeta: new NeDB({
-          ...defaultConfig,
+          ...configForType('GrpcRequestMeta'),
           filename: fsPath.join(dbPath, 'insomnia.GrpcRequestMeta.db'),
         }),
         MockRoute: new NeDB({
-          ...defaultConfig,
+          ...configForType('MockRoute'),
           filename: fsPath.join(dbPath, 'insomnia.MockRoute.db'),
         }),
         MockServer: new NeDB({
-          ...defaultConfig,
+          ...configForType('MockServer'),
           filename: fsPath.join(dbPath, 'insomnia.MockServer.db'),
         }),
         McpRequest: new NeDB({
-          ...defaultConfig,
+          ...configForType('McpRequest'),
           filename: fsPath.join(dbPath, 'insomnia.McpRequest.db'),
         }),
         McpResponse: new NeDB({
-          ...defaultConfig,
+          ...configForType('McpResponse'),
           filename: fsPath.join(dbPath, 'insomnia.McpResponse.db'),
         }),
         McpPayload: new NeDB({
-          ...defaultConfig,
+          ...configForType('McpPayload'),
           filename: fsPath.join(dbPath, 'insomnia.McpPayload.db'),
         }),
         OAuth2Token: new NeDB({
-          ...defaultConfig,
+          ...configForType('OAuth2Token'),
           filename: fsPath.join(dbPath, 'insomnia.OAuth2Token.db'),
         }),
         PluginData: new NeDB({
-          ...defaultConfig,
+          ...configForType('PluginData'),
           filename: fsPath.join(dbPath, 'insomnia.PluginData.db'),
         }),
         Project: new NeDB({
-          ...defaultConfig,
+          ...configForType('Project'),
           filename: fsPath.join(dbPath, 'insomnia.Project.db'),
         }),
         ProjectLintRuleset: new NeDB<ProjectLintRuleset>({
-          ...defaultConfig,
+          ...configForType('ProjectLintRuleset'),
           filename: fsPath.join(dbPath, 'insomnia.ProjectLintRuleset.db'),
         }),
         ProtoDirectory: new NeDB({
-          ...defaultConfig,
+          ...configForType('ProtoDirectory'),
           filename: fsPath.join(dbPath, 'insomnia.ProtoDirectory.db'),
         }),
         ProtoFile: new NeDB({
-          ...defaultConfig,
+          ...configForType('ProtoFile'),
           filename: fsPath.join(dbPath, 'insomnia.ProtoFile.db'),
         }),
         Request: new NeDB({
-          ...defaultConfig,
+          ...configForType('Request'),
           filename: fsPath.join(dbPath, 'insomnia.Request.db'),
         }),
         RequestGroup: new NeDB({
-          ...defaultConfig,
+          ...configForType('RequestGroup'),
           filename: fsPath.join(dbPath, 'insomnia.RequestGroup.db'),
         }),
         RequestGroupMeta: new NeDB({
-          ...defaultConfig,
+          ...configForType('RequestGroupMeta'),
           filename: fsPath.join(dbPath, 'insomnia.RequestGroupMeta.db'),
         }),
         RequestMeta: new NeDB({
-          ...defaultConfig,
+          ...configForType('RequestMeta'),
           filename: fsPath.join(dbPath, 'insomnia.RequestMeta.db'),
         }),
         RequestVersion: new NeDB({
-          ...defaultConfig,
+          ...configForType('RequestVersion'),
           filename: fsPath.join(dbPath, 'insomnia.RequestVersion.db'),
         }),
         Response: new NeDB({
-          ...defaultConfig,
+          ...configForType('Response'),
           filename: fsPath.join(dbPath, 'insomnia.Response.db'),
         }),
         RunnerTestResult: new NeDB({
-          ...defaultConfig,
+          ...configForType('RunnerTestResult'),
           filename: fsPath.join(dbPath, 'insomnia.RunnerTestResult.db'),
         }),
         Settings: new NeDB({
-          ...defaultConfig,
+          ...configForType('Settings'),
           filename: fsPath.join(dbPath, 'insomnia.Settings.db'),
         }),
         SocketIOPayload: new NeDB({
-          ...defaultConfig,
+          ...configForType('SocketIOPayload'),
           filename: fsPath.join(dbPath, 'insomnia.SocketIOPayload.db'),
         }),
         SocketIORequest: new NeDB({
-          ...defaultConfig,
+          ...configForType('SocketIORequest'),
           filename: fsPath.join(dbPath, 'insomnia.SocketIORequest.db'),
         }),
         SocketIORequestMeta: new NeDB({
-          ...defaultConfig,
+          ...configForType('SocketIORequestMeta'),
           filename: fsPath.join(dbPath, 'insomnia.SocketIORequestMeta.db'),
         }),
         SocketIOResponse: new NeDB({
-          ...defaultConfig,
+          ...configForType('SocketIOResponse'),
           filename: fsPath.join(dbPath, 'insomnia.SocketIOResponse.db'),
         }),
         Stats: new NeDB({
-          ...defaultConfig,
+          ...configForType('Stats'),
           filename: fsPath.join(dbPath, 'insomnia.Stats.db'),
         }),
         UnitTest: new NeDB({
-          ...defaultConfig,
+          ...configForType('UnitTest'),
           filename: fsPath.join(dbPath, 'insomnia.UnitTest.db'),
         }),
         UnitTestResult: new NeDB({
-          ...defaultConfig,
+          ...configForType('UnitTestResult'),
           filename: fsPath.join(dbPath, 'insomnia.UnitTestResult.db'),
         }),
         UnitTestSuite: new NeDB({
-          ...defaultConfig,
+          ...configForType('UnitTestSuite'),
           filename: fsPath.join(dbPath, 'insomnia.UnitTestSuite.db'),
         }),
         UserSession: new NeDB({
-          ...defaultConfig,
+          ...configForType('UserSession'),
           filename: fsPath.join(dbPath, 'insomnia.UserSession.db'),
         }),
         WebSocketPayload: new NeDB({
-          ...defaultConfig,
+          ...configForType('WebSocketPayload'),
           filename: fsPath.join(dbPath, 'insomnia.WebSocketPayload.db'),
         }),
         WebSocketRequest: new NeDB({
-          ...defaultConfig,
+          ...configForType('WebSocketRequest'),
           filename: fsPath.join(dbPath, 'insomnia.WebSocketRequest.db'),
         }),
         WebSocketRequestMeta: new NeDB({
-          ...defaultConfig,
+          ...configForType('WebSocketRequestMeta'),
           filename: fsPath.join(dbPath, 'insomnia.WebSocketRequestMeta.db'),
         }),
         WebSocketResponse: new NeDB({
-          ...defaultConfig,
+          ...configForType('WebSocketResponse'),
           filename: fsPath.join(dbPath, 'insomnia.WebSocketResponse.db'),
         }),
         Workspace: new NeDB<Workspace>({
-          ...defaultConfig,
+          ...configForType('Workspace'),
           filename: fsPath.join(dbPath, 'insomnia.Workspace.db'),
         }),
         WorkspaceMeta: new NeDB<WorkspaceMeta>({
-          ...defaultConfig,
+          ...configForType('WorkspaceMeta'),
           filename: fsPath.join(dbPath, 'insomnia.WorkspaceMeta.db'),
         }),
       };

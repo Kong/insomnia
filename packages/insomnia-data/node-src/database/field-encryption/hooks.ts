@@ -2,6 +2,7 @@ import { forEachEncryptedLeaf } from './paths';
 import {
   assertFieldEncryptionKey,
   decryptValue,
+  ENCRYPTED_VALUE_JSON_START,
   encryptValue,
   type FieldEncryptionKey,
   hasEncryptedValuePrefix,
@@ -115,6 +116,20 @@ export interface FieldEncryptionHooks {
   testSerializationHooks: false;
 }
 
+/**
+ * The hooks that belong on the datastore of `type`: all of them when the type has encrypted fields, none otherwise. A datastore
+ * without encrypted fields then reads and writes its lines exactly as without encryption, instead of parsing and serializing
+ * every one of them for nothing.
+ *
+ * This relies on a datastore holding only documents of its own type, which is how documents are written (insert and update
+ * route a document to the datastore named by its `type`). A line of another type that was put there by hand is not encrypted.
+ */
+export const getHooksForType = (
+  hooks: Partial<FieldEncryptionHooks>,
+  type: string,
+  getEncryptedFieldPaths: (type: string) => readonly string[],
+): Partial<FieldEncryptionHooks> => (getEncryptedFieldPaths(type).length > 0 ? hooks : {});
+
 const getDocType = (doc: unknown) => {
   const type = (doc as { type?: unknown } | null)?.type;
   return typeof type === 'string' ? type : undefined;
@@ -148,6 +163,10 @@ export const createFieldEncryptionHooks = (
   };
 
   const beforeDeserialization = (line: string) => {
+    // Nothing to decrypt: NeDB parses the line itself, so it does not need to be parsed and written again here
+    if (!line.includes(ENCRYPTED_VALUE_JSON_START)) {
+      return line;
+    }
     let doc;
     try {
       doc = JSON.parse(line);

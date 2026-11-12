@@ -7,6 +7,7 @@ import {
   countWellFormedCiphertext,
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
+  getHooksForType,
   parseFieldEncryptionKey,
   reconcileFieldDecryptionFailures,
 } from 'insomnia-data/node';
@@ -68,7 +69,8 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes, encryptionKey) => {
           autoload: true,
           filename: filePath,
           corruptAlertThreshold: 0.9,
-          ...hooks,
+          // Only the datastores that have encrypted fields need the hooks
+          ...getHooksForType(hooks, t, models.getEncryptedFieldPathsForType),
         });
         collection.find({}, (err: Error, docs: BaseModel[]) => {
           if (err) {

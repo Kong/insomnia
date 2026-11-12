@@ -5,6 +5,12 @@ export type FieldEncryptionKey = KeyObject;
 
 export const ENCRYPTED_VALUE_PREFIX = 'enc:insomnia:v1:';
 
+/**
+ * A serialized line that holds a ciphertext contains this text: the value is a JSON string, so it starts with a quote, and
+ * JSON.stringify never escapes a character of the prefix. A line without it has nothing to decrypt and need not be parsed.
+ */
+export const ENCRYPTED_VALUE_JSON_START = `"${ENCRYPTED_VALUE_PREFIX}`;
+
 const ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
 const IV_LENGTH = 12;

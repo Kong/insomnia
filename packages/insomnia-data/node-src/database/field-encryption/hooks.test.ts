@@ -6,6 +6,7 @@ import {
   countWellFormedCiphertext,
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
+  getHooksForType,
   reconcileFieldDecryptionFailures,
 } from './hooks';
 import { ENCRYPTED_VALUE_PREFIX, encryptValue } from './value';
@@ -42,6 +43,16 @@ describe('createFieldEncryptionHooks()', () => {
     const failureReport = createFieldDecryptionFailureReport();
     expect(setup().testSerializationHooks).toBe(false);
     expect(() => createFieldEncryptionHooks(undefined as never, { getEncryptedFieldPaths, failureReport })).toThrow();
+  });
+});
+
+describe('getHooksForType()', () => {
+  it('gives the hooks to a type that has encrypted fields, and nothing to a type without or an unknown one', () => {
+    const hooks = setup();
+    expect(getHooksForType(hooks, 'Request', getEncryptedFieldPaths)).toBe(hooks);
+    expect(getHooksForType(hooks, 'CookieJar', getEncryptedFieldPaths)).toBe(hooks);
+    expect(getHooksForType(hooks, 'Response', getEncryptedFieldPaths)).toEqual({});
+    expect(getHooksForType(hooks, 'NoSuchType', getEncryptedFieldPaths)).toEqual({});
   });
 });
 
@@ -186,6 +197,27 @@ describe('beforeDeserialization', () => {
     const doc = request();
     expect(parse(beforeDeserialization(line(doc)))).toEqual(doc);
     expect(failureReport.list()).toEqual([]);
+  });
+
+  it('returns a line without any ciphertext untouched, without parsing it or looking up the paths', () => {
+    const failureReport = createFieldDecryptionFailureReport();
+    const getPaths = vi.fn(getEncryptedFieldPaths);
+    const { beforeDeserialization } = createFieldEncryptionHooks(key, {
+      getEncryptedFieldPaths: getPaths,
+      failureReport,
+    });
+    // Not what JSON.stringify would write, so parsing and stringifying it again would change it
+    const original = '{ "_id": "req_1", "type": "Request",  "authentication": { "token": "plain" } }';
+    expect(beforeDeserialization(original)).toBe(original);
+    expect(getPaths).not.toHaveBeenCalled();
+    expect(failureReport.list()).toEqual([]);
+  });
+
+  it('still decrypts a line that holds ciphertext, however it is laid out', () => {
+    const { beforeDeserialization } = setup();
+    const ciphertext = encryptValue(key, 'secret-token');
+    const original = `{ "_id": "req_1", "type": "Request", "authentication": { "token": "${ciphertext}" } }`;
+    expect(parse(beforeDeserialization(original)).authentication.token).toBe('secret-token');
   });
 
   it('reads null, empty and non-string values on encrypted paths unchanged', () => {
@@ -335,7 +367,7 @@ describe('beforeDeserialization', () => {
         },
         failureReport,
       });
-      const original = line(request());
+      const original = line(request({ authentication: { type: 'bearer', token: encryptValue(key, 'secret-token') } }));
       expect(beforeDeserialization(original)).toBe(original);
       expect(consoleError).toHaveBeenCalledTimes(1);
       expect(String(consoleError.mock.calls[0][1])).toContain('path table broken');

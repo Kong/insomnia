@@ -143,7 +143,7 @@ A local AES-256 key auto-generated on first launch of the Insomnia App (regardle
 - **When a value counts as ciphertext:** A value is treated as ciphertext — decrypted on read, and reported if decryption fails — only if **all** of the following hold. Anything else is plaintext: left as-is, never decrypted, never reported.
   1. **It sits on an encrypted field path** of its document's type (4.4). The same prefix in a request body, URL, header, description, etc. is ordinary user data.
   2. **It is well-formed:** the prefix is followed by valid standard base64 (length a multiple of 4, correct padding) that decodes to at least 28 bytes (12-byte IV + 16-byte tag).
-- **Bootstrapping:** Load and decrypt the local encryption key from safeStorage → pass it to `mainDatabase.init()` → hooks are attached to every datastore of that database instance
+- **Bootstrapping:** Load and decrypt the local encryption key from safeStorage → pass it to `mainDatabase.init()` → hooks are attached to the datastores of that database instance that have encrypted fields (4.3)
 
 #### 4.2.1 Key Protection with Asynchronous safeStorage
 
@@ -205,9 +205,14 @@ init: async ({ dbPath, fieldEncryptionKey, ...config }: initOptions = {}, forceR
     autoload: true,
     corruptAlertThreshold: 0.9,
     ...config,
-    ...encryptionHooks,
   };
-  // every datastore is created from defaultConfig, so all datastores of this instance get the hooks
+  // Only the datastores whose type has encrypted fields (4.4) get the hooks; every other datastore reads and writes its
+  // lines exactly as NeDB does without encryption
+  const configForType = (type: AllTypes): NeDB.DataStoreOptions => ({
+    ...defaultConfig,
+    ...getHooksForType(encryptionHooks, type, models.getEncryptedFieldPathsForType),
+  });
+  // every datastore is created from configForType(type), e.g. new NeDB({ ...configForType('Request'), filename })
   // ...
 };
 ```
@@ -232,13 +237,16 @@ init: async (config: DataStoreOptions = {}, forceReset = false) => {
     - Non-string values (number, object, array): NeDB does not enforce the schema at runtime, so older or imported data may hold other types. They are left unchanged and do **not** throw — the "throw on encryption failure" rule in 4.3.1 is for bugs in our code, not for irregular data. Known gap: a secret stored as a non-string stays plaintext.
   - **Known gap — lone surrogates:** Values are encrypted as UTF-8. A string containing a lone UTF-16 surrogate (e.g. `\ud800`, which `JSON.parse` accepts) is not valid UTF-8 and decrypts with U+FFFD in its place, so the stored value differs from the original. This is accepted: real secrets practically never contain one, and detecting it would need either plaintext fallback, a thrown error that fails the whole datastore load, or a different value encoding.
 - **beforeDeserialization(line):** Called after reading from disk. Parses the JSON line → looks up the encrypted field paths for the doc's `type` (see 4.4) → decrypts the values on those paths that count as ciphertext (4.2) → re-stringifies. Values on other paths are never touched. Never throws (see 4.3.1)
+  - **A line without a ciphertext is not parsed:** if the line does not contain `"enc:insomnia:v1:`, it is returned unchanged and NeDB parses it itself. A ciphertext is a JSON string value, so it is preceded by a quote, and `JSON.stringify` (which NeDB and the write hook use) never escapes any character of the prefix. The read pass is therefore free for every plaintext line: all lines of the first launch (6.2) and every document of a type without encrypted fields. Only our own writer produces these values, so a line that holds one in another escaped form, written by another tool, is not recognized; NeDB's next rewrite writes it in the standard form, and it is decrypted at the launch after that
 - **`testSerializationHooks: false`:** NeDB's self-test feeds random non-JSON strings through the hooks, which JSON-parsing hooks cannot handle
 - **Persistent instances only:** `inMemoryOnly` instances never write to disk, so they get no hooks and require no key
+- **Hooks only where there are encrypted fields:** Only a datastore whose type has encrypted paths (4.4) gets the hooks, through `getHooksForType()`. Every other datastore reads and writes its lines exactly as NeDB does without encryption, so it pays nothing for encryption. The set follows the derived path table: it changes with the models (a new `encrypted()` mark, or a field added to a shared schema such as the authentication schema) and is never listed by hand. It relies on a datastore holding only documents of its own type, which is how documents are written (`insert` and `update` route a document to the datastore named by its `type`); a line of another type that was put into a datastore by hand is not encrypted
 - **Shared hook factory:** `createFieldEncryptionHooks()` lives in `insomnia-data` (Node side, `node-src/database/field-encryption/`) so inso CLI's `ne-db-adapter.ts`, which constructs `NeDB` directly, reuses the same implementation. Its signature is `createFieldEncryptionHooks(key, { getEncryptedFieldPaths, failureReport })`:
   - `key` is a Node `KeyObject` (`FieldEncryptionKey`). The factory rejects anything that is not a 256-bit secret key when it is called.
   - `getEncryptedFieldPaths(type)` returns the encrypted paths of a document type (4.4). It is injected, so the hooks have no dependency on the model definitions and can be tested with any path table.
   - `failureReport` is created by the caller with `createFieldDecryptionFailureReport()`, so each database instance owns its report.
   - The result can be spread straight into the NeDB options.
+  - `getHooksForType(hooks, type, getEncryptedFieldPaths)` decides per datastore: it returns the hooks when the type has encrypted paths and `{}` otherwise. `database-nedb.ts` and inso's `ne-db-adapter.ts` both use it, so the rule exists once.
 - **Key normally available in the app:** The local key is generated on first launch and present on every later launch. The only exception is a safeStorage failure (4.2.1), handled by degraded mode below
 - **Degraded mode (no usable key):** The main database is initialized without `fieldEncryptionKey`, so no hooks are attached. `enc:insomnia:v1:` values are ordinary strings to NeDB, so they load and save verbatim — no data loss — but are non-functional until the key can be decrypted again (the decryption failure dialog in 5.2 is shown). Sensitive values written during a degraded session stay plaintext; the next healthy launch encrypts them automatically, because every load rewrites each datastore through the hooks (section 6). Migration therefore never happens in a degraded session
 
@@ -443,7 +451,7 @@ How inso treats the key (all of this applies to the NeDB source only; export fil
 
 | Situation | Behavior |
 | --------- | -------- |
-| Key valid, data encrypted | `ne-db-adapter.ts` loads every datastore with the hooks from `createFieldEncryptionHooks()`, so the values are plaintext in memory. The key is parsed by `parseFieldEncryptionKey()` in `insomnia-data`, next to `exportFieldEncryptionKey()`, so both forms are defined in one place and round-trip |
+| Key valid, data encrypted | `ne-db-adapter.ts` loads every datastore and gives the hooks from `createFieldEncryptionHooks()` to those that have encrypted fields (`getHooksForType()`), so the values are plaintext in memory. The key is parsed by `parseFieldEncryptionKey()` in `insomnia-data`, next to `exportFieldEncryptionKey()`, so both forms are defined in one place and round-trip |
 | No key, data holds `enc:insomnia:v1:` values | One warning with the number of encrypted values per type and how to pass the key; the command carries on with the values untouched, so a request that needs one fails on its own. This is a warning and not an error because `run collection` and `run test` load every type (including `RequestVersion`, which is encrypted in any data directory that has history), so an error would stop inso on almost every data directory used without a key |
 | Key given, some values cannot be decrypted (wrong key, damaged value) | Error and a non-zero exit code. It lists the fields as `Type path (count)`, never the values. Failures are reconciled against the loaded documents first (as in 5.2), so an old line that a later line replaced does not count |
 | Key not valid (not base64 of a JWK, not JWK JSON, not 256 bits) | Error and a non-zero exit code. The message never contains any part of the input |
@@ -476,7 +484,7 @@ Every later launch performs the same rewrite. The same mechanism encrypts plaint
 **Timing and cost:**
 
 - `initDatabase(mainDatabase)` runs in `app.on('ready')` before any window is created, and all datastores load concurrently (`autoload: true`). Migration therefore runs before any UI exists, which is why it has no UI.
-- The cost of the first launch is the same encrypt pass that every later launch performs, with nothing to decrypt; see [field-encryption-performance.md](./field-encryption-performance.md).
+- The cost of the first launch is the same encrypt pass that every later launch performs, with nothing to decrypt: the read pass costs the hooks nothing, because a plaintext line holds no ciphertext and is not parsed (4.3). See [field-encryption-performance.md](./field-encryption-performance.md).
 
 ### 6.3 Key Before Data
 
@@ -514,7 +522,7 @@ If any of steps 1–4 fails, the "first launch when protection fails" path in 4.
 
 ## 7. Implementation Plan
 
-Phases define commit boundaries on the feature branch, ordered so that each phase only depends on earlier ones. Phases 1–9 ship together in a single release. This plan covers the baseline; the optimizations in [field-encryption-performance.md](./field-encryption-performance.md) and the Zod migration of the remaining models are follow-ups (7.1).
+Phases define commit boundaries on the feature branch, ordered so that each phase only depends on earlier ones. Phases 1–9 ship together in a single release. This plan covers the baseline. The optimizations in [field-encryption-performance.md](./field-encryption-performance.md) and the Zod migration of the remaining models are follow-ups (7.1); the first two optimizations, O1 and the first step of O2, are already implemented (4.3).
 
 | Phase   | Content | Notes |
 | ------- | ------- | ----- |
@@ -534,7 +542,7 @@ These are separate pieces of work that come after Phase 9. They are listed here 
 
 | Item | Content | Notes |
 | ---- | ------- | ----- |
-| Performance optimizations | O1–O5 in [field-encryption-performance.md](./field-encryption-performance.md), measured against the Phase 9 baseline | Do not change the stored format (performance doc section 5) |
+| Performance optimizations | O1–O8 in [field-encryption-performance.md](./field-encryption-performance.md), measured against the Phase 9 baseline. **Done so far:** O1 (hooks only on the datastores that have encrypted fields) and the first step of O2 (a line without a ciphertext is not parsed on read). Both were made after the baseline was measured, so the baseline is the code before them | Do not change the stored format (performance doc section 5) |
 | Migrate to Zod | **Migrate ClientCertificate / CloudCredential / OAuth2Token / GitCredentials / RequestVersion to Zod**, replacing their temporary `encryptedFields` arrays | Independent of Phases 3–9; path map snapshot must stay unchanged |
 
 ## 8. Open Questions

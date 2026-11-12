@@ -6,6 +6,7 @@ export {
   countWellFormedCiphertext,
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
+  getHooksForType,
   reconcileFieldDecryptionFailures,
 } from './database/field-encryption/hooks';
 export {
