@@ -125,6 +125,15 @@ export const UpgradePlanModal = () => {
                   <li className="flex flex-col py-2">
                     <div className="flex items-center gap-[8px]">
                       <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
+                      <span className="font-semibold">Native Kong Konnect integrations</span>
+                    </div>
+                    <span className="mt-1 ml-[24px] text-sm">
+                      Use Insomnia alongside your Kong gateways to quickly troubleshoot control plane configurations.
+                    </span>
+                  </li>
+                  <li className="flex flex-col py-2">
+                    <div className="flex items-center gap-[8px]">
+                      <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
                       <span className="font-semibold">User Governance</span>
                     </div>
                     <span className="mt-1 ml-[24px] text-sm">
@@ -138,15 +147,6 @@ export const UpgradePlanModal = () => {
                     </div>
                     <span className="mt-1 ml-[24px] text-sm">
                       Mandate Git, Cloud or Local project storage, plus E2EE
-                    </span>
-                  </li>
-                  <li className="flex flex-1 flex-col py-2">
-                    <div className="flex items-center gap-[8px]">
-                      <Icon icon="check-circle" className="h-[16px] text-(--color-surprise)" />
-                      <span className="font-semibold">World Class Support</span>
-                    </div>
-                    <span className="mt-1 ml-[24px] text-sm">
-                      A dedicated CSM that understands you, support access, and optional pro services to start quickly
                     </span>
                   </li>
                 </ul>

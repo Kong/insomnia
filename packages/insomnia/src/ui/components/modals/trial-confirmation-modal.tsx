@@ -12,17 +12,16 @@ interface TrialConfirmationModalProps {
 
 const TRIAL_BENEFITS = [
   {
+    title: 'Native Kong Konnect integrations (not available in Trial)',
+    description: 'Use Insomnia alongside your Kong gateways to quickly troubleshoot control plane configurations.',
+  },
+  {
     title: 'User governance',
     description: 'Control access at every level with SSO, SCIM, RBAC, and Teams.',
   },
   {
     title: 'Increased storage, security, and compliance',
     description: 'Keep your data safe, organized, and fully under your control with enterprise storage and governance.',
-  },
-  {
-    title: 'No limits on productivity',
-    description:
-      'Enjoy unlimited Mock Server requests, unlimited collaboration on Git Sync projects, and access to native Vault integrations.',
   },
 ];
 
