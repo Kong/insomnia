@@ -27,7 +27,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const { provider, providerCredential, authUrl, onClose, onComplete } = props;
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState('');
-  const [manulInputUrl, setManualInputUrl] = useState('');
+  const [manualInputUrl, setManualInputUrl] = useState('');
   const providerDisplayName = getProviderDisplayName(provider);
 
   const updateCloudCredential = useUpdateCloudCredential();
@@ -35,50 +35,34 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const isEditing = !!providerCredential;
   const upsertMutation = isEditing ? updateCloudCredential : createCloudCredential;
 
-  const fetchErrorMessage =
-    upsertMutation.data && 'error' in upsertMutation.data
-      ? upsertMutation.data.error
-      : (upsertMutation.error?.message ?? '');
+  const fetchErrorMessage = upsertMutation.error?.message ?? '';
 
   const isLoading = upsertMutation.isPending;
 
-  // The mutation resolves with `{ error }` for authentication failures; those stay open and surface via fetchErrorMessage.
   const closeOnSuccess = (data: object) => {
-    if ('error' in data) {
-      return;
-    }
     onClose(data);
     onComplete && onComplete(data);
   };
 
-  const handleFormSubmit = (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
+  const handleFormSubmit = async (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
     const { name, credentials, isAuthenticated = false } = data;
     const patch = { name, credentials, provider } as Partial<CloudProviderCredential>;
 
-    if (isEditing) {
-      return updateCloudCredential
-        .mutateAsync({
-          patch,
-          cloudCredentialId: providerCredential._id,
-        })
-        .then(closeOnSuccess);
+    try {
+      const result = await (isEditing
+        ? updateCloudCredential.mutateAsync({ patch, cloudCredentialId: providerCredential._id })
+        : createCloudCredential.mutateAsync({ name, credentials, provider, isAuthenticated }));
+      closeOnSuccess(result);
+    } catch {
+      // Surfaced through upsertMutation.error / fetchErrorMessage.
     }
-
-    return createCloudCredential
-      .mutateAsync({
-        name,
-        credentials,
-        provider,
-        isAuthenticated,
-      })
-      .then(closeOnSuccess);
   };
 
   const exchangeAzureCode = async () => {
     try {
       setError('');
       setIsAuthenticating(true);
-      const parsedURL = new URL(manulInputUrl);
+      const parsedURL = new URL(manualInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
         const authResult = await plugins.executePluginMainAction({

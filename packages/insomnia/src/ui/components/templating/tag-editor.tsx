@@ -97,7 +97,7 @@ export const TagEditor: FC<Props> = props => {
   const { handleRender, handleGetRenderContext } = useNunjucks(nunjucksOptions);
   const [hasMaskedValue, setHasMaskedValue] = useState(false);
   // Global cloud credentials come from the query cache so create/edit/delete mutations refresh them automatically.
-  const cloudCredentials = useCloudCredentials();
+  const { cloudCredentials } = useCloudCredentials();
   const allDocs = useMemo<Record<string, BaseModel[]>>(
     () => ({ ...state.allDocs, [cloudCredentialModelType]: cloudCredentials }),
     [state.allDocs, cloudCredentials],

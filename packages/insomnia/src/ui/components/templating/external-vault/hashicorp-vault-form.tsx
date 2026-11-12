@@ -26,7 +26,7 @@ const { HashiCorpCredentialType } = models.cloudCredential;
 const defaultKVVersion = 'v2';
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const cloudCredentials = useCloudCredentials();
+  const { cloudCredentials } = useCloudCredentials();
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;

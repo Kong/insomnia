@@ -11,22 +11,51 @@ type CreateCloudCredentialData = Pick<CloudProviderCredential, 'name' | 'provide
   provider: string;
 };
 
+interface AuthenticateResult { access_token: string; expires_at: number }
+
 const queryKeys = {
   cloudCredentials: () => ['cloudCredentials'],
 };
 
 const EMPTY_CLOUD_CREDENTIALS: CloudProviderCredential[] = [];
 
-export const useCloudCredentials = (): CloudProviderCredential[] => {
-  const { data } = useDBQuery({
+export const useCloudCredentials = () => {
+  const { data, isPending } = useDBQuery({
     queryKey: queryKeys.cloudCredentials(),
     queryFn: () => services.cloudCredential.all(),
-    // Credentials are also written outside these hooks (logout, plugins) and aren't pushed through db.changes,
+    // Credentials are written outside these hooks (logout, plugins) and updateAppDataOnDbChanges ignores this model.
     // Re-read on every mount instead of trusting the DB client's staleTime: Infinity default.
     staleTime: 0,
   });
-  return data ?? EMPTY_CLOUD_CREDENTIALS;
+  return { cloudCredentials: data ?? EMPTY_CLOUD_CREDENTIALS, isPending };
 };
+
+// Throws on failure so the mutation's `error` / `onError` / `onSuccess` reflect the real outcome.
+const authenticate = async (provider: string, credentials: unknown) => {
+  const response = (await plugins.executePluginMainAction({
+    pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
+    actionName: 'authenticate',
+    params: { provider, credentials },
+  })) as any;
+  const { success, error, result } = response;
+  if (error) {
+    throw new Error(`${error.errorMessage}`);
+  }
+  if (!success) {
+    throw new Error('Unexpected response from ' + provider);
+  }
+  return result as AuthenticateResult;
+};
+
+// Returns a copy so the caller's form data is never mutated.
+const withHashicorpToken = <T extends Partial<CloudProviderCredential>>(
+  patch: T,
+  provider: string,
+  { access_token, expires_at }: AuthenticateResult,
+): T =>
+  provider === 'hashicorp'
+    ? { ...patch, credentials: { ...patch.credentials, access_token, expires_at } as T['credentials'] }
+    : patch;
 
 export const useCreateCloudCredential = () =>
   useInvalidatingDBMutation({
@@ -45,29 +74,11 @@ export const useCreateCloudCredential = () =>
         return credentials;
       }
 
-      const authenticateResponse = await plugins.executePluginMainAction({
-        pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
-        actionName: 'authenticate',
-        params: { provider, credentials },
-      });
-      const { success, error, result } = authenticateResponse as any;
-      if (error) {
-        return {
-          error: `${error.errorMessage}`,
-        };
-      }
-      if (success) {
-        if (provider === 'hashicorp') {
-          // update access token and expires_at
-          const { access_token, expires_at } = result as { access_token: string; expires_at: number };
-          const credentialsRecord = patch.credentials as unknown as Record<string, unknown>;
-          credentialsRecord['access_token'] = access_token;
-          credentialsRecord['expires_at'] = expires_at;
-        }
-        await services.cloudCredential.create(patch as Partial<CloudProviderCredential>);
-        return result as { access_token: string; expires_at: number };
-      }
-      return { error: 'Unexpected response from ' + provider };
+      const result = await authenticate(provider, credentials);
+      await services.cloudCredential.create(
+        withHashicorpToken(patch as Partial<CloudProviderCredential>, provider, result),
+      );
+      return result;
     },
     invalidates: [queryKeys.cloudCredentials()],
   });
@@ -86,32 +97,11 @@ export const useUpdateCloudCredential = () =>
       invariant(provider, 'Cloud Provider name is required');
       invariant(credentials, 'Credentials are required');
 
-      const authenticateResponse = await plugins.executePluginMainAction({
-        pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
-        actionName: 'authenticate',
-        params: { provider, credentials },
-      });
-      const { success, error, result } = authenticateResponse as any;
-      if (error) {
-        return {
-          error: `${error.errorMessage}`,
-        };
-      }
-      if (success) {
-        const originCredential = await services.cloudCredential.getById(cloudCredentialId);
-        invariant(originCredential, 'No Cloud Credential found');
-        if (provider === 'hashicorp') {
-          // update access token and expires_at
-          const { access_token, expires_at } = result as { access_token: string; expires_at: number };
-          if (patch.credentials) {
-            patch.credentials['access_token'] = access_token;
-            patch.credentials['expires_at'] = expires_at;
-          }
-        }
-        await services.cloudCredential.update(originCredential, patch);
-        return result as { access_token: string; expires_at: number };
-      }
-      return { error: 'Unexpected response from ' + provider };
+      const result = await authenticate(provider, credentials);
+      const originCredential = await services.cloudCredential.getById(cloudCredentialId);
+      invariant(originCredential, 'No Cloud Credential found');
+      await services.cloudCredential.update(originCredential, withHashicorpToken(patch, provider, result));
+      return result;
     },
     invalidates: [queryKeys.cloudCredentials()],
   });
