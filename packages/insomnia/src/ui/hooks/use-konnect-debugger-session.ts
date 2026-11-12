@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { services } from 'insomnia-data';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type DebugSession, type DebugSessionApiContext, type DebugTraceDetail } from '~/konnect/debug-session-api';
+import { type DebugSession, type DebugSessionApiContext } from '~/konnect/debug-session-api';
 import {
   asDebugError,
   debugSessionKeys,
@@ -15,7 +15,7 @@ import {
 import { type DebugSessionState, deriveSessionState, getDebugSessionStartedAt } from '~/konnect/debug-trace-helper';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import uiEventBus, { KONNECT_PAT_CHANGE } from '~/ui/event-bus';
-import { useServerQueries, useServerQuery } from '~/ui/hooks/use-query';
+import { useServerQuery } from '~/ui/hooks/use-query';
 
 const AUTH_KINDS = new Set(['unauthorized', 'forbidden']);
 
@@ -102,27 +102,6 @@ export function useKonnectDebuggerSession({
     enabled: isPatLoaded && !!sessionId && !!debugSession,
   });
   const tracesError = asDebugError(tracesOriginError);
-
-  // Automatically fetch the detail of trace from trace list.
-  // The list always contains every trace id, so only fetch details that are not cached yet.
-  const traceDetails = useServerQueries({
-    queries: (debugSessionTraces || []).map(trace => {
-      const options = debugTraceQueryOptions(ctx, sessionId || '', trace.traceId);
-      return {
-        ...options,
-        enabled: isPatLoaded && !!sessionId && queryClient.getQueryData(options.queryKey) === undefined,
-      };
-    }),
-    combine: results => {
-      const details = new Map<string, DebugTraceDetail>();
-      for (const result of results) {
-        if (result.data) {
-          details.set(result.data.traceId, result.data);
-        }
-      }
-      return details;
-    },
-  });
 
   useEffect(() => {
     if (isDebugSessionMissingFromServer) {
@@ -218,7 +197,6 @@ export function useKonnectDebuggerSession({
     debugSessionState,
     capturedSecs,
     traces: debugSessionTraces || [],
-    traceDetails,
     isLoading: !!sessionId && isLoadingDebugSession,
     debugSessionAction: startMutation.isPending ? 'starting' : stopMutation.isPending ? 'stopping' : 'idle',
     authError,
