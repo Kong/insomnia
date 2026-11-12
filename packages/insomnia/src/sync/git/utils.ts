@@ -5,6 +5,7 @@ import { models, services } from 'insomnia-data';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
 import { invariant } from '~/common/utils/invariant';
+import { getGitRuntime } from '~/sync/git/git-runtime';
 import { gitRemoteProviderRegistry } from '~/sync/git/providers';
 
 // Re-exported for backwards compatibility. The pure URL helpers live in a
@@ -94,14 +95,20 @@ const onAuth =
     };
   };
 
-const getGitConfigValue = (key: string, cwd: string): Promise<string> =>
-  new Promise(resolve => {
+const getGitConfigValue = async (key: string, cwd: string): Promise<string> => {
+  const git = await getGitRuntime();
+  if (!git.available) {
+    return '';
+  }
+
+  return new Promise(resolve => {
     const chunks: string[] = [];
-    const proc = spawn('git', ['config', key], { cwd });
+    const proc = spawn(git.command, ['config', key], { cwd, env: git.env, windowsHide: true });
     proc.stdout.on('data', (d: Buffer) => chunks.push(d.toString()));
     proc.on('close', () => resolve(chunks.join('').trim()));
     proc.on('error', () => resolve(''));
   });
+};
 
 export const getAuthorFromGitRepository = async (gitRepositoryId: string, repoPath?: string): Promise<GitAuthor> => {
   const gitRepo = await services.gitRepository.getById(gitRepositoryId);
