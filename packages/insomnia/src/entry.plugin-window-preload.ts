@@ -1,5 +1,7 @@
 import { ipcRenderer } from 'electron';
 
+import { buildDialogRequest } from './common/plugins/dialog-payload';
+
 // Provide window.app so plugin-loading code (which checks __IS_RENDERER__) can resolve the userData path without needing the main renderer's full preload.
 window.app = {
   getPath: (name: string) => ipcRenderer.sendSync('getPath', name) as string,
@@ -13,8 +15,12 @@ window.showAlert = (options?: Record<string, any>) => {
   ipcRenderer.send('plugins.uiAlert', options ?? {});
 };
 
+// The dialog body is a DOM node (and `onHide` is a function), neither of which can be structured
+// cloned, so serialize it before the IPC hop instead of throwing inside this hidden window.
 window.showWrapper = (options?: Record<string, any>) => {
-  ipcRenderer.send('plugins.uiDialog', options ?? {});
+  void buildDialogRequest(options).then(request => {
+    ipcRenderer.send('plugins.uiDialog', request);
+  });
 };
 
 window.showPrompt = (options?: Record<string, any>) => {

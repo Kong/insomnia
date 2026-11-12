@@ -12,6 +12,7 @@ import { ProxyScopes, RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { buildDialogRequest } from '~/common/plugins/dialog-payload';
 import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
@@ -43,7 +44,7 @@ import {
   tryToInterpolateRequest,
 } from '../network/network';
 import { curlRequest } from './network/libcurl-promise';
-import { requestPromptFromRenderer } from './prompt-bridge';
+import { requestPromptFromRenderer, showDialogInRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templating-worker-database-auth';
 
@@ -1092,8 +1093,14 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
   'app.alert': async (body: { title: string; message?: string }) => {
     await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
   },
-  'app.dialog': async (body: { title: string; message?: string }) => {
-    await dialog.showMessageBox({ type: 'info', title: body.title, message: body.message || '' });
+  'app.dialog': async (body: {
+    title: string;
+    body?: string;
+    options?: { tall?: boolean; skinny?: boolean; wide?: boolean };
+  }) => {
+    // The sandbox has no DOM, so a sandboxed plugin can only pass markup as a string. Render it in
+    // the app window's WrapperModal: the native message box used here dropped the plugin's content.
+    showDialogInRenderer(await buildDialogRequest({ ...body.options, title: body.title, body: body.body }));
   },
   'app.prompt': async (body: { title: string; options?: AppPromptOptions }) => {
     return requestPromptFromRenderer({
