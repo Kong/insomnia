@@ -46,12 +46,12 @@ import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
-import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
+import { AppDataCacheProvider, useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import { useCreateCloudCredential } from '~/ui/hooks/data/use-cloud-credentials';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
-import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { type RootLoaderData, useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
@@ -374,7 +374,16 @@ const RootContent = () => {
   // other entry points are not, so pasting then can stack one more modal.
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
-  const { mutate: createCloudCredentials } = useCreateCloudCredential();
+  // Drop the app data cache when the user logs out to avoid showing the previous session's org/project data to the next user.
+  const dbQueryClient = useDBQueryClient();
+  const sessionId = useRootLoaderData()?.userSession.id;
+  useEffect(() => {
+    if (!sessionId) {
+      dbQueryClient.clear();
+    }
+  }, [dbQueryClient, sessionId]);
+
+  const { mutateAsync: createCloudCredentials } = useCreateCloudCredential();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
@@ -667,7 +676,7 @@ const RootContent = () => {
               credentials: result,
               provider: 'azure',
               isAuthenticated: true,
-            });
+            }).catch(error => showError({ title: 'Failed to save Azure credential', error }));
             const closeModalBtn = document.getElementById('close-add-cloud-credential-modal');
             if (closeModalBtn) {
               // close the modal to hint user Azure oauth url if exists

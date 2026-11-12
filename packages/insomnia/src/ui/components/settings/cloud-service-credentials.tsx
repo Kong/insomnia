@@ -51,7 +51,7 @@ const buttonClassName =
 
 export const CloudServiceCredentialList = () => {
   const { isOwner, isEnterprisePlan } = usePlanData();
-  const cloudCredentials = useCloudCredentials();
+  const { cloudCredentials, isPending: isLoadingCredentials } = useCloudCredentials();
   const [modalState, setModalState] = useState<{
     show: boolean;
     provider: CloudProviderName;
@@ -59,7 +59,7 @@ export const CloudServiceCredentialList = () => {
     authUrl?: string;
   }>();
   const [isVaultPluginInstalled, setIsVaultPluginInstalled] = useState(false);
-  const { mutate: deleteCredential } = useDeleteCloudCredential();
+  const { mutateAsync: deleteCredential } = useDeleteCloudCredential();
   useEffect(() => {
     const checkVaultPlugin = async () => {
       const plugins = await pluginsBridge.getBundlePlugins();
@@ -75,7 +75,7 @@ export const CloudServiceCredentialList = () => {
       message: `Are you sure to delete ${name}?`,
       onDone: async (isYes: boolean) => {
         if (isYes) {
-          deleteCredential(id);
+          deleteCredential(id).catch(error => showError({ title: 'Failed to delete cloud credential', error }));
         }
       },
     });
@@ -159,7 +159,7 @@ export const CloudServiceCredentialList = () => {
           </Popover>
         </MenuTrigger>
       </div>
-      {cloudCredentials.length === 0 ? (
+      {isLoadingCredentials ? null : cloudCredentials.length === 0 ? (
         <div className="faint pad text-center italic">No cloud service provider credentials found</div>
       ) : (
         <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
