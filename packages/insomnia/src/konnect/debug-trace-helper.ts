@@ -16,6 +16,9 @@ export function deriveSessionState(session: DebugSession): DebugSessionState {
       return 'completing';
     }
   }
+  // Timeout never reaches here. The timedOut(timed_out) determines whether the target did not respond in time before the sampling time elapsed.
+  // But we still need to fetch the session status to determine if it has completed or been cancelled.
+  // Leave it here as a placeholder in case API changes in the future and we need to handle additional session states.
   if (session.timedOut) {
     return 'timed_out';
   }
