@@ -661,7 +661,7 @@ collection:
       await fsClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, 'Environment'));
 
       // Create initial files
-      await fsClient.promises.writeFile(yamlFile, 'name: base env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: base env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\n');
 
       await GitVCS.init({
@@ -682,7 +682,7 @@ collection:
       await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
 
       // Make local changes on main
-      await fsClient.promises.writeFile(yamlFile, 'name: local env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: local env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\ndist\n');
       const status2 = await GitVCS.status();
       await GitVCS.stageChanges(status2.unstaged);
@@ -690,7 +690,7 @@ collection:
 
       // Switch to origin/main and make different changes
       await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
-      await fsClient.promises.writeFile(yamlFile, 'name: remote env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: remote env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\nbuild\n');
       await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: yamlFile });
       await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: gitignoreFile });
@@ -722,6 +722,77 @@ collection:
           filepath: gitignoreFile,
           action: 'use-theirs',
         });
+      }
+    });
+
+    it('should auto-resolve unrelated YAML files (not Insomnia files) to theirs instead of returning them as conflicts', async () => {
+      const fsClient = MemClient.createClient();
+      const insomniaFile = '.insomnia/Environment/env_1.yaml';
+      const workflowFile = '.github/workflows/main-deployment.yaml';
+      // Not valid YAML, e.g. a Helm template: must not make the pull throw
+      const helmTemplateFile = 'helm/deployment.yaml';
+
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, 'Environment'));
+      await fsClient.promises.mkdir('.github');
+      await fsClient.promises.mkdir('.github/workflows');
+      await fsClient.promises.mkdir('helm');
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: base env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: base\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.base }}\n');
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: local env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: local\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.local }}\n');
+      await GitVCS.commit('Local changes');
+
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: remote env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: remote\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.remote }}\n');
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      try {
+        await GitVCS.buildManualResolutionFromTrees();
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        // Only the Insomnia file goes to the conflict UI
+        expect(mergeErr.data.conflicts.map(c => c.key)).toEqual([insomniaFile]);
+        // The unrelated YAML files are resolved to theirs, like any other non-Insomnia file
+        expect(mergeErr.data.autoResolvedConflicts).toHaveLength(2);
+        expect(mergeErr.data.autoResolvedConflicts).toEqual(
+          expect.arrayContaining([
+            { filepath: workflowFile, action: 'use-theirs' },
+            { filepath: helmTemplateFile, action: 'use-theirs' },
+          ]),
+        );
       }
     });
 
