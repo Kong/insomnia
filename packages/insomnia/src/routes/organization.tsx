@@ -32,6 +32,7 @@ import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-str
 import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
@@ -173,7 +174,8 @@ const Component = () => {
   const organizations = useOrganizations();
   const user = useCurrentUser();
   const currentPlan = useCurrentPlan();
-  const { settings, userSession } = useRootLoaderData()!;
+  const settings = useSettings();
+  const { userSession } = useRootLoaderData()!;
   const [konnectMigrationGroups, setKonnectMigrationGroups] = useState<KonnectMigrationGroup[]>([]);
   // `konnectMigrationGroups` starts empty before `detectKonnectOrgMigration` below has resolved too,
   // so its length alone can't distinguish "not checked yet" from "checked, no conflict" — needed to

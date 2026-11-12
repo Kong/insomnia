@@ -35,6 +35,7 @@ import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useCommandSearch } from '~/ui/hooks/use-command-search';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
@@ -45,7 +46,7 @@ const { isRequestGroup } = models.requestGroup;
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {

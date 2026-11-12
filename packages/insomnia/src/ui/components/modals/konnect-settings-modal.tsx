@@ -6,7 +6,7 @@ import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
@@ -23,7 +23,7 @@ export const KonnectSettingsModal = ({
    * store it but syncing still could not run. */
   konnectSyncEnabled?: boolean;
 }) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const patchSettings = useSettingsPatcher();
 
   const [pat, setPat] = useState('');

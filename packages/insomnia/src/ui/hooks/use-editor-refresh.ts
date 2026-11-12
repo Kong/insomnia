@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 export const useEditorRefresh = (callback: () => void) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { showVariableSourceAndValue, nunjucksPowerUserMode, hideSecretValuesInPreviewAndConsole } = settings;
   const previousShowVariableSourceAndValue = reactUse.usePrevious(showVariableSourceAndValue);
   const previousNunjucksPowerUserMode = reactUse.usePrevious(nunjucksPowerUserMode);

@@ -10,6 +10,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
@@ -64,7 +65,8 @@ export function useKonnectSyncBar({
   setExpandedProjectAndWorkspaceIds,
 }: UseKonnectSyncBarOptions) {
   const navigate = useNavigate();
-  const { settings, userSession } = useRootLoaderData()!;
+  const settings = useSettings();
+  const { userSession } = useRootLoaderData()!;
   const konnectSyncEnabled = useKonnectSyncEnabled();
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();
   const [lastSyncedAt, setLastSyncedAt] = reactUse.useLocalStorage<number | null>(
@@ -86,54 +88,57 @@ export function useKonnectSyncBar({
     return map;
   }, [lastSyncResult]);
 
-  const syncKonnectProjectsAndNotify = useCallback(async (konnectOrganizationId?: string | null) => {
-    setLastSyncResult(null);
-    const isFirstSync = lastSyncedAt == null;
-    const result = await startSync(
-      organizationId,
-      konnectOrganizationId !== undefined ? konnectOrganizationId : settings.konnectOrganizationId,
-    );
-    setLastSyncResult(result ?? null);
-    setShowSyncDetails(false);
-    setCopiedReason(null);
-    if (result?.success) {
-      setLastSyncedAt(Date.now());
-      // Navigate to and expand the first Konnect project after a successful sync
-      const allProjects = await services.project.listByOrganizationIds(organizationId);
-      const sortedKonnectProjects = models.project.sortProjects(
-        allProjects.filter(p => p.konnectControlPlaneId != null),
+  const syncKonnectProjectsAndNotify = useCallback(
+    async (konnectOrganizationId?: string | null) => {
+      setLastSyncResult(null);
+      const isFirstSync = lastSyncedAt == null;
+      const result = await startSync(
+        organizationId,
+        konnectOrganizationId !== undefined ? konnectOrganizationId : settings.konnectOrganizationId,
       );
-      const firstKonnectProject = sortedKonnectProjects[0];
-      if (firstKonnectProject) {
-        const workspaces = await services.workspace.listByParentId(firstKonnectProject._id);
-        const envWorkspace = workspaces.find(w => w.scope === 'environment');
-        if (envWorkspace) {
-          // Show environment onboarding after first successful sync
-          if (isFirstSync) {
-            onFirstSyncEnvWorkspace?.(envWorkspace._id);
+      setLastSyncResult(result ?? null);
+      setShowSyncDetails(false);
+      setCopiedReason(null);
+      if (result?.success) {
+        setLastSyncedAt(Date.now());
+        // Navigate to and expand the first Konnect project after a successful sync
+        const allProjects = await services.project.listByOrganizationIds(organizationId);
+        const sortedKonnectProjects = models.project.sortProjects(
+          allProjects.filter(p => p.konnectControlPlaneId != null),
+        );
+        const firstKonnectProject = sortedKonnectProjects[0];
+        if (firstKonnectProject) {
+          const workspaces = await services.workspace.listByParentId(firstKonnectProject._id);
+          const envWorkspace = workspaces.find(w => w.scope === 'environment');
+          if (envWorkspace) {
+            // Show environment onboarding after first successful sync
+            if (isFirstSync) {
+              onFirstSyncEnvWorkspace?.(envWorkspace._id);
+            }
+            navigate(
+              `/organization/${organizationId}/project/${firstKonnectProject._id}/workspace/${envWorkspace._id}/environment`,
+            );
+          } else {
+            navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
           }
-          navigate(
-            `/organization/${organizationId}/project/${firstKonnectProject._id}/workspace/${envWorkspace._id}/environment`,
-          );
-        } else {
-          navigate(`/organization/${organizationId}/project/${firstKonnectProject._id}`);
+          setExpandedProjectAndWorkspaceIds?.(prev => {
+            const ids = prev || [];
+            return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
+          });
         }
-        setExpandedProjectAndWorkspaceIds?.(prev => {
-          const ids = prev || [];
-          return ids.includes(firstKonnectProject._id) ? ids : [...ids, firstKonnectProject._id];
-        });
       }
-    }
-  }, [
-    lastSyncedAt,
-    startSync,
-    organizationId,
-    settings.konnectOrganizationId,
-    navigate,
-    onFirstSyncEnvWorkspace,
-    setExpandedProjectAndWorkspaceIds,
-    setLastSyncedAt,
-  ]);
+    },
+    [
+      lastSyncedAt,
+      startSync,
+      organizationId,
+      settings.konnectOrganizationId,
+      navigate,
+      onFirstSyncEnvWorkspace,
+      setExpandedProjectAndWorkspaceIds,
+      setLastSyncedAt,
+    ],
+  );
   useEffect(() => {
     return uiEventBus.on(KONNECT_SYNC_TRIGGER, syncKonnectProjectsAndNotify);
   }, [syncKonnectProjectsAndNotify]);

@@ -40,10 +40,10 @@ import { SidebarFocusOnboarding } from '~/ui/components/sidebar/project-navigati
 import { UnsyncedWorkspaceNode } from '~/ui/components/sidebar/project-navigation-sidebar/unsynced-workspace-node';
 import { useProjectNavigationSidebarData } from '~/ui/components/sidebar/project-navigation-sidebar/use-navigation-sidebar-data';
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
@@ -96,7 +96,7 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();

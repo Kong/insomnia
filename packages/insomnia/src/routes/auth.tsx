@@ -7,10 +7,10 @@ import { Icon } from '~/ui/components/icon';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 const Component = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');

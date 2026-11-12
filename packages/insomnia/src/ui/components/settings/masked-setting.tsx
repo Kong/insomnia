@@ -2,7 +2,7 @@ import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC } from 'react';
 import * as reactUse from 'react-use';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
@@ -16,7 +16,7 @@ export const MaskedSetting: FC<{
 }> = ({ disabled, help, label, placeholder, setting }) => {
   const [isHidden, setHidden] = reactUse.useToggle(true);
 
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   if (!(setting in settings)) {
     throw new Error(`Invalid setting name ${setting}`);

@@ -8,7 +8,7 @@ import {
   tinykeys,
 } from 'tinykeys';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
   `${meta ? 'Meta+' : ''}${alt ? 'Alt+' : ''}${ctrl ? 'Control+' : ''}${shift ? 'Shift+' : ''}` +
@@ -18,7 +18,7 @@ export function useKeyboardShortcuts(
   getTarget: () => HTMLElement | Window,
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { hotKeyRegistry } = settings;
 
   useEffect(() => {

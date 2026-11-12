@@ -11,7 +11,7 @@ import { RenderError } from '~/common/templating/render-error';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { getGrpcConnectionErrorDetails } from '~/ui/utils/grpc';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
@@ -65,7 +65,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
   const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
   const { activeEnvironment, activeProject, activeWorkspace, vcsVersion } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
   const editorRef = useRef<CodeEditorHandle>(null);

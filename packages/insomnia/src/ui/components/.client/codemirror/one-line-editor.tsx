@@ -31,11 +31,11 @@ import { UpgradeModal } from '~/ui/components/modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '~/ui/components/settings/shortcuts';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useNunjucks, type UseNunjucksOptions } from '~/ui/context/nunjucks/use-nunjucks';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useEditorRefresh } from '~/ui/hooks/use-editor-refresh';
 import { useOpenVariableSource } from '~/ui/hooks/use-open-variable-source';
 import { usePlanData } from '~/ui/hooks/use-plan';
 import { useResizeObserver } from '~/ui/hooks/use-resize-observer';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { getTagDefinitions } from '~/ui/templating/renderer-safe';
 
@@ -133,7 +133,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const [tooltipValue, setTooltipValue] = useState<string>(
       type?.toLowerCase() === 'password' ? '' : defaultValue || '',
     );
-    const { settings } = useRootLoaderData()!;
+    const settings = useSettings();
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
     const openVariableSource = useOpenVariableSource();

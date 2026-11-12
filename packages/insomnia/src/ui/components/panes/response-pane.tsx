@@ -7,7 +7,7 @@ import { useFetcher } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
@@ -46,7 +46,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const handleSetFilter = async (responseFilter: string) => {
     if (!activeResponse) {
