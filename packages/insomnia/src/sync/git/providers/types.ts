@@ -197,9 +197,22 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
 
   /**
    * Prepare auth failure callback for isomorphic-git
-   * Handles token refresh on auth failures
+   * Handles token refresh on auth failures. `url` and `auth` are the remote URL
+   * and the credentials the server just rejected.
    */
-  authFailureCallback(credential: any): Promise<GitAuth> | GitAuth | void | Promise<void>;
+  authFailureCallback(
+    credential: any,
+    url?: string,
+    auth?: GitAuth,
+    repoPath?: string,
+  ): Promise<GitAuth> | GitAuth | void | Promise<void>;
+
+  /**
+   * Called after the server accepted the credentials returned by authCallback
+   * (or authFailureCallback). Optional — only providers that need to persist or
+   * confirm credentials externally implement it.
+   */
+  authSuccessCallback?(credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string): Promise<void> | void;
 }
 
 export interface GitProviderOption {
