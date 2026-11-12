@@ -11,7 +11,7 @@ import type {
 } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -92,7 +92,12 @@ export const RequestActionsDropdown = ({
     );
   };
 
-  const [specPosition, setSpecPosition] = useState<SpecOperationLocation | null>(null);
+  const specPosition = useMemo<SpecOperationLocation | null>(() => {
+    if (!isOpen || !apiSpec || !isRequest(request)) {
+      return null;
+    }
+    return findSpecOperationForRequest(apiSpec.contents, request);
+  }, [isOpen, request, apiSpec]);
 
   const viewSpec = () => {
     if (!specPosition) {
@@ -106,7 +111,7 @@ export const RequestActionsDropdown = ({
         item: activeWorkspace,
       },
       {
-        withTab: true,
+        withTab: false,
         shouldNavigate: true,
         searchParams: new URLSearchParams({ specPath: specPosition.path, specMethod: specPosition.method }),
       },
@@ -129,15 +134,6 @@ export const RequestActionsDropdown = ({
       onOpen();
     }
   }, [isOpen, onOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !apiSpec || !isRequest(request)) {
-      setSpecPosition(null);
-      return;
-    }
-    const specLocation = findSpecOperationForRequest(apiSpec.contents, request);
-    setSpecPosition(specLocation);
-  }, [isOpen, activeWorkspace, request, apiSpec]);
 
   const handleDuplicateRequest = () => {
     if (!request) {
