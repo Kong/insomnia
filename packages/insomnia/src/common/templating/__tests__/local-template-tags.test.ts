@@ -487,26 +487,34 @@ describe('prompt tag', () => {
     expect(data.get('my-key')).toBe('typed-value');
   });
 
-  it('does not overwrite a previously cached value when the user cancels (prompt resolves null)', async () => {
+  it('aborts the request instead of sending an empty value when the user cancels', async () => {
     // No explicit storage key, so the cache only pre-fills the default rather than skipping the
-    // prompt outright — otherwise there'd be no prompt call left to cancel.
+    // prompt outright, otherwise there'd be no prompt call left to cancel.
     const { store, data } = makeFakeStore();
     data.set('req_1.Title', 'previously-typed-value');
 
     const context = makePromptContext(null, { store, data });
-    const result = await promptTag.run(context, 'Title', '', '', '', false, true);
 
-    expect(result).toBeNull();
+    await expect(promptTag.run(context, 'Title', '', '', '', false, true)).rejects.toThrow(/cancelled/);
     expect(data.get('req_1.Title')).toBe('previously-typed-value');
   });
 
-  it('does not cache anything on cancel when there was no prior cached value', async () => {
+  it('does not cache anything when the dialog is dismissed', async () => {
     const { store, data } = makeFakeStore();
     const context = makePromptContext(null, { store, data });
+
+    await expect(promptTag.run(context, 'Title', '', '', 'my-key', false, false)).rejects.toThrow(/cancelled/);
+    expect(data.has('my-key')).toBe(false);
+  });
+
+  it('still submits an explicitly empty value', async () => {
+    const { store, data } = makeFakeStore();
+    const context = makePromptContext('', { store, data });
+
     const result = await promptTag.run(context, 'Title', '', '', 'my-key', false, false);
 
-    expect(result).toBeNull();
-    expect(data.has('my-key')).toBe(false);
+    expect(result).toBe('');
+    expect(data.get('my-key')).toBe('');
   });
 });
 
