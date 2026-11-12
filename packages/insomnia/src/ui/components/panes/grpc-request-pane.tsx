@@ -36,6 +36,7 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { KongLogo } from '../kong-logo';
 import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { ErrorModal } from '../modals/error-modal';
@@ -44,6 +45,7 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { Pane, PaneBody, PaneHeader } from './pane';
+import { RequestPluginsTab } from './request-plugins-tab';
 const { isRequestGroup } = models.requestGroup;
 interface Props {
   grpcState: GrpcRequestState;
@@ -61,7 +63,7 @@ export const GrpcMethodTypeName = {
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
   const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
-  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, activeProject, activeWorkspace, vcsVersion } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
   const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
@@ -396,6 +398,17 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               >
                 Headers
               </Tab>
+              {activeProject?.konnectControlPlaneId && (
+                <Tab
+                  className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+                  id="plugins"
+                >
+                  <span>Plugins</span>
+                  <span className="flex h-6 min-w-6 shrink-0 items-center justify-center">
+                    <KongLogo width={14} height={13} />
+                  </span>
+                </Tab>
+              )}
             </TabList>
             {methodType && (
               <TabPanel className={'h-full w-full overflow-y-auto'} id="method-type">
@@ -508,6 +521,17 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                 />
               </ErrorBoundary>
             </TabPanel>
+            {activeProject?.konnectControlPlaneId && (
+              <TabPanel className="h-full w-full overflow-y-auto" id="plugins">
+                <ErrorBoundary key={`${activeRequest._id}:plugins`} errorClassName="font-error pad text-center">
+                  <RequestPluginsTab
+                    activeRequest={activeRequest}
+                    activeWorkspace={activeWorkspace}
+                    activeProject={activeProject}
+                  />
+                </ErrorBoundary>
+              </TabPanel>
+            )}
           </Tabs>
         </PaneBody>
       </Pane>

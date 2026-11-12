@@ -20,6 +20,23 @@ const currentPlan: CurrentPlan = {
   type: 'enterprise',
 };
 
+let konnectControlPlanes: Record<string, unknown>[] = [];
+let konnectServices: Record<string, unknown>[] = [];
+let konnectRoutes: Record<string, unknown>[] = [];
+const DEFAULT_KONNECT_AVAILABLE_PLUGINS = [
+  'datakit',
+  'key-auth',
+  'openid-connect',
+  'cors',
+  'rate-limiting-advanced',
+  'request-transformer',
+];
+
+let konnectPlugins: Record<string, unknown>[] = [];
+let konnectAvailablePlugins: string[] = [...DEFAULT_KONNECT_AVAILABLE_PLUGINS];
+let konnectPluginsError = false;
+let konnectAvailablePluginsError = false;
+
 const projectsByOrgId = new Map(
   Object.entries({
     'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
@@ -735,7 +752,45 @@ export default function setup(app: Application) {
     });
   });
 
+  app.post('/v1/test-utils/konnect/fixtures', json(), (req, res) => {
+    konnectControlPlanes = req.body.controlPlanes ?? [];
+    konnectServices = req.body.services ?? [];
+    konnectRoutes = req.body.routes ?? [];
+    konnectPlugins = req.body.plugins ?? [];
+    konnectAvailablePlugins = req.body.availablePlugins ?? [...DEFAULT_KONNECT_AVAILABLE_PLUGINS];
+    konnectPluginsError = req.body.failPlugins === true;
+    konnectAvailablePluginsError = req.body.failAvailability === true;
+    res.json({ ok: true });
+  });
+
   app.get('/v2/control-planes', (_req, res) => {
-    res.status(200).json({ data: [] });
+    res.status(200).json({
+      data: konnectControlPlanes,
+      meta: { page: { total: konnectControlPlanes.length } },
+    });
+  });
+
+  app.get('/v2/control-planes/:controlPlaneId/core-entities/services', (_req, res) => {
+    res.json({ data: konnectServices, offset: null });
+  });
+
+  app.get('/v2/control-planes/:controlPlaneId/core-entities/services/:serviceId/routes', (_req, res) => {
+    res.json({ data: konnectRoutes, offset: null });
+  });
+
+  app.get('/v2/control-planes/:controlPlaneId/core-entities/plugins', (_req, res) => {
+    if (konnectPluginsError) {
+      konnectPluginsError = false;
+      return res.status(500).json({ message: 'Injected plugins failure' });
+    }
+    res.json({ data: konnectPlugins, offset: null });
+  });
+
+  app.get('/v2/control-planes/:controlPlaneId/core-entities/v1/available-plugins', (_req, res) => {
+    if (konnectAvailablePluginsError) {
+      konnectAvailablePluginsError = false;
+      return res.status(500).json({ message: 'Injected available-plugins failure' });
+    }
+    res.json({ names: konnectAvailablePlugins });
   });
 }

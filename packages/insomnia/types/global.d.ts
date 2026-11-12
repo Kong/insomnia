@@ -28,6 +28,8 @@ type RendererEnv = {
   INSOMNIA_AI_URL: string | undefined;
   KONNECT_API_URL: string | undefined;
   KONNECT_API_REGIONS: string | undefined;
+  KONNECT_CLOUD_ORIGIN: string | undefined;
+  KONG_DOCS_ORIGIN: string | undefined;
   INSOMNIA_APP_WEBSITE_URL: string | undefined;
   INSOMNIA_GITHUB_REST_API_URL: string | undefined;
   INSOMNIA_GITHUB_API_URL: string | undefined;
