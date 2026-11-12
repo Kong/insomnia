@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
+import { pathWithParamsAsVariables, REQUEST_BASE_URL } from '../../../common/path-with-params';
 import type { Converter, Header, ImportRequest } from '../entities';
 import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
@@ -139,7 +140,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `${REQUEST_BASE_URL}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body,
     description: endpointSchema.description || '',
     headers,
@@ -268,15 +269,6 @@ const setupAuthentication = (
   }
 
   return request;
-};
-
-/**
- * Return path with parameters replaced by insomnia variables
- *
- * I.e. "/foo/:bar" => "/foo/{{ bar }}"
- */
-const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
 };
 
 /**

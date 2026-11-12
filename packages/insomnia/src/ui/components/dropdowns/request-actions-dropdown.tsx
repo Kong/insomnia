@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type {
+  ApiSpec,
   GrpcRequest,
   Project,
   Request,
@@ -15,6 +16,7 @@ import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, P
 import { useParams } from 'react-router';
 
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
+import { findSpecOperationForRequest, type SpecOperationLocation } from '~/common/spec-operation';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -39,6 +41,7 @@ interface Props {
   activeProject: Project;
   activeWorkspace: Workspace;
   requestGroup?: RequestGroup;
+  apiSpec?: ApiSpec;
   isOpen: boolean;
   triggerRef?: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
@@ -54,6 +57,7 @@ export const RequestActionsDropdown = ({
   activeWorkspace,
   triggerRef,
   onOpenChange,
+  apiSpec,
   onRename,
   onDelete,
 }: Props) => {
@@ -88,6 +92,27 @@ export const RequestActionsDropdown = ({
     );
   };
 
+  const [specPosition, setSpecPosition] = useState<SpecOperationLocation | null>(null);
+
+  const viewSpec = () => {
+    if (!specPosition) {
+      return;
+    }
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: activeWorkspace,
+      },
+      {
+        withTab: true,
+        shouldNavigate: true,
+        searchParams: new URLSearchParams({ specPath: specPosition.path, specMethod: specPosition.method }),
+      },
+    );
+  };
+
   const onOpen = useCallback(async () => {
     try {
       const actionPlugins = await plugins.getRequestActions();
@@ -104,6 +129,15 @@ export const RequestActionsDropdown = ({
       onOpen();
     }
   }, [isOpen, onOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !apiSpec || !isRequest(request)) {
+      setSpecPosition(null);
+      return;
+    }
+    const specLocation = findSpecOperationForRequest(apiSpec.contents, request);
+    setSpecPosition(specLocation);
+  }, [isOpen, activeWorkspace, request, apiSpec]);
 
   const handleDuplicateRequest = () => {
     if (!request) {
@@ -251,6 +285,16 @@ export const RequestActionsDropdown = ({
           icon: 'external-link-alt',
           hint: hotKeyRegistry.request_openInNewTab,
         },
+        ...(specPosition
+          ? [
+              {
+                id: 'ViewSpec',
+                name: 'View Spec',
+                action: viewSpec,
+                icon: 'file-lines' as IconName,
+              },
+            ]
+          : []),
         {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',

@@ -28,6 +28,7 @@ import {
   PanelGroup,
   PanelResizeHandle,
 } from 'react-resizable-panels';
+import { useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -171,6 +172,7 @@ export const SpecView = ({
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
+  const [searchParams] = useSearchParams();
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // Cloud/local projects have no RepoFileWatcher, so rulesetContent from NeDB is mirrored
@@ -340,44 +342,61 @@ export const SpecView = ({
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
-  const navigateToPath = (path: string): void => {
-    if (!apiSpec) {
+  const navigateToPath = useCallback(
+    (path: string): void => {
+      if (!apiSpec) {
+        return;
+      }
+      const pathSegments = path.split('.');
+      const scrollPosition = {
+        start: { line: 0, col: 0 },
+        end: { line: 0, col: 200 },
+      };
+
+      try {
+        JSON.parse(apiSpec.contents);
+        // Account for JSON (as string) line number shift
+        scrollPosition.start.line = 1;
+      } catch {}
+
+      const lineCounter = new YAML.LineCounter();
+      const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
+      const astNode = doc.getIn(pathSegments, true) as YAML.Node;
+      const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
+      if (nodePosition) {
+        scrollPosition.start.line += nodePosition.line;
+      }
+      const isServersSection = pathSegments[0] === 'servers';
+      if (!isServersSection) {
+        scrollPosition.start.line -= 1;
+      }
+
+      scrollPosition.end.line = scrollPosition.start.line;
+      // NOTE: We're subtracting 1 from everything because YAML CST uses
+      //   1-based indexing and we use 0-based.
+      handleScrollToSelection(
+        scrollPosition.start.col - 1,
+        scrollPosition.end.col - 1,
+        scrollPosition.start.line - 1,
+        scrollPosition.end.line - 1,
+      );
+    },
+    [apiSpec, handleScrollToSelection],
+  );
+
+  useEffect(() => {
+    const targetSpecPath = searchParams.get('specPath');
+    const targetSpecMethod = searchParams.get('specMethod');
+    if (!targetSpecPath || !targetSpecMethod || !apiSpec?.contents) {
       return;
     }
-    const pathSegments = path.split('.');
-    const scrollPosition = {
-      start: { line: 0, col: 0 },
-      end: { line: 0, col: 200 },
-    };
-
-    try {
-      JSON.parse(apiSpec.contents);
-      // Account for JSON (as string) line number shift
-      scrollPosition.start.line = 1;
-    } catch {}
-
-    const lineCounter = new YAML.LineCounter();
-    const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
-    const astNode = doc.getIn(pathSegments, true) as YAML.Node;
-    const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
-    if (nodePosition) {
-      scrollPosition.start.line += nodePosition.line;
+    if (editor.current?.getDoc()) {
+      navigateToPath(`paths.${targetSpecPath}.${targetSpecMethod}`);
+      return;
     }
-    const isServersSection = pathSegments[0] === 'servers';
-    if (!isServersSection) {
-      scrollPosition.start.line -= 1;
-    }
-
-    scrollPosition.end.line = scrollPosition.start.line;
-    // NOTE: We're subtracting 1 from everything because YAML CST uses
-    //   1-based indexing and we use 0-based.
-    handleScrollToSelection(
-      scrollPosition.start.col - 1,
-      scrollPosition.end.col - 1,
-      scrollPosition.start.line - 1,
-      scrollPosition.end.line - 1,
-    );
-  };
+    // Only re-run when the searchParams changes, not on every change in the spec.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, Boolean(apiSpec?.contents)]);
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const specSidebarRef = useRef<ImperativePanelHandle>(null);
