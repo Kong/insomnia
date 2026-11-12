@@ -24,13 +24,22 @@ afterEach(() => {
 });
 
 const open = async (options: { key?: typeof key; dbPath?: string } = {}) => {
-  let internals!: { getFieldDecryptionFailures: () => unknown[] };
+  let internals!: {
+    getFieldDecryptionFailures: () => unknown[];
+    refreshFieldDecryptionFailures: () => Promise<unknown[]>;
+    resetFieldDecryptionFailures: () => Promise<number>;
+  };
   const db = createNedbDatabase((nedbDatabase, nedbInternals) => {
     internals = nedbInternals;
     return nedbDatabase;
   });
   await db.init({ dbPath: options.dbPath ?? dir, fieldEncryptionKey: options.key });
-  return { db, failures: () => internals.getFieldDecryptionFailures() };
+  return {
+    db,
+    failures: () => internals.getFieldDecryptionFailures(),
+    refresh: () => internals.refreshFieldDecryptionFailures(),
+    reset: () => internals.resetFieldDecryptionFailures(),
+  };
 };
 
 const filePath = (type: string) => path.join(dir, `insomnia.${type}.db`);
@@ -287,6 +296,150 @@ describe('failed decryption', () => {
     ]);
     const { failures } = await open({ key });
     expect(failures()).toEqual([]);
+  });
+});
+
+describe('keeping the failure report current after the load', () => {
+  const seedWithOtherKey = () =>
+    writeLines('Request', [
+      encryptWith(otherKey, request({ _id: 'req_1' })),
+      encryptWith(otherKey, request({ _id: 'req_2', authentication: { type: 'basic', password: 'pw' } })),
+    ]);
+
+  it('resetting clears the failed fields, keeps the rest of the documents and empties the report', async () => {
+    seedWithOtherKey();
+    const { db, failures, reset } = await open({ key });
+    expect(failures()).toHaveLength(2);
+
+    expect(await reset()).toBe(2);
+
+    expect(failures()).toEqual([]);
+    expect((await db.findOne<any>('Request', { _id: 'req_1' }))?.authentication).toEqual({ type: 'bearer', token: '' });
+    expect((await db.findOne<any>('Request', { _id: 'req_2' }))?.authentication.password).toBe('');
+    expect((await db.findOne<any>('Request', { _id: 'req_2' }))?.name).toBe('A request');
+    expect(await db.count('Request')).toBe(2);
+    // The file is append-only until the next load, so the latest line of each document is what counts
+    expect(
+      readLines('Request')
+        .slice(-2)
+        .map(line => line.authentication),
+    ).toEqual([
+      { type: 'bearer', token: '' },
+      { type: 'basic', password: '' },
+    ]);
+
+    // a new launch has nothing to report
+    const restarted = await open({ key });
+    expect(restarted.failures()).toEqual([]);
+    expect((await restarted.db.findOne<any>('Request', { _id: 'req_1' }))?.authentication.token).toBe('');
+  });
+
+  it('clears only the failed fields of a document, and resets a field inside an array', async () => {
+    writeLines('CookieJar', [
+      encryptWith(otherKey, {
+        _id: 'jar_1',
+        type: 'CookieJar',
+        parentId: 'wrk_1',
+        cookies: [
+          { key: 'a', value: 'first', domain: 'x' },
+          { key: 'b', value: 'second', domain: 'x' },
+        ],
+      }),
+    ]);
+    const { db, reset, failures } = await open({ key });
+    expect(failures().map((failure: any) => failure.path)).toEqual(['cookies[0].value', 'cookies[1].value']);
+
+    await db.update({
+      ...(await db.findOne<any>('CookieJar', { _id: 'jar_1' })),
+      cookies: [
+        { key: 'a', value: 'typed again', domain: 'x' },
+        ...(await db.findOne<any>('CookieJar', { _id: 'jar_1' }))!.cookies.slice(1),
+      ],
+    });
+
+    expect(await reset()).toBe(1);
+    const jar = await db.findOne<any>('CookieJar', { _id: 'jar_1' });
+    expect(jar?.cookies.map((cookie: any) => [cookie.key, cookie.value])).toEqual([
+      ['a', 'typed again'],
+      ['b', ''],
+    ]);
+  });
+
+  it('clears several failed fields under the same top-level key in one update, and keeps their siblings', async () => {
+    writeLines('CookieJar', [
+      encryptWith(otherKey, {
+        _id: 'jar_1',
+        type: 'CookieJar',
+        parentId: 'wrk_1',
+        cookies: [
+          { key: 'a', value: 'first', domain: 'x' },
+          { key: 'b', value: 'second', domain: 'x' },
+          { key: 'c', value: 'third', domain: 'x' },
+        ],
+      }),
+    ]);
+    const { db, reset, failures } = await open({ key });
+    expect(failures()).toHaveLength(3);
+    const listener = vi.fn();
+    db.onChange(listener);
+
+    expect(await reset()).toBe(3);
+
+    const jar = await db.findOne<any>('CookieJar', { _id: 'jar_1' });
+    expect(jar?.cookies.map((cookie: any) => [cookie.key, cookie.value, cookie.domain])).toEqual([
+      ['a', '', 'x'],
+      ['b', '', 'x'],
+      ['c', '', 'x'],
+    ]);
+    expect(failures()).toEqual([]);
+    // one update for the document, whose patch holds the whole array with every field cleared
+    expect(listener).toHaveBeenCalledTimes(1);
+    const [[event, , patches]] = listener.mock.calls[0][0];
+    expect(event).toBe('update');
+    expect(patches[0].cookies.map((cookie: any) => cookie.value)).toEqual(['', '', '']);
+    // and what is on disk is what is in memory
+    const restarted = await open({ key });
+    expect(
+      (await restarted.db.findOne<any>('CookieJar', { _id: 'jar_1' }))?.cookies.map((cookie: any) => cookie.value),
+    ).toEqual(['', '', '']);
+  });
+
+  it('refreshing drops a field the user edited after the load, and a document that was removed', async () => {
+    seedWithOtherKey();
+    const { db, refresh, reset } = await open({ key });
+
+    const edited = await db.findOne<any>('Request', { _id: 'req_1' });
+    await db.update({ ...edited, authentication: { type: 'bearer', token: 'typed after the load' } });
+    expect(await refresh()).toEqual([{ type: 'Request', _id: 'req_2', path: 'authentication.password' }]);
+
+    await db.remove((await db.findOne<any>('Request', { _id: 'req_2' }))!);
+    expect(await refresh()).toEqual([]);
+    expect(await reset()).toBe(0);
+    expect((await db.findOne<any>('Request', { _id: 'req_1' }))?.authentication.token).toBe('typed after the load');
+  });
+
+  it('does not overwrite a value typed after the report was made, even if the report is stale', async () => {
+    seedWithOtherKey();
+    const { db, reset } = await open({ key });
+    const typedLater = await db.findOne<any>('Request', { _id: 'req_1' });
+    // The update goes through the datastore directly, so the report is not refreshed in between
+    await db.update({ ...typedLater, authentication: { type: 'bearer', token: 'typed later' } });
+
+    await reset();
+    expect((await db.findOne<any>('Request', { _id: 'req_1' }))?.authentication.token).toBe('typed later');
+  });
+
+  it('notifies change listeners once for the whole reset', async () => {
+    seedWithOtherKey();
+    const { db, reset } = await open({ key });
+    const listener = vi.fn();
+    db.onChange(listener);
+    await reset();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0].map(([event, doc]: any) => [event, doc._id])).toEqual([
+      ['update', 'req_1'],
+      ['update', 'req_2'],
+    ]);
   });
 });
 

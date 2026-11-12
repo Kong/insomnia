@@ -213,3 +213,39 @@ describe('ElectronStorage.setItemDurable() / getItemStrict()', () => {
     });
   });
 });
+
+describe('ElectronStorage.renameItem()', () => {
+  let dir: string;
+  let storage: ElectronStorage;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-electronstorage-rename-'));
+    storage = new ElectronStorage(dir);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('moves the content to the new key and leaves nothing under the old one', async () => {
+    await storage.setItemDurable('key', { a: 1 });
+    await storage.renameItem('key', 'key.bak');
+    expect(storage.getItemStrict('key')).toBeNull();
+    expect(storage.getItemStrict('key.bak')).toEqual({ a: 1 });
+    expect(fs.readdirSync(dir)).toEqual(['key.bak']);
+  });
+
+  it('drops a pending buffered write, so that it cannot recreate the old name', async () => {
+    await storage.setItemDurable('key', 'durable');
+    storage.setItem('key', 'buffered');
+    await storage.renameItem('key', 'key.bak');
+    await new Promise(resolve => setTimeout(resolve, 150));
+    expect(fs.readdirSync(dir)).toEqual(['key.bak']);
+    expect(storage.getItemStrict('key.bak')).toBe('durable');
+  });
+
+  it('rejects when the item does not exist, and for an invalid key', async () => {
+    await expect(storage.renameItem('missing', 'other')).rejects.toThrow();
+    await expect(storage.renameItem('key', 'a/b')).rejects.toThrow('Invalid electron storage key');
+    expect(fs.readdirSync(dir)).toEqual([]);
+  });
+});
