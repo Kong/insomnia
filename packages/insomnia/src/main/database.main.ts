@@ -32,7 +32,7 @@ export const mainDatabase: IDatabase = createNedbDatabase((nedbDatabase, interna
       provideFieldEncryptionController(
         createFieldEncryptionController({
           // No key means the database was opened without encryption
-          degraded: !fieldEncryptionKey,
+          key: fieldEncryptionKey,
           refreshFailures: internals.refreshFieldDecryptionFailures,
           resetFailures: internals.resetFieldDecryptionFailures,
           findDocumentWithAncestors: async (type, _id) => {

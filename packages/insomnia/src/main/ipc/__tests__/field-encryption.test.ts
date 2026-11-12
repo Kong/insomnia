@@ -1,3 +1,5 @@
+import { createSecretKey, generateKeySync } from 'node:crypto';
+
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { registerAllIpcHandlers as RegisterAllIpcHandlers } from '../base-ipc-handler';
@@ -16,6 +18,8 @@ vi.mock('electron', () => ({
 }));
 vi.mock('../electron', () => ({ ipcMainHandle }));
 
+const localKey = generateKeySync('aes', { length: 256 });
+
 const failure = (overrides: Partial<{ type: string; _id: string; path: string }> = {}) => ({
   type: 'Request',
   _id: 'req_1',
@@ -25,7 +29,7 @@ const failure = (overrides: Partial<{ type: string; _id: string; path: string }>
 
 const setup = (overrides: Partial<FieldEncryptionControllerDeps> = {}) => {
   const deps: FieldEncryptionControllerDeps = {
-    degraded: false,
+    key: localKey,
     refreshFailures: vi.fn(async () => [failure()]),
     resetFailures: vi.fn(async () => 1),
     findDocumentWithAncestors: vi.fn(async () => [{ name: 'My request' }, { name: 'My workspace' }]),
@@ -130,13 +134,13 @@ describe('field encryption controller', () => {
     });
 
     it('is degraded when the database runs without the key, without looking at the report', async () => {
-      const { controller, deps } = setup({ degraded: true });
+      const { controller, deps } = setup({ key: undefined });
       expect(await controller.getStatus()).toEqual({ kind: 'degraded', canResetKey: true });
       expect(deps.refreshFailures).not.toHaveBeenCalled();
     });
 
     it('says that the key cannot be reset when there is no key file, which is the case when it could not be created', async () => {
-      const { controller } = setup({ degraded: true, keyFileExists: vi.fn(() => false) });
+      const { controller } = setup({ key: undefined, keyFileExists: vi.fn(() => false) });
       expect(await controller.getStatus()).toEqual({ kind: 'degraded', canResetKey: false });
     });
   });
@@ -156,7 +160,7 @@ describe('field encryption controller', () => {
     });
 
     it('refuses while the database runs without encryption', async () => {
-      const { controller, deps } = setup({ degraded: true });
+      const { controller, deps } = setup({ key: undefined });
       await expect(controller.resetFailedFields()).rejects.toThrow();
       expect(deps.resetFailures).not.toHaveBeenCalled();
     });
@@ -171,7 +175,7 @@ describe('field encryption controller', () => {
     });
 
     it('does the same in degraded mode', async () => {
-      const { controller } = setup({ degraded: true });
+      const { controller } = setup({ key: undefined });
       await controller.dismiss();
       expect(await controller.getStatus()).toEqual({ kind: 'ok' });
     });
@@ -181,7 +185,7 @@ describe('field encryption controller', () => {
     it('asks the user, then sets the key aside, then restarts, in that order', async () => {
       const order: string[] = [];
       const { controller } = setup({
-        degraded: true,
+        key: undefined,
         confirmResetKey: vi.fn(async () => {
           order.push('confirm');
           return true;
@@ -198,21 +202,21 @@ describe('field encryption controller', () => {
     });
 
     it('does nothing when the user declines, so the renderer cannot reset the key on its own', async () => {
-      const { controller, deps } = setup({ degraded: true, confirmResetKey: vi.fn(async () => false) });
+      const { controller, deps } = setup({ key: undefined, confirmResetKey: vi.fn(async () => false) });
       expect(await controller.resetKey()).toBe(false);
       expect(deps.setAsideKey).not.toHaveBeenCalled();
       expect(deps.restart).not.toHaveBeenCalled();
     });
 
     it('passes the window that asked, so the question is shown on top of it', async () => {
-      const { controller, deps } = setup({ degraded: true });
+      const { controller, deps } = setup({ key: undefined });
       const sender = {} as never;
       await controller.resetKey(sender);
       expect(deps.confirmResetKey).toHaveBeenCalledWith(sender);
     });
 
     it('is refused when there is no key file, without asking the user', async () => {
-      const { controller, deps } = setup({ degraded: true, keyFileExists: vi.fn(() => false) });
+      const { controller, deps } = setup({ key: undefined, keyFileExists: vi.fn(() => false) });
       await expect(controller.resetKey()).rejects.toThrow('no encryption key file');
       expect(deps.confirmResetKey).not.toHaveBeenCalled();
       expect(deps.setAsideKey).not.toHaveBeenCalled();
@@ -220,7 +224,7 @@ describe('field encryption controller', () => {
 
     it('does not restart when the key could not be set aside', async () => {
       const { controller, deps } = setup({
-        degraded: true,
+        key: undefined,
         setAsideKey: vi.fn().mockRejectedValue(new Error('EPERM')),
       });
       await expect(controller.resetKey()).rejects.toThrow('EPERM');
@@ -228,11 +232,53 @@ describe('field encryption controller', () => {
     });
 
     it('is refused when the key works, so that a renderer cannot give up a working key', async () => {
-      const { controller, deps } = setup({ degraded: false });
+      const { controller, deps } = setup();
       await expect(controller.resetKey()).rejects.toThrow();
       expect(deps.confirmResetKey).not.toHaveBeenCalled();
       expect(deps.setAsideKey).not.toHaveBeenCalled();
       expect(deps.restart).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('the local encryption key of the controller', () => {
+  describe('isKeyAvailable()', () => {
+    it('is true when the database was opened with a key', async () => {
+      const { controller } = setup();
+      expect(await controller.isKeyAvailable()).toBe(true);
+    });
+
+    it('is false in degraded mode, where there is no key', async () => {
+      const { controller } = setup({ key: undefined });
+      expect(await controller.isKeyAvailable()).toBe(false);
+    });
+
+    it('answers with a boolean and not with anything of the key', async () => {
+      const { controller } = setup();
+      expect(await controller.isKeyAvailable()).toBe(true);
+      expect(JSON.stringify(await controller.isKeyAvailable())).toBe('true');
+    });
+  });
+
+  describe('getKey()', () => {
+    it('gives the key as JWK JSON text and as the base64 of that text', async () => {
+      const { controller } = setup();
+      const { jwk, base64 } = await controller.getKey();
+
+      expect(JSON.parse(jwk)).toEqual({ kty: 'oct', k: localKey.export().toString('base64url') });
+      expect(Buffer.from(base64, 'base64').toString('utf8')).toBe(jwk);
+    });
+
+    it('gives a key that is the one the database uses', async () => {
+      const { controller } = setup();
+      const { base64 } = await controller.getKey();
+      const jwk = JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+      expect(createSecretKey(Buffer.from(jwk.k, 'base64url')).equals(localKey)).toBe(true);
+    });
+
+    it('rejects in degraded mode instead of giving out something', async () => {
+      const { controller } = setup({ key: undefined });
+      await expect(controller.getKey()).rejects.toThrow('There is no local encryption key in this session');
     });
   });
 });
@@ -280,6 +326,8 @@ describe('the IPC handler', () => {
     resetFailedFields: vi.fn(async () => 3),
     resetKey: vi.fn(async (_sender?: unknown) => true),
     dismiss: vi.fn(async () => {}),
+    isKeyAvailable: vi.fn(async () => true),
+    getKey: vi.fn(async () => ({ jwk: '{"kty":"oct","k":"a2V5"}', base64: 'eyJrdHkiOiJvY3QiLCJrIjoiYTJWNSJ9' })),
   });
 
   /** What the renderer reaches: the `main.invoke` handler that `registerAllIpcHandlers` registers. */
@@ -309,6 +357,29 @@ describe('the IPC handler', () => {
     expect(controller.dismiss).toHaveBeenCalledTimes(1);
   });
 
+  it('answers isKeyAvailable and getKey from the controller, and getKey only when asked', async () => {
+    const controller = fakeController();
+    handlerModule.provideFieldEncryptionController(controller as never);
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+    expect(await rendererInvoke('fieldEncryption', 'isKeyAvailable')).toBe(true);
+    expect(controller.getKey).not.toHaveBeenCalled();
+    expect(await rendererInvoke('fieldEncryption', 'getKey')).toEqual({
+      jwk: '{"kty":"oct","k":"a2V5"}',
+      base64: 'eyJrdHkiOiJvY3QiLCJrIjoiYTJWNSJ9',
+    });
+    expect(controller.getKey).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the error of getKey on to the renderer', async () => {
+    const controller = fakeController();
+    controller.getKey.mockRejectedValue(new Error('There is no local encryption key in this session'));
+    handlerModule.provideFieldEncryptionController(controller as never);
+    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+
+    await expect(rendererInvoke('fieldEncryption', 'getKey')).rejects.toThrow('no local encryption key');
+  });
+
   it('passes the window that asked to resetKey, so the confirmation is shown on top of it', async () => {
     const controller = fakeController();
     handlerModule.provideFieldEncryptionController(controller as never);
@@ -325,14 +396,20 @@ describe('the IPC handler', () => {
 
     await rendererInvoke('fieldEncryption', 'resetFailedFields', { degraded: false }, 'anything');
     await rendererInvoke('fieldEncryption', 'dismiss', 'anything');
+    await rendererInvoke('fieldEncryption', 'isKeyAvailable', 'anything');
+    await rendererInvoke('fieldEncryption', 'getKey', { key: 'another key' });
     expect(controller.resetFailedFields).toHaveBeenCalledWith();
     expect(controller.dismiss).toHaveBeenCalledWith();
+    expect(controller.isKeyAvailable).toHaveBeenCalledWith();
+    expect(controller.getKey).toHaveBeenCalledWith();
   });
 
   it('refuses to answer before the database has given it a controller', async () => {
     registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
     await expect(rendererInvoke('fieldEncryption', 'getStatus')).rejects.toThrow('not available yet');
     await expect(rendererInvoke('fieldEncryption', 'resetKey')).rejects.toThrow('not available yet');
+    await expect(rendererInvoke('fieldEncryption', 'isKeyAvailable')).rejects.toThrow('not available yet');
+    await expect(rendererInvoke('fieldEncryption', 'getKey')).rejects.toThrow('not available yet');
   });
 
   it('can be replaced when the database is opened again', async () => {
@@ -349,11 +426,13 @@ describe('the IPC handler', () => {
 
   describe('what the renderer can reach', () => {
     // The dispatcher calls any function of a registered handler for the renderer, so the class may hold nothing but API
-    it('has exactly the four methods of the API, and nothing that changes what they use', () => {
+    it('has exactly the six methods of the API, and nothing that changes what they use', () => {
       expect(Object.getOwnPropertyNames(handlerModule.FieldEncryptionIpcHandler.prototype).sort()).toEqual([
         'constructor',
         'dismiss',
+        'getKey',
         'getStatus',
+        'isKeyAvailable',
         'resetFailedFields',
         'resetKey',
       ]);
