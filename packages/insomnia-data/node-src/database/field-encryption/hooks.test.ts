@@ -3,6 +3,7 @@ import { generateKeySync } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  countWellFormedCiphertext,
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
   getHooksForType,
@@ -492,5 +493,32 @@ describe('reconcileFieldDecryptionFailures', () => {
       vi.fn(async () => {}),
     );
     expect(failures).toEqual([failure('req_1')]);
+  });
+});
+
+describe('countWellFormedCiphertext()', () => {
+  it('counts the fields on encrypted paths that hold ciphertext, whatever key they were encrypted with', () => {
+    const doc = request({ authentication: { token: encryptValue(key, 'a'), password: encryptValue(otherKey, 'b') } });
+    expect(countWellFormedCiphertext(doc, getEncryptedFieldPaths('Request'))).toBe(2);
+  });
+
+  it('counts every element of an array path', () => {
+    const doc = {
+      cookies: [{ value: encryptValue(key, 'a') }, { value: 'plain' }, { value: encryptValue(key, 'c') }],
+    };
+    expect(countWellFormedCiphertext(doc, getEncryptedFieldPaths('CookieJar'))).toBe(2);
+  });
+
+  it('does not count plaintext, lookalikes, or ciphertext outside the encrypted paths', () => {
+    const lookalike = `${ENCRYPTED_VALUE_PREFIX}not base64!`;
+    const doc = request({
+      name: encryptValue(key, 'not an encrypted path'),
+      authentication: { token: 'plain', password: lookalike, value: '' },
+    });
+    expect(countWellFormedCiphertext(doc, getEncryptedFieldPaths('Request'))).toBe(0);
+  });
+
+  it('is zero for a type without encrypted fields', () => {
+    expect(countWellFormedCiphertext({ name: encryptValue(key, 'a') }, getEncryptedFieldPaths('Workspace'))).toBe(0);
   });
 });
