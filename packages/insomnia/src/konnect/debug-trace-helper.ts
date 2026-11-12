@@ -9,6 +9,10 @@ export const TRACE_ATTRIBUTE_NAMES = {
   HTTP_RESPONSE_STATUS_CODE: 'http.response.status_code',
   HTTP_REQUEST_SIZE: 'http.request.size',
   HTTP_RESPONSE_SIZE: 'http.response.size',
+  PROTOCOL: 'network.protocol.name',
+  METHOD: 'http.request.method',
+  ROUTE_ID: 'proxy.kong.route.id',
+  URL_SCHEME: 'url.scheme',
 };
 
 // Derive the state of a debug session from its response
@@ -146,6 +150,10 @@ export function flattenVisible(roots: SpanNode[], collapsed: ReadonlySet<string>
 }
 
 export interface TraceSummaryBreakdown {
+  routeId: string;
+  protocol: string;
+  method: string;
+  urlScheme: string;
   totalMs: number;
   kongMs: number;
   upstreamMs: number;
@@ -166,6 +174,7 @@ const LATENCY_ATTRIBUTES = {
   upstream: 'proxy.kong.latency.upstream',
   client: 'proxy.kong.latency.client',
   thirdParty: 'proxy.kong.latency.3p.total_io',
+  protocol: 'network.protocol.name',
 };
 
 // Some numeric attributes come back as strings (e.g. `proxy.kong.http.response.body.size`).
@@ -202,6 +211,10 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
   const pct = (value: number) => (sum > 0 ? (value / sum) * 100 : 0);
   const requestSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_SIZE] || 0;
   const responseSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_RESPONSE_SIZE] || 0;
+  const protocol = span.attributes[TRACE_ATTRIBUTE_NAMES.PROTOCOL] || '';
+  const method = span.attributes[TRACE_ATTRIBUTE_NAMES.METHOD] || '';
+  const routeId = span.attributes[TRACE_ATTRIBUTE_NAMES.ROUTE_ID] || '';
+  const urlScheme = span.attributes[TRACE_ATTRIBUTE_NAMES.URL_SCHEME] || '';
   return {
     totalMs: readMs(span.attributes, LATENCY_ATTRIBUTES.total) ?? tree.totalMs,
     kongMs,
@@ -214,6 +227,10 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
     thirdPartyPct: pct(thirdPartyMs),
     requestSize,
     responseSize,
+    protocol,
+    method,
+    routeId,
+    urlScheme,
   };
 }
 
@@ -234,8 +251,6 @@ export function getTracePath(trace: Pick<DebugTraceSummary, 'url' | 'route'>): s
   return trace.route ? normalizePath(trace.route) : null;
 }
 
-const ROUTE_ID_ATTRIBUTE = 'proxy.kong.route.id';
-
 // konnectRouteKey is `${route.id}:${method}:${pathSegment}:${protocol}`
 export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | undefined): string | null {
   if (!konnectRouteKey) {
@@ -243,18 +258,6 @@ export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | u
   }
   const routeId = konnectRouteKey.split(':')[0];
   return routeId;
-}
-
-// Ids of the Kong routes that served the spans of a trace.
-export function getRouteIdsFromTraceDetail(detail: DebugTraceDetail): Set<string> {
-  const routeIds = new Set<string>();
-  for (const span of detail.spans) {
-    const routeId = span.attributes[ROUTE_ID_ATTRIBUTE];
-    if (typeof routeId === 'string') {
-      routeIds.add(routeId);
-    }
-  }
-  return routeIds;
 }
 
 interface ParsedKonnectError {

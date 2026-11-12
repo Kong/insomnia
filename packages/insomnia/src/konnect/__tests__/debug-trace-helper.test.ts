@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DebugTraceDetail } from '../debug-session-api';
-import { getRouteIdFromKonnectRouteKey, getRouteIdsFromTraceDetail } from '../debug-trace-helper';
+import { getRouteIdFromKonnectRouteKey, type SpanTree, summarizeTrace } from '../debug-trace-helper';
 
 const detail = (traceId: string, attributes: Record<string, any>[]): DebugTraceDetail => ({
   traceId,
@@ -30,18 +30,36 @@ describe('getRouteIdFromKonnectRouteKey', () => {
   });
 });
 
-describe('getRouteIdsFromTraceDetail', () => {
-  it('collects the distinct proxy.kong.route.id values of the spans', () => {
-    const traceDetail = detail('t1', [
-      { 'http.route': '/a' },
-      { 'proxy.kong.route.id': 'route-1' },
-      { 'proxy.kong.route.id': 'route-1' },
-      { 'proxy.kong.route.id': 'route-2' },
-    ]);
-    expect([...getRouteIdsFromTraceDetail(traceDetail)]).toEqual(['route-1', 'route-2']);
+describe('summarizeTrace', () => {
+  const treeWith = (attributes: Record<string, any>): SpanTree => ({
+    roots: [
+      {
+        span: { ...detail('t1', [attributes]).spans[0] },
+        name: 'span',
+        depth: 0,
+        startOffsetMs: 0,
+        durationMs: 1,
+        children: [],
+      },
+    ],
+    totalMs: 1,
   });
 
-  it('returns an empty set when no span has a route id', () => {
-    expect(getRouteIdsFromTraceDetail(detail('t2', [{}])).size).toBe(0);
+  it('reads the route id, method, protocol and url scheme from the latency span', () => {
+    const summary = summarizeTrace(
+      treeWith({
+        'proxy.kong.latency.total': 10,
+        'proxy.kong.route.id': 'route-1',
+        'http.request.method': 'GET',
+        'network.protocol.name': 'http',
+        'url.scheme': 'https',
+      }),
+    );
+    expect(summary).toMatchObject({ routeId: 'route-1', method: 'GET', protocol: 'http', urlScheme: 'https' });
+  });
+
+  it('defaults the route fields to empty strings when absent', () => {
+    const summary = summarizeTrace(treeWith({ 'proxy.kong.latency.total': 10 }));
+    expect(summary).toMatchObject({ routeId: '', method: '', protocol: '', urlScheme: '' });
   });
 });
