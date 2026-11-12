@@ -72,10 +72,10 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
     expect(jwk).toMatchObject({ kty: "oct" });
     expect(typeof jwk.k).toBe("string");
     // The file holds the key that decrypts the whole database: only its owner may read or write it (POSIX only, Windows has no mode bits)
-    if (process.platform !== "win32") {
-      const mode = fs.statSync(file).mode & 0o777;
-      expect(mode.toString(8), "exported key file permissions").toBe("600");
-    }
+    // Windows maps to a 0 mask so both sides become 0 there, without a conditional in the test
+    const modeMask: Record<string, number> = { win32: 0, darwin: 0o777, linux: 0o777 };
+    const mode = fs.statSync(file).mode & 0o777 & modeMask[process.platform];
+    expect(mode.toString(8), "exported key file permissions").toBe((0o600 & modeMask[process.platform]).toString(8));
     expect(
       decryptStoredValue(keyBytesFromJwk(JSON.stringify(jwk)), storedToken(dataPath, request.name)),
     ).toBe(token);
