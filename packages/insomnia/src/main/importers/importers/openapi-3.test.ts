@@ -495,4 +495,85 @@ describe('openapi-3', () => {
       expect(anyPetContentTypeHeader?.value).toBe('application/json');
     });
   });
+
+  describe('circular $ref', () => {
+    // 3.2.0 is not supported by swagger-parser: it left every $ref unresolved, so generated bodies were `null`
+    it.each(['3.0.3', '3.2.0'])('should import a schema that references itself without recursing forever (%s)', async openapi => {
+      const openApiDoc = {
+        openapi,
+        info: { title: 'Tree API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/nodes': {
+            post: {
+              requestBody: {
+                content: {
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/Node' },
+                  },
+                },
+              },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+        components: {
+          schemas: {
+            Node: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                parent: { $ref: '#/components/schemas/Node' },
+                children: { type: 'array', items: { $ref: '#/components/schemas/Node' } },
+              },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      expect(result).not.toBeNull();
+      const request = result?.find(item => item._type === 'request');
+
+      const body = JSON.parse(request.body.text);
+      expect(body.name).toBe('string');
+      expect(Array.isArray(body.children)).toBe(true);
+      // the cycle is cut off with null instead of expanding forever
+      let node = body;
+      let depth = 0;
+      while (node && depth < 10) {
+        node = node.parent;
+        depth++;
+      }
+      expect(node).toBeNull();
+      expect(depth).toBeLessThan(10);
+    });
+  });
+
+  describe('unresolved remote $ref', () => {
+    it('should still import operations whose requestBody is a blocked remote $ref', async () => {
+      const openApiDoc = {
+        openapi: '3.0.3',
+        info: { title: 'Remote body API', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/remote': {
+            post: {
+              requestBody: { $ref: 'http://example.com/body.json' },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+          '/local': {
+            get: { responses: { 200: { description: 'ok' } } },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+
+      const requests = result?.filter(item => item._type === 'request') ?? [];
+      expect(requests).toHaveLength(2);
+      expect(requests.find(request => request.url.endsWith('/remote'))?.body).toEqual({});
+    });
+  });
 });
