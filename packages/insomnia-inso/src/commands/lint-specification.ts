@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { oas3_0, oas3_1 } from '@stoplight/spectral-formats';
 import { Resolver } from '@stoplight/spectral-ref-resolver';
 import { oas } from '@stoplight/spectral-rulesets';
 import { fetch as spectralFetch } from '@stoplight/spectral-runtime';
@@ -16,6 +17,21 @@ import { isPrivateOrLoopbackHost } from 'insomnia/src/main/private-host';
 
 import { InsoError } from '../errors';
 import { logger } from '../logger';
+
+// These rules only know the example `value` field and report OpenAPI 3.2 `dataValue` examples as errors,
+// so they only run for OpenAPI 3.0 / 3.1 until Spectral supports 3.2 examples.
+// Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
+const RULES_WITHOUT_OAS3_2_EXAMPLES = ['oas3-valid-media-example', 'oas3-examples-value-or-externalValue'];
+const oasRules = oas.rules as Record<string, object>;
+const defaultRuleset = {
+  ...oas,
+  rules: {
+    ...oasRules,
+    ...Object.fromEntries(
+      RULES_WITHOUT_OAS3_2_EXAMPLES.map(name => [name, { ...oasRules[name], formats: [oas3_0, oas3_1] }]),
+    ),
+  },
+} as RulesetDefinition;
 
 // Protect against SSRF attacks in spec $ref resolution.
 // Note: This is duplicated in insomnia's main/lint-process.mjs. Remember to mirror changes there as well.
@@ -89,7 +105,7 @@ export async function lintSpecification({
 }) {
   const spectral = new Spectral({ resolver: safeRefResolver });
   // Use custom ruleset if present
-  let ruleset = oas;
+  let ruleset: RulesetDefinition = defaultRuleset;
   try {
     if (rulesetFileName) {
       // Step 1: flatten local extends and validate remote URLs (SSRF + disallowed keys).

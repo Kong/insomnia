@@ -53,10 +53,10 @@
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
-    "@stoplight/spectral-core": "^1.22.0",
-    "@stoplight/spectral-formats": "^1.8.2",
+    "@stoplight/spectral-core": "^1.23.0",
+    "@stoplight/spectral-formats": "^1.9.0",
     "@stoplight/spectral-ruleset-bundler": "1.7.0",
-    "@stoplight/spectral-rulesets": "^1.22.1",
+    "@stoplight/spectral-rulesets": "^1.23.0",
     "@stoplight/types": "^14.1.1",
     "commander": "^12.1.0",
     "consola": "^3.4.2",
