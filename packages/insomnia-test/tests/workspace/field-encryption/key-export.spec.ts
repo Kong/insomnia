@@ -48,6 +48,7 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
   user,
   dataPath,
 }) => {
+  test.fail(true, 'INS-4306');
   const { fieldEncryptionFlow } = user.flowManager;
   const { request, token } = await createBearerRequest(user);
   await expect.poll(() => storedToken(dataPath, request.name)).toMatch(/^enc:insomnia:v1:/);
