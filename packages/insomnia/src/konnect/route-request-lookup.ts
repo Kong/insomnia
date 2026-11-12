@@ -1,13 +1,16 @@
 import type { GrpcRequest, Request, WebSocketRequest, Workspace, WorkspaceChildrenForScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
 
-import { getRouteIdFromKonnectRouteKey } from './debug-trace-helper';
+import { getRouteIdFromKonnectRouteKey, type TraceSummaryBreakdown } from './debug-trace-helper';
 
 export interface KonnectRouteRequest {
   request: Request | WebSocketRequest | GrpcRequest;
   workspaceId: string;
   workspaceName: string;
   routeId: string;
+  /** Method and protocol segments of the konnectRouteKey. */
+  method: string;
+  protocol: string;
 }
 
 // Local requests of the given workspaces that were synced from a Konnect route.
@@ -25,24 +28,30 @@ export function listKonnectRouteRequests(
         return [];
       }
       const routeId = getRouteIdFromKonnectRouteKey(doc.konnectRouteKey);
-      return routeId ? [{ request: doc, workspaceId: workspace._id, workspaceName: workspace.name, routeId }] : [];
+      if (!routeId) {
+        return [];
+      }
+      // konnectRouteKey is `${route.id}:${method}:${pathSegment}:${protocol}`; the path may contain ':'.
+      const segments = doc.konnectRouteKey!.split(':');
+      const method = (segments[1] ?? '').toUpperCase();
+      const protocol = (segments.at(-1) ?? '').toUpperCase();
+      return [{ request: doc, workspaceId: workspace._id, workspaceName: workspace.name, routeId, method, protocol }];
     }),
   );
 }
 
-// Picks the local request for a trace: same Kong route, preferring the one with the trace's HTTP method.
+// Picks the local request for a trace: same Kong route, and the same HTTP method and protocol as the trace.
 export function findRouteRequestForTrace(
   routeRequests: KonnectRouteRequest[],
-  traceRouteIds: ReadonlySet<string>,
-  traceMethod: string | null | undefined,
+  trace: Pick<TraceSummaryBreakdown, 'method' | 'urlScheme' | 'routeId'>,
 ): KonnectRouteRequest | null {
-  const candidates = routeRequests.filter(candidate => traceRouteIds.has(candidate.routeId));
-  const method = traceMethod?.toUpperCase();
+  const method = trace.method?.toUpperCase();
   return (
-    candidates.find(
-      candidate => models.request.isRequest(candidate.request) && candidate.request.method.toUpperCase() === method,
-    ) ??
-    candidates[0] ??
-    null
+    routeRequests.find(
+      candidate =>
+        trace.routeId === candidate.routeId &&
+        candidate.method.toUpperCase() === method &&
+        candidate.protocol.toUpperCase() === trace.urlScheme?.toUpperCase(),
+    ) ?? null
   );
 }
