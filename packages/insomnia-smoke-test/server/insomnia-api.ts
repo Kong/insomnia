@@ -37,30 +37,33 @@ let konnectAvailablePlugins: string[] = [...DEFAULT_KONNECT_AVAILABLE_PLUGINS];
 let konnectPluginsError = false;
 let konnectAvailablePluginsError = false;
 
-const projectsByOrgId = new Map(
-  Object.entries({
-    'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
-      {
-        id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
-        name: 'Personal Workspace',
-      },
-    ],
-    'team_195a6ce0edb1427eb2e8ba7b986072e4': [
-      {
-        id: 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4',
-        name: 'Personal Workspace',
-      },
-    ],
-    // User B personal org — used by cloud-sync multi-user smoke tests so user B
-    // can resolve a personal organization and reach a project page.
-    'org_74b577e6b59d43a5a607f84b4f73e3df': [
-      {
-        id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
-        name: 'Personal Workspace',
-      },
-    ],
-  }),
-);
+const initialProjectsByOrgId = {
+  'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
+    {
+      id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+      name: 'Personal Workspace',
+    },
+  ],
+  'team_195a6ce0edb1427eb2e8ba7b986072e4': [
+    {
+      id: 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4',
+      name: 'Personal Workspace',
+    },
+  ],
+  // User B personal org — used by cloud-sync multi-user smoke tests so user B
+  // can resolve a personal organization and reach a project page.
+  'org_74b577e6b59d43a5a607f84b4f73e3df': [
+    {
+      id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+      name: 'Personal Workspace',
+    },
+  ],
+};
+
+// One server process serves every test of a CI shard, so a test that deletes or adds a project changes what all later
+// tests see. `POST /__test/reset-team-projects` puts the list back to the initial one, and the Playwright `app` fixture
+// calls it when a test ends.
+const projectsByOrgId = new Map(Object.entries(structuredClone(initialProjectsByOrgId)));
 
 const organizations = [
   // Personal organization
@@ -562,6 +565,14 @@ export default function setup(app: Application) {
   });
 
   // Projects
+  app.post('/__test/reset-team-projects', (_req, res) => {
+    projectsByOrgId.clear();
+    for (const [orgId, projects] of Object.entries(structuredClone(initialProjectsByOrgId))) {
+      projectsByOrgId.set(orgId, projects);
+    }
+    res.status(200).send();
+  });
+
   app.get('/v1/organizations/:orgId/team-projects', (_req, res) => {
     res.status(200).send({
       data: projectsByOrgId.get(_req.params.orgId),
