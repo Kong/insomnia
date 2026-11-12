@@ -1,7 +1,7 @@
 import { isApiError } from 'insomnia-api';
 
 import { insomniaFetch } from '../common/insomnia-fetch';
-import { regionalApiBase } from './api';
+import { getKonnectRegionalApiBase } from './api';
 
 const POLL_TIMEOUT_MS = 10_000;
 
@@ -104,7 +104,7 @@ async function request<T>(
       data: options.data,
       timeout: options.timeout,
       sessionId: null,
-      origin: regionalApiBase(ctx.region),
+      origin: getKonnectRegionalApiBase(ctx.region),
       headers: { Authorization: `Bearer ${ctx.pat}` },
     });
   } catch (err) {
