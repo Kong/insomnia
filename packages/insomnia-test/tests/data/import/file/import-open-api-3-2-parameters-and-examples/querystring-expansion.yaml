@@ -1,0 +1,122 @@
+openapi: 3.2.0
+info: { title: Querystring expansion, version: 1.0.0 }
+paths:
+  /outer-example:
+    get:
+      summary: Querystring outer example
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required: [limit, offset]
+                example: { limit: 25 }
+                properties:
+                  limit: { type: integer }
+                  offset: { type: integer }
+      responses:
+        "200": { description: OK }
+  /property-default:
+    get:
+      summary: Querystring property default
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required: [limit]
+                properties:
+                  limit: { type: integer, default: 10 }
+      responses:
+        "200": { description: OK }
+  /arrays:
+    get:
+      summary: Querystring array styles
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required: [tag, csv, pipe]
+                example:
+                  tag: [a, b]
+                  csv: [a, b]
+                  pipe: [a, b]
+                properties:
+                  tag: { type: array, items: { type: string } }
+                  csv: { type: array, items: { type: string } }
+                  pipe: { type: array, items: { type: string } }
+              encoding:
+                csv: { style: form, explode: false }
+                pipe: { style: pipeDelimited }
+      responses:
+        "200": { description: OK }
+  /objects:
+    get:
+      summary: Querystring object styles
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required: [filter, user]
+                example:
+                  filter: { role: admin }
+                  user: { name: rex }
+                properties:
+                  filter: { type: object, properties: { role: { type: string } } }
+                  user: { type: object, properties: { name: { type: string } } }
+              encoding:
+                filter: { style: deepObject, explode: true }
+      responses:
+        "200": { description: OK }
+  /all-of:
+    get:
+      summary: Querystring allOf properties
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                allOf:
+                  - type: object
+                    required: [a]
+                    properties:
+                      a: { type: string }
+                  - type: object
+                    required: [b]
+                    properties:
+                      b: { type: integer }
+                      c: { type: string }
+      responses:
+        "200": { description: OK }
+  /prototype-name:
+    get:
+      summary: Querystring prototype member name
+      parameters:
+        - name: qs
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                required: [toString]
+                properties:
+                  toString: { type: string }
+      responses:
+        "200": { description: OK }
