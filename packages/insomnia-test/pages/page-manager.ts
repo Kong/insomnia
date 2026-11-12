@@ -1,4 +1,6 @@
 import type { BaseComponent } from "@package/components/base.component";
+import { FieldEncryptionIssueComponent } from "@package/components/field-encryption-issue.component";
+import { LocalEncryptionKeyComponent } from "@package/components/local-encryption-key.component";
 import { PreferencesComponent } from "@package/components/preferences.component";
 import { PreferencesAiComponent } from "@package/components/preferences-ai.component";
 import { PreferencesCredentialsComponent } from "@package/components/preferences-credentials.component";
@@ -8,9 +10,11 @@ import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
 import { CertificatesPage } from "./certificates.page";
+import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { ExportPage } from "./export.page";
 import { HttpRequestPage } from "./http-request.page";
+import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
@@ -19,17 +23,25 @@ import { WorkspacePage } from "./workspace.page";
 const pageRegistry = {
   certificatesPage: (page: Page): CertificatesPage =>
     new CertificatesPage(page),
+  cookiePage: (page: Page): CookiePage =>
+    new CookiePage(page),
   environmentPage: (page: Page): EnvironmentPage =>
     new EnvironmentPage(page),
   exportPage: (page: Page): ExportPage =>
     new ExportPage(page),
+  fieldEncryptionIssue: (page: Page): FieldEncryptionIssueComponent =>
+    new FieldEncryptionIssueComponent(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
+  importPage: (page: Page): ImportPage =>
+    new ImportPage(page),
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
   responsePage: (page: Page): ResponsePage =>
     new ResponsePage(page),
+  localEncryptionKey: (page: Page): LocalEncryptionKeyComponent =>
+    new LocalEncryptionKeyComponent(page),
   preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
     new PreferencesCredentialsComponent(page),
   preferencesPlugins: (page: Page): PreferencesPluginsComponent =>

@@ -8,4 +8,5 @@ export enum ContextMenuItem {
   Pin = "Pin",
   Unpin = "Unpin",
   Export = "Export",
+  Import = "Import",
 }
