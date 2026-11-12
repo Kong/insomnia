@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -88,7 +89,8 @@ export async function launchInsomniaElectron(options: {
   vaultSalt: string;
   /**
    * Scripts (absolute paths, CommonJS) that the main process loads before the app's own code, through Electron's
-   * `--require` option. Not available for a packaged app, which ignores the option.
+   * `--require` option. A packaged app ignores that option, so with `INSOMNIA_BINARY` set the app's own code (the
+   * `app.asar` next to the binary) is run by the repo's Electron binary instead, which honours it.
    */
   preloadScripts?: string[];
   /** Extra environment variables for the app. */
@@ -100,17 +102,33 @@ export async function launchInsomniaElectron(options: {
     await ensureInsomniaDevBuild();
   }
 
-  const executablePath =
-    process.env.INSOMNIA_BINARY ??
-    (INSOMNIA_DEV_MODE
-      ? (require(path.join(INSOMNIA_SRC_PACKAGE, "..", "..", "node_modules", "electron")) as string)
-      : packagedAppPath());
+  const repoElectron = () =>
+    require(path.join(INSOMNIA_SRC_PACKAGE, "..", "..", "node_modules", "electron")) as string;
+  // A packaged binary ignores `--require`, so a spec that needs preload scripts runs the packaged app's code
+  // (resources/app.asar, or resources/app) with the repo's Electron binary instead
+  const packagedAppCode = (binary: string) => {
+    const resources = [path.join(path.dirname(binary), "resources"), path.join(path.dirname(binary), "..", "Resources")]
+      .find((dir) => fs.existsSync(path.join(dir, "app.asar")) || fs.existsSync(path.join(dir, "app")));
+    if (!resources) {
+      throw new Error(`No app.asar or app folder found next to ${binary}`);
+    }
+    return fs.existsSync(path.join(resources, "app.asar")) ? path.join(resources, "app.asar") : path.join(resources, "app");
+  };
+  const packagedBinary = process.env.INSOMNIA_BINARY;
+  const runPackagedCodeWithRepoElectron = !!packagedBinary && preloadScripts.length > 0;
+
+  const executablePath = runPackagedCodeWithRepoElectron
+    ? repoElectron()
+    : (packagedBinary ??
+      (INSOMNIA_DEV_MODE ? repoElectron() : packagedAppPath()));
   const args = [
     // Electron's own options have to come before the app's path
     ...preloadScripts.flatMap((script) => ["--require", script]),
     ...(INSOMNIA_DEV_MODE
       ? [INSOMNIA_SRC_PACKAGE, "--no-sandbox"]
-      : ["--no-sandbox"]),
+      : runPackagedCodeWithRepoElectron
+        ? [packagedAppCode(packagedBinary), "--no-sandbox"]
+        : ["--no-sandbox"]),
   ];
 
   const { ELECTRON_RUN_AS_NODE: _ignored, ...launchEnv } =
