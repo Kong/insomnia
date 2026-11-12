@@ -1,0 +1,32 @@
+openapi: 3.2.0
+info:
+  title: XML Request Body
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /orders:
+    post:
+      summary: Create an order
+      requestBody:
+        content:
+          application/xml:
+            schema: { $ref: "#/components/schemas/Order" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Order:
+      type: object
+      xml:
+        nodeType: element
+        name: order
+        prefix: ord
+        namespace: https://example.com/schemas/order
+      properties:
+        id:
+          type: integer
+          xml: { nodeType: attribute, name: orderId }
+        item:
+          type: string
+          xml: { nodeType: element, name: product }
