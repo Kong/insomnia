@@ -17,14 +17,18 @@ export class CertificatesPage extends BasePage {
    * that outer element, matching how every row lookup below needs to see
    * the grid's rendered content.
    */
-  private readonly modal = new ModalComponent(
-    this.page,
-    this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Manage Certificates" })
-      .first(),
-  );
-  private readonly dialog = this.modal.root;
+  private get modal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page
+        .getByRole("dialog")
+        .filter({ hasText: "Manage Certificates" })
+        .first(),
+    );
+  }
+  private get dialog(): Locator {
+    return this.modal.root;
+  }
 
   /**
    * Waits for the "Manage Certificates" dialog to become visible,

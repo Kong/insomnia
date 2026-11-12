@@ -5,6 +5,7 @@ import {
   startWindowCoverage,
   trackHiddenWindowCoverage,
 } from "@package/misc/coverage";
+import type { FlowContext } from "@package/misc/flow-context";
 import { launchInsomniaElectron } from "@package/misc/launch";
 import { step } from "@package/misc/step";
 import type { Page } from "playwright-core";
@@ -35,6 +36,28 @@ export class AppFlow extends BaseFlow {
     );
     await collectHiddenWindowCoverage(this.context.electronApp!);
     await this.context.electronApp!.close();
+    return this.launchAgain(config);
+  }
+
+  /**
+   * Starts the app again after it quit by itself (e.g. "Reset local
+   * encryption key" restarts it), against the same `dataPath`/env as
+   * `restart()`. Unlike `restart()`, it does not close the previous app.
+   */
+  @step()
+  async relaunch(): Promise<Page> {
+    const config = this.context.launchConfig;
+    if (!config) {
+      throw new Error(
+        "AppFlow.relaunch() requires the SessionContext to have been constructed with a launchConfig — see misc/fixtures.ts's `user` fixture",
+      );
+    }
+    return this.launchAgain(config);
+  }
+
+  private async launchAgain(
+    config: NonNullable<FlowContext["launchConfig"]>,
+  ): Promise<Page> {
     const app = await launchInsomniaElectron(config);
     trackHiddenWindowCoverage(app);
 

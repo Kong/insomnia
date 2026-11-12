@@ -1,23 +1,34 @@
 import { ModalComponent } from "@package/components/modal.component";
 import type { ExportFormat } from "@package/enums/export-format";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {
-  private readonly exportRequestsModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
-  );
+  // Getters, not fields: see CookiePage.
+  private get exportRequestsModal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
+    );
+  }
 
-  private readonly selectExportTypeModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
-  );
+  private get selectExportTypeModal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
+    );
+  }
 
-  private readonly exportRequestsDialog = this.exportRequestsModal.root;
-  private readonly selectExportTypeDialog = this.selectExportTypeModal.root;
+  private get exportRequestsDialog(): Locator {
+    return this.exportRequestsModal.root;
+  }
+
+  private get selectExportTypeDialog(): Locator {
+    return this.selectExportTypeModal.root;
+  }
 
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
