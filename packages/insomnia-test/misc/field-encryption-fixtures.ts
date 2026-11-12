@@ -14,6 +14,9 @@ export const LEGACY_DB = path.resolve(
 export const LEGACY_WORKSPACE_ID = "wrk_1b49626a0a9442b7b9474a1f3493bb5d";
 
 const ENCRYPTED_PREFIX = "enc:insomnia:v1:";
+// iv (12 bytes) + tag (16 bytes) + ciphertext. The tag length is fixed, so a shortened tag cannot pass as valid.
+const GCM_IV_LENGTH = 12;
+const GCM_TAG_LENGTH = 16;
 
 /** `<dataPath>/localStorage/fieldEncryptionKey` — where the app keeps its protected local key. */
 export const keyFilePath = (dataPath: string): string =>
@@ -62,9 +65,11 @@ export function writeUnusableKeyFile(dataPath: string): void {
 export function decryptStoredValue(keyBytes: Buffer, value: string): string {
   if (!value.startsWith(ENCRYPTED_PREFIX)) throw new Error("Not an encrypted value");
   const payload = Buffer.from(value.slice(ENCRYPTED_PREFIX.length), "base64");
-  const decipher = createDecipheriv("aes-256-gcm", createSecretKey(keyBytes), payload.subarray(0, 12));
-  decipher.setAuthTag(payload.subarray(12, 28));
-  return Buffer.concat([decipher.update(payload.subarray(28)), decipher.final()]).toString("utf8");
+  const decipher = createDecipheriv("aes-256-gcm", createSecretKey(keyBytes), payload.subarray(0, GCM_IV_LENGTH), {
+    authTagLength: GCM_TAG_LENGTH,
+  });
+  decipher.setAuthTag(payload.subarray(GCM_IV_LENGTH, GCM_IV_LENGTH + GCM_TAG_LENGTH));
+  return Buffer.concat([decipher.update(payload.subarray(GCM_IV_LENGTH + GCM_TAG_LENGTH)), decipher.final()]).toString("utf8");
 }
 
 /** The raw key bytes of a JWK (`{"kty":"oct","k":...}`) as copied or exported from Preferences. */
