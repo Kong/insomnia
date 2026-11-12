@@ -1,9 +1,13 @@
 import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
+import { AppFlow } from "./app.flow";
+import { CertificatesFlow } from "./certificates.flow";
 import { EnvironmentFlow } from "./environment.flow";
+import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
+import { InsoFlow } from "./inso.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
@@ -19,9 +23,13 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
+  appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
+  certificatesFlow: (m: FlowDeps): CertificatesFlow => new CertificatesFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
+  exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
+  insoFlow: (m: FlowDeps): InsoFlow => new InsoFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
