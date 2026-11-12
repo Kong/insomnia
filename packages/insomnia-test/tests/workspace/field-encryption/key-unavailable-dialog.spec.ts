@@ -18,7 +18,6 @@ function breakKeyFile(dataPath: string): string {
   return working;
 }
 
-// INS-2368 case 14
 base("Dialog A: the missing key is reported once per run, deletes nothing, and the next start with a working key encrypts what was written meanwhile", async ({
   user,
   dataPath,
@@ -68,7 +67,6 @@ base("Dialog A: the missing key is reported once per run, deletes nothing, and t
   expect(entered.authentication.token).toBe("token-entered-while-degraded");
 });
 
-// INS-2368 case 15
 base("Dialog A: Reset local encryption key sets the old key aside and restarts with a new one", async ({
   user,
   dataPath,
@@ -109,7 +107,6 @@ base("Dialog A: Reset local encryption key sets the old key aside and restarts w
   ]);
 });
 
-// INS-2368 case 15, last step: with no key file, there is nothing to set aside
 const withoutKeyFile = base.extend({
   dataPath: async ({ dataPath }, use) => {
     // The key cannot be created when its directory cannot be written to, which leaves no key file behind
@@ -132,7 +129,6 @@ withoutKeyFile("Dialog A: no Reset button when there is no key file to set aside
   expect(await fieldEncryptionFlow.canResetLocalKey()).toBe(false);
 });
 
-// INS-2368 case 17
 const withUnusableKey = base.extend({
   dataPath: async ({ dataPath }, use) => {
     writeUnusableKeyFile(dataPath);

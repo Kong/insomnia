@@ -32,7 +32,6 @@ const test = base.extend({
 
 const rawRequest = (dataPath: string, id: string) => readRawDocs(dataPath, "Request").find((doc) => doc._id === id);
 
-// INS-2368 case 12
 test("Dialog B: Reset affected fields clears only the fields that cannot be decrypted", async ({
   userAtStartup: user,
   dataPath,
@@ -75,7 +74,6 @@ test("Dialog B: Reset affected fields clears only the fields that cannot be decr
   await fieldEncryptionFlow.expectNoIssue();
 });
 
-// INS-2368 case 13
 test("Dialog B: Continue without decryption keeps the data and asks again on the next start", async ({
   userAtStartup: user,
   dataPath,

@@ -43,7 +43,6 @@ const test = base.extend({
 // Which models carry the user's own structure: projects, collections, folders, requests, environments
 const STRUCTURE_MODELS = ["Project", "Workspace", "RequestGroup", "Request", "Environment"];
 
-// INS-2368 case 03: a plaintext database is migrated by simply starting the new version.
 test("Plaintext legacy database is encrypted on first launch, and everything the user had is still there", async ({
   user,
   dataPath,
