@@ -24,8 +24,15 @@ export interface InsoResult {
  * `ELECTRON_RUN_AS_NODE`, so it loads the same Electron-targeted
  * `@getinsomnia/node-libcurl` the app does and the shared `node_modules`
  * never has to be switched to a Node-targeted build.
+ *
+ * `env` is added to the environment. An `INSOMNIA_ENCRYPTION_KEY` of the
+ * test runner's own never reaches inso: only the one passed in `env` does.
  */
-export function runInso(args: string[], cwd?: string): Promise<InsoResult> {
+export function runInso(
+  args: string[],
+  cwd?: string,
+  env: Record<string, string> = {},
+): Promise<InsoResult> {
   if (!existsSync(INSO_BUNDLE)) {
     return Promise.reject(
       new Error(`inso bundle not found at ${INSO_BUNDLE}; run "npm run build -w insomnia-inso" first`),
@@ -34,11 +41,13 @@ export function runInso(args: string[], cwd?: string): Promise<InsoResult> {
 
   const electronPath = require(path.resolve(INSO_PACKAGE, "..", "..", "node_modules", "electron")) as string;
 
+  const { INSOMNIA_ENCRYPTION_KEY: _ignored, ...baseEnv } = process.env;
+
   return new Promise((resolve, reject) => {
     execFile(
       electronPath,
       [INSO_BIN, ...args],
-      { cwd, env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", NO_COLOR: "1" } },
+      { cwd, env: { ...baseEnv, ...env, ELECTRON_RUN_AS_NODE: "1", NO_COLOR: "1" } },
       (error, stdout, stderr) => {
         if (error && typeof error.code !== "number") {
           reject(error);

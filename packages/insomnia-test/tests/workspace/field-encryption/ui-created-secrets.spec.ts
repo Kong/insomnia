@@ -8,10 +8,6 @@ import { expect } from "@playwright/test";
 
 import { createBearerRequest } from "./helpers";
 
-// INS-2368 case 05, the parts that can be created through the UI rather than seeded:
-// the request history snapshot written by a real send, and a client certificate added in Manage Certificates
-// (the UI keeps the chosen files' paths in `cert` / `key`).
-
 test("RequestVersion: the history snapshot of a sent request is encrypted but still contains the request", async ({
   user,
   dataPath,

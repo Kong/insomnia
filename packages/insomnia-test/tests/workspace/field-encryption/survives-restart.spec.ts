@@ -5,8 +5,6 @@ import { expect } from "@playwright/test";
 
 import { createBearerRequest } from "./helpers";
 
-// INS-2368 case 07: the Bearer token and the cookie stay intact across two restarts, with no "could not be
-// decrypted" dialog, and are shown in the app (the request's database record and the Cookie Jar dialog).
 test("Encrypted Bearer token and cookie survive two restarts without a decryption dialog", async ({
   user,
   dataPath,

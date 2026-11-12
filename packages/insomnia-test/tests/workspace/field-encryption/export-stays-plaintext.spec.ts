@@ -12,7 +12,6 @@ import { expect } from "@playwright/test";
 
 import { createBearerRequest } from "./helpers";
 
-// INS-2368 case 06: the export holds the real values, never ciphertext, and imports back into a working collection.
 test("Exported collection holds the plaintext token and cookie, and imports into a new project", async ({
   user,
   dataPath,

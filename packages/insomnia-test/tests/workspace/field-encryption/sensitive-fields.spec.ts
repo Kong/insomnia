@@ -7,13 +7,6 @@ import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-// INS-2368 case 05: every model in "2. Sensitive Fields Analysis" of
-// packages/insomnia-data/docs/field-encryption-design.md has its sensitive
-// fields encrypted on disk, readable in the app, and intact across restarts.
-// Documents are written through the app's own database layer (`docCreate`),
-// the same path the UI's writes take, because the framework has no Page/Flow
-// for most of these models.
-
 /**
  * One document to seed through the app's database layer, plus what the field
  * encryption must (and must not) do to it. Paths are the dotted form of the
@@ -262,8 +255,6 @@ test("Request: every authentication type's secrets are encrypted, identifiers st
   await expectScenariosEncrypted(user, dataPath, authenticationScenarios(workspaceId), (s) => seed(user, s));
 });
 
-// Workspace (collection-level authentication), RequestGroup (folder), WebSocketRequest, SocketIORequest and
-// McpRequest share the Request's AuthenticationSchema, so the same marks cover them.
 test("Workspace, folder, WebSocket, Socket.IO and MCP requests: shared authentication fields are encrypted", async ({
   user,
   dataPath,
@@ -530,8 +521,6 @@ test("GrpcRequest: the reflection API key is encrypted", async ({ user, dataPath
   await expectScenariosEncrypted(user, dataPath, scenarios, (s) => seed(user, s));
 });
 
-// Out of scope by design (section 2): confidential environment variables are a display-masking policy, not
-// a storage one, so their values stay plaintext in the local database.
 test("Environment: confidential variable values stay plaintext (documented non-goal)", async ({ user, dataPath }) => {
   const workspaceId = await createWorkspace(user);
   const value = `plain-confidential-${faker.string.alphanumeric(10)}`;

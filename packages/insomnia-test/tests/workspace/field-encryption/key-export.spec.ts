@@ -14,7 +14,6 @@ import { createBearerRequest } from "./helpers";
 const storedToken = (dataPath: string, requestName: string): string =>
   readRawDocs(dataPath, "Request").find((doc) => doc.name === requestName).authentication.token;
 
-// INS-2368 case 08
 test("Copy Key puts the key on the clipboard as one line of base64 after a confirmation", async ({
   user,
   dataPath,
@@ -45,7 +44,6 @@ test("Copy Key puts the key on the clipboard as one line of base64 after a confi
   expect(decryptStoredValue(keyBytes, storedToken(dataPath, request.name))).toBe(token);
 });
 
-// INS-2368 case 09
 test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and cancelling saves nothing", async ({
   user,
   dataPath,

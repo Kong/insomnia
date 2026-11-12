@@ -1,6 +1,9 @@
 import { createCipheriv, createDecipheriv, createSecretKey, randomBytes } from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+
+import { readRawDocs } from "./db";
 
 /** The plaintext database a pre-encryption version left behind, shared with the smoke tests. */
 export const LEGACY_DB = path.resolve(
@@ -69,4 +72,31 @@ export function keyBytesFromJwk(jwkText: string): Buffer {
   const jwk = JSON.parse(jwkText);
   if (jwk.kty !== "oct") throw new Error(`Unexpected key type: ${jwk.kty}`);
   return Buffer.from(jwk.k, "base64url");
+}
+
+/** Copies an app data directory's `.db` files (not its protected key) to a new temporary directory. */
+export function copyDataDir(source: string): string {
+  const destination = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-data-copy-"));
+  for (const file of fs.readdirSync(source)) {
+    if (/^insomnia\..+\.db$/.test(file)) fs.copyFileSync(path.join(source, file), path.join(destination, file));
+  }
+  return destination;
+}
+
+/**
+ * What a directory of `.db` files holds, independent of how the files are laid out: each file's documents as they
+ * stand (a later line of the same `_id` replaces the earlier one). Two snapshots are equal when nothing was changed.
+ */
+export function snapshotDataDir(directory: string): Record<string, unknown[]> {
+  const snapshot: Record<string, unknown[]> = {};
+  for (const file of fs.readdirSync(directory).sort()) {
+    const match = /^insomnia\.(.+)\.db$/.exec(file);
+    if (match) snapshot[match[1]] = readRawDocs(directory, match[1]).sort((a, b) => String(a._id).localeCompare(String(b._id)));
+  }
+  return snapshot;
+}
+
+/** A random 256-bit key in the JWK form that Export Key writes: a key from some other installation. */
+export function randomJwkKey(): string {
+  return JSON.stringify({ kty: "oct", k: randomBytes(32).toString("base64url"), alg: "A256GCM", ext: true });
 }

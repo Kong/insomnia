@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 
 import { createBearerRequest } from "./helpers";
 
-// INS-2368 case 01: sensitive fields are encrypted on disk, plaintext in the app.
 test("Bearer token is encrypted in insomnia.Request.db but shown as plaintext in the app", async ({
   user,
   dataPath,
