@@ -2,7 +2,13 @@ import { createSecretKey, generateKeySync, randomBytes } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { exportFieldEncryptionKey, INVALID_KEY_MESSAGE, parseFieldEncryptionKey } from './key-format';
+import {
+  exportFieldEncryptionKey,
+  getFieldEncryptionKeyHost,
+  INVALID_KEY_MESSAGE,
+  isSameHost,
+  parseFieldEncryptionKey,
+} from './key-format';
 import { decryptValue, encryptValue } from './value';
 
 const key = generateKeySync('aes', { length: 256 });
@@ -35,6 +41,63 @@ describe('exportFieldEncryptionKey()', () => {
   it('refuses something that is not a 256-bit secret key', () => {
     expect(() => exportFieldEncryptionKey(generateKeySync('aes', { length: 128 }))).toThrow('256-bit');
     expect(() => exportFieldEncryptionKey(undefined as never)).toThrow('256-bit');
+  });
+
+  it('records the machine name as a custom JWK member in both forms, and nothing without one', () => {
+    const { jwk, base64 } = exportFieldEncryptionKey(key, 'WEI-PC');
+    expect(JSON.parse(jwk)).toEqual({
+      'kty': 'oct',
+      'k': key.export().toString('base64url'),
+      'x-insomnia-host': 'WEI-PC',
+    });
+    expect(Buffer.from(base64, 'base64').toString('utf8')).toBe(jwk);
+    expect(JSON.parse(exportFieldEncryptionKey(key, '').jwk)).not.toHaveProperty('x-insomnia-host');
+  });
+});
+
+describe('getFieldEncryptionKeyHost()', () => {
+  it.each(['jwk', 'base64'] as const)('gives the machine name the key was exported with, from the %s form', form => {
+    expect(getFieldEncryptionKeyHost(exportFieldEncryptionKey(key, 'WEI-PC')[form])).toBe('WEI-PC');
+  });
+
+  it('gives undefined for a key without a machine name', () => {
+    expect(getFieldEncryptionKeyHost(exportFieldEncryptionKey(key).jwk)).toBeUndefined();
+    expect(getFieldEncryptionKeyHost(exportFieldEncryptionKey(key).base64)).toBeUndefined();
+  });
+
+  it.each(['', 'not a key', '[]', '{"x-insomnia-host":5}', '{"x-insomnia-host":""}', '{"x-insomnia-host":'])(
+    'gives undefined, and does not throw, for %j',
+    text => {
+      expect(getFieldEncryptionKeyHost(text)).toBeUndefined();
+    },
+  );
+
+  it('does not stop the key from being read', () => {
+    expect(parseFieldEncryptionKey(exportFieldEncryptionKey(key, 'WEI-PC').jwk).equals(key)).toBe(true);
+    expect(parseFieldEncryptionKey(exportFieldEncryptionKey(key, 'WEI-PC').base64).equals(key)).toBe(true);
+  });
+});
+
+describe('isSameHost()', () => {
+  it.each([
+    ['WEI-PC', 'wei-pc'],
+    ['Weis-MacBook.local', 'Weis-MacBook'],
+    ['build-1.corp.example.com', 'build-1'],
+    [' wei-pc ', 'wei-pc'],
+  ])('treats %s and %s as the same machine', (a, b) => {
+    expect(isSameHost(a, b)).toBe(true);
+    expect(isSameHost(b, a)).toBe(true);
+  });
+
+  it.each([
+    ['WEI-PC', 'WEI-LAPTOP'],
+    ['build-1.example.com', 'build-2.example.com'],
+    ['wei', 'wei2'],
+    ['192.168.1.5', '192.168.2.7'],
+    ['db.prod.example.com', 'db.staging.example.com'],
+    ['', 'wei'],
+  ])('treats %s and %s as different machines', (a, b) => {
+    expect(isSameHost(a, b)).toBe(false);
   });
 });
 

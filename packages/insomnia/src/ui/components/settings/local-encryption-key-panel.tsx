@@ -52,19 +52,15 @@ export const LocalEncryptionKeyPanel = () => {
   // machine's database with a key its Insomnia does not have, so the user is told before the key leaves this panel.
   const confirmThenRun = (run: () => Promise<void>) =>
     showModal(AskModal, {
-      title: 'Keep this key secure and use it on this machine only',
+      title: 'Careful: Keep this key private & use it only on this machine',
       message: (
         <div className="flex flex-col gap-2">
+          <p className="m-0">Inso CLI requires this key to access sensitive values.</p>
           <p className="m-0">
-            This key only encrypts and decrypts the Insomnia database on this machine. Use it only when you run the inso
-            CLI on this machine.
-          </p>
-          <p className="m-0 font-semibold">
-            Do not use it on any other machine. Otherwise the Insomnia database on another machine may no longer be
-            decryptable.
+            <strong>Never share this key:</strong> Anyone with this key can decrypt locally stored tokens, values, etc.
           </p>
           <p className="m-0">
-            Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens.
+            <strong>Never use it on another machine:</strong> Using the wrong key can corrupt data.
           </p>
         </div>
       ),
@@ -112,7 +108,8 @@ export const LocalEncryptionKeyPanel = () => {
       <div>
         <span className="font-semibold">Local Encryption Key</span>
         <p className="m-0 mt-1 text-(--hl)">
-          This key is used to encrypt sensitive fields in your local database. You may need it for CLI usage.
+          Used for encryption of sensitive values in your local Insomnia database. Inso CLI needs this key to access
+          sensitive values.
         </p>
       </div>
       <div className="flex items-center gap-2">

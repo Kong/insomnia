@@ -88,8 +88,10 @@ describe('LocalEncryptionKeyPanel', () => {
 
       const text = byTestId('local-encryption-key-panel')!.textContent;
       expect(text).toContain('Local Encryption Key');
-      expect(text).toContain('This key is used to encrypt sensitive fields in your local database.');
-      expect(text).not.toContain('Keep this key secure');
+      expect(text).toContain(
+        'Used for encryption of sensitive values in your local Insomnia database. Inso CLI needs this key to access sensitive values.',
+      );
+      expect(text).not.toContain('Never share this key');
       expect(byTestId('local-encryption-key-copy')!.disabled).toBe(false);
       expect(byTestId('local-encryption-key-export')!.disabled).toBe(false);
       expect(byTestId('local-encryption-key-unavailable')).toBeNull();
@@ -116,21 +118,22 @@ describe('LocalEncryptionKeyPanel', () => {
         expect(writeFile).not.toHaveBeenCalled();
       });
 
-      it('tells the user that the key is for this machine only', async () => {
+      it('tells the user that the key is private and for this machine only', async () => {
         await mount();
         await press(id);
 
         const { title, message, yesText, noText, centered } = lastConfirmation();
         const text = renderToStaticMarkup(<>{message}</>);
-        expect(title).toBe('Keep this key secure and use it on this machine only');
-        expect(text).toContain('only encrypts and decrypts the Insomnia database on this machine');
-        expect(text).toContain('only when you run the inso CLI on this machine');
-        expect(text).toContain('Do not use it on any other machine');
+        expect(title).toBe('Careful: Keep this key private & use it only on this machine');
+        expect(text).toContain('Inso CLI requires this key to access sensitive values.');
         expect(text).toContain(
-          'Keep this key secure. Anyone with this key can decrypt your locally stored passwords and tokens.',
+          '<strong>Never share this key:</strong> Anyone with this key can decrypt locally stored',
+        );
+        expect(text).toContain('tokens, values, etc.');
+        expect(text).toContain(
+          '<strong>Never use it on another machine:</strong> Using the wrong key can corrupt data.',
         );
         expect(centered).toBe(true);
-        expect(text).toContain('the Insomnia database on another machine may no longer be decryptable');
         expect(yesText).toBe('I understand, continue');
         expect(noText).toBe('Cancel');
       });

@@ -12,5 +12,7 @@ export {
 export {
   exportFieldEncryptionKey,
   type FieldEncryptionKeyExport,
+  getFieldEncryptionKeyHost,
+  isSameHost,
   parseFieldEncryptionKey,
 } from './database/field-encryption/key-format';

@@ -122,6 +122,76 @@ describe('neDbAdapter()', () => {
       });
     });
 
+    describe('with a key that was exported on another machine', () => {
+      const otherHost = `other-${os.hostname()}`;
+
+      it.each(['base64', 'jwk'] as const)(
+        'warns with both machine names and carries on, given the %s form',
+        async form => {
+          writeDatastore('Request', [request('req_1')]);
+          const text = exportFieldEncryptionKey(key, otherHost)[form];
+
+          const db = await load(text);
+
+          expect(tokenOf(db, 'req_1')).toBe(secret);
+          expect(warn).toHaveBeenCalledTimes(1);
+          const message = warn.mock.calls[0][0] as string;
+          expect(message).toContain(`exported on "${otherHost}"`);
+          expect(message).toContain(`this machine is "${os.hostname()}"`);
+          expect(message).not.toContain(text);
+          expect(message).not.toContain(key.export().toString('base64url'));
+        },
+      );
+
+      it('warns before any file is rewritten', async () => {
+        writeDatastore('Request', [request('req_1')], { plaintext: true });
+        let plaintextOnDiskWhenWarned: boolean | undefined;
+        warn.mockImplementation(() => {
+          plaintextOnDiskWhenWarned = readDatastore('Request').includes(secret);
+        });
+
+        await load(exportFieldEncryptionKey(key, otherHost).base64);
+
+        expect(plaintextOnDiskWhenWarned).toBe(true);
+        expect(readDatastore('Request')).not.toContain(secret);
+      });
+
+      it('prints the machine name from the key as quoted JSON and cut short, so it cannot disturb the log', async () => {
+        writeDatastore('Request', [request('req_1')]);
+
+        await load(exportFieldEncryptionKey(key, `\u001B[2K\rall good${'x'.repeat(1000)}`).base64);
+
+        const message = warn.mock.calls[0][0] as string;
+        expect(message).not.toContain('\u001B');
+        expect(message).not.toContain('\r');
+        expect(message).toContain('\\u001b[2K\\rall good');
+        expect(message.length).toBeLessThan(1000);
+      });
+
+      it.each([
+        ['the name of this machine', exportFieldEncryptionKey(key, os.hostname()).base64],
+        [
+          'the name of this machine in other letters',
+          exportFieldEncryptionKey(key, os.hostname().toUpperCase()).base64,
+        ],
+        ['no machine name', exportFieldEncryptionKey(key).base64],
+      ])('says nothing for a key with %s', async (_, text) => {
+        writeDatastore('Request', [request('req_1')]);
+
+        await load(text);
+
+        expect(warn).not.toHaveBeenCalled();
+      });
+
+      it('says nothing when no key is given', async () => {
+        writeDatastore('Request', [request('req_1')], { plaintext: true });
+
+        await load();
+
+        expect(warn).not.toHaveBeenCalled();
+      });
+    });
+
     describe('with a key that does not decrypt the values', () => {
       const wrongKey = () => exportFieldEncryptionKey(otherKey).base64;
 

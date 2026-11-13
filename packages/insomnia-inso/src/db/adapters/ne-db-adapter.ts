@@ -1,4 +1,5 @@
 import { stat } from 'node:fs/promises';
+import { hostname } from 'node:os';
 import path from 'node:path';
 
 import NeDB from '@seald-io/nedb';
@@ -7,7 +8,9 @@ import {
   countWellFormedCiphertext,
   createFieldDecryptionFailureReport,
   createFieldEncryptionHooks,
+  getFieldEncryptionKeyHost,
   getHooksForType,
+  isSameHost,
   parseFieldEncryptionKey,
   reconcileFieldDecryptionFailures,
 } from 'insomnia-data/node';
@@ -19,6 +22,7 @@ import type { Database, DbAdapter } from '../types';
 import { emptyDb } from '../types';
 
 const MAX_LISTED_FIELDS = 10;
+const MAX_HOST_LENGTH = 255;
 
 const parseKey = (encryptionKey: string) => {
   try {
@@ -41,6 +45,23 @@ const describeFields = (fields: { type: string; path: string }[]) => {
   return [...lines.slice(0, MAX_LISTED_FIELDS), ...(lines.length > MAX_LISTED_FIELDS ? ['  - ...'] : [])].join('\n');
 };
 
+/**
+ * The key records the machine it was exported on. Used on another machine, it would encrypt that machine's plaintext
+ * values with a key its Insomnia does not have, so the user is warned and may go on.
+ */
+const warnIfKeyIsFromAnotherMachine = (encryptionKey: string) => {
+  const keyHost = getFieldEncryptionKeyHost(encryptionKey);
+  if (keyHost && !isSameHost(keyHost, hostname())) {
+    // The name comes from the key text: quoted as JSON (so control characters are escaped) and cut to a host name's length
+    logger.warn(
+      `The encryption key was exported on ${JSON.stringify(keyHost.slice(0, MAX_HOST_LENGTH))}, but this machine is ${JSON.stringify(hostname())}. ` +
+        'inso encrypts the plaintext values it finds in the data directory with this key, and the Insomnia on this ' +
+        'machine cannot read values that were encrypted with the key of another machine. Use the key from the Insomnia ' +
+        'on this machine, unless you know that this key belongs to this data directory.',
+    );
+  }
+};
+
 const neDbAdapter: DbAdapter = async (dir, filterTypes, encryptionKey) => {
   // Confirm if db files exist
   try {
@@ -52,6 +73,10 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes, encryptionKey) => {
   // The key is only looked at when the data really comes from NeDB, so a key that is set for every command (for example
   // in the environment) does not get in the way of commands that read an export file or a git repository
   const key = encryptionKey ? parseKey(encryptionKey) : undefined;
+  if (encryptionKey) {
+    // Before the load below: the load already rewrites the files, so a warning after it would come too late
+    warnIfKeyIsFromAnotherMachine(encryptionKey);
+  }
   const failureReport = createFieldDecryptionFailureReport();
   const hooks = key
     ? createFieldEncryptionHooks(key, { getEncryptedFieldPaths: models.getEncryptedFieldPathsForType, failureReport })

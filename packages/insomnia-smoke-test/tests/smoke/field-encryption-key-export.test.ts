@@ -1,5 +1,6 @@
 import { createDecipheriv, createSecretKey } from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { expect, type Page } from '@playwright/test';
@@ -85,6 +86,7 @@ test.describe('Local Encryption Key in Preferences', () => {
 
       const keyBytes = keyFromJwk(fs.readFileSync(exportPath, 'utf8'));
       expect.soft(keyBytes).toHaveLength(32);
+      expect.soft(JSON.parse(fs.readFileSync(exportPath, 'utf8'))['x-insomnia-host']).toBe(os.hostname());
       expect.soft(decrypt(keyBytes, readEncryptedToken(dataPath))).toBe(bearerToken);
     } finally {
       cleanupExportDir(tempDir);
@@ -121,10 +123,8 @@ test.describe('Local Encryption Key in Preferences', () => {
       await app.evaluate(({ clipboard }) => clipboard.writeText('clipboard before'));
 
       await page.getByTestId('local-encryption-key-copy').click();
-      await expect.soft(page.getByRole('dialog').getByText('Do not use it on any other machine')).toBeVisible();
-      await expect
-        .soft(page.getByRole('dialog').getByText('Keep this key secure. Anyone with this key can decrypt'))
-        .toBeVisible();
+      await expect.soft(page.getByRole('dialog').getByText('Never use it on another machine')).toBeVisible();
+      await expect.soft(page.getByRole('dialog').getByText('Never share this key')).toBeVisible();
       await confirmationButton(page, 'Cancel').click();
 
       await page.getByTestId('local-encryption-key-export').click();

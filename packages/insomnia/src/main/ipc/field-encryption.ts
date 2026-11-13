@@ -1,4 +1,5 @@
 import type { KeyObject } from 'node:crypto';
+import { hostname } from 'node:os';
 
 import { app, BrowserWindow, dialog, type MessageBoxOptions, type WebContents } from 'electron';
 import { exportFieldEncryptionKey, type FieldEncryptionKeyExport } from 'insomnia-data/node';
@@ -137,7 +138,7 @@ export const createFieldEncryptionController = (deps: FieldEncryptionControllerD
       if (!deps.key) {
         throw new Error('There is no local encryption key in this session');
       }
-      return exportFieldEncryptionKey(deps.key);
+      return exportFieldEncryptionKey(deps.key, hostname());
     },
   };
 };

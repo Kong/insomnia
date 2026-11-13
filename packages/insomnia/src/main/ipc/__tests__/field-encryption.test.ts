@@ -1,5 +1,7 @@
 import { createSecretKey, generateKeySync } from 'node:crypto';
+import { hostname } from 'node:os';
 
+import { getFieldEncryptionKeyHost } from 'insomnia-data/node';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { registerAllIpcHandlers as RegisterAllIpcHandlers } from '../base-ipc-handler';
@@ -265,8 +267,20 @@ describe('the local encryption key of the controller', () => {
       const { controller } = setup();
       const { jwk, base64 } = await controller.getKey();
 
-      expect(JSON.parse(jwk)).toEqual({ kty: 'oct', k: localKey.export().toString('base64url') });
+      expect(JSON.parse(jwk)).toEqual({
+        'kty': 'oct',
+        'k': localKey.export().toString('base64url'),
+        'x-insomnia-host': hostname(),
+      });
       expect(Buffer.from(base64, 'base64').toString('utf8')).toBe(jwk);
+    });
+
+    it('records the name of this machine in the key, in both forms', async () => {
+      const { controller } = setup();
+      const { jwk, base64 } = await controller.getKey();
+
+      expect(getFieldEncryptionKeyHost(jwk)).toBe(hostname());
+      expect(getFieldEncryptionKeyHost(base64)).toBe(hostname());
     });
 
     it('gives a key that is the one the database uses', async () => {
