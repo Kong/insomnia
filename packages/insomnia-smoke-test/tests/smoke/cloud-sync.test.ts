@@ -41,7 +41,10 @@ test.describe('Cloud Sync', () => {
 
   test('Discard, branch and commit actions', async ({ page, insomnia }) => {
     test.slow();
-    await insomnia.navigationSidebar.fetchUnsyncedWorkspace('My Collection R1', insomnia.navigationSidebar.requestRow('New Request'));
+    await insomnia.navigationSidebar.fetchUnsyncedWorkspace(
+      'My Collection R1',
+      insomnia.navigationSidebar.requestRow('New Request'),
+    );
     await insomnia.navigationSidebar.clickRequestOrFolder('New Request');
     // Send request and check body
     await page.getByRole('button', { name: 'Send' }).click();
@@ -77,7 +80,7 @@ test.describe('Cloud Sync', () => {
     await expect.soft(page.getByLabel('Commit')).toHaveAttribute('aria-disabled', 'true');
 
     // restore commit
-    const historyButton = page.getByText('History');
+    const historyButton = page.getByText('History', { exact: true });
     // Wait for history button to be enabled
     await expect.soft(historyButton).not.toHaveAttribute('aria-disabled', 'true');
     historyButton.click();

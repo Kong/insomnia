@@ -6,11 +6,21 @@ export const HINT_DURATION_MS = 10_000;
  */
 const HINT_DISMISSED_STORAGE_KEY = 'responseHistoryHintDismissed';
 
-export const isResponseHistoryHintDismissed = (): boolean =>
-  window.localStorage.getItem(HINT_DISMISSED_STORAGE_KEY) === 'true';
+export const isResponseHistoryHintDismissed = (): boolean => {
+  try {
+    return window.localStorage.getItem(HINT_DISMISSED_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
 
 export const dismissResponseHistoryHint = (): void => {
-  window.localStorage.setItem(HINT_DISMISSED_STORAGE_KEY, 'true');
+  try {
+    window.localStorage.setItem(HINT_DISMISSED_STORAGE_KEY, 'true');
+  } catch {
+    // Storage can be unavailable (disabled or full). The caller still hides the
+    // hint for this session, so dismissal degrades to session-scoped.
+  }
 };
 
 interface HintTrigger {
