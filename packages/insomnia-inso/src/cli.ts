@@ -11,6 +11,7 @@ import { pick } from 'es-toolkit';
 import { configureV3ClientDefaults } from 'insomnia/src/common/configure-v3-client';
 import { isDevelopment, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { insomniaFetch } from 'insomnia/src/common/insomnia-fetch';
+import { findNextRequestIndex } from 'insomnia/src/common/runner-next-request';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/network/send-request.node';
 import { initRuntime } from 'insomnia/src/runtimes';
 import { nodeRuntime } from 'insomnia/src/runtimes/runtime.node';
@@ -854,11 +855,15 @@ export const go = (args?: string[]) => {
               await new Promise(r => setTimeout(r, Number.parseInt(options.delayRequest, 10)));
 
               if (res.nextRequestIdOrName) {
-                const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);
-                reqIndex += offset;
-                if (reqIndex < requestsToRun.length) {
+                const nextIndex = findNextRequestIndex(
+                  requestsToRun.map(req => ({ id: req._id, name: req.name })),
+                  res.nextRequestIdOrName,
+                );
+                if (nextIndex !== -1) {
+                  reqIndex = nextIndex;
                   console.log(`The next request has been pointed to "${requestsToRun[reqIndex].name}"`);
                 } else {
+                  reqIndex = requestsToRun.length;
                   console.log(`No request has been found for "${res.nextRequestIdOrName}", ending the iteration`);
                 }
               } else {
@@ -1044,18 +1049,4 @@ export const go = (args?: string[]) => {
   });
 
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
-};
-
-const getNextRequestOffset = (leftRequestsToRun: Request[], nextRequestIdOrName: string) => {
-  const idMatchOffset = leftRequestsToRun.findIndex(req => req._id.trim() === nextRequestIdOrName.trim());
-  if (idMatchOffset !== -1) {
-    return idMatchOffset;
-  }
-
-  const nameMatchOffset = leftRequestsToRun.reverse().findIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-  if (nameMatchOffset !== -1) {
-    return leftRequestsToRun.length - 1 - nameMatchOffset;
-  }
-
-  return leftRequestsToRun.length;
 };
