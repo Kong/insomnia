@@ -36,29 +36,3 @@ export async function waitForExportedFile(
 
   throw new Error(`Exported file never stabilized within ${timeout}ms: ${filePath}`);
 }
-
-/** Field names whose values are freshly generated on every export (ids,
- * timestamps, sort order) rather than derived from the exported data
- * itself — comparing an export against a fixture must normalize these
- * first. Covers both the YAML/JSON "Insomnia v5" shape (`id`, `created`,
- * `modified`, `sortKey`) and the HAR shape (`startedDateTime`). */
-const DYNAMIC_FIELDS = ["id", "created", "modified", "sortKey", "startedDateTime"];
-
-/**
- * Replaces every dynamic field's value in an exported file's raw text
- * (YAML or JSON) with a fixed `<FIELD_NAME>` placeholder, so the result
- * can be diffed against a checked-in fixture regardless of the random
- * ids/timestamps a real export always produces. Applies to both sides of
- * a comparison — normalize the fresh export and the fixture the same way
- * before comparing.
- */
-export function normalizeExportFixture(content: string): string {
-  let normalized = content;
-  for (const field of DYNAMIC_FIELDS) {
-    normalized = normalized.replace(
-      new RegExp(`^(\\s*"?${field}"?\\s*[:=]\\s*)("[^"]*"|-?[0-9a-zA-Z_]+)`, "gm"),
-      `$1<${field.toUpperCase()}>`,
-    );
-  }
-  return normalized;
-}

@@ -6,7 +6,10 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {
-  private readonly modal = new ModalComponent(this.page);
+  // A getter, not a field, so the component follows `this.page` across an app restart.
+  private get modal(): ModalComponent {
+    return new ModalComponent(this.page);
+  }
 
   // Formerly "Select Collection".
   private readonly COLLECTION_SELECT =

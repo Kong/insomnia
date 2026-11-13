@@ -99,7 +99,9 @@ export class InsoFlow extends BaseFlow {
       const executions: RunExecution[] = fs.existsSync(output)
         ? (JSON.parse(fs.readFileSync(output, "utf8")).executions ?? [])
         : [];
-      const statusCodes = executions.map((execution) => execution.response?.code as number);
+      const statusCodes = executions
+        .map((execution) => execution.response?.code)
+        .filter((code): code is number => code !== undefined);
       return { ...result, statusCodes, executions };
     } finally {
       fs.rmSync(outputDir, { recursive: true, force: true });
