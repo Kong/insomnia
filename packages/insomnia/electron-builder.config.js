@@ -25,6 +25,30 @@ const config = {
     './package.json',
   ],
   publish: null,
+  // `--win --dir` builds no nsis target, so electron-builder does not write resources/app-update.yml,
+  // and the NSIS updater needs it. The dist step uses --prepackaged, so afterPack does not run there.
+  afterPack: async context => {
+    if (context.electronPlatformName !== 'win32') {
+      return;
+    }
+    const fs = require('fs');
+    const path = require('path');
+    const target = path.join(context.appOutDir, 'resources', 'app-update.yml');
+    if (fs.existsSync(target)) {
+      return;
+    }
+    const publish = context.packager.config.win?.publish;
+    if (!publish || typeof publish !== 'object') {
+      throw new Error('[afterPack] win.publish is not configured, cannot write app-update.yml');
+    }
+    const entries = { ...publish, updaterCacheDirName: context.packager.appInfo.updaterCacheDirName };
+    fs.writeFileSync(
+      target,
+      Object.entries(entries)
+        .map(([k, v]) => `${k}: ${v}\n`)
+        .join(''),
+    );
+  },
   extraResources: [
     {
       from: './bin',
@@ -197,6 +221,14 @@ const config = {
     base: 'core22',
   },
 };
+
+// Every signed file costs one code-signing token. The release workflow signs the secure wrapper Insomnia.exe
+// before `package:windows:dist` (see build-secure-wrapper.sh), but Squirrel signs the app exe again.
+// signExts entries starting with "!" exclude files whose path ends with that text from signing.
+// It is only set for the prepackaged dist step. In the unpacked step the stock Insomnia.exe still must be signed.
+if (process.env.SKIP_SIGN_PREPACKAGED_APP_EXE === 'true') {
+  config.win.signExts = ['!' + require('path').join('win-unpacked', 'Insomnia.exe')];
+}
 
 const {
   env: { BUILD_TARGETS },

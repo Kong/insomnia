@@ -13,6 +13,11 @@ exports.default = async function (configuration) {
     return;
   }
 
+  if (process.env.SKIP_WINDOWS_SIGN === 'true') {
+    console.log('[customSign] Skipping signing because SKIP_WINDOWS_SIGN is true');
+    return;
+  }
+
   const { SM_KEYPAIR_ALIAS, SM_API_KEY, SM_CLIENT_CERT_PASSWORD } = process.env;
   if (!SM_KEYPAIR_ALIAS || !SM_API_KEY || !SM_CLIENT_CERT_PASSWORD) {
     console.log('[customSign] Skipping signing,  Missing required environment variable: SM_KEYPAIR_ALIAS');
