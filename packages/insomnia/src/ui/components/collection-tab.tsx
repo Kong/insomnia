@@ -29,7 +29,10 @@ const tabClassName =
   'flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)';
 
 const TabActiveDot = () => (
-  <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
+  <span
+    data-testid="tab-active-dot"
+    className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs"
+  >
     <span className="h-2 w-2 rounded-full bg-green-500" />
   </span>
 );
@@ -110,7 +113,10 @@ export const CollectionTab = ({
         <Tab className={tabClassName} id="headers">
           <span>Headers</span>
           {headersCount > 0 && (
-            <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
+            <span
+              data-testid="tab-count-badge"
+              className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs"
+            >
               {headersCount}
             </span>
           )}

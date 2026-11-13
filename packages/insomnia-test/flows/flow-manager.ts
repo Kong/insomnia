@@ -1,10 +1,18 @@
 import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
+import { AppFlow } from "./app.flow";
+import { CollectionFlow } from "./collection.flow";
 import { EnvironmentFlow } from "./environment.flow";
+import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
+import { GrpcRequestFlow } from "./grpc-request.flow";
 import { HttpRequestFlow } from "./http-request.flow";
+import { ImportFlow } from "./import.flow";
+import { InsoFlow } from "./inso.flow";
 import { PreferencesFlow } from "./preferences.flow";
+import { SocketIORequestFlow } from "./socket-io-request.flow";
+import { WebSocketRequestFlow } from "./web-socket-request.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
@@ -19,10 +27,18 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
+  appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
+  collectionFlow: (m: FlowDeps): CollectionFlow => new CollectionFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
+  exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
+  grpcRequestFlow: (m: FlowDeps): GrpcRequestFlow => new GrpcRequestFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
+  importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
+  insoFlow: (m: FlowDeps): InsoFlow => new InsoFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
+  socketIoRequestFlow: (m: FlowDeps): SocketIORequestFlow => new SocketIORequestFlow(m.context, m.pageManager),
+  webSocketRequestFlow: (m: FlowDeps): WebSocketRequestFlow => new WebSocketRequestFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
 } satisfies Record<string, (m: FlowDeps) => unknown>;

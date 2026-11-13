@@ -1,8 +1,12 @@
+import type { OAuth2Tokens } from "@package/components/auth-tab.component";
+import type { KeyValueRow } from "@package/components/key-value-editor.component";
+import type { RequestScripts } from "@package/components/script-tab.component";
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { step } from "@package/misc/step";
 import type { Collection } from "@package/models/collection";
 import { Folder } from "@package/models/folder";
+import type { FolderPage } from "@package/pages/folder.page";
 
 import { BaseFlow } from "./base.flow";
 
@@ -37,5 +41,52 @@ export class FolderFlow extends BaseFlow {
     const folder = new Folder(name);
     folder.id = node._id;
     return folder;
+  }
+
+  /**
+   * Opens a folder's own editor tab (Auth/Headers/Scripts/Environment/
+   * Docs) via its "Open in New Tab" context-menu item — not the same as
+   * its "Settings" item, which only opens a rename/move dialog.
+   */
+  @step()
+  async open(folder: Folder): Promise<FolderPage> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.findItemNode({ name: folder.name, id: folder.id }, TreeNodeType.Folder);
+    if (!node) throw new Error(`Folder "${folder.name}" not found`);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(ContextMenuItem.OpenInNewTab);
+
+    const folderPage = this.pageManager.folderPage;
+    await folderPage.navigate();
+    return folderPage;
+  }
+
+  /** Opens `folder` and sets its headers (see `HeadersTabComponent.setHeaders()`). */
+  @step()
+  async setHeaders(folder: Folder, headers: KeyValueRow[]): Promise<void> {
+    const folderPage = await this.open(folder);
+    await folderPage.headers.setHeaders(headers);
+  }
+
+  /**
+   * Opens `folder` and sets its own pre-request and/or after-response
+   * scripts — these run for every descendant request before/after that
+   * request's own script.
+   */
+  @step()
+  async setScripts(folder: Folder, scripts: RequestScripts): Promise<void> {
+    const folderPage = await this.open(folder);
+    await folderPage.scripts.setScripts(scripts);
+  }
+
+  /**
+   * Opens `folder` and clicks its Auth tab's token-fetch button, then
+   * reads back the resulting Refresh/Identity/Access Token fields.
+   */
+  @step()
+  async fetchOAuth2Tokens(folder: Folder): Promise<OAuth2Tokens> {
+    const folderPage = await this.open(folder);
+    await folderPage.auth.fetchOAuth2Tokens();
+    return folderPage.auth.getOAuth2Tokens();
   }
 }
