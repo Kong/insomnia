@@ -10,7 +10,6 @@ export const TRACE_ATTRIBUTE_NAMES = {
   HTTP_REQUEST_SIZE: 'http.request.size',
   HTTP_RESPONSE_SIZE: 'http.response.size',
   PROTOCOL: 'network.protocol.name',
-  METHOD: 'http.request.method',
   ROUTE_ID: 'proxy.kong.route.id',
   URL_SCHEME: 'url.scheme',
 };
@@ -212,7 +211,7 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
   const requestSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_SIZE] || 0;
   const responseSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_RESPONSE_SIZE] || 0;
   const protocol = span.attributes[TRACE_ATTRIBUTE_NAMES.PROTOCOL] || '';
-  const method = span.attributes[TRACE_ATTRIBUTE_NAMES.METHOD] || '';
+  const method = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_METHOD] || '';
   const routeId = span.attributes[TRACE_ATTRIBUTE_NAMES.ROUTE_ID] || '';
   const urlScheme = span.attributes[TRACE_ATTRIBUTE_NAMES.URL_SCHEME] || '';
   return {
