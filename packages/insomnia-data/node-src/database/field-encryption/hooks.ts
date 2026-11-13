@@ -89,6 +89,21 @@ export const reconcileFieldDecryptionFailures = async (
   report.retain(failure => keep.has(getFailureKey(failure)));
 };
 
+/**
+ * How many fields of the document hold well-formed ciphertext on the given encrypted paths. For readers that have no key
+ * and want to tell the user that some values cannot be read.
+ */
+export const countWellFormedCiphertext = (doc: unknown, paths: readonly string[]) => {
+  let count = 0;
+  forEachEncryptedLeaf(doc, paths, ({ container, key }) => {
+    const value = container[key];
+    if (typeof value === 'string' && isWellFormedCiphertext(value)) {
+      count++;
+    }
+  });
+  return count;
+};
+
 export interface FieldEncryptionHooksOptions {
   /** Encrypted field paths of a document type; empty for types without encrypted fields. */
   getEncryptedFieldPaths: (type: string) => readonly string[];
