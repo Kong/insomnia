@@ -13,6 +13,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 
+import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
@@ -1532,9 +1533,13 @@ export class GitVCS {
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
-        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+        // Auto-resolve non-Insomnia files to theirs (remote) since Insomnia only manages its own YAML files.
+        // A `.yaml` extension is not enough: the repo may hold unrelated YAML (e.g. GitHub workflows, Helm config).
         // Collect for deferred staging in continueMerge() so cancel has zero side effects.
-        if (!conflictPath.endsWith('.yaml')) {
+        if (
+          !conflictPath.endsWith('.yaml') ||
+          !(await this.isInsomniaFileConflict(conflictPath, conflictType, oursHeadCommitOid, theirsHeadCommitOid))
+        ) {
           autoResolvedConflicts.push({
             filepath: conflictPath,
             action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
@@ -1685,6 +1690,36 @@ export class GitVCS {
     return treeMap;
   }
 
+  /**
+   * Whether a conflicted file is an Insomnia file, judged by its raw content (the first line declares an
+   * Insomnia file `type`) on whichever sides still have the file. Reads raw text instead of parsing, since
+   * unrelated files (e.g. Helm templates) are not necessarily valid YAML.
+   */
+  async isInsomniaFileConflict(
+    filepath: string,
+    conflictType: 'bothModified' | 'deleteByUs' | 'deleteByTheirs',
+    oursOid: string,
+    theirsOid: string,
+  ) {
+    const oids = [];
+    if (conflictType !== 'deleteByUs') {
+      oids.push(oursOid);
+    }
+    if (conflictType !== 'deleteByTheirs') {
+      oids.push(theirsOid);
+    }
+    for (const oid of oids) {
+      const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
+      const content = Buffer.from(blob).toString('utf8');
+      const newLineIndex = content.indexOf('\n');
+      const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
+      if (InsomniaFileTypeValues.some(type => firstLine.includes(type))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   extractConflictParts(content: any) {
     const regex = /^<<<<<<< .*\n([\s\S]*?)^=======\n([\s\S]*?)^>>>>>>> .*/gm;
     const match = regex.exec(content);
@@ -1756,9 +1791,13 @@ export class GitVCS {
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
-          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+          // Auto-resolve non-Insomnia files to theirs (remote) since Insomnia only manages its own YAML files.
+          // A `.yaml` extension is not enough: the repo may hold unrelated YAML (e.g. GitHub workflows, Helm config).
           // Collect for deferred staging in continueMerge() so cancel has zero side effects.
-          if (!conflictPath.endsWith('.yaml')) {
+          if (
+            !conflictPath.endsWith('.yaml') ||
+            !(await this.isInsomniaFileConflict(conflictPath, conflictType, oursHeadCommitOid, theirsHeadCommitOid))
+          ) {
             autoResolvedConflicts.push({
               filepath: conflictPath,
               action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
