@@ -2,6 +2,7 @@ import { safeStorage } from 'electron';
 
 import { getElectronStorage } from '../electron-storage';
 import { ipcMainHandle } from './electron';
+import { assertStorageKeyAllowedForRenderer } from './reserved-storage-keys';
 
 export interface secretStorageBridgeAPI {
   setSecret: typeof setSecret;
@@ -12,9 +13,19 @@ export interface secretStorageBridgeAPI {
 }
 
 export function registerSecretStorageHandlers() {
-  ipcMainHandle('secretStorage.setSecret', (_, key, secret) => setSecret(key, secret));
-  ipcMainHandle('secretStorage.getSecret', (_, key) => getSecret(key));
-  ipcMainHandle('secretStorage.deleteSecret', (_, key) => deleteSecret(key));
+  // These are the renderer's way in: the main process calls setSecret / getSecret / deleteSecret directly
+  ipcMainHandle('secretStorage.setSecret', (_, key, secret) => {
+    assertStorageKeyAllowedForRenderer(key);
+    return setSecret(key, secret);
+  });
+  ipcMainHandle('secretStorage.getSecret', (_, key) => {
+    assertStorageKeyAllowedForRenderer(key);
+    return getSecret(key);
+  });
+  ipcMainHandle('secretStorage.deleteSecret', (_, key) => {
+    assertStorageKeyAllowedForRenderer(key);
+    return deleteSecret(key);
+  });
   ipcMainHandle('secretStorage.encryptString', (_, raw) => encryptString(raw));
   ipcMainHandle('secretStorage.decryptString', (_, raw) => decryptString(raw));
 }
