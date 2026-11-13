@@ -35,7 +35,8 @@ import {
   getHooksForType,
   reconcileFieldDecryptionFailures,
 } from './field-encryption/hooks';
-import type { FieldEncryptionKey } from './field-encryption/value';
+import { forEachEncryptedLeaf } from './field-encryption/paths';
+import { type FieldEncryptionKey, isWellFormedCiphertext } from './field-encryption/value';
 import { initModel } from './init-model';
 import { repairDatabase } from './repair-database';
 
@@ -55,6 +56,16 @@ interface DatabaseInternals {
   flushChangesImpl: FlushChangesImpl;
   /** The fields that could not be decrypted when the datastores were loaded by the last `init()`. */
   getFieldDecryptionFailures: () => FieldDecryptionFailure[];
+  /**
+   * Checks the failure report against the data as it is now, drops the entries that no longer describe it (the field was
+   * reset or edited, or the document was removed since the load), and returns what is left.
+   */
+  refreshFieldDecryptionFailures: () => Promise<FieldDecryptionFailure[]>;
+  /**
+   * Sets every field that still holds ciphertext that could not be decrypted to an empty string, and returns how many
+   * fields were cleared. A field that was edited since the load is not touched.
+   */
+  resetFieldDecryptionFailures: () => Promise<number>;
 }
 
 /**
@@ -496,11 +507,7 @@ export const createNedbDatabase = <O = initOptions>(
       }
 
       if (encryptionEnabled) {
-        await reconcileFieldDecryptionFailures(
-          fieldDecryptionFailureReport,
-          models.getEncryptedFieldPathsForType,
-          async (type, _id) => nedbBucket[type as AllTypes]?.findOneAsync({ _id }),
-        );
+        await refreshFieldDecryptionFailures();
       }
 
       // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
@@ -691,10 +698,60 @@ export const createNedbDatabase = <O = initOptions>(
     }
   }
 
+  const refreshFieldDecryptionFailures = async () => {
+    await reconcileFieldDecryptionFailures(
+      fieldDecryptionFailureReport,
+      models.getEncryptedFieldPathsForType,
+      async (type, _id) => nedbBucket[type as AllTypes]?.findOneAsync({ _id }),
+    );
+    return fieldDecryptionFailureReport.list();
+  };
+
+  const resetFieldDecryptionFailures = async () => {
+    const failuresByDocument = new Map<string, { type: AllTypes; _id: string; paths: Set<string> }>();
+    for (const { type, _id, path } of await refreshFieldDecryptionFailures()) {
+      const documentKey = JSON.stringify([type, _id]);
+      const entry = failuresByDocument.get(documentKey) ?? { type: type as AllTypes, _id, paths: new Set<string>() };
+      entry.paths.add(path);
+      failuresByDocument.set(documentKey, entry);
+    }
+
+    let cleared = 0;
+    const flushId = await database.bufferChangesIndefinitely();
+    try {
+      for (const { type, _id, paths } of failuresByDocument.values()) {
+        const doc = await nedbBucket[type]?.findOneAsync<BaseModel>({ _id });
+        if (!doc) {
+          continue;
+        }
+        // The value is checked again here, so a field that was edited after the report was made keeps its new value
+        const patch: Record<string, unknown> = {};
+        forEachEncryptedLeaf(doc, models.getEncryptedFieldPathsForType(type), ({ container, key, path }) => {
+          const value = container[key];
+          if (paths.has(path) && typeof value === 'string' && isWellFormedCiphertext(value)) {
+            container[key] = '';
+            const topLevelKey = path.split(/[.[]/)[0];
+            patch[topLevelKey] = (doc as unknown as Record<string, unknown>)[topLevelKey];
+            cleared++;
+          }
+        });
+        if (Object.keys(patch).length > 0) {
+          await database.docUpdate(doc, patch as Partial<BaseModel>);
+        }
+      }
+    } finally {
+      await database.flushChanges(flushId);
+    }
+    await refreshFieldDecryptionFailures();
+    return cleared;
+  };
+
   const database = wrapper
     ? wrapper(originalDatabase, {
         flushChangesImpl,
         getFieldDecryptionFailures: () => fieldDecryptionFailureReport.list(),
+        refreshFieldDecryptionFailures,
+        resetFieldDecryptionFailures,
       })
     : originalDatabase;
   return database as IDatabase<O>;
