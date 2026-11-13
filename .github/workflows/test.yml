@@ -192,3 +192,59 @@ jobs:
       - name: Fail if the circular reference check did not pass
         if: steps.check-cycles.outcome == 'failure'
         run: exit 1
+
+  ValidatePlugins:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    # Installs third-party CLIs globally, so keep it isolated from the Test job's token scopes and npm auth.
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Check AI plugin manifests are up to date
+        run: |
+          # Manifests are generated from plugins/plugins.json; never edit them by hand.
+          npm run generate:plugins
+          if ! git diff --exit-code -- .claude-plugin .agents plugins; then
+            echo "::error::AI plugin manifests are out of date. Run 'npm run generate:plugins' and commit the result."
+            exit 1
+          fi
+
+      - name: Validate AI plugins (Claude Code and Codex)
+        run: |
+          set -euo pipefail
+
+          # Pinned so a new CLI release can't break unrelated PRs. Bump deliberately.
+          npm install -g @anthropic-ai/claude-code@2.1.294 @openai/codex@0.167.0
+
+          # Claude Code: validate the marketplace manifest and each plugin
+          claude plugin validate .
+          for plugin in plugins/*/; do
+            claude plugin validate "$plugin"
+          done
+
+          # Codex: add the marketplace from this checkout and install each plugin from it.
+          # CODEX_HOME is a throwaway dir so nothing touches the runner's real config.
+          export CODEX_HOME="$(mktemp -d)"
+          codex plugin marketplace add "$PWD"
+          marketplace="$(node -p "require('./.agents/plugins/marketplace.json').name")"
+          node -p "require('./.agents/plugins/marketplace.json').plugins.map(p => p.name).join('\n')" | while read -r plugin; do
+            codex plugin add "$plugin@$marketplace"
+          done
+          codex plugin list
