@@ -2,6 +2,11 @@ name: Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_windows_signing:
+        description: Skip Windows code signing (no signing tokens used). The Windows artifacts are unsigned and must not be released.
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -45,6 +50,7 @@ jobs:
       contents: read
       packages: read
     env:
+      SKIP_WINDOWS_SIGN: ${{ inputs.skip_windows_signing && 'true' || 'false' }}
       INSO_PACKAGE_NAME: insomnia-inso
       INSO_DOCKER_TAR: inso-docker-image.tar
       # DIGICERT_SM_CLIENT_CERT_FILE: sm_client_cert.p12
@@ -145,7 +151,7 @@ jobs:
       # This will install smctl
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -210,7 +216,7 @@ jobs:
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -224,7 +230,7 @@ jobs:
 
       # Fails the job now, before the dist build and the installer signing steps spend more tokens, if signing did not work.
       - name: Verify wrapper signature (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: pwsh
         run: |
           $signature = Get-AuthenticodeSignature -LiteralPath "packages/insomnia/dist/win-unpacked/tosign/Insomnia.exe"
@@ -258,7 +264,7 @@ jobs:
           SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       - name: Check squirrel exe signature (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: pwsh
         run: |
           $version = $env:INSO_VERSION
@@ -294,7 +300,7 @@ jobs:
           Write-Host "✓ All executables are properly signed" -ForegroundColor Green
 
       - name: Code-sign inso exe (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -307,7 +313,7 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
 
       - name: Verify inso exe signature (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: pwsh
         run: |
           $signature = Get-AuthenticodeSignature -LiteralPath "packages/insomnia-inso/binaries/inso.exe"
