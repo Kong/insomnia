@@ -1,0 +1,72 @@
+import path from "node:path";
+
+import { faker } from "@faker-js/faker";
+import { ProjectType } from "@package/enums/project-types";
+import { certPath } from "@package/misc/certs";
+import { GRPC_SERVER_MTLS, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+test("Verify Client Certificate Toggle Controls mTLS Enforcement For gRPC Request", async ({
+  user,
+}) => {
+  const { workspaceFlow, grpcRequestFlow, preferencesFlow, certificatesFlow } =
+    user.flowManager;
+
+  await preferencesFlow.set({
+    validateSSL: false,
+    dataFolders: [path.join(import.meta.dirname, "../../misc/fixtures")],
+  });
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  await expect(
+    grpcRequestFlow.create(collection, {
+      name: faker.string.alphanumeric(10),
+      url: GRPC_SERVER_MTLS,
+      method: "/hello.HelloService/SayHello",
+      body: JSON.stringify({ greeting: faker.person.firstName() }),
+    }),
+  ).rejects.toThrow(/Client Certificate Required/);
+  await user.page.keyboard.press("Escape");
+
+  await certificatesFlow.addClientCertificate(collection, {
+    host: "localhost",
+    cert: certPath("mtls-client-cert.pem"),
+    key: certPath("mtls-client-key.pem"),
+  });
+
+  const greeting = faker.person.firstName();
+  const requestWithCert = await grpcRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    url: GRPC_SERVER_MTLS,
+    method: "/hello.HelloService/SayHello",
+    body: JSON.stringify({ greeting }),
+  });
+  const responseWithCert = await grpcRequestFlow.send(requestWithCert);
+
+  await certificatesFlow.setClientCertificateEnabled(
+    collection,
+    "localhost",
+    false,
+  );
+
+  await expect(
+    grpcRequestFlow.create(collection, {
+      name: faker.string.alphanumeric(10),
+      url: GRPC_SERVER_MTLS,
+      method: "/hello.HelloService/SayHello",
+      body: JSON.stringify({ greeting: faker.person.firstName() }),
+    }),
+  ).rejects.toThrow(/Client Certificate Required/);
+
+  expect(responseWithCert.status).toEqual({ code: "0", message: "OK" });
+  expect(responseWithCert.message).toMatchObject({ reply: `hello ${greeting}` });
+});
