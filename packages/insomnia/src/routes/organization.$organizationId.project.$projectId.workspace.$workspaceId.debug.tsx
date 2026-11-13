@@ -4,7 +4,7 @@ import { models, services } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { href, redirect, useLoaderData, useMatch, useParams } from 'react-router';
+import { href, redirect, useLoaderData, useMatch, useParams, useSearchParams } from 'react-router';
 import YAML from 'yaml';
 
 import { generateId } from '~/common/misc';
@@ -199,6 +199,9 @@ const Debug = () => {
     requestGroupId?: string;
     panel?: string;
   };
+  const [searchParams] = useSearchParams();
+  const collectionActiveTab = searchParams.get('collectionActiveTab') || 'spec';
+  const showSpecView = collectionActiveTab === 'spec';
 
   const isRunner = Boolean(
     useMatch('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner'),
@@ -531,24 +534,26 @@ const Debug = () => {
                             organizationId={organizationId}
                             projectId={projectId}
                             workspaceId={workspaceId}
-                            activeItemId="spec"
+                            activeItemId={collectionActiveTab}
                             enableLegacyUnitTests={settings.enableLegacyUnitTests}
                             hasLegacyUnitTests={hasLegacyUnitTests}
                           />
-                          <div className="min-h-0 flex-1">
-                            <SpecView
-                              organizationId={organizationId}
-                              projectId={projectId}
-                              workspaceId={workspaceId}
-                              gitSyncRulesetPath={gitSyncRulesetPath}
-                              isConnectedGitProject={isConnectedGitProject}
-                              rulesetContent={rulesetContent}
-                              rulesetLastCompiledAt={rulesetLastCompiledAt}
-                              rulesetImportIssue={rulesetImportIssue}
-                              parsedSpec={parsedSpec}
-                              apiSpec={apiSpec}
-                            />
-                          </div>
+                          {showSpecView && (
+                            <div className="min-h-0 flex-1">
+                              <SpecView
+                                organizationId={organizationId}
+                                projectId={projectId}
+                                workspaceId={workspaceId}
+                                gitSyncRulesetPath={gitSyncRulesetPath}
+                                isConnectedGitProject={isConnectedGitProject}
+                                rulesetContent={rulesetContent}
+                                rulesetLastCompiledAt={rulesetLastCompiledAt}
+                                rulesetImportIssue={rulesetImportIssue}
+                                parsedSpec={parsedSpec}
+                                apiSpec={apiSpec}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                       {isRequestSettingsModalOpen && activeRequest && (

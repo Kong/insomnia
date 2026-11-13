@@ -8,14 +8,14 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
+import { useRequestGroupPatcher, useRequestPatcher, useWorkspacePatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   headers: RequestHeader[];
   bulk: boolean;
   isDisabled?: boolean;
-  requestType: 'Request' | 'RequestGroup' | 'WebSocketRequest' | 'McpRequest';
+  requestType: 'Request' | 'RequestGroup' | 'Workspace' | 'WebSocketRequest' | 'McpRequest';
   disableUserAgentHeader?: boolean;
   onDescriptionToggle?: () => void;
 }
@@ -43,13 +43,20 @@ export const RequestHeadersEditor: FC<Props> = ({
 }) => {
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
+  const patchWorkspace = useWorkspacePatcher();
   const isRequestGroup = requestType === 'RequestGroup';
-  const patcher = isRequestGroup ? patchRequestGroup : patchRequest;
+  const isWorkspace = requestType === 'Workspace';
+  const patcher = isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
-  const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
-  const id = isRequestGroup ? requestGroupId : requestId;
-  invariant(id, 'Request or RequestGroup ID is required');
-  const showUserAgentReadOnly = !isRequestGroup && !headers.some(h => h.name.toLowerCase() === 'user-agent');
+  const { requestId, requestGroupId, workspaceId } = useParams() as {
+    requestId?: string;
+    requestGroupId?: string;
+    workspaceId?: string;
+  };
+  const id = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
+  invariant(id, 'Request, RequestGroup or Workspace ID is required');
+  const showUserAgentReadOnly =
+    !isRequestGroup && !isWorkspace && !headers.some(h => h.name.toLowerCase() === 'user-agent');
   const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs).filter(
     p => showUserAgentReadOnly || p.name.toLowerCase() !== 'user-agent',
   );
@@ -59,13 +66,13 @@ export const RequestHeadersEditor: FC<Props> = ({
       const hasUserAgent = newHeaders.some(h => h.name.toLowerCase() === 'user-agent');
       // If the user just removed their last User-Agent header, default the read-only row to
       // disabled rather than letting it silently start sending `insomnia/<version>`.
-      if (!isRequestGroup && hadUserAgent && !hasUserAgent) {
+      if (!isRequestGroup && !isWorkspace && hadUserAgent && !hasUserAgent) {
         patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
       } else {
         patcher(id, { headers: newHeaders });
       }
     },
-    [headers, id, isRequestGroup, patcher, patchRequest],
+    [headers, isRequestGroup, isWorkspace, patchRequest, id, patcher],
   );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
