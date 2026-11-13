@@ -131,12 +131,14 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          echo "${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
+          echo "$DIGICERT_SM_CLIENT_CERT_FILE_B64" | base64 --decode > /d/Certificate_pkcs12.p12
 
       - name: Set variables
         id: variables
         run: |
           echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
+        env:
+          DIGICERT_SM_CLIENT_CERT_FILE_B64: ${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}
         shell: bash
 
       # This will install smctl
@@ -274,7 +276,7 @@ jobs:
       - name: Remove DigiCert client certificate after signing
         shell: bash
         run: |
-          rm -f ${{ env.SM_CLIENT_CERT_FILE }}
+          rm -f '${{ env.SM_CLIENT_CERT_FILE }}'
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
@@ -323,6 +325,7 @@ jobs:
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id FX44YY62GV \
+        if: always() && runner.os == 'Windows'
             --wait
 
       - name: Create Inso zip/tar/gz artifacts
@@ -358,7 +361,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          if-no-files-found: ignore
+          if-no-files-found: error
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
