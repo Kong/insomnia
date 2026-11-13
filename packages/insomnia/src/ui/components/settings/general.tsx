@@ -19,6 +19,7 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
+import { LocalEncryptionKeyPanel } from './local-encryption-key-panel';
 import { NumberSetting } from './number-setting';
 import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
@@ -267,6 +268,7 @@ export const General: FC = () => {
         />
       </div>
       {isLoggedIn && <VaultKeyPanel />}
+      <LocalEncryptionKeyPanel />
 
       <div className="form-row pad-top-sm">
         <TextArraySetting
