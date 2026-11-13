@@ -1,7 +1,7 @@
 import { getItemCount } from '@react-stately/collections';
 import type { AriaMenuProps } from '@react-types/menu';
 import type { Node } from '@react-types/shared';
-import React, { useRef } from 'react';
+import React, { type ReactNode, useRef } from 'react';
 import { useMenu } from 'react-aria';
 import { type TreeState, useTreeState } from 'react-stately';
 
@@ -10,6 +10,8 @@ import { MenuSection } from './menu-section';
 
 interface Props<T extends object> extends AriaMenuProps<T> {
   closeOnSelect?: boolean;
+  /** Non-interactive text rendered above the menu items. */
+  header?: ReactNode;
 }
 
 export const Menu = <T extends object>(props: Props<T>) => {
@@ -38,6 +40,15 @@ export const Menu = <T extends object>(props: Props<T>) => {
       ref={ref}
       className="dropdown__menu focus:outline-0"
     >
+      {props.header ? (
+        <li
+          role="presentation"
+          className="w-0 min-w-full px-(--padding-sm) pt-2 pb-2 text-xs whitespace-normal text-(--hl)"
+          data-testid="dropdown-header"
+        >
+          {props.header}
+        </li>
+      ) : null}
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
         // @ts-expect-error -- early deprecation
