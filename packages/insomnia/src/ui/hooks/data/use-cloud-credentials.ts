@@ -1,8 +1,9 @@
 import { type CloudProviderCredential, services } from 'insomnia-data';
 
+import { cloudCredentialKeys } from '~/common/app-data';
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
-import { useInvalidatingDBMutation } from '~/ui/hooks/use-mutations';
+import { useDBMutation } from '~/ui/hooks/use-mutations';
 import { useDBQuery } from '~/ui/hooks/use-query';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
@@ -13,19 +14,13 @@ type CreateCloudCredentialData = Pick<CloudProviderCredential, 'name' | 'provide
 
 interface AuthenticateResult { access_token: string; expires_at: number }
 
-const queryKeys = {
-  cloudCredentials: () => ['cloudCredentials'],
-};
-
 const EMPTY_CLOUD_CREDENTIALS: CloudProviderCredential[] = [];
 
+// Refreshed by updateAppDataOnDbChanges, so the mutations below don't invalidate it themselves.
 export const useCloudCredentials = () => {
   const { data, isPending } = useDBQuery({
-    queryKey: queryKeys.cloudCredentials(),
+    queryKey: cloudCredentialKeys.all,
     queryFn: () => services.cloudCredential.all(),
-    // Credentials are written outside these hooks (logout, plugins) and updateAppDataOnDbChanges ignores this model.
-    // Re-read on every mount instead of trusting the DB client's staleTime: Infinity default.
-    staleTime: 0,
   });
   return { cloudCredentials: data ?? EMPTY_CLOUD_CREDENTIALS, isPending };
 };
@@ -58,7 +53,7 @@ const withHashicorpToken = <T extends Partial<CloudProviderCredential>>(
     : patch;
 
 export const useCreateCloudCredential = () =>
-  useInvalidatingDBMutation({
+  useDBMutation({
     mutationFn: async (patch: CreateCloudCredentialData) => {
       const { name, provider, credentials, isAuthenticated } = patch;
       invariant(name && typeof name === 'string', 'Name is required');
@@ -80,11 +75,10 @@ export const useCreateCloudCredential = () =>
       );
       return result;
     },
-    invalidates: [queryKeys.cloudCredentials()],
   });
 
 export const useUpdateCloudCredential = () =>
-  useInvalidatingDBMutation({
+  useDBMutation({
     mutationFn: async ({
       cloudCredentialId,
       patch,
@@ -103,11 +97,10 @@ export const useUpdateCloudCredential = () =>
       await services.cloudCredential.update(originCredential, withHashicorpToken(patch, provider, result));
       return result;
     },
-    invalidates: [queryKeys.cloudCredentials()],
   });
 
 export const useDeleteCloudCredential = () =>
-  useInvalidatingDBMutation({
+  useDBMutation({
     mutationFn: async (cloudCredentialId: string) => {
       invariant(typeof cloudCredentialId === 'string', 'Cloud Credential ID is required');
       const cloudCredential = await services.cloudCredential.getById(cloudCredentialId);
@@ -115,5 +108,4 @@ export const useDeleteCloudCredential = () =>
       await services.cloudCredential.remove(cloudCredential);
       return { name: cloudCredential.name, provider: cloudCredential.provider };
     },
-    invalidates: [queryKeys.cloudCredentials()],
   });

@@ -9,7 +9,7 @@ import type {
 } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
+import { cloudCredentialKeys, organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
 
 vi.mock('insomnia-data', async () => {
   const actual = await vi.importActual<typeof InsomniaData>('insomnia-data');
@@ -220,9 +220,7 @@ describe('updateAppDataOnDbChanges', () => {
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
 
-    updateAppDataOnDbChanges(queryClient, [
-      change('update', fakeApiSpec({ parentId: workspaceId, contents: 'new' })),
-    ]);
+    updateAppDataOnDbChanges(queryClient, [change('update', fakeApiSpec({ parentId: workspaceId, contents: 'new' }))]);
 
     const updated = queryClient.getQueryData<CollectionWorkspaceChildren>(
       workspaceChildrenKeys.byWorkspaceId(workspaceId),

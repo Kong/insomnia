@@ -22,6 +22,10 @@ export const workspaceChildrenKeys = {
   byWorkspaceId: (workspaceId: string) => [...workspaceChildrenKeys.all, workspaceId],
 };
 
+export const cloudCredentialKeys = {
+  all: ['cloudCredentials'],
+};
+
 const COLLECTION_REQUEST_DOC_TYPES: string[] = [
   models.request.type,
   models.grpcRequest.type,
@@ -244,9 +248,16 @@ function updateCollectionChildrenWithUpdatedDoc(
 export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: ChangeBufferEvent[]) {
   const organizationIdsToRevalidate = new Set<string>();
   const workspaceIdsToRevalidate = new Set<string>();
+  let shouldRevalidateCloudCredentials = false;
 
   // We do not use the patches here because some db operations do not contain patches like git repo file watcher
   for (const [event, doc] of changes) {
+    // Cloud credentials are also written by plugins, the templating worker and logout, outside any mutation hook.
+    if (doc.type === models.cloudCredential.type) {
+      shouldRevalidateCloudCredentials = true;
+      continue;
+    }
+
     if (!MONITOR_DOC_TYPES.includes(doc.type)) {
       continue;
     }
@@ -379,4 +390,7 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
       refetchType: 'all',
     }),
   );
+  if (shouldRevalidateCloudCredentials) {
+    queryClient.invalidateQueries({ queryKey: cloudCredentialKeys.all, refetchType: 'all' });
+  }
 }
