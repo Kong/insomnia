@@ -641,6 +641,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
     () => {
       gitIntervalFetchFetcher.submit({
         projectId,
+        background: true,
       });
     },
     1000 * 60 * 5,
@@ -801,6 +802,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                         'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                       }
                       aria-label={item.label}
+                      data-testid={`git-sync-menu-${item.id}`}
                     >
                       <Icon icon={item.icon} />
                       <span>{item.label}</span>
@@ -814,6 +816,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                     <MenuItem
                       className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                       aria-label={item.label}
+                      data-testid={`git-sync-menu-${item.id}`}
                     >
                       <Icon icon={item.icon} className={item.isActive ? 'text-(--color-success)' : ''} />
                       <span className="truncate">{item.label}</span>
@@ -829,6 +832,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                         'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                       }
                       aria-label={item.label}
+                      data-testid={`git-sync-menu-${item.id}`}
                     >
                       <Icon icon={item.icon} />
                       <span>{item.label}</span>

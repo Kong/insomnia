@@ -223,12 +223,13 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
     name = lastHistoryItem.currentType.name;
   }
   return (
-    <div className="graphql-explorer theme--dialog">
+    <div className="graphql-explorer theme--dialog" data-testid="graphql-explorer">
       <div className="graphql-explorer__header">
         {history.length ? (
           <a
             href="#"
             className="graphql-explorer__header__back-btn"
+            data-testid="graphql-explorer-back"
             onClick={event => {
               event.preventDefault();
               handlePopHistory();
@@ -240,6 +241,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
           <a
             href="#"
             className="graphql-explorer__header__back-btn"
+            data-testid="graphql-explorer-back"
             onClick={event => {
               event.preventDefault();
               handlePopHistory();
@@ -249,7 +251,11 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
           </a>
         ) : null}
         <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-        <button className="btn btn--compact graphql-explorer__header__close-btn" onClick={handleClose}>
+        <button
+          className="btn btn--compact graphql-explorer__header__close-btn"
+          onClick={handleClose}
+          data-testid="graphql-explorer-close"
+        >
           <i className="fa fa-close" />
         </button>
       </div>

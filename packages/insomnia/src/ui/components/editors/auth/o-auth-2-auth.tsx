@@ -542,7 +542,12 @@ const OAuth2TokenInput: FC<{
           {label}
           {expiryLabel ? <em> {expiryLabel}</em> : null}
         </small>
-        <input value={token?.[property] || ''} placeholder="n/a" onChange={onChange} />
+        <input
+          data-testid={`auth-field-${id}`}
+          value={token?.[property] || ''}
+          placeholder="n/a"
+          onChange={onChange}
+        />
       </label>
     </div>
   );

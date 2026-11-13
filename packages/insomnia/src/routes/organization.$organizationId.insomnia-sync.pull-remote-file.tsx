@@ -3,6 +3,7 @@ import { href, redirect } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { sync } from '~/ui/ipc';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.insomnia-sync.pull-remote-file';
@@ -18,7 +19,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const remoteId = formData.get('remoteId');
     invariant(typeof remoteId === 'string', 'Remote Id is required');
 
-    const { projectId, workspaceId } = await window.main.sync.pullRemoteBackendProject({
+    const { projectId, workspaceId } = await sync.pullRemoteBackendProject({
       organizationId,
       backendProjectId,
       remoteId,

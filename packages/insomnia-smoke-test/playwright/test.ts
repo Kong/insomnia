@@ -197,6 +197,12 @@ export const test = baseTest.extend<{
         }
       }
     }
+
+    // The mock server outlives the test and keeps its projects in memory. A test that deleted one (e.g. the only
+    // project, to reach the no-project state) must not leave the next test an app that creates its own first project.
+    // Done after the app is closed so it cannot sync in between. Best effort: a test that does not use the server
+    // may run without it.
+    await fetch(`${echoServer}/__test/reset-team-projects`, { method: 'POST' }).catch(() => {});
   },
   page: async ({ app }, use) => {
     // The plugin window is created after the main window's did-finish-load, so

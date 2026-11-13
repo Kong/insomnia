@@ -89,6 +89,7 @@ export const RequestGroupPane: FC = () => {
   return (
     <>
       <Tabs
+        data-testid="folder-pane"
         aria-label="Request group tabs"
         className="flex h-full w-full flex-1 flex-col"
         selectedKey={selectedTab}

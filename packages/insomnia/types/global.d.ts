@@ -28,6 +28,8 @@ type RendererEnv = {
   INSOMNIA_AI_URL: string | undefined;
   KONNECT_API_URL: string | undefined;
   KONNECT_API_REGIONS: string | undefined;
+  KONNECT_CLOUD_ORIGIN: string | undefined;
+  KONG_DOCS_ORIGIN: string | undefined;
   INSOMNIA_APP_WEBSITE_URL: string | undefined;
   INSOMNIA_GITHUB_REST_API_URL: string | undefined;
   INSOMNIA_GITHUB_API_URL: string | undefined;
@@ -43,6 +45,7 @@ declare global {
     _dataServices?: Services;
     // Under contextIsolation the services Proxy can't cross the bridge; the preload exposes this flat invoke instead and the renderer rebuilds the Proxy.
     _dataServicesInvoke?: (serviceName: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
+    _mainInvoke?: (domain: string, methodName: string, ...args: unknown[]) => Promise<unknown>;
     dialog: Pick<Electron.Dialog, 'showOpenDialog' | 'showSaveDialog'>;
     app: Pick<Electron.App, 'getPath' | 'getAppPath'> & { process: { platform: NodeJS.Platform } };
     shell: Pick<Electron.Shell, 'showItemInFolder' | 'openPath'>;

@@ -1,5 +1,7 @@
 import type { MergeConflict } from 'insomnia-vcs';
 
+import { sync } from '~/ui/ipc';
+
 import { showModal } from '../components/modals';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 
@@ -18,10 +20,10 @@ export const registerSyncMergeConflictListener = () => {
       conflicts,
       labels,
       onResolveAll: (resolvedConflicts: MergeConflict[]) => {
-        window.main.sync.resolveConflict({ handlerId, conflicts: resolvedConflicts });
+        sync.resolveConflict({ handlerId, conflicts: resolvedConflicts });
       },
       onCancelUnresolved: () => {
-        window.main.sync.cancelConflict({ handlerId });
+        sync.cancelConflict({ handlerId });
       },
     });
   });

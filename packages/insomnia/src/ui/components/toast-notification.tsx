@@ -26,6 +26,10 @@ export interface RAToastContent {
     url: string;
     external: boolean;
   };
+  action?: {
+    label: string;
+    onPress: () => void;
+  };
   status?: Status;
   time?: string;
 }
@@ -154,13 +158,15 @@ export const Toaster = () => (
                 )}
               </span>
             )}
-            <div className="flex w-full flex-col gap-1">
+            <div data-testid="toast-body" className="flex w-full flex-col gap-1">
               <Text slot="title" className="flex w-full items-center gap-1">
-                <span className="flex-1">{toast.content.title}</span>
+                <span data-testid="toast-title" className="flex-1">
+                  {toast.content.title}
+                </span>
                 {toast.content.time && <span className="text-xs text-(--hl)">{toast.content.time}</span>}
               </Text>
               {toast.content.description && (
-                <Text slot="description" className="max-w-md text-xs">
+                <Text slot="description" data-testid="toast-description" className="max-w-md text-xs">
                   {toast.content.description}
                 </Text>
               )}
@@ -173,6 +179,17 @@ export const Toaster = () => (
                   <span className="underline">{toast.content.link.label}</span>
                   {toast.content.link.external && <FontAwesomeIcon icon="arrow-up-right-from-square" className="size-3" />}
                 </Link>
+              )}
+              {toast.content.action && (
+                <Button
+                  onPress={() => {
+                    toast.content.action?.onPress();
+                    queue.close(toast.key);
+                  }}
+                  className="w-fit text-xs text-(--color-surprise) underline hover:opacity-80"
+                >
+                  {toast.content.action.label}
+                </Button>
               )}
             </div>
           </div>

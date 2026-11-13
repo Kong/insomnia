@@ -315,6 +315,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       gitFetchFetcher.submit({
         projectId,
         workspaceId,
+        background: true,
       });
     },
     1000 * 60 * 5,
@@ -442,6 +443,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       'group flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
+                    data-testid={`git-sync-menu-${item.id}`}
                   >
                     <div className="group-pressed:opacity-80 flex w-full items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-1 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all group-hover:bg-(--color-surprise)/80 group-hover:ring-inset group-focus:bg-(--color-surprise)/80 group-focus:ring-inset hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80">
                       <Icon icon={item.icon} />
@@ -459,6 +461,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
+                    data-testid={`git-sync-menu-${item.id}`}
                   >
                     <Icon icon={item.icon} />
                     <span>{item.label}</span>
@@ -472,6 +475,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                   <MenuItem
                     className={`flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                     aria-label={item.label}
+                    data-testid={`git-sync-menu-${item.id}`}
                   >
                     <Icon icon={item.icon} className={item.isActive ? 'text-(--color-success)' : ''} />
                     <span className="truncate">{item.label}</span>
@@ -487,6 +491,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       'flex h-(--line-height-xs) w-full items-center gap-2 bg-transparent px-(--padding-md) whitespace-nowrap text-(--color-font) transition-colors hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:outline-hidden disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
                     }
                     aria-label={item.label}
+                    data-testid={`git-sync-menu-${item.id}`}
                   >
                     <Icon icon={item.icon} />
                     <span>{item.label}</span>

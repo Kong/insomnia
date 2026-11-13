@@ -13,8 +13,10 @@ import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
+import { SyncIpcHandler } from '~/main/cloud-sync/sync-ipc-handler';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
+import { GitIpcHandler } from '~/main/git/git-ipc-handler';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -28,8 +30,8 @@ import { getAppVersion, getProductName, isDevelopment } from './common/constants
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerSyncHandlers } from './main/cloud-sync/ipc';
 import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
+import { registerAllIpcHandlers } from './main/ipc/base-ipc-handler';
 import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
@@ -109,7 +111,7 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
-  registerSyncHandlers();
+  registerAllIpcHandlers([new SyncIpcHandler(), new GitIpcHandler()]);
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.

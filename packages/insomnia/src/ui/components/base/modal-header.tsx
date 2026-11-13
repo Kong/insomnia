@@ -5,9 +5,10 @@ interface Props {
   children: ReactNode;
   hideCloseButton?: boolean;
   className?: string;
+  testId?: string;
 }
 
-export const ModalHeader: FC<Props> = memo(({ hideCloseButton, className, children }) => {
+export const ModalHeader: FC<Props> = memo(({ hideCloseButton, className, testId, children }) => {
   let closeButton: null | JSX.Element = null;
 
   if (!hideCloseButton) {
@@ -25,7 +26,9 @@ export const ModalHeader: FC<Props> = memo(({ hideCloseButton, className, childr
 
   return (
     <div className={classnames('modal__header theme--dialog__header', className)}>
-      <div className="modal__header__children">{children}</div>
+      <div className="modal__header__children" data-testid={testId}>
+        {children}
+      </div>
       {closeButton}
     </div>
   );

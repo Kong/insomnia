@@ -29,13 +29,15 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
       <div className="pad text-left">
         <label className="label--small">Selected File</label>
         {path ? (
-          <code className="txt-sm block">
+          <code data-testid="body-file-name" className="txt-sm block">
             <span className="force-wrap selectable" title={path}>
               {pathDescription}
             </span>
           </code>
         ) : (
-          <code className="super-faint txt-sm block">No file selected</code>
+          <code data-testid="body-file-empty" className="super-faint txt-sm block">
+            No file selected
+          </code>
         )}
       </div>
       <div>
@@ -43,7 +45,12 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
           Reset File
         </PromptButton>
         &nbsp;&nbsp;
-        <FileInputButton path={path} className="btn btn--clicky" onChange={_handleChooseFile} />
+        <FileInputButton
+          data-testid="body-file-select"
+          path={path}
+          className="btn btn--clicky"
+          onChange={_handleChooseFile}
+        />
       </div>
     </div>
   );

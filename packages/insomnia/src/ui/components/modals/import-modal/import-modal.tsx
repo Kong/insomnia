@@ -367,7 +367,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>{header}</ModalHeader>
+        <ModalHeader testId="import-modal-header">{header}</ModalHeader>
         {autoScan && (hasApiSpecScanResult || hasMcpScanResult) && hasAnyDataToImport && !showForm ? (
           <div className="flex items-center justify-center p-8">
             <i className="fa fa-spinner fa-spin fa-2x" />

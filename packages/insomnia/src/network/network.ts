@@ -46,6 +46,7 @@ import type { TransformedExecuteScriptContext } from './concurrency.renderer';
 
 const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
 
 export type { SendActionRuntime };
 
@@ -292,8 +293,9 @@ export const tryToExecutePreRequestScript = async (
   runtime?: SendActionRuntime,
   sensitiveValueCollector?: SensitiveValueCollector | null,
 ) => {
-  const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
-  const folderScripts = requestGroups
+  const ancestorsWithScripts = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc));
+  // Reverse the order so that workspace script runs first, then folder scripts from furthest to nearest, and finally request scripts
+  const ancestorScripts = ancestorsWithScripts
     .reverse()
     .filter(group => group?.preRequestScript)
     .map(
@@ -303,14 +305,14 @@ export const tryToExecutePreRequestScript = async (
       await fn${i}();
   `,
     );
-  const originalRequestGroups = requestGroups.filter(group => isRequestGroup(group));
+  const originalRequestGroups = ancestorsWithScripts.filter(group => isRequestGroup(group));
   const parentFolders = originalRequestGroups.map(group => ({
     id: group._id,
     name: group.name,
     environment: group.environment,
   }));
 
-  if (folderScripts.length === 0) {
+  if (ancestorScripts.length === 0) {
     return {
       request,
       environment,
@@ -327,7 +329,7 @@ export const tryToExecutePreRequestScript = async (
       parentFolders,
     };
   }
-  const joinedScript = [...folderScripts].join('\n');
+  const joinedScript = [...ancestorScripts].join('\n');
 
   const mutatedContext = await tryToExecuteScript({
     script: joinedScript,
@@ -741,8 +743,11 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
-  const requestGroups = context.ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
-  const folderScripts = requestGroups
+  const ancestorsWithScripts = context.ancestors.filter(
+    doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc),
+  );
+  // Reverse the order so that workspace script runs first, then folder scripts from furthest to nearest, and finally request scripts
+  const ancestorScripts = ancestorsWithScripts
     .reverse()
     .filter(group => group?.afterResponseScript)
     .map(
@@ -752,15 +757,15 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       await fn${i}();
   `,
     );
-  const originalRequestGroups = requestGroups.filter(group => isRequestGroup(group));
+  const originalRequestGroups = ancestorsWithScripts.filter(group => isRequestGroup(group));
 
-  if (folderScripts.length === 0) {
+  if (ancestorScripts.length === 0) {
     return {
       ...context,
       requestTestResults: new Array<RequestTestResult>(),
     };
   }
-  const joinedScript = [...folderScripts].join('\n');
+  const joinedScript = [...ancestorScripts].join('\n');
   const postMutatedContext = await tryToExecuteScript({ script: joinedScript, ...context, eventName: 'test' });
   if (!postMutatedContext || 'error' in postMutatedContext) {
     return {

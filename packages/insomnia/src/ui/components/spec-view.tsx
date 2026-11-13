@@ -1089,6 +1089,7 @@ export const SpecView = ({
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button
                               key={method}
+                              data-testid={`spec-outline-method-${method.toUpperCase()}`}
                               onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
                               className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >

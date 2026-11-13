@@ -2,6 +2,7 @@ import { href } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import uiEventBus, { CLOUD_SYNC_FILE_CHANGE } from '~/ui/event-bus';
+import { sync } from '~/ui/ipc';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.insomnia-sync.delete-remote-file';
@@ -13,7 +14,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
     const backendProjectId = formData.get('backendProjectId');
     invariant(typeof backendProjectId === 'string', 'Backend project Id is required');
 
-    await window.main.sync.archiveBackendProject(backendProjectId);
+    await sync.archiveBackendProject(backendProjectId);
     uiEventBus.emit(CLOUD_SYNC_FILE_CHANGE);
 
     return { error: null };

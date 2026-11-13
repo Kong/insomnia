@@ -224,7 +224,9 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                               if (editorType === 'diff') {
                                 return (
                                   <GridListItem className="group flex w-full items-center justify-between overflow-hidden px-2 py-1 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm) aria-selected:bg-(--hl-sm) aria-selected:text-(--color-font)">
-                                    <span className="truncate">{item.name}</span>
+                                    <span data-testid="merge-conflict-name" className="truncate">
+                                      {item.name}
+                                    </span>
                                     <RadioGroup
                                       onChange={value => {
                                         setConflicts(prevConflicts =>
@@ -241,6 +243,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                       <div className="flex gap-2">
                                         <Radio
                                           value={item.mineBlob || ''}
+                                          data-testid="merge-conflict-choice-current"
                                           className="flex flex-1 items-center gap-2 rounded-sm border border-solid border-(--hl-md) px-2 py-1 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:bg-[rgba(var(--color-surprise-rgb),0.3)] data-selected:text-(--color-font) data-selected:ring-(--color-surprise)"
                                         >
                                           <Icon icon="laptop" />
@@ -248,6 +251,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                         </Radio>
                                         <Radio
                                           value={item.theirsBlob || ''}
+                                          data-testid="merge-conflict-choice-incoming"
                                           className="flex flex-1 items-center gap-2 rounded-sm border border-solid border-(--hl-md) px-2 py-1 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:bg-[rgba(var(--color-surprise-rgb),0.3)] data-selected:text-(--color-font-surprise) data-selected:ring-(--color-surprise)"
                                         >
                                           <Icon icon="globe" />

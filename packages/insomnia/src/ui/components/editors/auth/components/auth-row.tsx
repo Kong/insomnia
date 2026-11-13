@@ -24,7 +24,7 @@ export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, d
   const { authentication } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
   const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
   return (
-    <tr key={labelFor}>
+    <tr key={labelFor} data-testid={`auth-field-${labelFor}`}>
       <td className="pad-right no-wrap valign-middle">
         <label htmlFor={labelFor} className="label--small no-pad">
           {label}
