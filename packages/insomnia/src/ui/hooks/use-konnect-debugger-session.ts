@@ -169,6 +169,10 @@ export function useKonnectDebuggerSession({
     await stopAsync().catch(() => {});
   }, [ctx, sessionId, stopAsync, resetStart]);
 
+  const refreshTraces = useCallback(() => {
+    refetchTraces();
+  }, [refetchTraces]);
+
   const retryDebugSession = useCallback(() => {
     resetStart();
     resetStop();
@@ -204,6 +208,8 @@ export function useKonnectDebuggerSession({
     startDebugSession,
     stopDebugSession,
     retryDebugSession,
+    refreshTraces,
+    isRefreshingTraces: isFetchingTraces,
   };
 }
 
