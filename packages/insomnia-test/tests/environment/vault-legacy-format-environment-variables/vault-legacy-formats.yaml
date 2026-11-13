@@ -1,0 +1,173 @@
+_type: export
+__export_format: 4
+__export_date: 2025-01-24T07:58:39.196Z
+__export_source: insomnia.desktop.app:v10.3.1-beta.0
+resources:
+  - _id: wrk_37e3ee9c2ce7468493378fa5e525b4b1
+    parentId: null
+    modified: 1737705410863
+    created: 1737705410863
+    name: Vault Legacy Format Collection
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_1c9ef3a2afae47d1bd960ae23de09750
+    parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
+    modified: 1737617845875
+    created: 1734948333857
+    url: localhost:4060/post
+    name: legacy-array-vault
+    description: ""
+    method: POST
+    body:
+      mimeType: text/plain
+      text: |-
+        {{ _.vault[0] }}
+        {{ _.vault[1] }}
+    headers:
+      - name: Content-Type
+        value: text/plain
+    authentication: {}
+    metaSortKey: -1734948333857
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_fb7fb8d4345f471fb53d03b069737a07
+    parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
+    modified: 1737617874271
+    created: 1737617856040
+    url: localhost:4060/post
+    name: legacy-object-vault
+    description: ""
+    method: POST
+    body:
+      mimeType: text/plain
+      text: |-
+        {{ _.vault.v1 }}
+        {{ _.vault.v2 }}
+    headers:
+      - name: Content-Type
+        value: text/plain
+    authentication: {}
+    metaSortKey: -1729018003774
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: req_2a150b45acb242cfa2db04d929a11085
+    parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
+    modified: 1737617920254
+    created: 1737617896390
+    url: localhost:4060/post
+    name: legacy-invalid-vault
+    description: ""
+    method: POST
+    body:
+      mimeType: text/plain
+      text: ""
+    headers:
+      - name: Content-Type
+        value: text/plain
+    authentication: {}
+    metaSortKey: -1731983168815.5
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: env_40681941450149a4a41f2dcbc22ec616
+    parentId: wrk_37e3ee9c2ce7468493378fa5e525b4b1
+    modified: 1737618683836
+    created: 1732861968102
+    name: Base Environment1
+    data:
+      a_hello: test
+    dataPropertyOrder:
+      "&":
+        - a_hello
+    color: null
+    isPrivate: false
+    metaSortKey: 1732861968102
+    environmentType: kv
+    kvPairData:
+      - id: envPair_62a7e9c0cdb949e0abf15e0fe4b1e8d3
+        name: a_hello
+        value: test
+        type: str
+        enabled: true
+    _type: environment
+  - _id: env_7ace551350dc40cbbb8302234ec0af0a
+    parentId: env_40681941450149a4a41f2dcbc22ec616
+    modified: 1737618683836
+    created: 1736745679348
+    name: base with vault
+    data:
+      vault: hello
+    dataPropertyOrder:
+      "&":
+        - vault
+    color: null
+    isPrivate: false
+    metaSortKey: 1736745679348
+    environmentType: kv
+    kvPairData:
+      - id: envPair_4bcd80eeb9c544c8a5cca0a1a6a85ffc
+        name: vault
+        value: hello
+        type: str
+        enabled: true
+    _type: environment
+  - _id: env_fce7e052bb99440a9019a162afea7f85
+    parentId: env_40681941450149a4a41f2dcbc22ec616
+    modified: 1737617847199
+    created: 1736745692249
+    name: legacy vault value array
+    data:
+      vault:
+        - vault_array_a
+        - vault_array_b
+    dataPropertyOrder:
+      "&":
+        - vault
+    color: null
+    isPrivate: false
+    metaSortKey: 1736745679398
+    environmentType: json
+    kvPairData: []
+    _type: environment
+  - _id: env_9214888ae2dc497e87a7f8f8edaf19f2
+    parentId: env_40681941450149a4a41f2dcbc22ec616
+    modified: 1737617875350
+    created: 1737617352406
+    name: legacy vault value object
+    data:
+      vault:
+        v1: secv1
+        v2: secv2
+    dataPropertyOrder:
+      "&":
+        - vault
+      "&~|vault":
+        - v1
+        - v2
+    color: null
+    isPrivate: false
+    metaSortKey: 1736881902959
+    environmentType: json
+    kvPairData: []
+    _type: environment

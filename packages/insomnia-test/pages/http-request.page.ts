@@ -1,5 +1,6 @@
 import { FileInputComponent } from "@package/components/file-input.component";
 import { SelectComponent } from "@package/components/select.component";
+import { PressedToggleComponent } from "@package/components/toggle.component";
 import { ContentType } from "@package/enums/content-type";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -141,7 +142,7 @@ export class HttpRequestPage extends RequestPage {
       const enabled =
         (await toggle.count()) === 0
           ? true
-          : (await toggle.getAttribute("aria-pressed")) === "true";
+          : await new PressedToggleComponent(this.page, toggle).isOn();
       if (name || value) params.push({ name, value, disabled: !enabled });
     }
     return params;
@@ -195,7 +196,10 @@ export class HttpRequestPage extends RequestPage {
       }
 
       if (param.disabled) {
-        await row.locator('button[aria-pressed="true"]').click();
+        await new PressedToggleComponent(
+          this.page,
+          row.locator("button[aria-pressed]"),
+        ).set(false);
       }
 
       if (!param.fileName) {

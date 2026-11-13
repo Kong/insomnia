@@ -22,7 +22,7 @@ export class PreferencesAiComponent extends PreferencesTabComponent {
    * in — always true for this project's fixture.
    */
   async openAiSettingsTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "AI Settings" }).click();
+    await this.tabs.tabByName("AI Settings").click();
   }
 
   /**

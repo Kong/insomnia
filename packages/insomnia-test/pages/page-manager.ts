@@ -7,29 +7,47 @@ import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
+import { CertificatesPage } from "./certificates.page";
+import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
+import { FolderPage } from "./folder.page";
 import { HttpRequestPage } from "./http-request.page";
+import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
+import { TemplateTagPage } from "./template-tag.page";
+import { VariableSourcePage } from "./variable-source.page";
 import { WorkspacePage } from "./workspace.page";
 
 const pageRegistry = {
+  certificatesPage: (page: Page): CertificatesPage =>
+    new CertificatesPage(page),
+  cookiePage: (page: Page): CookiePage =>
+    new CookiePage(page),
   environmentPage: (page: Page): EnvironmentPage =>
     new EnvironmentPage(page),
+  folderPage: (page: Page): FolderPage =>
+    new FolderPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
   preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
     new PreferencesCredentialsComponent(page),
   preferencesPlugins: (page: Page): PreferencesPluginsComponent =>
     new PreferencesPluginsComponent(page),
   preferencesAi: (page: Page): PreferencesAiComponent =>
     new PreferencesAiComponent(page),
+  importPage: (page: Page): ImportPage =>
+    new ImportPage(page),
+  responsePage: (page: Page): ResponsePage =>
+    new ResponsePage(page),
+  templateTagPage: (page: Page): TemplateTagPage =>
+    new TemplateTagPage(page),
+  variableSourcePage: (page: Page): VariableSourcePage =>
+    new VariableSourcePage(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
   specPage: (page: Page): SpecPage =>
