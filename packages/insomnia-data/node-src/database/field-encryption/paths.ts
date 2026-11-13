@@ -13,8 +13,11 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 
 // `a`, `a[]` or `a[][]`: the key and how many array levels to go through
 const parseSegment = (segment: string) => {
-  const name = segment.replace(/(\[\])+$/, '');
-  return { name, depth: (segment.length - name.length) / 2 };
+  let end = segment.length;
+  while (segment.endsWith('[]', end)) {
+    end -= 2;
+  }
+  return { name: segment.slice(0, end), depth: (segment.length - end) / 2 };
 };
 
 // Goes `depth` array levels down into `array`, then continues with each element

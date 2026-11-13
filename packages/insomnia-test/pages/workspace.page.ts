@@ -218,7 +218,8 @@ export class Tree {
       case "project": {
         return TreeNodeType.Project;
       }
-      case "workspace": {
+      case "workspace":
+      case "unsyncedWorkspace": {
         return TreeNodeType.Workspace;
       }
       case "emptyProject": {
