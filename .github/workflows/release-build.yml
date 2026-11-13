@@ -2,6 +2,11 @@ name: Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_windows_signing:
+        description: Skip Windows code signing (no signing tokens used). The Windows artifacts are unsigned and must not be released.
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -45,6 +50,7 @@ jobs:
       packages: read
     env:
       INSO_PACKAGE_NAME: insomnia-inso
+      SKIP_WINDOWS_SIGN: ${{ inputs.skip_windows_signing && 'true' || 'false' }}
       INSO_DOCKER_TAR: inso-docker-image.tar
       # DIGICERT_SM_CLIENT_CERT_FILE: sm_client_cert.p12
       # DIGICERT_WIN_SM_CLIENT_CERT_FILE: /d/a/insomnia-ee/insomnia-ee/sm_client_cert.p12
@@ -131,20 +137,20 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
+        env:
+          DIGICERT_SM_CLIENT_CERT_FILE_B64: ${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}
           echo "$DIGICERT_SM_CLIENT_CERT_FILE_B64" | base64 --decode > /d/Certificate_pkcs12.p12
 
       - name: Set variables
         id: variables
         run: |
           echo "SM_CLIENT_CERT_FILE=D:\\Certificate_pkcs12.p12" >> "$GITHUB_ENV"
-        env:
-          DIGICERT_SM_CLIENT_CERT_FILE_B64: ${{ secrets.DIGICERT_SM_CLIENT_CERT_FILE_B64 }}
         shell: bash
 
       # This will install smctl
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -206,7 +212,7 @@ jobs:
 
       # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: bash
         run: |
           NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:dist -w insomnia
@@ -217,7 +223,7 @@ jobs:
           SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       - name: Check squirrel exe signature (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: pwsh
         run: |
           $version = $env:INSO_VERSION
@@ -261,7 +267,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign inso exe (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -319,13 +325,13 @@ jobs:
         # notarytool requires the binary to be packaged in a zip, dmg, or pkg.
         run: |
           BIN_PATH="./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso"
+        if: always() && runner.os == 'Windows'
           ZIP_PATH="$(mktemp -d)/inso.zip"
           ditto -c -k --keepParent "$BIN_PATH" "$ZIP_PATH"
           xcrun notarytool submit "$ZIP_PATH" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id FX44YY62GV \
-        if: always() && runner.os == 'Windows'
             --wait
 
       - name: Create Inso zip/tar/gz artifacts
