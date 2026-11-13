@@ -1,0 +1,3 @@
+type: object
+properties:
+  localFileMarker: { type: string, example: should-not-be-read-from-disk }

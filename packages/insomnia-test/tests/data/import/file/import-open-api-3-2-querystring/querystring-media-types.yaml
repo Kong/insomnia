@@ -1,0 +1,53 @@
+openapi: 3.2.0
+info: { title: Querystring media types, version: 1.0.0 }
+servers:
+  - url: https://api.example.com
+paths:
+  /charset:
+    get:
+      summary: Querystring with charset
+      parameters:
+        - name: filter
+          in: querystring
+          required: true
+          content:
+            application/x-www-form-urlencoded; charset=utf-8:
+              schema:
+                type: object
+                required: [name]
+                properties:
+                  name: { type: string }
+                  limit: { type: integer, default: 10 }
+      responses:
+        "200": { description: OK }
+  /uppercase:
+    get:
+      summary: Querystring with mixed case media type
+      parameters:
+        - name: filter
+          in: querystring
+          required: true
+          content:
+            Application/X-WWW-Form-Urlencoded:
+              schema:
+                type: object
+                required: [name]
+                properties:
+                  name: { type: string }
+      responses:
+        "200": { description: OK }
+  /json:
+    get:
+      summary: Querystring with JSON content
+      parameters:
+        - name: filter
+          in: querystring
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name: { type: string }
+      responses:
+        "200": { description: OK }

@@ -1,4 +1,5 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
+import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
 import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TreeComponent } from "@package/components/tree.component";
@@ -731,5 +732,47 @@ export class WorkspacePage extends BasePage {
       await new Promise<void>((resolve) => setTimeout(resolve, interval));
     }
     return undefined;
+  }
+
+  /**
+   * Opens a workspace row's "⋮" actions dropdown (the "SideBar Workspace
+   * Actions" trigger, only rendered on hover) — the same underlying menu
+   * `rightClick()` also opens.
+   */
+  async openWorkspaceActionsDropdown(node: TreeNode): Promise<void> {
+    const row = this.treeNav.containerRow(node._id);
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByLabel("SideBar Workspace Actions").click();
+  }
+
+  /**
+   * Clicks the "Ok" button on the currently open dialog and waits for it
+   * to close. Used to dismiss an error dialog (e.g. one surfaced by an
+   * action decorated with `@throwOnDialog`) so a test can continue with
+   * further steps afterward.
+   */
+  async closeDialog(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await dialog.getByRole("button", { name: "Ok" }).click();
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Creates an API Collection via the project dashboard's empty-state
+   * "Enter API Spec" button (only rendered when the project has no
+   * workspaces yet) rather than the project-tree "API Collection" context
+   * menu item. Fills the name input and commits by pressing Enter.
+   */
+  async createCollectionInEmptyState(name: string): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Create document", exact: true })
+      .click();
+    const input = this.page.getByPlaceholder(
+      /Enter a name for your API Collection/,
+    );
+    await input.fill(name);
+    await input.press("Enter");
+    await this.navigate();
   }
 }

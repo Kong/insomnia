@@ -1,0 +1,26 @@
+openapi: 3.2.0
+info: { title: Event stream, version: 1.0.0 }
+paths:
+  /pets:
+    get:
+      summary: List pets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+  /events:
+    get:
+      summary: Stream events
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              itemSchema:
+                type: object
+                properties:
+                  id: { type: string }

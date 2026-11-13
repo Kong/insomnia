@@ -1,0 +1,28 @@
+openapi: 3.2.0
+info: { title: Duplicate POST, version: 1.0.0 }
+paths:
+  /pets:
+    post:
+      summary: Create a pet
+      description: Create a pet
+      operationId: createPet
+      tags: [pets]
+      responses:
+        "200": { description: OK }
+    additionalOperations:
+      POST:
+        summary: Create a pet again
+        description: Create a pet again
+        operationId: createPetAgain
+        tags: [pets]
+        responses:
+          "200": { description: OK }
+      PURGE:
+        summary: Purge pet cache
+        description: Purge pet cache
+        operationId: purgePets
+        tags: [pets]
+        responses:
+          "204": { description: No Content }
+tags:
+  - name: pets

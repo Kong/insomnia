@@ -1,0 +1,68 @@
+openapi: 3.2.0
+$self: https://example.com/specs/petstore.yaml
+info:
+  title: Valid 3.2
+  version: 1.0.0
+  description: Valid OpenAPI 3.2 fixture
+  contact:
+    name: API Support
+servers:
+  - url: https://api.example.com
+tags:
+  - name: pets
+    kind: nav
+  - name: cats
+    parent: pets
+    summary: Cats
+paths:
+  /pets:
+    query:
+      operationId: searchPets
+      tags:
+        - cats
+      parameters:
+        - name: qs
+          in: querystring
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+              examples:
+                sample:
+                  dataValue:
+                    name: Rex
+    additionalOperations:
+      PURGE:
+        operationId: purgePets
+        responses:
+          "204":
+            description: No Content
+  /events:
+    get:
+      operationId: streamEvents
+      description: Streams events
+      tags:
+        - pets
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              itemSchema:
+                type: object
+                properties:
+                  id:
+                    type: string

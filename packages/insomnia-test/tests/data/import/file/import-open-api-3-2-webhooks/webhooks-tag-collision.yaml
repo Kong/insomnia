@@ -1,0 +1,17 @@
+openapi: 3.1.0
+info: { title: Webhooks tag, version: 1.0.0 }
+tags:
+  - name: Webhooks
+paths:
+  /pets:
+    get:
+      summary: List pets
+      tags: [Webhooks]
+      responses:
+        "200": { description: OK }
+webhooks:
+  pet.created:
+    post:
+      summary: Pet created
+      responses:
+        "200": { description: OK }

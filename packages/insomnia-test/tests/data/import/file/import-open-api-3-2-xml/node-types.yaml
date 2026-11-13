@@ -1,0 +1,65 @@
+openapi: 3.2.0
+info:
+  title: XML Node Types
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /items:
+    post:
+      summary: Create an item
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Item" }
+      responses:
+        "200": { description: OK }
+  /legacy-items:
+    post:
+      summary: Create a legacy item
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LegacyItem" }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Item:
+      type: object
+      xml: { nodeType: element, name: item }
+      properties:
+        id:
+          type: integer
+          xml: { nodeType: attribute }
+        title:
+          type: string
+          xml: { nodeType: element }
+        note:
+          type: string
+          xml: { nodeType: text }
+        raw:
+          type: string
+          xml: { nodeType: cdata }
+        meta:
+          type: string
+          xml: { nodeType: none }
+        tags:
+          type: array
+          xml: { nodeType: element, name: tags }
+          items:
+            type: string
+            xml: { nodeType: element, name: tag }
+    LegacyItem:
+      type: object
+      xml: { name: legacy }
+      properties:
+        id:
+          type: integer
+          xml: { attribute: true }
+        tags:
+          type: array
+          xml: { wrapped: true, name: tags }
+          items:
+            type: string
+            xml: { name: tag }

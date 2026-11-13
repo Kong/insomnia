@@ -1,0 +1,56 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "query": {
+        "summary": "Search pets",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "additionalOperations": {
+        "PURGE": {
+          "summary": "Purge pet cache",
+          "responses": {
+            "204": {
+              "description": "No Content"
+            }
+          }
+        }
+      }
+    },
+    "/pets/{id}": {
+      "$ref": "#/components/pathItems/PetItem"
+    }
+  },
+  "components": {
+    "pathItems": {
+      "PetItem": {
+        "get": {
+          "summary": "Get a pet",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK"
+            }
+          }
+        }
+      }
+    }
+  }
+}
