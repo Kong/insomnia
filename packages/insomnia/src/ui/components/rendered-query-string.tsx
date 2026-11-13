@@ -6,6 +6,7 @@ import type {
   RequestParameter,
   SocketIORequest,
   WebSocketRequest,
+  Workspace,
 } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { type FC, useCallback, useEffect, useState } from 'react';
@@ -25,6 +26,7 @@ import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import { CopyButton } from './base/copy-button';
 
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
 
 interface Props {
   request: Request | WebSocketRequest | SocketIORequest;
@@ -48,11 +50,13 @@ async function getQueryParamsFromAuth(
     return addApiKeyToParams(requestAuth);
   }
 
-  const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup>(request, [
-    models.requestGroup.type,
-  ]);
+  const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup | Workspace>(
+    request,
+    [models.requestGroup.type, models.workspace.type],
+  );
   const requestGroups = ancestors.filter(isRequestGroup);
-  const auth = getOrInheritAuthentication({ request, requestGroups });
+  const workspace = ancestors.find(isWorkspace);
+  const auth = getOrInheritAuthentication({ request, requestGroups, workspace });
   const closestAuth = getAuthObjectOrNull(auth);
   if (!closestAuth) {
     return [];
