@@ -1,4 +1,15 @@
-import type { CookieJar, Request, RequestAuthentication, RequestBody, RequestGroup, RequestHeader, RequestParameter, SocketIORequest, WebSocketRequest } from 'insomnia-data';
+import type {
+  CookieJar,
+  Request,
+  RequestAuthentication,
+  RequestBody,
+  RequestGroup,
+  RequestHeader,
+  RequestParameter,
+  SocketIORequest,
+  WebSocketRequest,
+  Workspace,
+} from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 
 import { database as db } from '../../common/database';
@@ -7,6 +18,7 @@ import { tryToInterpolateRequestAndCollectSensitiveValues } from './try-interpol
 
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup, type: requestGroupType } = models.requestGroup;
+const { isWorkspace, type: workspaceType } = models.workspace;
 
 export interface RenderedRealtimeConnectPayload {
   /** rendered url with path parameters applied */
@@ -31,11 +43,13 @@ export async function renderRealtimeConnectPayload({
   workspaceId: string;
 }): Promise<RenderedRealtimeConnectPayload | undefined> {
   const workspaceCookieJar = await services.cookieJar.getOrCreateForParentId(workspaceId);
-  const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup>(request, [
-    requestGroupType,
-  ]);
+  const ancestors = await db.withAncestors<Request | WebSocketRequest | SocketIORequest | RequestGroup | Workspace>(
+    request,
+    [requestGroupType, workspaceType],
+  );
   const requestGroups = ancestors.filter(isRequestGroup);
-  const headers = getOrInheritHeaders({ request, requestGroups });
+  const workspace = ancestors.find(isWorkspace);
+  const headers = getOrInheritHeaders({ request, requestGroups, workspace });
   const authentication = getOrInheritAuthentication({ request, requestGroups });
   const body = 'body' in request ? request.body : undefined;
 
@@ -64,7 +78,7 @@ export async function renderRealtimeConnectPayload({
   }
   const { rendered, sensitiveValues } = result;
 
-  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups, workspace });
 
   const url = applyPathParametersToUrl(rendered.url, rendered.pathParameters);
 

@@ -78,14 +78,16 @@ export const getOrInheritAuthentication = ({
 export function getOrInheritHeaders({
   request,
   requestGroups,
+  workspace = {},
 }: {
   request: Pick<Request, 'headers'>;
   requestGroups: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): RequestHeader[] {
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
-  // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups].reverse().concat(request);
+  // workspace headers, then parent folder from furthest to nearest, then request
+  const headerContexts = [workspace].concat([...requestGroups].reverse()).concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -115,11 +117,13 @@ export function getOrInheritHeaders({
 export function shouldSuppressUserAgent({
   request,
   requestGroups = [],
+  workspace = {},
 }: {
   request: Pick<Request | WebSocketRequest | SocketIORequest, 'headers' | 'disableUserAgentHeader'>;
   requestGroups?: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): boolean {
-  const userAgentHeaders = [...requestGroups, request]
+  const userAgentHeaders = [workspace, ...requestGroups, request]
     .flatMap(doc => doc.headers || [])
     .filter(h => h.name?.toLowerCase() === 'user-agent');
   return (
