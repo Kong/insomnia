@@ -37,6 +37,11 @@ export class LocalEncryptionKeyComponent extends PreferencesTabComponent {
     );
   }
 
+  /** The error dialog a failed Export Key opens, e.g. "Could not export the local encryption key". */
+  get errorDialog(): ModalComponent {
+    return new ModalComponent(this.page, this.page.getByRole("dialog").filter({ hasText: /^Could not/ }));
+  }
+
   /** Waits until the panel has asked the main process and settled on enabled or disabled buttons. */
   async waitUntilSettled(): Promise<void> {
     await expect(this.panel).toBeVisible({ timeout: DEFAULT_TIMEOUT });

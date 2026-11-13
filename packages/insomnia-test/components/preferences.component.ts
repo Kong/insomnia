@@ -54,7 +54,9 @@ export class PreferencesComponent extends PreferencesTabComponent {
    * actual clickable target. Same shape as setValidateSSL() above.
    */
   async setSidebarFocusForCollections(enabled: boolean): Promise<void> {
-    const label = this.dialog.getByTestId("setting-sidebarFocusForCollections");
+    // Located by the input's name rather than the `setting-*` test id, which the releases an upgrade test starts from
+    // (see misc/upgrade-fixture.ts) do not have
+    const label = this.dialog.locator('label:has(input[name="sidebarFocusForCollections"])');
     const input = label.locator('input[type="checkbox"]');
     if ((await input.isChecked()) !== enabled) {
       await label.click();

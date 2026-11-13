@@ -471,9 +471,13 @@ export class AuthTabComponent extends TabPanelComponent {
    * `data-testid="auth-field-Client-ID"`).
    */
   private authFieldEditor(label: string): Locator {
-    return this.page
-      .locator(this.TABPANEL)
-      .getByTestId(`auth-field-${label.replace(/ /g, "-")}`)
+    const field = label.replace(/ /g, "-");
+    const panel = this.page.locator(this.TABPANEL);
+    // The `auth-field-*` test id is not on the rows of the releases an upgrade test starts from (see
+    // misc/upgrade-fixture.ts); every row has a label for the field's editor, though
+    return panel
+      .getByTestId(`auth-field-${field}`)
+      .or(panel.locator("tr").filter({ has: this.page.locator(`label[for="${field}"]`) }))
       .locator(".CodeMirror");
   }
 }

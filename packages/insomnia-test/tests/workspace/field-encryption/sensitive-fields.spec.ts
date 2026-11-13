@@ -108,12 +108,7 @@ export async function expectScenariosEncrypted(
     await user.flowManager.appFlow.restart();
     await expectOnDisk();
     await expectInApp();
-    await expect(
-      user.pageManager.window
-        .getByRole("dialog")
-        .filter({ hasText: /could not be decrypted|encryption key is not available/ }),
-      `no decryption dialog after restart #${restart}`,
-    ).toHaveCount(0);
+    await user.flowManager.fieldEncryptionFlow.expectNoIssueDialog(`after restart #${restart}`);
   }
 }
 

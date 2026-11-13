@@ -1,4 +1,5 @@
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
@@ -22,3 +23,21 @@ export class ToggleButtonComponent extends BaseComponent {
   }
 }
 
+/** Text-labelled enable button, e.g. a certificate row's "Enabled"/"Disabled". */
+export class EnabledLabelToggleComponent extends BaseComponent {
+  get button(): Locator {
+    return this.root.getByRole("button", { name: /^(Enabled|Disabled)$/ });
+  }
+
+  async isOn(): Promise<boolean> {
+    return (await this.button.innerText()) === "Enabled";
+  }
+
+  async set(enabled: boolean): Promise<void> {
+    if ((await this.isOn()) === enabled) return;
+    await this.button.click();
+    await expect(this.button).toHaveText(enabled ? "Enabled" : "Disabled", {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+}

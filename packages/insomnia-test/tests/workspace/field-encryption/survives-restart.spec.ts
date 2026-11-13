@@ -30,12 +30,7 @@ test("Encrypted Bearer token and cookie survive two restarts without a decryptio
     expect(readRawDbText(dataPath)).not.toContain(cookieValue);
     expect(readRawDbText(dataPath)).not.toContain(token);
 
-    await expect(
-      user.pageManager.window
-        .getByRole("dialog")
-        .filter({ hasText: /could not be decrypted|encryption key is not available/ }),
-      `no decryption dialog ${when}`,
-    ).toHaveCount(0);
+    await user.flowManager.fieldEncryptionFlow.expectNoIssueDialog(`${when}`);
   };
 
   await expectIntact("before any restart");
