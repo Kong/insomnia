@@ -18,6 +18,7 @@ type RendererEnv = {
   INSOMNIA_VAULT_KEY: string | undefined;
   INSOMNIA_VAULT_SRP_SECRET: string | undefined;
   INSOMNIA_ENV: string | undefined;
+  INSOMNIA_DATA_PATH: string | undefined;
   BUILD_DATE: string | undefined;
   PORTABLE_EXECUTABLE_DIR: string | undefined;
   ALLOW_UPDATES_IN_DEV: string | undefined;

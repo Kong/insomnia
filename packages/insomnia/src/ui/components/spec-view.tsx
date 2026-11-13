@@ -51,6 +51,7 @@ import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { LintCLIModal } from '~/ui/components/modals/lint-cli-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
@@ -145,10 +146,12 @@ export const SpecView = ({
   parsedSpec,
   apiSpec,
 }: SpecViewProps) => {
-  const { activeProject, vcsVersion, activeWorkspace } = useWorkspaceLoaderData()!;
+  const { activeProject, vcsVersion, activeWorkspace, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
+  const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);
+  const [lintCLIRulesetPath, setLintCLIRulesetPath] = useState<string | undefined>();
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
   const storageRules = useOrganizationStorageRule(organizationId);
@@ -180,6 +183,9 @@ export const SpecView = ({
     () => window.path.join(window.app.getPath('userData'), `projects/${projectId}/.spectral.yaml`),
     [projectId],
   );
+
+  // Mirrors the main process, which prefers INSOMNIA_DATA_PATH over Electron's userData.
+  const appDataDir = window.env.INSOMNIA_DATA_PATH || window.app.getPath('userData');
 
   const rulesetHasRemoteExtendsEntries = useMemo(() => {
     if (!rulesetContent) return false;
@@ -475,6 +481,25 @@ export const SpecView = ({
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleOpenLintCLIModal = async () => {
+    let compiledPath: string | undefined;
+    // Git projects use the repo's .spectral.yaml, which the RepoFileWatcher keeps in sync. Otherwise make sure the
+    // compiled ruleset file exists and is current before handing its path to inso.
+    if (rulesetContent && !(isConnectedGitProject && gitSyncRulesetPath)) {
+      try {
+        ({ compiledPath } = await window.main.refreshCompiledRuleset({ projectId, rulesetContent }));
+      } catch (err) {
+        showError({
+          title: 'Lint via CLI Failed',
+          message: `Failed to prepare ruleset: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        return;
+      }
+    }
+    setLintCLIRulesetPath(compiledPath);
+    setIsLintCLIModalOpen(true);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -903,6 +928,16 @@ export const SpecView = ({
               </Button>
             )}
           </div>
+        )}
+        {apiSpec?.contents && (
+          <>
+            <span aria-hidden="true" className="text-(--hl) select-none">
+              |
+            </span>
+            <Button data-testid="lint-via-cli" className="underline" onPress={handleOpenLintCLIModal}>
+              Lint via CLI
+            </Button>
+          </>
         )}
       </div>
     </div>
@@ -1335,6 +1370,26 @@ export const SpecView = ({
               sourceApiSpec={apiSpec}
               source="design-view"
               onOpenChange={setNewMockServerModalOpen}
+            />
+          )}
+          {isLintCLIModalOpen && apiSpec && (
+            <LintCLIModal
+              onClose={() => setIsLintCLIModalOpen(false)}
+              apiSpecId={apiSpec._id}
+              // Git projects: the spec's file inside the repo, otherwise inso finds no file. Others: the app data dir holding the NeDB files.
+              workingDir={
+                isConnectedGitProject && gitSyncRulesetPath
+                  ? window.path.join(window.path.dirname(gitSyncRulesetPath), activeWorkspaceMeta?.gitFilePath || '')
+                  : appDataDir
+              }
+              // inso only applies a custom ruleset when passed explicitly. Same file the in-app lint uses.
+              rulesetPath={
+                rulesetContent
+                  ? isConnectedGitProject && gitSyncRulesetPath
+                    ? gitSyncRulesetPath
+                    : lintCLIRulesetPath
+                  : undefined
+              }
             />
           )}
           {isViewRulesetModalOpen && (
