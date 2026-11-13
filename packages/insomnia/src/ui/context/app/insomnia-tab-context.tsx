@@ -14,6 +14,7 @@ export type TabType =
   | 'document'
   | 'collection'
   | 'runner'
+  | 'konnectDebugger'
   | 'test'
   | 'testSuite';
 export interface BaseTab {

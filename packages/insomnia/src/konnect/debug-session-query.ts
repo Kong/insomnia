@@ -194,7 +194,7 @@ export async function startOrAdoptDebugSession(
 ): Promise<DebugSession> {
   const nodeIds = await listNodeIds(ctx);
   if (nodeIds.length === 0) {
-    throw new DebugApiError('unknown', 'No data plane nodes are connected to this control plane.');
+    throw new DebugApiError('unknown', 'No data plane nodes are connected to this control plane.', '');
   }
   return createDebugSession(ctx, durationSecs, nodeIds);
 }

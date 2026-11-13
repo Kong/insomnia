@@ -112,6 +112,34 @@ const buildRunnerTab = ({
   };
 };
 
+export const buildKonnectDebuggerTabId = (projectId: string) => `konnect_debugger_${projectId}`;
+
+// The Konnect debugger tab belongs to a project (one global debug session per project), not to a workspace
+const buildKonnectDebuggerTab = async ({
+  organizationId,
+  projectId,
+}: {
+  organizationId: string;
+  projectId: string;
+}): Promise<BaseTab> => {
+  const project = await services.project.getById(projectId);
+  if (!project) {
+    throw new Error(`Project not found: ${projectId}`);
+  }
+
+  return {
+    type: 'konnectDebugger',
+    id: buildKonnectDebuggerTabId(project._id),
+    name: 'Debugger',
+    url: `/organization/${organizationId}/project/${project._id}/konnect-debugger`,
+    organizationId,
+    projectId: project._id,
+    workspaceId: '',
+    projectName: project.name,
+    workspaceName: '',
+  };
+};
+
 const buildTabUrlFromResource = ({
   resource,
   organizationId,
@@ -211,6 +239,12 @@ const buildTabFromNavigation = async (
 ): Promise<BaseTab | null> => {
   const { project, workspace, resource } = await getNavigationResources();
 
+  if (routeInfo.routeId === 'project:konnect-debugger') {
+    return project
+      ? await buildKonnectDebuggerTab({ organizationId: routeInfo.organizationId, projectId: project._id })
+      : null;
+  }
+
   if (!project || !workspace || !resource || models.project.isProject(resource)) {
     return null;
   }
@@ -237,6 +271,10 @@ const buildTabFromNavigation = async (
 };
 
 const getNavigationTabId = async (routeInfo?: InsomniaNavigationRouteInfo | null) => {
+  if (routeInfo?.routeId === 'project:konnect-debugger' && routeInfo.projectId) {
+    return buildKonnectDebuggerTabId(routeInfo.projectId);
+  }
+
   if (!routeInfo || !routeInfo.workspaceId || !routeInfo.resourceId) {
     return null;
   }
@@ -309,6 +347,19 @@ export const useTabNavigate = () => {
     [addTab, navigate],
   );
   return tabNavigate;
+};
+
+export const useOpenKonnectDebuggerTab = () => {
+  const navigate = useNavigate();
+  const { addTab } = useInsomniaTabContext();
+  return useCallback(
+    async (organizationId: string, projectId: string) => {
+      const tab = await buildKonnectDebuggerTab({ organizationId, projectId });
+      addTab(tab);
+      navigate(tab.url);
+    },
+    [addTab, navigate],
+  );
 };
 
 export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
