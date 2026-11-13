@@ -1332,9 +1332,14 @@ export class WorkspacePage extends BasePage {
   /**
    * Reads the titles of any visible "resource not found" toasts, so a failing
    * assertion names the route that raised it.
+   *
+   * `ignoreResourceIds` skips the `<Kind> not found: <id>` toast for
+   * resources the test itself just deleted: while the delete action settles,
+   * the deleted resource's own route loader can briefly re-run before the tab
+   * close navigates away, which users do not notice.
    */
-  async getResourceNotFoundToastTexts(): Promise<string[]> {
-    return this.page
+  async getResourceNotFoundToastTexts(ignoreResourceIds: string[] = []): Promise<string[]> {
+    const texts = await this.page
       .getByTestId("toast-body")
       .filter({
         has: this.page
@@ -1345,6 +1350,7 @@ export class WorkspacePage extends BasePage {
           }),
       })
       .allInnerTexts();
+    return texts.filter((text) => !ignoreResourceIds.some((id) => text.includes(`not found: ${id}`)));
   }
 
   /**
