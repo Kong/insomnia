@@ -172,7 +172,8 @@ describe('NativeProvider', () => {
     it('cancels and reports missing credentials, with the helper output, when fill fails', async () => {
       fillResponses.push({
         code: 128,
-        stderr: "fatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled\n",
+        stderr:
+          "helper: no credentials for dev.azure.com\nfatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled\n",
       });
       const provider = new NativeProvider({ type: 'native', displayName: 'System' });
 
@@ -181,7 +182,7 @@ describe('NativeProvider', () => {
         {
           host: 'dev.azure.com',
           reason: 'no-credentials',
-          detail: "fatal: could not read Username for 'https://dev.azure.com': terminal prompts disabled",
+          detail: 'helper: no credentials for dev.azure.com',
         },
       ]);
     });

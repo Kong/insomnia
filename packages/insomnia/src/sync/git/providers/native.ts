@@ -124,12 +124,18 @@ const toSpawnError = (err: unknown): { code?: string; message: string } => ({
   message: (err as Error).message,
 });
 
-/** Last non-empty line of stderr, e.g. "fatal: could not read Username for 'https://host': terminal prompts disabled". */
+/**
+ * git's own fallback after a helper fails to provide credentials (with terminal
+ * prompts disabled). It says nothing about why the helper failed.
+ */
+const GIT_PROMPT_FALLBACK = /^fatal: could not read (Username|Password) for /;
+
+/** Last non-empty line of the helper's stderr, ignoring git's own prompt fallback line. */
 const summarizeStderr = (stderr: string) =>
   stderr
     .split('\n')
     .map(line => line.trim())
-    .findLast(Boolean)
+    .findLast(line => line && !GIT_PROMPT_FALLBACK.test(line))
     ?.slice(0, 300);
 
 interface RunningGitCredential {

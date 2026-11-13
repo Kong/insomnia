@@ -118,25 +118,25 @@ const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (ho
 };
 
 // Credential error toasts stay until dismissed; keep at most one per host and reason
-// so repeated failures do not stack up.
-const nativeCredentialErrorToasts = new Map<string, string>();
+// so repeated failures do not stack up. An entry lives until its toast is closed, including
+// while the toast is still waiting in the queue behind other notifications.
+const nativeCredentialErrorToasts = new Set<string>();
 
 window.main.on('git.native-credential-error', (_, error: NativeCredentialError) => {
   const toastId = `${error.host}\n${error.reason}`;
-  const openKey = nativeCredentialErrorToasts.get(toastId);
-  if (openKey && queue.visibleToasts.some(toast => toast.key === openKey)) {
+  if (nativeCredentialErrorToasts.has(toastId)) {
     return;
   }
 
   const content = nativeCredentialErrorMessages[error.reason](error.host);
-  const key = showToast(
+  nativeCredentialErrorToasts.add(toastId);
+  showToast(
     {
       ...content,
       icon: 'key',
       status: 'warning',
       description: error.detail ? `${content.description} (${error.detail})` : content.description,
     },
-    { timeout: null },
+    { timeout: null, onClose: () => nativeCredentialErrorToasts.delete(toastId) },
   );
-  nativeCredentialErrorToasts.set(toastId, key);
 });
