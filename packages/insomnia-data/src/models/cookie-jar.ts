@@ -2,6 +2,7 @@ import { z } from 'zod/v4';
 
 import { JsonSchema } from '../../common-src';
 import { type BaseModel, createModelSchema } from './base-types';
+import { encrypted } from './utils/encrypted-field';
 
 export const name = 'Cookie Jar';
 
@@ -19,7 +20,7 @@ export const CookieSchema = z.object({
     .optional()
     .default(() => crypto.randomUUID()),
   key: z.string().optional().default(''),
-  value: z.string().optional().default(''),
+  value: encrypted(z.string()).optional().default(''),
   expires: z.preprocess(
     val => {
       // Handle 'Infinity' string

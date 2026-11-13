@@ -25,6 +25,7 @@ import {
 import { z } from 'zod/v4';
 
 import { type BaseModel, createModelSchema } from './base-types';
+import { encrypted } from './utils/encrypted-field';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'Request';
@@ -46,7 +47,7 @@ export const AuthTypeBasicSchema = z.object({
   type: z.literal('basic'),
   useISO88591: z.boolean().optional(),
   username: z.string().optional(),
-  password: z.string().optional(),
+  password: encrypted(z.string()).optional(),
   disabled: z.boolean().optional(),
 });
 export type AuthTypeBasic = z.infer<typeof AuthTypeBasicSchema>;
@@ -57,7 +58,7 @@ export type AuthTypeBasic = z.infer<typeof AuthTypeBasicSchema>;
 export const AuthTypeAPIKeySchema = z.object({
   type: z.literal('apikey'),
   key: z.string().optional(),
-  value: z.string().optional(),
+  value: encrypted(z.string()).optional(),
   disabled: z.boolean().optional(),
   addTo: z.string().optional(),
 });
@@ -84,21 +85,21 @@ export const AuthTypeOAuth2Schema = z.object({
   accessTokenUrl: z.string().optional(),
   authorizationUrl: z.string().optional(),
   clientId: z.string().optional(),
-  clientSecret: z.string().optional(),
+  clientSecret: encrypted(z.string()).optional(),
   clientIdIssuedAt: z.number().optional(),
   clientSecretExpiresAt: z.number().optional(),
   audience: z.string().optional(),
   scope: z.string().optional(),
   resource: z.string().optional(),
   username: z.string().optional(),
-  password: z.string().optional(),
+  password: encrypted(z.string()).optional(),
   redirectUrl: z.string().optional(),
   useDefaultBrowser: z.boolean().optional(),
   credentialsInBody: z.boolean().optional(),
   state: z.string().optional(),
   code: z.string().optional(),
-  accessToken: z.string().optional(),
-  refreshToken: z.string().optional(),
+  accessToken: encrypted(z.string()).optional(),
+  refreshToken: encrypted(z.string()).optional(),
   tokenPrefix: z.string().optional(),
   usePkce: z.boolean().optional(),
   pkceMethod: z.string().optional(),
@@ -111,7 +112,7 @@ export type AuthTypeOAuth2 = z.infer<typeof AuthTypeOAuth2Schema>;
 export const AuthTypeHawkSchema = z.object({
   type: z.literal('hawk'),
   id: z.string(),
-  key: z.string(),
+  key: encrypted(z.string()),
   ext: z.string().optional(),
   validatePayload: z.boolean().optional(),
   algorithm: z.enum(['sha1', 'sha256']),
@@ -131,10 +132,10 @@ export const AuthTypeOAuth1Schema = z.object({
     ])
     .optional(),
   consumerKey: z.string().optional(),
-  consumerSecret: z.string().optional(),
+  consumerSecret: encrypted(z.string()).optional(),
   tokenKey: z.string().optional(),
-  tokenSecret: z.string().optional(),
-  privateKey: z.string().optional(),
+  tokenSecret: encrypted(z.string()).optional(),
+  privateKey: encrypted(z.string()).optional(),
   version: z.string().optional(),
   nonce: z.string().optional(),
   timestamp: z.string().optional(),
@@ -149,7 +150,7 @@ export const AuthTypeDigestSchema = z.object({
   type: z.literal('digest'),
   disabled: z.boolean().optional(),
   username: z.string().optional(),
-  password: z.string().optional(),
+  password: encrypted(z.string()).optional(),
 });
 export type AuthTypeDigest = z.infer<typeof AuthTypeDigestSchema>;
 
@@ -157,14 +158,14 @@ export const AuthTypeNTLMSchema = z.object({
   type: z.literal('ntlm'),
   disabled: z.boolean().optional(),
   username: z.string().optional(),
-  password: z.string().optional(),
+  password: encrypted(z.string()).optional(),
 });
 export type AuthTypeNTLM = z.infer<typeof AuthTypeNTLMSchema>;
 
 export const AuthTypeBearerSchema = z.object({
   type: z.literal('bearer'),
   disabled: z.boolean().optional(),
-  token: z.string().optional(),
+  token: encrypted(z.string()).optional(),
   prefix: z.string().optional(),
 });
 export type AuthTypeBearer = z.infer<typeof AuthTypeBearerSchema>;
@@ -172,9 +173,9 @@ export type AuthTypeBearer = z.infer<typeof AuthTypeBearerSchema>;
 export const AuthTypeAwsIamSchema = z.object({
   type: z.literal('iam'),
   disabled: z.boolean().optional(),
-  accessKeyId: z.string().optional(),
-  secretAccessKey: z.string().optional(),
-  sessionToken: z.string().optional(),
+  accessKeyId: encrypted(z.string()).optional(),
+  secretAccessKey: encrypted(z.string()).optional(),
+  sessionToken: encrypted(z.string()).optional(),
   region: z.string().optional(),
   service: z.string().optional(),
 });
@@ -193,7 +194,7 @@ export const AuthTypeAsapSchema = z.object({
   subject: z.string().optional(),
   audience: z.string(),
   additionalClaims: z.string().optional(),
-  privateKey: z.string(),
+  privateKey: encrypted(z.string()),
   keyId: z.string(),
 });
 export type AuthTypeAsap = z.infer<typeof AuthTypeAsapSchema>;
@@ -207,7 +208,7 @@ export type AuthTypeNone = z.infer<typeof AuthTypeNoneSchema>;
 export const AuthTypeSingleTokenSchema = z.object({
   type: z.literal('singleToken'),
   disabled: z.boolean().optional(),
-  token: z.string().optional(),
+  token: encrypted(z.string()).optional(),
 });
 export type AuthTypeSingleToken = z.infer<typeof AuthTypeSingleTokenSchema>;
 
