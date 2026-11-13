@@ -35,6 +35,11 @@ interface TreeRow {
   parentId?: string;
   /** The row's position among all visible rows, from `data-index`. */
   index: number;
+  /**
+   * What a release that predates the `data-*` attributes above (see `Tree.fromLegacyRows`) lets a row be told apart
+   * by: the test id of its content, its indent, and its offset from the top of the virtualized list.
+   */
+  legacy?: { testId: string; depth: number; top: number };
 }
 
 export class Tree {
@@ -56,7 +61,9 @@ export class Tree {
     await expect(grid).toBeVisible({ timeout: DEFAULT_TIMEOUT });
 
     const scroller = page.getByTestId("project-navigation-tree-container");
-    const rows = grid.locator("[data-node-type]");
+    // `data-node-type` is only there in the current app: a row of a release an upgrade test starts from has just
+    // `data-key` and `aria-label`, so every row is scraped and told apart by `Tree.fromLegacyRows` afterwards
+    const rows = grid.locator('[role="row"][data-key]');
     const collected = new Map<string, TreeRow>();
 
     let previousSize = -1;
@@ -73,8 +80,16 @@ export class Tree {
           const nodeType = el.dataset.nodeType ?? "";
           const parentId = el.dataset.parentId || undefined;
           const index = Number.parseInt(el.dataset.index ?? "", 10) || 0;
+          const content = el.querySelector<HTMLElement>("[data-testid]");
+          const legacy = nodeType
+            ? undefined
+            : {
+                testId: content?.dataset.testid ?? "",
+                depth: Number.parseFloat(content?.style.paddingLeft ?? "") || 0,
+                top: Number.parseFloat(/translateY\(([\d.]+)px\)/.exec(el.style.transform)?.[1] ?? "") || 0,
+              };
 
-          return { key, name, nodeType, parentId, index };
+          return { key, name, nodeType, parentId, index, legacy };
         }),
       );
 
@@ -96,7 +111,37 @@ export class Tree {
       );
     }
 
-    return Tree.fromRows([...collected.values()]);
+    return Tree.fromRows(Tree.fromLegacyRows([...collected.values()]));
+  }
+
+  /**
+   * Fills in `nodeType`, `parentId` and `index` of the rows that have none, i.e. those of a release that predates the
+   * `data-node-type`, `data-parent-id` and `data-index` attributes (the app an upgrade test creates its data in, see
+   * misc/upgrade-fixture.ts): the kind comes from the test id of the row's content, the order from its offset in the
+   * virtualized list, and the parent is the closest row above it that is indented less. Rows that have the attributes
+   * are returned as they are.
+   */
+  static fromLegacyRows(rows: TreeRow[]): TreeRow[] {
+    const kindByTestId: [prefix: string, kind: string][] = [
+      ["project-node-", "project"],
+      ["unsynced-workspace-node-", "unsyncedWorkspace"],
+      ["workspace-node-", "workspace"],
+      ["request-node-", "collectionChild"],
+      ["pinned-request-node-", "pinnedRequest"],
+      ["empty-node-", ""],
+    ];
+    const ordered = rows.filter((row) => row.legacy).sort((a, b) => a.legacy!.top - b.legacy!.top);
+    const filled = new Map<string, TreeRow>();
+    const parents: TreeRow[] = [];
+    for (const [position, row] of ordered.entries()) {
+      const { testId, depth } = row.legacy!;
+      const emptyKind = testId.startsWith("empty-node-") ? testId.slice("empty-node-".length) : "";
+      const kind = emptyKind || (kindByTestId.find(([prefix]) => testId.startsWith(prefix))?.[1] ?? "");
+      while (parents.length > 0 && parents.at(-1)!.legacy!.depth >= depth) parents.pop();
+      filled.set(row.key, { ...row, nodeType: kind, parentId: parents.at(-1)?.key, index: position });
+      parents.push(row);
+    }
+    return rows.map((row) => filled.get(row.key) ?? row);
   }
 
   /**

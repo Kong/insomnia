@@ -231,6 +231,18 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Expands an existing project and, inside it, an existing collection, so the collection's requests are listed in the
+   * sidebar. The expanded state of the tree is not kept across versions of the app, so a launch on data that an older
+   * release wrote starts with everything collapsed.
+   */
+  @step()
+  async expandCollection(project: string, collection: string): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    await workspace.expand(await workspace.requireItemNode({ name: project }, TreeNodeType.Project));
+    await workspace.expand(await workspace.requireItemNode({ name: collection }, TreeNodeType.Workspace));
+  }
+
+  /**
    * Finds the tree node matching `item` and returns it as a Project model.
    */
   @step()

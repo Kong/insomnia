@@ -55,12 +55,7 @@ test("A file with both encrypted and plaintext values reads correctly and ends u
       clientSecret: token,
       password: plainPassword,
     });
-    await expect(
-      user.pageManager.window
-        .getByRole("dialog")
-        .filter({ hasText: /could not be decrypted|encryption key is not available/ }),
-      `no decryption dialog ${when}`,
-    ).toHaveCount(0);
+    await user.flowManager.fieldEncryptionFlow.expectNoIssueDialog(`${when}`);
   };
 
   // The next start finishes the job

@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { step } from "@package/misc/step";
 import { expect } from "@playwright/test";
@@ -114,7 +115,25 @@ export class FieldEncryptionFlow extends BaseFlow {
   /** Whether an error dialog (e.g. "Could not export the local encryption key") is open. */
   @step()
   async hasErrorDialog(): Promise<boolean> {
-    return this.pageManager.window.getByRole("dialog").filter({ hasText: /^Could not/ }).isVisible();
+    return this.pageManager.localEncryptionKey.errorDialog.root.isVisible();
+  }
+
+  /**
+   * Asserts the app shows nothing about the field encryption: no dialog (so not the startup dialogs A and B either),
+   * no progress bar. Used after a launch that migrated the data, which is meant to go unnoticed.
+   */
+  @step()
+  async expectNoEncryptionUi(): Promise<void> {
+    const { window, fieldEncryptionIssue } = this.pageManager;
+    await expect(new ModalComponent(window).root).toHaveCount(0);
+    await expect(window.getByRole("progressbar")).toHaveCount(0);
+    await expect(fieldEncryptionIssue.root).toHaveCount(0);
+  }
+
+  /** Asserts neither startup dialog (A or B) is open; `when` names the moment in the failure message. */
+  @step()
+  async expectNoIssueDialog(when: string): Promise<void> {
+    await expect(this.pageManager.fieldEncryptionIssue.root, `no decryption dialog ${when}`).toHaveCount(0);
   }
 
   // --- Startup dialogs A and B -------------------------------------------
