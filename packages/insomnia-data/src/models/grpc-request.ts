@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 
 import { type BaseModel, createModelSchema } from './base-types';
+import { encrypted } from './utils/encrypted-field';
 import { replaceIdsInFields } from './utils/replace-ids-in-fields';
 
 export const name = 'gRPC Request';
@@ -34,7 +35,7 @@ export const baseGrpcRequestSchema = z.object({
   reflectionApi: z.object({
     enabled: z.boolean().optional().default(false),
     url: z.string().optional().default(''),
-    apiKey: z.string().optional().default(''),
+    apiKey: encrypted(z.string()).optional().default(''),
     module: z.string().optional().default(''),
   }),
   disableUserAgentHeader: z.boolean().optional(),

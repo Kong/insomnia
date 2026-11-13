@@ -7,6 +7,7 @@ export * from './db-models';
 export * as organization from './organization';
 
 export * from './utils/ignore-keys';
+export { getEncryptedFieldPathsByType, getEncryptedFieldPathsForType } from './encrypted-field-paths';
 
 // Type assertion to ensure dbModels has the expected structure
 dbModels satisfies Record<
