@@ -12,6 +12,9 @@ export const canDuplicate = true;
 
 export const canSync = false;
 
+// Temporary: replaced by `encrypted()` field marks once this model is migrated to a Zod schema
+export const encryptedFields = ['passphrase', 'cert', 'key', 'pfx'];
+
 interface BaseClientCertificate {
   parentId: string;
   host: string;

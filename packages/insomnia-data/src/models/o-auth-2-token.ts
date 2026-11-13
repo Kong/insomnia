@@ -10,6 +10,9 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
+// Temporary: replaced by `encrypted()` field marks once this model is migrated to a Zod schema
+export const encryptedFields = ['refreshToken', 'accessToken', 'identityToken'];
+
 export interface BaseOAuth2Token {
   refreshToken: string;
   accessToken: string;
