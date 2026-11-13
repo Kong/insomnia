@@ -6,6 +6,7 @@ import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, M
 
 import { invariant } from '~/common/utils/invariant';
 import { gitRemoteProviderRegistry } from '~/sync/git/providers';
+import type { GitAuthOptions } from '~/sync/git/providers/types';
 
 // Re-exported for backwards compatibility. The pure URL helpers live in a
 // provider/electron-free module so they can be imported from the renderer.
@@ -28,7 +29,7 @@ const onMessage: MessageCallback = message => {
   console.log(`[git-event] ${message}`);
 };
 
-const onAuthFailure = (credentialsId?: string | null, repoPath?: string): AuthFailureCallback => {
+const onAuthFailure = (credentialsId?: string | null, repoPath?: string, options?: GitAuthOptions): AuthFailureCallback => {
   return async (url, auth) => {
     console.log(`[git-event] Auth Failure: ${url}`);
 
@@ -45,7 +46,7 @@ const onAuthFailure = (credentialsId?: string | null, repoPath?: string): AuthFa
         return;
       }
 
-      const authFailureCallback = provider.authFailureCallback(credentials, url, auth, repoPath);
+      const authFailureCallback = provider.authFailureCallback(credentials, url, auth, repoPath, options);
 
       return authFailureCallback;
     } catch (error) {
@@ -79,7 +80,7 @@ const onAuthSuccess = (credentialsId?: string | null, repoPath?: string): AuthSu
 };
 
 const onAuth =
-  (credentialsId?: string | null, repoPath?: string): AuthCallback =>
+  (credentialsId?: string | null, repoPath?: string, options?: GitAuthOptions): AuthCallback =>
   async (url): Promise<GitAuth> => {
     if (!credentialsId) {
       console.log('[git-event] No credentials');
@@ -103,7 +104,7 @@ const onAuth =
 
     if (provider && provider.authCallback) {
       console.log(`[git-event] Using provider ${provider.config.type} for auth callback`);
-      const gitAuth = provider.authCallback(credentials, url, repoPath);
+      const gitAuth = provider.authCallback(credentials, url, repoPath, options);
       return gitAuth;
     }
 
@@ -158,11 +159,15 @@ export const getAuthorFromGitRepository = async (gitRepositoryId: string, repoPa
   };
 };
 
-export const gitCallbacks = (credentialsId?: string | null, repoPath?: string) => {
+/**
+ * isomorphic-git auth callbacks for a credential. Pass `{ interactive: false }` for
+ * background operations so providers do not start sign-ins.
+ */
+export const gitCallbacks = (credentialsId?: string | null, repoPath?: string, options?: GitAuthOptions) => {
   return {
     onMessage,
-    onAuthFailure: onAuthFailure(credentialsId, repoPath),
+    onAuthFailure: onAuthFailure(credentialsId, repoPath, options),
     onAuthSuccess: onAuthSuccess(credentialsId, repoPath),
-    onAuth: onAuth(credentialsId, repoPath),
+    onAuth: onAuth(credentialsId, repoPath, options),
   };
 };

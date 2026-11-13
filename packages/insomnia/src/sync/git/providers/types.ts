@@ -193,7 +193,12 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
    * Prepare auth callback for isomorphic-git
    * Converts credential to format expected by isomorphic-git
    */
-  authCallback(credential: GitCredentials, url?: string, repoPath?: string): Promise<GitAuth> | GitAuth;
+  authCallback(
+    credential: GitCredentials,
+    url?: string,
+    repoPath?: string,
+    options?: GitAuthOptions,
+  ): Promise<GitAuth> | GitAuth;
 
   /**
    * Prepare auth failure callback for isomorphic-git
@@ -205,6 +210,7 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
     url?: string,
     auth?: GitAuth,
     repoPath?: string,
+    options?: GitAuthOptions,
   ): Promise<GitAuth> | GitAuth | void | Promise<void>;
 
   /**
@@ -213,6 +219,15 @@ export interface GitRemoteProvider<TConfig extends BaseProviderConfig = BaseProv
    * confirm credentials externally implement it.
    */
   authSuccessCallback?(credential: GitCredentials, url: string, auth: GitAuth, repoPath?: string): Promise<void> | void;
+}
+
+/** How a git operation may authenticate. */
+export interface GitAuthOptions {
+  /**
+   * False for background operations (e.g. the periodic fetch): providers must not
+   * start interactive sign-ins or show sign-in UI. Defaults to true.
+   */
+  interactive?: boolean;
 }
 
 export interface GitProviderOption {

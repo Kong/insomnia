@@ -22,6 +22,7 @@ const nativeCredentials = { _id: 'git-creds-native', provider: 'native' };
 
 describe('gitCallbacks', () => {
   const provider = {
+    config: { type: 'native' },
     authCallback: vi.fn(),
     authFailureCallback: vi.fn(),
     authSuccessCallback: vi.fn(),
@@ -64,6 +65,26 @@ describe('gitCallbacks', () => {
       'https://example.com/repo.git',
       auth,
       '/repo',
+      undefined,
+    );
+  });
+
+  it('passes the interactive option to the provider', async () => {
+    const callbacks = gitCallbacks('git-creds-native', '/repo', { interactive: false });
+    const auth = { username: 'user', password: 'stale' };
+
+    await callbacks.onAuth('https://example.com/repo.git', {});
+    await callbacks.onAuthFailure('https://example.com/repo.git', auth);
+
+    expect(provider.authCallback).toHaveBeenCalledWith(nativeCredentials, 'https://example.com/repo.git', '/repo', {
+      interactive: false,
+    });
+    expect(provider.authFailureCallback).toHaveBeenCalledWith(
+      nativeCredentials,
+      'https://example.com/repo.git',
+      auth,
+      '/repo',
+      { interactive: false },
     );
   });
 
