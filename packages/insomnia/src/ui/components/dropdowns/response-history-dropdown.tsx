@@ -29,7 +29,8 @@ import {
   dismissResponseHistoryHint,
   HINT_DURATION_MS,
   isResponseHistoryHintDismissed,
-  shouldShowResponseHistoryHint,
+  REQUEST_CONTENT_EDITED_EVENT,
+  type RequestContentEditedDetail,
 } from './response-history-hint';
 
 const { isRequest } = models.request;
@@ -44,13 +45,10 @@ export const ResponseHistoryDropdown = ({
   activeResponse,
   responses,
   requestVersions,
-  requestModified,
 }: {
   activeResponse: ResponseType;
   responses: ResponseType[];
   requestVersions: RequestVersion[];
-  /** Last modification timestamp of the request, used to detect edits. */
-  requestModified: number;
 }) => {
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
@@ -64,11 +62,6 @@ export const ResponseHistoryDropdown = ({
   const [isHintDismissed, setIsHintDismissed] = useState(isResponseHistoryHintDismissed);
   const [isHintVisible, setIsHintVisible] = useState(false);
   const hintTimer = useRef<number | null>(null);
-  const previousRequest = useRef({
-    requestId,
-    activeResponseId: activeResponse._id,
-    requestModified,
-  });
   const hasRestorableHistory = responses.some(response => Boolean(response.requestVersionId));
   const now = new Date();
   const categories: Record<string, ResponseType[]> = {
@@ -117,32 +110,26 @@ export const ResponseHistoryDropdown = ({
   );
 
   useEffect(() => {
-    const previous = previousRequest.current;
-    previousRequest.current = {
-      requestId,
-      activeResponseId: activeResponse._id,
-      requestModified,
+    // The hint describes the request this dropdown belongs to, so drop it when the
+    // user moves to another request.
+    setIsHintVisible(false);
+  }, [requestId]);
+
+  useEffect(() => {
+    const onContentEdited = (event: Event) => {
+      const detail = (event as CustomEvent<RequestContentEditedDetail>).detail;
+      if (detail?.requestId !== requestId) {
+        return;
+      }
+      if (!hasRestorableHistory || isHintDismissed || hintShownThisSession) {
+        return;
+      }
+      hintShownThisSession = true;
+      showHint();
     };
-    if (previous.requestId !== requestId) {
-      setIsHintVisible(false);
-    }
-    const shouldShow = shouldShowResponseHistoryHint({
-      previousRequestId: previous.requestId,
-      requestId,
-      previousActiveResponseId: previous.activeResponseId,
-      activeResponseId: activeResponse._id,
-      previousModified: previous.requestModified,
-      modified: requestModified,
-      hasRestorableHistory,
-      hintDismissed: isHintDismissed,
-      alreadyShown: hintShownThisSession,
-    });
-    if (!shouldShow) {
-      return;
-    }
-    hintShownThisSession = true;
-    showHint();
-  }, [requestId, activeResponse._id, requestModified, hasRestorableHistory, isHintDismissed, showHint]);
+    window.addEventListener(REQUEST_CONTENT_EDITED_EVENT, onContentEdited);
+    return () => window.removeEventListener(REQUEST_CONTENT_EDITED_EVENT, onContentEdited);
+  }, [requestId, hasRestorableHistory, isHintDismissed, showHint]);
 
   const hideHintPermanently = useCallback(() => {
     dismissResponseHistoryHint();
