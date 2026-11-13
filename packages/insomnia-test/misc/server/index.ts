@@ -20,11 +20,14 @@ import githubApi from './github-api.ts';
 import gitlabApi from './gitlab-api.ts';
 import { schema } from './graphql.ts';
 import { startGRPCServer } from './grpc.ts';
+import { startHelloGrpcServers } from './grpc-hello.ts';
 import grpcReflectionApi from './grpc-reflection-api.ts';
+import { startHandshakeEchoServers } from './handshake-echo.ts';
 import insomniaApi from './insomnia-api.ts';
 import { mockApi } from './mock-api.ts';
 import { mtlsRouter } from './mtls.ts';
 import { oauthRoutes } from './oauth.ts';
+import { startOAuth2Server } from './oauth2.ts';
 import simpleCrud from './simple-crud.ts';
 import { startSocketIOServer } from './socket-io.ts';
 import { startWebSocketServer } from './websocket.ts';
@@ -296,5 +299,8 @@ startWebSocketServer(
 );
 
 startSocketIOServer();
+startOAuth2Server();
+startHandshakeEchoServers();
+startHelloGrpcServers();
 
 startGRPCServer(grpcPort);
