@@ -73,7 +73,7 @@ export interface SpanTree {
 const NANOS_PER_MS = 1_000_000n;
 
 // Span timestamps are unix nanoseconds as strings: too large for a JS number to hold exactly.
-function toBigInt(value: string): bigint {
+export function toBigInt(value: string): bigint {
   try {
     return BigInt(value);
   } catch {
