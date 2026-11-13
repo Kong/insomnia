@@ -1,17 +1,17 @@
 import classnames from 'classnames';
 import type { KonnectProject, WorkspaceChildrenForScope } from 'insomnia-data';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useRef, useState } from 'react';
 import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 
 import type { DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
 import {
   buildSpanTree,
   flattenVisible,
-  getRouteIdsFromTraceDetail,
   getTracePath,
   parseKonnectError,
   type SpanNode,
   summarizeTrace,
+  toBigInt,
   type TraceSummaryBreakdown,
 } from '~/konnect/debug-trace-helper';
 import { getDebugSessionsUrl } from '~/konnect/links';
@@ -112,7 +112,6 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
     debugSession,
     debugSessionState,
     traces: originTraces,
-    traceDetails,
     debugSessionAction,
     capturedSecs,
     ctx: debugSessionContext,
@@ -127,7 +126,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   const isCapturing = isActive || isCompleting;
 
   const traces = useMemo(
-    () => [...originTraces].sort((a, b) => Number(BigInt(b.startTimeUnixNano) - BigInt(a.startTimeUnixNano))),
+    () => [...originTraces].sort((a, b) => Number(toBigInt(b.startTimeUnixNano) - toBigInt(a.startTimeUnixNano))),
     [originTraces],
   );
   const existingSelectedTraceId =
@@ -148,18 +147,6 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
       ),
     [projectCollections, collectionByWorkspaceIds],
   );
-  const routeRequestByTraceId = useMemo(() => {
-    const result = new Map<string, KonnectRouteRequest>();
-    for (const trace of traces) {
-      const detail = traceDetails.get(trace.traceId);
-      const routeRequest =
-        detail && findRouteRequestForTrace(routeRequests, getRouteIdsFromTraceDetail(detail), trace.method);
-      if (routeRequest) {
-        result.set(trace.traceId, routeRequest);
-      }
-    }
-    return result;
-  }, [traces, traceDetails, routeRequests]);
   const tabNavigate = useTabNavigate();
   const openRequest = ({ request, workspaceId, workspaceName }: KonnectRouteRequest) =>
     tabNavigate(
@@ -269,19 +256,19 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
         <div className="flex min-h-0 flex-1">
           <TraceList
             traces={traces}
-            routeRequestByTraceId={routeRequestByTraceId}
-            onOpenRequest={openRequest}
             selectedId={existingSelectedTraceId}
             onSelect={setSelectedTraceId}
             isActive={isActive}
           />
-          <div className="min-w-0 flex-1 overflow-y-auto">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
             {selectedTrace ? (
               <TraceDetail
                 key={selectedTrace.traceId}
                 trace={selectedTrace}
                 ctx={debugSessionContext}
                 sessionId={debuggerSessionId!}
+                routeRequests={routeRequests}
+                onOpenRequest={openRequest}
               />
             ) : (
               <div className="p-6 text-center text-(--hl)">
@@ -448,15 +435,11 @@ const StatusBanners = ({
 
 const TraceList = ({
   traces,
-  routeRequestByTraceId,
-  onOpenRequest,
   selectedId,
   onSelect,
   isActive,
 }: {
   traces: DebugTraceSummary[];
-  routeRequestByTraceId: ReadonlyMap<string, KonnectRouteRequest>;
-  onOpenRequest: (routeRequest: KonnectRouteRequest) => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
   isActive: boolean;
@@ -468,7 +451,6 @@ const TraceList = ({
     </div>
     {traces.length === 0 && isActive && <div className="px-3 py-2 text-xs text-(--hl)">Listening for traffic…</div>}
     {traces.map(trace => {
-      const routeRequest = routeRequestByTraceId.get(trace.traceId);
       const isSelected = trace.traceId === selectedId;
       const upperTraceMethod = (trace.method || '').toUpperCase();
       return (
@@ -498,15 +480,6 @@ const TraceList = ({
             </div>
             <span className="text-xs text-(--hl)">{formatMs(trace.durationMs)}</span>
           </Button>
-          {routeRequest && (
-            <Button
-              onPress={() => onOpenRequest(routeRequest)}
-              aria-label={`Open request ${routeRequest.request.name}`}
-              className="absolute right-2.5 bottom-2.5 flex max-w-[45%] items-center gap-1 truncate text-xs text-(--color-surprise) underline ring-1 ring-transparent outline-hidden focus:ring-(--hl-md)"
-            >
-              <span className="truncate">{routeRequest.request.name}</span>
-            </Button>
-          )}
           <CopyButton
             size="small"
             content={trace.traceId}
@@ -577,14 +550,22 @@ const TraceDetail = ({
   trace,
   ctx,
   sessionId,
+  routeRequests,
+  onOpenRequest,
 }: {
   trace: DebugTraceSummary;
   ctx: DebugSessionApiContext;
   sessionId: string;
+  routeRequests: KonnectRouteRequest[];
+  onOpenRequest: (routeRequest: KonnectRouteRequest) => void;
 }) => {
   const { detail, errorKind, refetch: onRetry } = useKonnectDebuggerSessionTrace(ctx, sessionId, trace.traceId);
   const tree = useMemo(() => (detail ? buildSpanTree(detail) : null), [detail]);
   const summary = useMemo(() => (tree ? summarizeTrace(tree) : null), [tree]);
+  const routeRequest = useMemo(
+    () => (summary ? findRouteRequestForTrace(routeRequests, summary) : null),
+    [summary, routeRequests],
+  );
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [expandedAttrs, setExpandedAttrs] = useState<ReadonlySet<string>>(new Set());
 
@@ -599,11 +580,20 @@ const TraceDetail = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 p-4">
-      <div className="flex items-stretch gap-2 font-mono">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
+      <div className="flex shrink-0 items-stretch gap-2 font-mono">
         {trace.statusCode !== null && <StatusTag statusCode={trace.statusCode} />}
         <TimeTag milliseconds={summary?.totalMs ?? tree?.totalMs ?? trace.durationMs} />
         <SizeTag bytesRead={summary?.responseSize || 0} bytesContent={0} showTooltip={false} />
+        {routeRequest && (
+          <Button
+            onPress={() => onOpenRequest(routeRequest)}
+            aria-label={`Open request ${routeRequest.request.name}`}
+            className="ml-auto flex min-w-0 items-center gap-1 truncate text-xs text-(--color-surprise) underline ring-1 ring-transparent outline-hidden focus:ring-(--hl-md)"
+          >
+            <span className="truncate">{routeRequest.request.name}</span>
+          </Button>
+        )}
       </div>
 
       {errorKind ? (
@@ -623,7 +613,7 @@ const TraceDetail = ({
           {summary && (
             <>
               <div
-                className="flex h-2 w-full overflow-hidden rounded-full bg-(--hl-sm)"
+                className="flex h-2 w-full shrink-0 overflow-hidden rounded-full bg-(--hl-sm)"
                 role="img"
                 aria-label="Time split"
               >
@@ -631,7 +621,7 @@ const TraceDetail = ({
                   <div key={part} className={PART_BG[part]} style={{ width: `${pct}%` }} />
                 ))}
               </div>
-              <div className="flex flex-col gap-1 text-sm">
+              <div className="flex shrink-0 flex-col gap-1 text-sm">
                 {summaryParts(summary).map(({ part, ms, pct }) => (
                   <div key={part} className="flex items-center gap-2">
                     <span className={classnames('inline-block h-2 w-2 rounded-xs', PART_BG[part])} />
@@ -644,7 +634,7 @@ const TraceDetail = ({
             </>
           )}
 
-          <div className="mt-2 flex flex-col">
+          <div className="min-h- mt-2 flex flex-1 flex-col overflow-y-auto">
             {flattenVisible(tree.roots, collapsed).map(node => (
               <SpanRow
                 key={node.span.spanId}
@@ -679,31 +669,48 @@ const SpanRow = ({
   onToggleAttrs: () => void;
 }) => {
   const attributes = Object.entries(node.span.attributes);
+  const nameRef = useRef<HTMLButtonElement>(null);
   const left = totalMs > 0 ? (node.startOffsetMs / totalMs) * 100 : 0;
   const width = totalMs > 0 ? Math.max((node.durationMs / totalMs) * 100, 0.4) : 0;
   return (
     <div>
       <div className="flex h-7 items-center gap-2 hover:bg-(--hl-xs)">
-        <div className="flex w-56 shrink-0 items-center truncate" style={{ paddingLeft: `${node.depth * 12}px` }}>
+        <div
+          className="flex w-56 shrink-0 items-center gap-1.5 truncate"
+          style={{ paddingLeft: `${node.depth * 12}px` }}
+        >
           {node.children.length > 0 ? (
             <Button
               aria-label={isCollapsed ? `Expand ${node.name}` : `Collapse ${node.name}`}
               onPress={onToggleChildren}
-              className="flex w-4 items-center justify-center text-(--hl)"
+              className="flex w-4 shrink-0 items-center justify-center text-(--hl)"
             >
               <Icon icon={isCollapsed ? 'caret-right' : 'caret-down'} />
             </Button>
           ) : (
-            <span className="w-4" />
+            <span className="w-4 shrink-0" />
           )}
-          <Button
-            isDisabled={attributes.length === 0}
-            onPress={onToggleAttrs}
-            className="truncate text-left disabled:cursor-default"
-            aria-expanded={isAttrsOpen}
+          <Tooltip
+            message={node.name}
+            position="top"
+            className="min-w-0"
+            shouldShow={() => {
+              const el = nameRef.current;
+              return !!el && el.scrollWidth > el.clientWidth;
+            }}
           >
-            {node.name}
-          </Button>
+            <Button
+              ref={nameRef}
+              isDisabled={attributes.length === 0}
+              onPress={onToggleAttrs}
+              className={classnames('block w-full truncate text-left disabled:cursor-default', {
+                'cursor-pointer decoration-dotted underline-offset-2 hover:underline': attributes.length > 0,
+              })}
+              aria-expanded={isAttrsOpen}
+            >
+              {node.name}
+            </Button>
+          </Tooltip>
         </div>
         <div className="relative h-2 min-w-0 flex-1 rounded-xs bg-(--hl-sm)">
           <div
@@ -720,8 +727,10 @@ const SpanRow = ({
         >
           {attributes.map(([key, value]) => (
             <div key={key} className="flex gap-3">
-              <span className="text-(--hl)">{key}</span>
-              <span className="break-all">{typeof value === 'string' ? value : JSON.stringify(value)}</span>
+              <span className="max-w-[50%] shrink-0 break-all text-(--hl)">{key}</span>
+              <span className="min-w-0 flex-1 break-all">
+                {typeof value === 'string' ? value : JSON.stringify(value)}
+              </span>
             </div>
           ))}
         </div>
