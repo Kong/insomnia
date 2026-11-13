@@ -25,6 +25,30 @@ const config = {
     './package.json',
   ],
   publish: null,
+  // `--win --dir` builds no nsis target, so electron-builder does not write resources/app-update.yml,
+  // and the NSIS updater needs it. The dist step uses --prepackaged, so afterPack does not run there.
+  afterPack: async context => {
+    if (context.electronPlatformName !== 'win32') {
+      return;
+    }
+    const fs = require('fs');
+    const path = require('path');
+    const target = path.join(context.appOutDir, 'resources', 'app-update.yml');
+    if (fs.existsSync(target)) {
+      return;
+    }
+    const publish = context.packager.config.win?.publish;
+    if (!publish || typeof publish !== 'object') {
+      throw new Error('[afterPack] win.publish is not configured, cannot write app-update.yml');
+    }
+    const entries = { ...publish, updaterCacheDirName: context.packager.appInfo.updaterCacheDirName };
+    fs.writeFileSync(
+      target,
+      Object.entries(entries)
+        .map(([k, v]) => `${k}: ${v}\n`)
+        .join(''),
+    );
+  },
   extraResources: [
     {
       from: './bin',

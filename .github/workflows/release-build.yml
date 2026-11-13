@@ -173,6 +173,18 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.DIGICERT_SM_CLIENT_CERT_PASSWORD }}
           SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
+      # --win --dir builds no nsis target, so the afterPack hook writes app-update.yml. NSIS auto-update fails without it.
+      - name: Check app-update.yml exists in unpacked app (Windows only)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          f=packages/insomnia/dist/win-unpacked/resources/app-update.yml
+          if [ ! -s "$f" ] || ! grep -q 'updates.insomnia.rest' "$f"; then
+            echo "::error::$f is missing or invalid"
+            exit 1
+          fi
+          cat "$f"
+
       # Built before any Windows code-signing step on purpose: if this fails, no signing token is spent on a run
       # that cannot finish. It must stay after the app packaging steps, install-libcurl-node swaps the libcurl binary.
       - name: Package inso
