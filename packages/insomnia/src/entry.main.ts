@@ -30,11 +30,13 @@ import { getAppVersion, getProductName, isDevelopment } from './common/constants
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
+import { reportDatabaseStartupFailure } from './main/database-startup-error';
 import { backfillAllManagedGitFolderSlugs, registerGitServiceAPI } from './main/git-service';
 import { registerAllIpcHandlers } from './main/ipc/base-ipc-handler';
 import { registerCookieHandlers } from './main/ipc/cookies';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
+import { fieldEncryptionIpcHandler } from './main/ipc/field-encryption';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
@@ -111,7 +113,7 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
-  registerAllIpcHandlers([new SyncIpcHandler(), new GitIpcHandler()]);
+  registerAllIpcHandlers([new SyncIpcHandler(), new GitIpcHandler(), fieldEncryptionIpcHandler]);
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
@@ -142,7 +144,13 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await initDatabase(mainDatabase);
+  try {
+    await initDatabase(mainDatabase);
+  } catch (error) {
+    // There is no window yet. Without this the process would stay alive with nothing on screen.
+    await reportDatabaseStartupFailure(error, dataPath);
+    return;
+  }
   // Initialize services for main process
   initServices(servicesNodeImpl);
   initRuntime(nodeRuntime);

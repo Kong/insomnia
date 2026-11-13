@@ -2,6 +2,7 @@ import { createSecretKey, generateKeySync, type KeyObject } from 'node:crypto';
 
 import { safeStorage } from 'electron';
 
+import type ElectronStorage from './electron-storage';
 import { getElectronStorage } from './electron-storage';
 
 /**
@@ -20,7 +21,8 @@ import { getElectronStorage } from './electron-storage';
  * - A new key is generated only when the key file does not exist. Anything else that goes wrong with an existing key file
  *   (unreadable, corrupt, cannot be decrypted, temporarily unavailable) leaves the file untouched and the database runs
  *   without encryption for this session ("degraded mode"). The next launch tries again. Generating a new key over an
- *   unreadable one would orphan every encrypted field on disk.
+ *   unreadable one would orphan every encrypted field on disk. The only way out is the user's explicit decision to start
+ *   over (`setAsideLocalEncryptionKey`): the file is renamed, never deleted, so that the next launch finds no key file.
  * - A new key is saved and read back before it is returned, so no datastore is ever written with encryption before the key
  *   is safely on disk. A crash after the `.db` files are encrypted, but before the key is on disk, would make the data
  *   unreadable for good.
@@ -239,6 +241,35 @@ export const createLocalEncryptionKeyProvider = ({
       return undefined;
     }
   };
+};
+
+/**
+ * Whether there is a key file. A file that exists but cannot be read counts as existing: it is there, and it is not for
+ * this check to decide that it is unusable.
+ */
+export const localEncryptionKeyFileExists = (
+  storage: Pick<ElectronStorage, 'getItemStrict'> = getElectronStorage(),
+) => {
+  try {
+    return storage.getItemStrict(LOCAL_ENCRYPTION_KEY_STORAGE_KEY) !== null;
+  } catch {
+    return true;
+  }
+};
+
+/**
+ * Moves the key file aside, so that the next launch finds no key file and creates a new key. Only for the user's explicit
+ * decision to give up the encrypted values that the old key protects. The file is renamed rather than deleted, so the old
+ * key can be put back (for example when the data directory is moved back to the machine it came from). Resolves the name
+ * the key file was moved to.
+ */
+export const setAsideLocalEncryptionKey = async (
+  storage: Pick<ElectronStorage, 'renameItem'> = getElectronStorage(),
+  now = Date.now(),
+) => {
+  const backupKey = `${LOCAL_ENCRYPTION_KEY_STORAGE_KEY}.bak-${now}`;
+  await storage.renameItem(LOCAL_ENCRYPTION_KEY_STORAGE_KEY, backupKey);
+  return backupKey;
 };
 
 /** Loads the local encryption key, creating it on the first launch. Needs `app` to be ready. */
