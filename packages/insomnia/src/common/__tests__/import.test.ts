@@ -172,6 +172,48 @@ describe('importRaw()', () => {
     });
   });
 
+  // https://github.com/Kong/insomnia/issues/10747
+  it('should persist the per-field media type of an imported curl form-data request', async () => {
+    const content = `curl --location --request POST 'https://example.com/api/actions/uploadFiles' --form 'uploadFileRequestParam="{\\"uploadType\\": \\"2\\"}";type=application/json' --form 'file=@"/tmp/abc.xml"'`;
+
+    const projectToImportTo = await services.project.create();
+
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
+
+    expect(scanResult[0].type?.id).toBe('curl');
+    expect(scanResult[0].errors.length).toBe(0);
+
+    await importUtil.importResourcesToProject({
+      projectId: projectToImportTo._id,
+    });
+
+    const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
+    const curlRequests = await services.request.findByParentId(projectWorkspaces[0]._id);
+
+    expect(curlRequests[0]).toMatchObject({
+      body: {
+        mimeType: 'multipart/form-data',
+        params: [
+          {
+            name: 'uploadFileRequestParam',
+            value: '{"uploadType": "2"}',
+            type: 'text',
+            multiline: 'application/json',
+          },
+          {
+            name: 'file',
+            fileName: '/tmp/abc.xml',
+            type: 'file',
+          },
+        ],
+      },
+    });
+  });
+
   it('should call syncNewWorkspaceIfNeeded after importing to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
