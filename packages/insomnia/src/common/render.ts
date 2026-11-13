@@ -766,6 +766,12 @@ export async function getRenderContext({
     : await services.environment.getById('n/a');
 
   const settings = await services.settings.get();
+  // User preference OR organization enforcement, resolved once here so every consumer of
+  // getSettings() (masking policy, templating worker, external vault tags) sees the same value.
+  const hideSecretValuesInPreviewAndConsole = await services.organization.resolveHideSecretValues({
+    organizationId: project?.parentId,
+    settings,
+  });
 
   // Add meta data helper function
   const baseContext: Omit<BaseRenderContext, 'getKeysContext'> = {
@@ -781,7 +787,7 @@ export async function getRenderContext({
     getProjectId: () => project?._id,
     getSettings: () => ({
       dataFolders: settings.dataFolders,
-      hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
+      hideSecretValuesInPreviewAndConsole,
       forceReveal: forceReveal,
     }),
     ...(sensitiveValueCollector != null ? { getSensitiveValueCollector: () => sensitiveValueCollector } : {}),

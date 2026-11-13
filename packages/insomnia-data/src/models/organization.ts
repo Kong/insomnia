@@ -1,4 +1,4 @@
-import type { Organization, PersonalPlanType } from 'insomnia-api';
+import type { FeatureList, Organization, PersonalPlanType } from 'insomnia-api';
 
 export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
 export const isScratchpadOrganizationId = (organizationId: string) => organizationId === SCRATCHPAD_ORGANIZATION_ID;
@@ -15,6 +15,10 @@ export const isKonnectOrganizationId = (organizationId: string) =>
 /** Organizations that exist only on this machine and must never be used for organization-scoped API calls. */
 export const isLocalOrganizationId = (organizationId: string) =>
   isScratchpadOrganizationId(organizationId) || isKonnectOrganizationId(organizationId);
+
+/** True when the organization admin enforces hiding confidential values in Preview/Console. */
+export const isHideSecretValuesEnforcedByOrganization = (features: FeatureList | null | undefined) =>
+  features?.hideSecretValuesInPreviewAndConsole?.enabled === true;
 
 export const buildKonnectOrganization = (accountId: string): Organization => ({
   id: getKonnectOrganizationId(accountId),

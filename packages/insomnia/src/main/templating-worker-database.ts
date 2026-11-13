@@ -781,7 +781,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
 
     // Renders with purpose 'send', so confidential values are real here and need the same
     // timeline/response redaction the main send path gets.
-    const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+    const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValuesForDoc(request, settings));
     const renderResult = await tryToInterpolateRequest({
       request,
       environment: environment._id,

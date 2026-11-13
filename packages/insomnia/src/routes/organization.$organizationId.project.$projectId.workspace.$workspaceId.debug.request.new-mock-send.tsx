@@ -43,7 +43,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   // Renders with purpose 'send', so confidential values are real here and need the same
   // timeline/response redaction the main send path gets.
-  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValuesForDoc(req, settings));
   const renderResult = await tryToInterpolateRequest({
     request: req,
     environment: environment._id,

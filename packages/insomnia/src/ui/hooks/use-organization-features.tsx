@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -12,6 +13,7 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+  hideSecretValuesInPreviewAndConsole: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period
@@ -41,7 +43,13 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
     queryKey: ['organization-features', organizationId],
     queryFn: async () => {
       const { id: sessionId } = await services.userSession.get();
-      return getOrganizationFeatures({ organizationId, sessionId });
+      const result = await getOrganizationFeatures({ organizationId, sessionId });
+      // Share the fresh result with the render/send code path, which reads org features
+      // through the organization service (main-process cache) rather than this query cache.
+      if (result?.features) {
+        await services.organization.setFeatures(organizationId, result.features);
+      }
+      return result;
     },
     enabled: isEnabled,
   });
@@ -109,6 +117,21 @@ export function useAIFeatureStatus(): AIFeatureStatus {
     isGenerateCommitMessagesWithAIEnabled:
       generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
     isMCPWithAIEnabled: mcpClientWithAIAllowedByOrg && mcpIntegrationWithAIEnabledByUser && hasActiveLLM,
+  };
+}
+
+/**
+ * Effective "hide confidential values in Preview/Console" for the current organization:
+ * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValues,
+ * which the render/send code path uses.
+ */
+export function useHideSecretValues() {
+  const { settings } = useRootLoaderData()!;
+  const { features } = useOrganizationPermissions();
+  const isEnforcedByOrganization = models.organization.isHideSecretValuesEnforcedByOrganization(features);
+  return {
+    hideSecretValues: (settings.hideSecretValuesInPreviewAndConsole ?? true) || isEnforcedByOrganization,
+    isEnforcedByOrganization,
   };
 }
 
