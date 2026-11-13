@@ -10,8 +10,8 @@ import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
-export const name = 'OpenAPI 3.0';
-export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
+export const name = 'OpenAPI 3.x';
+export const description = 'Importer for OpenAPI 3.x specification (json/yaml)';
 const toCamelCase = (a: string) =>
   a
     .replace(/`|'/g, '')
@@ -31,6 +31,32 @@ function isPlainObject(value: any) {
 }
 
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/;
+
+// Minimal additions for OpenAPI 3.2, which `openapi-types` does not cover yet
+// `query` is handled like any other method key; `additionalOperations` maps custom HTTP methods to operations
+type PathItemObjectV3_2 = OpenAPIV3.PathItemObject & {
+  query?: OpenAPIV3.OperationObject;
+  additionalOperations?: Record<string, OpenAPIV3.OperationObject>;
+};
+
+// `in: querystring` parameter: has `content` instead of `schema`
+interface QueryStringParameterObject {
+  name: string;
+  in: 'querystring';
+  required?: boolean;
+  content?: Record<string, OpenAPIV3.MediaTypeObject>;
+}
+
+const getWebhooks = (document: OpenAPIV3.Document) => {
+  const { webhooks } = document as OpenAPIV3.Document & { webhooks?: Record<string, PathItemObjectV3_2> };
+  return isPlainObject(webhooks)
+    ? Object.fromEntries(Object.entries(webhooks!).filter(([, item]) => isPlainObject(item)))
+    : {};
+};
+
+const WEBHOOKS_FOLDER_NAME = 'Webhooks';
+const WEBHOOKS_FOLDER_ID = 'fld___WORKSPACE_ID__webhooks';
+const WEBHOOK_URL = '{{ _.webhook_url }}';
 
 // 3.x.x
 const MIMETYPE_JSON = 'application/json';
@@ -167,6 +193,40 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
 };
 
 /**
+ * Merge Path Item level parameters into an operation. Operation level parameters override path level ones with the same `name` + `in`.
+ */
+const mergeParameters = (pathParameters: unknown, operationParameters: unknown) => {
+  if (!Array.isArray(pathParameters) || pathParameters.length === 0) {
+    return operationParameters;
+  }
+  const operationList = Array.isArray(operationParameters) ? operationParameters : [];
+  const overridden = new Set(operationList.map(p => `${p?.in}:${p?.name}`));
+  return [...pathParameters.filter(p => !overridden.has(`${p?.in}:${p?.name}`)), ...operationList];
+};
+
+/**
+ * Return `[method, operation]` pairs of a Path Item, including OpenAPI 3.2 `additionalOperations` (custom HTTP methods such as PURGE).
+ * Path Item level `parameters` are merged into each operation.
+ */
+const getPathItemOperations = (pathItem: PathItemObjectV3_2): [string, OpenAPIV3.SchemaObject][] => {
+  const { additionalOperations, ...standardOperations } = pathItem;
+
+  const methods = Object.entries(standardOperations)
+    // Only keep entries that are plain objects and not spec extensions
+    .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+
+  const customMethods =
+    additionalOperations && isPlainObject(additionalOperations)
+      ? Object.entries(additionalOperations).filter(([, value]) => isPlainObject(value))
+      : [];
+
+  return [...methods, ...customMethods].map(([method, operation]) => {
+    const parameters = mergeParameters(pathItem.parameters, (operation as OpenAPIV3.OperationObject).parameters);
+    return [method, { ...(operation as OpenAPIV3.SchemaObject), ...(parameters ? { parameters } : {}) }];
+  });
+};
+
+/**
  * Create request definitions based on openapi document.
  */
 const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
@@ -177,24 +237,22 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   const rootSecurity = document.security;
   const securitySchemes = document.components?.securitySchemes as OpenAPIV3.SecuritySchemeObject | undefined;
   const defaultParent = WORKSPACE_ID;
+  // `paths` is optional since OpenAPI 3.1, e.g. in a webhooks-only document
+  const paths = document.paths || {};
 
   const endpointsSchemas: ({
     path: string;
     method: string;
     tags?: string[];
-  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths).flatMap(path => {
-    const schemasPerMethod = document.paths[path];
+  } & OpenAPIV3.SchemaObject)[] = Object.keys(paths).flatMap(path => {
+    const schemasPerMethod = paths[path];
 
     if (!schemasPerMethod) {
       return [];
     }
 
-    const methods = Object.entries(schemasPerMethod)
-      // Only keep entries that are plain objects and not spec extensions
-      .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
-
-    return methods.map(([method]) => ({
-      ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
+    return getPathItemOperations(schemasPerMethod as PathItemObjectV3_2).map(([method, operation]) => ({
+      ...operation,
       path,
       method,
     }));
@@ -224,7 +282,34 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     });
   });
 
-  return [...folders, ...requests];
+  // `webhooks` (3.1+): imported into a dedicated folder, the receiver URL is left to the user via `webhook_url`
+  const webhookRequests: ImportRequest[] = [];
+  Object.entries(getWebhooks(document)).forEach(([webhookName, webhookItem]) => {
+    getPathItemOperations(webhookItem).forEach(([method, operation]) => {
+      // Root `security` describes how clients call the API; webhooks are sent by the API provider, so only the
+      // operation's own `security` applies
+      const { security } = operation as unknown as OpenAPIV3.OperationObject;
+      webhookRequests.push(
+        importRequest(
+          { ...operation, path: webhookName, method },
+          WEBHOOKS_FOLDER_ID,
+          security,
+          securitySchemes,
+          WEBHOOK_URL,
+        ),
+      );
+    });
+  });
+  const webhookFolders = webhookRequests.length
+    ? [
+        {
+          ...importFolderItem(defaultParent)({ name: WEBHOOKS_FOLDER_NAME } as OpenAPIV3.SchemaObject),
+          _id: WEBHOOKS_FOLDER_ID,
+        },
+      ]
+    : [];
+
+  return [...folders, ...webhookFolders, ...requests, ...webhookRequests];
 };
 
 /**
@@ -264,6 +349,7 @@ const importRequest = (
   parentId: string,
   security?: OpenAPIV3.SecurityRequirementObject[],
   securitySchemes?: OpenAPIV3.SecuritySchemeObject,
+  urlOverride?: string,
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
@@ -280,7 +366,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
+    url: urlOverride ?? `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
@@ -293,10 +379,113 @@ const importRequest = (
  * Imports insomnia definitions of query parameters.
  */
 const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
-  return convertParameters(
-    endpointSchema.parameters?.filter(
-      parameter => (parameter as OpenAPIV3.ParameterObject).in === 'query',
-    ) as OpenAPIV3.ParameterObject[],
+  return [
+    ...convertParameters(
+      endpointSchema.parameters?.filter(
+        parameter => (parameter as OpenAPIV3.ParameterObject).in === 'query',
+      ) as OpenAPIV3.ParameterObject[],
+    ),
+    ...convertQueryStringParameters(
+      endpointSchema.parameters?.filter(
+        parameter => (parameter as { in?: string }).in === 'querystring',
+      ) as QueryStringParameterObject[],
+    ),
+  ];
+};
+
+/**
+ * OpenAPI 3.2 `in: querystring` describes the whole query string as one `content` entry.
+ * Only `application/x-www-form-urlencoded` object schemas are expanded into one query parameter per property;
+ * a property is enabled only when both the parameter and the property are required.
+ */
+const convertQueryStringParameters = (parameters: QueryStringParameterObject[] = []) => {
+  return parameters.flatMap(({ required, content }) => {
+    const mediaType = content?.['application/x-www-form-urlencoded'];
+    const schema = mediaType?.schema as OpenAPIV3.SchemaObject | undefined;
+    const { properties, required: requiredProperties } = collectObjectSchema(schema);
+    if (!schema || Object.keys(properties).length === 0) {
+      return [];
+    }
+    // Property values come from the media type example, otherwise from an example generated for the whole schema
+    // (so `example` / `default` on the enclosing object schema are honored before falling back to each property)
+    const mediaTypeExample = getExampleValue(mediaType);
+    const exampleSource = mediaTypeExample !== undefined ? mediaTypeExample : generateParameterExample(schema);
+    const exampleValues = isPlainObject(exampleSource) ? (exampleSource as Record<string, unknown>) : {};
+    return Object.entries(properties).flatMap(([propertyName, propertySchema]) => {
+      // own-property check so names such as `toString` don't resolve to `Object.prototype` members
+      const value = Object.hasOwn(exampleValues, propertyName)
+        ? exampleValues[propertyName]
+        : generateParameterExample(propertySchema as OpenAPIV3.SchemaObject);
+      const disabled = required !== true || !requiredProperties.includes(propertyName);
+      return flattenQueryStringProperty(propertyName, value, disabled, mediaType?.encoding?.[propertyName]);
+    });
+  });
+};
+
+/**
+ * Collect the effective `properties` and `required` of an object schema, including those composed through `allOf`.
+ */
+const collectObjectSchema = (schema?: OpenAPIV3.SchemaObject): { properties: Record<string, unknown>; required: string[] } => {
+  const properties: Record<string, unknown> = isPlainObject(schema?.properties) ? { ...schema?.properties } : {};
+  const required: string[] = Array.isArray(schema?.required) ? [...schema.required] : [];
+  for (const subSchema of schema?.allOf ?? []) {
+    if (isPlainObject(subSchema)) {
+      const collected = collectObjectSchema(subSchema as OpenAPIV3.SchemaObject);
+      Object.assign(properties, collected.properties);
+      required.push(...collected.required);
+    }
+  }
+  return { properties, required };
+};
+
+const ARRAY_DELIMITERS: Record<string, string> = { form: ',', spaceDelimited: ' ', pipeDelimited: '|' };
+
+/**
+ * `application/x-www-form-urlencoded` arrays default to `style: form` + `explode: true`, i.e. one repeated
+ * `name=value` pair per item. With `explode: false` (or a delimited style) the items are joined into a single value.
+ */
+const flattenQueryStringProperty = (
+  name: string,
+  value: unknown,
+  disabled: boolean,
+  encoding?: { style?: string; explode?: boolean },
+) => {
+  const style = encoding?.style ?? 'form';
+  const explode = encoding?.explode ?? style === 'form';
+  if (isPlainObject(value)) {
+    // `deepObject` is the only style that uses bracket notation: `filter[role]=admin`
+    if (style === 'deepObject') {
+      return flattenParameter(name, value, disabled);
+    }
+    // form objects: `role=admin` when exploded, otherwise `filter=role,admin`
+    if (explode) {
+      return Object.entries(value as Record<string, unknown>).flatMap(([key, child]) =>
+        flattenParameter(key, child, disabled),
+      );
+    }
+    return flattenParameter(name, Object.entries(value as Record<string, unknown>).flat().join(ARRAY_DELIMITERS[style] ?? ','), disabled);
+  }
+  if (!Array.isArray(value)) {
+    return flattenParameter(name, value, disabled);
+  }
+  if (explode) {
+    return value.length === 0 ? flattenParameter(name, '', disabled) : value.flatMap(item => flattenParameter(name, item, disabled));
+  }
+  return flattenParameter(name, value.join(ARRAY_DELIMITERS[style] ?? ','), disabled);
+};
+
+const hasEventStreamResponse = (endpointSchema: OpenAPIV3.PathItemObject) => {
+  const { responses } = endpointSchema as OpenAPIV3.OperationObject;
+  if (!isPlainObject(responses)) {
+    return false;
+  }
+  return Object.entries(responses).some(
+    ([statusCode, response]) =>
+      /^2(\d\d|XX)$/i.test(statusCode) &&
+      isPlainObject((response as OpenAPIV3.ResponseObject)?.content) &&
+      Object.keys((response as OpenAPIV3.ResponseObject).content!).some(
+        mimeType => mimeType.split(';')[0]!.trim().toLowerCase() === 'text/event-stream',
+      ),
   );
 };
 
@@ -309,6 +498,14 @@ const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => 
       parameter => (parameter as OpenAPIV3.ParameterObject).in === 'header',
     ) as OpenAPIV3.ParameterObject[],
   );
+
+  // A 2xx `text/event-stream` response makes the request an Insomnia Event Stream request, which is detected by this Accept header
+  // Header names are case-insensitive, but the detection is case-sensitive, so a declared `accept` is renamed to `Accept`
+  if (hasEventStreamResponse(endpointSchema)) {
+    paramHeaders = paramHeaders.some(header => header.name.toLowerCase() === 'accept')
+      ? paramHeaders.map(header => (header.name.toLowerCase() === 'accept' ? { ...header, name: 'Accept' } : header))
+      : [{ name: 'Accept', disabled: false, value: 'text/event-stream' }, ...paramHeaders];
+  }
 
   const noContentTypeHeader = !paramHeaders?.find(header => header.name === 'Content-Type');
 
@@ -518,7 +715,11 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
       };
     }
 
-    const example = generateParameterExample(bodyParameter.schema as OpenAPIV3.SchemaObject);
+    const mediaTypeExample = getExampleValue(bodyParameter);
+    const example =
+      mediaTypeExample !== undefined
+        ? mediaTypeExample
+        : generateParameterExample(bodyParameter.schema as OpenAPIV3.SchemaObject);
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: MIMETYPE_JSON,
@@ -534,7 +735,11 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   return {};
 };
 
-const flattenParameter = (name: string, value: unknown, disabled: boolean): { name: string; value: string; disabled: boolean }[] => {
+const flattenParameter = (
+  name: string,
+  value: unknown,
+  disabled: boolean,
+): { name: string; value: string; disabled: boolean }[] => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return Object.entries(value).flatMap(([key, child]) => flattenParameter(`${name}[${key}]`, child, disabled));
   }
@@ -542,12 +747,46 @@ const flattenParameter = (name: string, value: unknown, disabled: boolean): { na
 };
 
 /**
+ * Returns the example declared on a Media Type or Parameter Object: `example`, otherwise the first `examples` entry
+ * with a usable value (OpenAPI 3.2 `dataValue` before `value`; `externalValue` / `serializedValue` are skipped).
+ * Returns `undefined` when there is none, so the caller can fall back to generating one from the schema.
+ */
+const getExampleValue = (holder?: { example?: unknown; examples?: unknown }): unknown => {
+  if (!holder) {
+    return undefined;
+  }
+  if (holder.example !== undefined) {
+    return holder.example;
+  }
+  if (!isPlainObject(holder.examples)) {
+    return undefined;
+  }
+  for (const exampleObject of Object.values(holder.examples as Record<string, unknown>)) {
+    if (!isPlainObject(exampleObject)) {
+      continue;
+    }
+    const { dataValue, value } = exampleObject as { dataValue?: unknown; value?: unknown };
+    if (dataValue !== undefined) {
+      return dataValue;
+    }
+    if (value !== undefined) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+/**
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.flatMap(({ required, name, schema }) =>
-    flattenParameter(name, generateParameterExample(schema as OpenAPIV3.SchemaObject), required !== true),
-  );
+  return parameters.flatMap(parameter => {
+    const { required, name, schema } = parameter;
+    const parameterExample = getExampleValue(parameter);
+    const value =
+      parameterExample !== undefined ? parameterExample : generateParameterExample(schema as OpenAPIV3.SchemaObject);
+    return flattenParameter(name, value, required !== true);
+  });
 };
 
 /**
@@ -605,15 +844,22 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
     }
 
     const {
-      type,
+      type: schemaType,
       format,
       example,
+      examples,
+      const: constValue,
       readOnly,
       default: defaultValue,
+      enum: enumValues,
       allOf,
       oneOf,
       anyOf,
     } = schema as OpenAPIV3.SchemaObject & {
+      // OpenAPI 3.1: `type` can be an array, `examples` is an array and `const` is supported
+      type?: string | string[];
+      examples?: unknown[];
+      const?: unknown;
       allOf?: OpenAPIV3.SchemaObject[];
       oneOf?: OpenAPIV3.SchemaObject[];
       anyOf?: OpenAPIV3.SchemaObject[];
@@ -623,12 +869,25 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
       return;
     }
 
-    if (example) {
+    // `!== undefined` so that falsy values such as `0`, `false` and `''` are kept
+    if (example !== undefined) {
       return example;
     }
 
-    if (defaultValue) {
+    if (Array.isArray(examples) && examples.length > 0) {
+      return examples[0];
+    }
+
+    if (constValue !== undefined) {
+      return constValue;
+    }
+
+    if (defaultValue !== undefined) {
       return defaultValue;
+    }
+
+    if (Array.isArray(enumValues) && enumValues.length > 0) {
+      return enumValues[0];
     }
 
     // Handle allOf by merging examples from all schemas
@@ -652,6 +911,9 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ances
     if (anyOf && Array.isArray(anyOf) && anyOf.length > 0) {
       return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject, [...ancestors, schema]);
     }
+
+    // OpenAPI 3.1 `type: ['string', 'null']`: use the first non-null type
+    const type = Array.isArray(schemaType) ? schemaType.find(t => t !== 'null') : schemaType;
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     const factory = typeExamples[`${type}_${format}`] || typeExamples[type];
@@ -829,6 +1091,9 @@ export const convert: Converter = async rawData => {
     description: apiDocument.info.description || '', // scope is not set because it could be imported for design OR to generate requests
   };
 
+  const endpoints = parseEndpoints(apiDocument);
+  const hasWebhookRequests = endpoints.some(item => item._type === 'request' && item.parentId === WEBHOOKS_FOLDER_ID);
+
   const baseEnv: ImportRequest = {
     _type: 'environment',
     _id: '__BASE_ENVIRONMENT_ID__',
@@ -836,11 +1101,11 @@ export const convert: Converter = async rawData => {
     name: 'Base environment',
     data: {
       base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
+      ...(hasWebhookRequests ? { webhook_url: 'https://example.com/webhook' } : {}),
     },
   };
 
   const openapiEnvs = parseEnvs(baseEnv, apiDocument);
-  const endpoints = parseEndpoints(apiDocument);
 
   return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };
