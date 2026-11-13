@@ -7,18 +7,35 @@ import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
+import { CollectionPage } from "./collection.page";
 import { EnvironmentPage } from "./environment.page";
+import { ExportPage } from "./export.page";
+import { FolderPage } from "./folder.page";
+import { GrpcRequestPage } from "./grpc-request.page";
 import { HttpRequestPage } from "./http-request.page";
+import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
 import { ResponsePage } from "./response.page";
+import { SocketIORequestPage } from "./socket-io-request.page";
 import { SpecPage } from "./spec.page";
+import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
 const pageRegistry = {
+  collectionPage: (page: Page): CollectionPage =>
+    new CollectionPage(page),
   environmentPage: (page: Page): EnvironmentPage =>
     new EnvironmentPage(page),
+  folderPage: (page: Page): FolderPage =>
+    new FolderPage(page),
+  exportPage: (page: Page): ExportPage =>
+    new ExportPage(page),
+  grpcRequestPage: (page: Page): GrpcRequestPage =>
+    new GrpcRequestPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
+  importPage: (page: Page): ImportPage =>
+    new ImportPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
@@ -32,8 +49,12 @@ const pageRegistry = {
     new PreferencesAiComponent(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
+  socketIoRequestPage: (page: Page): SocketIORequestPage =>
+    new SocketIORequestPage(page),
   specPage: (page: Page): SpecPage =>
     new SpecPage(page),
+  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
+    new WebSocketRequestPage(page),
   workspacePage: (page: Page): WorkspacePage =>
     new WorkspacePage(page),
 } satisfies Record<string, (page: Page) => BasePage | BaseComponent>;
@@ -53,6 +74,22 @@ export class PageManager {
   /** Queries the app's database through the current window. See `findDocs`. */
   findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {
     return findDocs(this.page, dbFile, query);
+  }
+
+  /**
+   * Rewires every page/component onto a relaunched app's window (see
+   * `AppFlow.restart()`), keeping references a spec already holds valid.
+   */
+  setWindow(page: Page): void {
+    this.page = page;
+    for (const [name, instance] of this.instances) {
+      if (typeof (instance as BasePage).setContext === "function") {
+        (instance as BasePage).setContext(page);
+      } else {
+        // Components bind their root locator to the old window at construction, so rebuild.
+        this.instances.set(name, pageRegistry[name as PageName](page));
+      }
+    }
   }
 
   private getOrCreate(name: PageName): unknown {

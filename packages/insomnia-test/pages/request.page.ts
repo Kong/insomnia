@@ -116,6 +116,65 @@ export abstract class RequestPage extends BasePage {
   }
 
   /**
+   * Clicks the Connect/Disconnect button to open a connection (for
+   * streaming request types) and waits for it to flip to "Disconnect".
+   * If an error dialog (e.g. "Failed to Render Request") appears instead,
+   * throws using its text rather than waiting out the full timeout for a
+   * button that will never appear.
+   */
+  async connect({
+    expectConnected = true,
+  }: { expectConnected?: boolean } = {}): Promise<void> {
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click();
+    if (!expectConnected) return;
+
+    const disconnectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Disconnect", exact: true });
+    const dialog = this.page.getByRole("dialog").first();
+    await disconnectButton
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
+  }
+
+  /**
+   * Runs the given callback (e.g. to perform assertions or actions while
+   * connected) until it passes within the timeout, then clicks the
+   * Connect/Disconnect button to close the connection and waits for it
+   * to flip back to "Connect".
+   */
+  async disconnect(
+    callback: () => Promise<void> | void = () => {},
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      await callback();
+    }).toPass({ timeout });
+
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click();
+    await expect(connectButton).toHaveText("Connect", {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Reads back the request's current headers.
+   */
+  async getHeaders(): Promise<RequestHeader[]> {
+    return this.readKeyValuePairs("headers");
+  }
+
+  /**
    * Reads back the request's current query parameters.
    */
   async getParams(): Promise<RequestParameter[]> {

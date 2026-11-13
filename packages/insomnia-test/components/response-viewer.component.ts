@@ -15,4 +15,8 @@ export class ResponseViewerComponent extends BaseComponent {
   get tabs(): TabsComponent {
     return new TabsComponent(this.page, this.root);
   }
+
+  get statusTag(): Locator {
+    return this.root.getByTestId("response-status-tag");
+  }
 }

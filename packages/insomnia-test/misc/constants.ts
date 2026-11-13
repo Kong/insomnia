@@ -21,3 +21,23 @@ export const MOCK_API_SERVER = "http://localhost:4010";
 // The single mock server (misc/server/index.ts) serves HTTP on one port.
 export const HTTP_SERVER = MOCK_API_SERVER;
 
+/**
+ * Fixed test credentials `misc/server/oauth2.ts` accepts for its Authorization
+ * Code / Implicit / Client Credentials / Resource Owner Password grants —
+ * mirror any change here into that file.
+ */
+export const OAUTH2_SERVER = "http://localhost:4080";
+export const OAUTH2_CLIENT_ID = "test-client-id";
+export const OAUTH2_CLIENT_SECRET = "test-client-secret";
+
+/** gRPC hello server (`misc/server/grpc-hello.ts`, with server reflection). */
+export const GRPC_SERVER = "localhost:9000";
+
+/**
+ * Servers that answer a connection with the handshake headers (and, for
+ * Socket.IO, the handshake auth) they received — `misc/server/handshake-echo.ts`.
+ */
+export const WS_HANDSHAKE_SERVER = "ws://localhost:4140";
+export const SOCKET_IO_HANDSHAKE_SERVER = "ws://localhost:4141";
+/** `GET` this for the latest Socket.IO handshake the server received, as `{ headers, auth }`. */
+export const SOCKET_IO_LAST_HANDSHAKE = "http://localhost:4141/last-handshake";
