@@ -5,6 +5,8 @@ import { LOCAL_ENCRYPTION_KEY_STORAGE_KEY } from '../local-encryption-key';
  * Keys of the main process's `ElectronStorage` that the renderer must never read, write or delete through the generic
  * storage IPC handlers. The local encryption key is the only one: a renderer that could delete or overwrite its file would
  * make the next launch create a new key, which orphans every encrypted field on disk, or plant a key of its own choosing.
+ * Every key that starts with a reserved name is reserved too, which covers the copies that are set aside when the user
+ * starts over with a new key (`<name>.bak-<time>`).
  */
 const RESERVED_STORAGE_KEYS = [LOCAL_ENCRYPTION_KEY_STORAGE_KEY];
 
@@ -23,7 +25,7 @@ const isReservedStorageKey = (key: string) => {
   const storage = getElectronStorage();
   return RESERVED_STORAGE_KEYS.some(
     reservedKey =>
-      normalized === normalizeKey(reservedKey) ||
+      normalized.startsWith(normalizeKey(reservedKey)) ||
       // Any other way to reach the same file (a Windows short name, a hard link)
       storage.isSameFile(key, reservedKey),
   );

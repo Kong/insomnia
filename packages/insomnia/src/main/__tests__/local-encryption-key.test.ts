@@ -11,6 +11,8 @@ import {
   createLocalEncryptionKeyProvider,
   isTemporarilyUnavailableError,
   LOCAL_ENCRYPTION_KEY_STORAGE_KEY,
+  localEncryptionKeyFileExists,
+  setAsideLocalEncryptionKey,
 } from '../local-encryption-key';
 
 vi.mock('electron', () => ({ safeStorage: {} }));
@@ -365,6 +367,86 @@ describe('local encryption key', () => {
 
   it('stores the key in the file localStorage/fieldEncryptionKey of the data directory', () => {
     expect(LOCAL_ENCRYPTION_KEY_STORAGE_KEY).toBe('fieldEncryptionKey');
+  });
+});
+
+describe('setAsideLocalEncryptionKey()', () => {
+  let dir: string;
+  let storage: ElectronStorage;
+  let fake: ReturnType<typeof createFakeSafeStorage>;
+  let getKey: ReturnType<typeof createLocalEncryptionKeyProvider>;
+
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-local-key-setaside-'));
+    storage = new ElectronStorage(dir);
+    fake = createFakeSafeStorage();
+    getKey = createLocalEncryptionKeyProvider({
+      safeStorage: fake.safeStorage,
+      storage,
+      retry: { baseDelayMs: 1, maxDelayMs: 2, jitterRatio: 0 },
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('keeps the old key file under another name, and the next launch creates a new key', async () => {
+    const oldKey = (await getKey())!;
+    const original = fs.readFileSync(path.join(dir, LOCAL_ENCRYPTION_KEY_STORAGE_KEY), 'utf8');
+
+    const backupName = await setAsideLocalEncryptionKey(storage, 1_700_000_000_000);
+
+    expect(backupName).toBe(`${LOCAL_ENCRYPTION_KEY_STORAGE_KEY}.bak-1700000000000`);
+    expect(fs.readFileSync(path.join(dir, backupName), 'utf8')).toBe(original);
+    expect(fs.existsSync(path.join(dir, LOCAL_ENCRYPTION_KEY_STORAGE_KEY))).toBe(false);
+
+    const newKey = (await getKey())!;
+    expect(newKey.equals(oldKey)).toBe(false);
+    expect(fs.readFileSync(path.join(dir, backupName), 'utf8')).toBe(original);
+  });
+
+  it('works for a key file that cannot be decrypted, which is the case it is for', async () => {
+    fs.writeFileSync(path.join(dir, LOCAL_ENCRYPTION_KEY_STORAGE_KEY), '{"version":1,"ciphertext":"bm90IGEga2V5"}');
+    await expect(getKey()).resolves.toBeUndefined();
+
+    await setAsideLocalEncryptionKey(storage);
+
+    await expect(getKey()).resolves.toBeDefined();
+  });
+
+  it('rejects when there is no key file', async () => {
+    await expect(setAsideLocalEncryptionKey(storage)).rejects.toThrow();
+  });
+});
+
+describe('localEncryptionKeyFileExists()', () => {
+  let dir: string;
+  let storage: ElectronStorage;
+
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-local-key-exists-'));
+    storage = new ElectronStorage(dir);
+  });
+  afterEach(() => {
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('is false when there is no key file, and does not create one', () => {
+    expect(localEncryptionKeyFileExists(storage)).toBe(false);
+    expect(fs.readdirSync(dir)).toEqual([]);
+  });
+
+  it('is true when there is a key file', () => {
+    fs.writeFileSync(path.join(dir, LOCAL_ENCRYPTION_KEY_STORAGE_KEY), '{"version":1,"ciphertext":"abc"}');
+    expect(localEncryptionKeyFileExists(storage)).toBe(true);
+  });
+
+  it('is true for a key file that cannot be read or parsed, because it is there', () => {
+    fs.writeFileSync(path.join(dir, LOCAL_ENCRYPTION_KEY_STORAGE_KEY), '{bad JSON');
+    expect(localEncryptionKeyFileExists(storage)).toBe(true);
   });
 });
 

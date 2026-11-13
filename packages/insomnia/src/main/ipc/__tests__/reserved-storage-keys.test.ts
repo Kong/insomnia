@@ -73,6 +73,9 @@ describe('storage keys the renderer must not reach', () => {
       ['the default data stream', 'fieldEncryptionKey::$DATA'],
       ['a Unicode case folding (Kelvin sign)', 'fieldEncryption\u212Aey'],
       ['a compatibility form (full-width)', 'ｆieldEncryptionKey'],
+      ['a copy that was set aside', 'fieldEncryptionKey.bak-1700000000000'],
+      ['a copy that was set aside, in another case', 'FIELDENCRYPTIONKEY.BAK-1'],
+      ['a longer name that starts with it', 'fieldEncryptionKey2'],
     ])('blocks the key under %s, which a file system may treat as the same file', (_name, key) => {
       expect(isBlocked(key)).toBe(true);
     });
@@ -97,7 +100,6 @@ describe('storage keys the renderer must not reach', () => {
       'vault_acct_123',
       'current-oauth-session-id',
       'GIT_CREDENTIALS_MIGRATION',
-      'fieldEncryptionKey2',
       'xfieldEncryptionKey',
       'field-encryption-key',
       'fieldEncryption',
