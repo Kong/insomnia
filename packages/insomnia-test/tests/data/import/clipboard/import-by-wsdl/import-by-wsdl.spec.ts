@@ -1,0 +1,39 @@
+import * as fs from "node:fs";
+import path from "node:path";
+
+import { faker } from "@faker-js/faker";
+import { ContentType } from "@package/enums/content-type";
+import { ProjectType } from "@package/enums/project-types";
+import { test } from "@package/misc/fixtures";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+const wsdl = fs.readFileSync(path.join(import.meta.dirname, "calculator.wsdl"), "utf8");
+const soapBody = fs.readFileSync(path.join(import.meta.dirname, "soap-body.xml"), "utf8");
+
+test("Import WSDL by Clipboard", async ({ user }) => {
+  const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
+  const { httpRequestPage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+
+  await importFlow.importClipboard(project, wsdl);
+
+  const request = await httpRequestFlow.get("Add");
+  expect(request).toMatchObject({
+    method: "POST",
+    url: "http://127.0.0.1:4060/calculator.asmx",
+  });
+
+  await httpRequestPage.setBody({
+    mimeType: ContentType.XML,
+    text: soapBody,
+  }, (filePath) => user.flowManager.context.stubFileChooser(filePath));
+
+  const responseView = await httpRequestFlow.send(request!);
+  expect(responseView.statusBar.code).toBe(200);
+  expect(responseView.preview).toContain("AddResult");
+  expect(responseView.preview).toContain("9");
+});
