@@ -4,7 +4,7 @@ import { parse as urlParse } from 'node:url';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
-import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
+import { pathWithParamsAsPathParameters, REQUEST_BASE_URL } from '../../../common/path-with-params';
 import type { Converter, ImportRequest } from '../entities';
 import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
@@ -280,7 +280,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
+    url: `${REQUEST_BASE_URL}${pathWithParamsAsPathParameters(endpointSchema.path)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
