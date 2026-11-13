@@ -25,19 +25,32 @@ import { StatusTag, StringStatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
+import {
+  dismissResponseHistoryHint,
+  HINT_DURATION_MS,
+  isResponseHistoryHintDismissed,
+  shouldShowResponseHistoryHint,
+} from './response-history-hint';
 
 const { isRequest } = models.request;
 
 type ResponseType = Response | WebSocketResponse | SocketIOResponse | McpResponse;
 
+// The hint is a one-time nudge per window session; "Don't show again" persists
+// in localStorage.
+let hintShownThisSession = false;
+
 export const ResponseHistoryDropdown = ({
   activeResponse,
   responses,
   requestVersions,
+  requestModified,
 }: {
   activeResponse: ResponseType;
   responses: ResponseType[];
   requestVersions: RequestVersion[];
+  /** Last modification timestamp of the request, used to detect edits. */
+  requestModified: number;
 }) => {
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
@@ -48,6 +61,15 @@ export const ResponseHistoryDropdown = ({
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
   const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const [isHintDismissed, setIsHintDismissed] = useState(isResponseHistoryHintDismissed);
+  const [isHintVisible, setIsHintVisible] = useState(false);
+  const hintTimer = useRef<number | null>(null);
+  const previousRequest = useRef({
+    requestId,
+    activeResponseId: activeResponse._id,
+    requestModified,
+  });
+  const hasRestorableHistory = responses.some(response => Boolean(response.requestVersionId));
   const now = new Date();
   const categories: Record<string, ResponseType[]> = {
     minutes: [],
@@ -76,6 +98,57 @@ export const ResponseHistoryDropdown = ({
       cancelled = true;
     };
   }, [requestVersions]);
+
+  const showHint = useCallback(() => {
+    setIsHintVisible(true);
+    if (hintTimer.current !== null) {
+      window.clearTimeout(hintTimer.current);
+    }
+    hintTimer.current = window.setTimeout(() => setIsHintVisible(false), HINT_DURATION_MS);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (hintTimer.current !== null) {
+        window.clearTimeout(hintTimer.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const previous = previousRequest.current;
+    previousRequest.current = {
+      requestId,
+      activeResponseId: activeResponse._id,
+      requestModified,
+    };
+    if (previous.requestId !== requestId) {
+      setIsHintVisible(false);
+    }
+    const shouldShow = shouldShowResponseHistoryHint({
+      previousRequestId: previous.requestId,
+      requestId,
+      previousActiveResponseId: previous.activeResponseId,
+      activeResponseId: activeResponse._id,
+      previousModified: previous.requestModified,
+      modified: requestModified,
+      hasRestorableHistory,
+      hintDismissed: isHintDismissed,
+      alreadyShown: hintShownThisSession,
+    });
+    if (!shouldShow) {
+      return;
+    }
+    hintShownThisSession = true;
+    showHint();
+  }, [requestId, activeResponse._id, requestModified, hasRestorableHistory, isHintDismissed, showHint]);
+
+  const hideHintPermanently = useCallback(() => {
+    dismissResponseHistoryHint();
+    setIsHintDismissed(true);
+    setIsHintVisible(false);
+  }, []);
 
   const deleteReponseFetcher = useRequestResponseDeleteActionFetcher();
   const deleteAllReponsesFetcher = useRequestResponseDeleteAllActionFetcher();
@@ -217,58 +290,84 @@ export const ResponseHistoryDropdown = ({
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (
-    <Dropdown
-      ref={dropdownRef}
-      aria-label="Response history dropdown"
-      key={activeResponse ? activeResponse._id : 'n/a'}
-      closeOnSelect={false}
-      className="tall pane__header__right"
-      triggerButton={
-        <Button className="btn btn--super-compact tall">
-          {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
-          {!isLatestResponseActive ? (
-            <i className="fa fa-thumb-tack space-left" />
-          ) : (
-            <i className="fa fa-caret-down space-left" />
-          )}
-        </Button>
-      }
-    >
-      <DropdownSection
-        aria-label={`${environmentName} Responses`}
-        title={
-          <span>
-            <strong>{environmentName}</strong> Responses
-          </span>
+    <div className="relative flex h-full">
+      <Dropdown
+        ref={dropdownRef}
+        aria-label="Response history dropdown"
+        key={activeResponse ? activeResponse._id : 'n/a'}
+        closeOnSelect={false}
+        className="tall pane__header__right"
+        header={
+          <p className="m-0 leading-snug text-pretty text-(--color-font)">
+            Click any row to restore the Request and Response from that send. Unsent changes will be lost.
+          </p>
+        }
+        triggerButton={
+          <Button className="btn btn--super-compact tall">
+            {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
+            {!isLatestResponseActive ? (
+              <i className="fa fa-thumb-tack space-left" />
+            ) : (
+              <i className="fa fa-caret-down space-left" />
+            )}
+          </Button>
         }
       >
-        <DropdownItem aria-label="Delete Current Response">
-          <ItemContent icon="trash-o" label="Delete Current Response" onClick={handleDeleteResponse} />
-        </DropdownItem>
-        <DropdownItem aria-label="Clear History">
-          <ItemContent icon="trash-o" label="Clear History" onClick={handleDeleteResponses} />
-        </DropdownItem>
-      </DropdownSection>
+        <DropdownSection
+          aria-label={`${environmentName} Responses`}
+          title={
+            <span>
+              <strong>{environmentName}</strong> Responses
+            </span>
+          }
+        >
+          <DropdownItem aria-label="Delete Current Response">
+            <ItemContent icon="trash-o" label="Delete Current Response" onClick={handleDeleteResponse} />
+          </DropdownItem>
+          <DropdownItem aria-label="Clear History">
+            <ItemContent icon="trash-o" label="Clear History" onClick={handleDeleteResponses} />
+          </DropdownItem>
+        </DropdownSection>
 
-      <DropdownSection aria-label="Minutes Section" title="Just Now">
-        {categories.minutes.map(renderResponseRow)}
-      </DropdownSection>
+        <DropdownSection aria-label="Minutes Section" title="Just Now">
+          {categories.minutes.map(renderResponseRow)}
+        </DropdownSection>
 
-      <DropdownSection aria-label="Hours Section" title="Less Than Two Hours Ago">
-        {categories.hours.map(renderResponseRow)}
-      </DropdownSection>
+        <DropdownSection aria-label="Hours Section" title="Less Than Two Hours Ago">
+          {categories.hours.map(renderResponseRow)}
+        </DropdownSection>
 
-      <DropdownSection aria-label="Today Section" title="Today">
-        {categories.today.map(renderResponseRow)}
-      </DropdownSection>
+        <DropdownSection aria-label="Today Section" title="Today">
+          {categories.today.map(renderResponseRow)}
+        </DropdownSection>
 
-      <DropdownSection aria-label="Week Section" title="This Week">
-        {categories.week.map(renderResponseRow)}
-      </DropdownSection>
+        <DropdownSection aria-label="Week Section" title="This Week">
+          {categories.week.map(renderResponseRow)}
+        </DropdownSection>
 
-      <DropdownSection aria-label="Other Section" title="Older Than This Week">
-        {categories.other.map(renderResponseRow)}
-      </DropdownSection>
-    </Dropdown>
+        <DropdownSection aria-label="Other Section" title="Older Than This Week">
+          {categories.other.map(renderResponseRow)}
+        </DropdownSection>
+      </Dropdown>
+      {isHintVisible && (
+        <div
+          role="status"
+          className="pointer-events-none absolute top-full right-0 z-10 mt-1 w-64 rounded-md border border-solid border-(--hl-md) bg-(--color-bg) p-(--padding-sm) text-xs text-(--color-font) shadow-md"
+          data-testid="response-history-hint"
+        >
+          <p className="m-0 font-bold text-(--color-font)">Response History</p>
+          <p className="m-0 mt-0.5">
+            Click any past response to restore the Request and Response from that send. Unsent changes are lost.
+          </p>
+          <button
+            type="button"
+            className="pointer-events-auto mt-1 cursor-pointer text-(--hl) underline hover:text-(--color-font)"
+            onClick={hideHintPermanently}
+          >
+            Don't show again
+          </button>
+        </div>
+      )}
+    </div>
   );
 };

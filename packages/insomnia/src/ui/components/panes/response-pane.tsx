@@ -160,6 +160,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             activeResponse={activeResponse}
             responses={responses}
             requestVersions={requestVersions}
+            requestModified={activeRequest.modified}
           />
         </PaneHeader>
       )}

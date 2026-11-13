@@ -219,6 +219,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
   autoSelectLatestEvent,
   readyState,
 }) => {
+  const { activeRequest } = useRequestLoaderData()!;
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
@@ -369,7 +370,12 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             </>
           )}
         </div>
-        <ResponseHistoryDropdown activeResponse={response} requestVersions={requestVersions} responses={responses} />
+        <ResponseHistoryDropdown
+          activeResponse={response}
+          requestVersions={requestVersions}
+          responses={responses}
+          requestModified={activeRequest.modified}
+        />
       </PaneHeader>
       <Tabs
         key={response._id}
