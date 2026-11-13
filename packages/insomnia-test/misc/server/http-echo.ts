@@ -203,6 +203,8 @@ app.post('/calculator.asmx', rawBody, (req, res) => {
       `<?xml version="1.0" encoding="utf-8"?>` +
         `<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">` +
         `<soap:Body><AddResponse xmlns="http://tempuri.org/">` +
+        // intA/intB are parsed integers, so the sum is always numeric and cannot inject markup.
+        // nosemgrep: javascript.express.security.injection.raw-html-format.raw-html-format
         `<AddResult>${intA + intB}</AddResult>` +
         `</AddResponse></soap:Body></soap:Envelope>`,
     );

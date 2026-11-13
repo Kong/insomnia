@@ -12,6 +12,7 @@ import { RulesetType } from "@package/enums/ruleset-type";
 import type { SpecFormat } from "@package/enums/spec-format";
 import { TreeNodeType } from "@package/enums/tree-node-types";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { throwOnDialog } from "@package/misc/decorators";
 import type {
   LintEntry,
   PathItem} from "@package/models/collection";
@@ -192,7 +193,7 @@ export class SpecPage extends BasePage {
       if (!summary) continue;
 
       if ((await row.getAttribute("aria-expanded")) !== "true") {
-        await row.getByRole("button").first().click();
+        await row.getByRole("button").first().click({ timeout: 2_000 });
       }
       const lineRefs = await row.getByText(/^Ln \d+$/).allInnerTexts();
       entries.push({ ...summary, lineRefs });
@@ -245,12 +246,15 @@ export class SpecPage extends BasePage {
    * all.
    */
   async getOpenApiVersion(): Promise<string> {
-    const label = this.page
-      .locator(this.PANE_ONE)
-      .first()
-      .getByText(/OpenAPI \d/)
-      .first();
-    if ((await label.count()) === 0) return "";
+    // The span is always rendered once the spec has content, but stays
+    // empty until the parsed spec's `openapi` field is known, so wait for
+    // text rather than for the element.
+    const label = this.page.getByTestId("spec-openapi-version");
+    try {
+      await expect(label).toHaveText(/OpenAPI \d/, { timeout: DEFAULT_TIMEOUT });
+    } catch {
+      return "";
+    }
     return (await label.innerText()).trim();
   }
 
@@ -379,10 +383,14 @@ export class SpecPage extends BasePage {
    * Reads every suite name currently listed in the Test Suites sidebar.
    */
   async getTestSuiteNames(): Promise<string[]> {
-    return new TableComponent(
-      this.page,
-      this.page.locator(this.TEST_SUITES_LIST),
-    ).rows.allInnerTexts();
+    // Re-opening the Tests tab re-renders the list; wait for it to settle
+    // so a read taken mid-render doesn't return a stale or partial list.
+    return this.waitForStableValue(() =>
+      new TableComponent(
+        this.page,
+        this.page.locator(this.TEST_SUITES_LIST),
+      ).rows.allInnerTexts(),
+    );
   }
 
   /**
@@ -580,11 +588,13 @@ export class SpecPage extends BasePage {
    * Clicks "Upload custom ruleset" (the native file-open dialog must
    * already be stubbed — see `FlowContext.stubFileChooser`) and waits for either outcome to settle: the
    * "View selected ruleset content" button (ruleset accepted) or the
-   * "Invalid Spectral Ruleset" error dialog (ruleset rejected). Dismiss
-   * the error dialog afterward via `closeDialog()` — it's the app's shared
+   * "Invalid Spectral Ruleset" error dialog (ruleset rejected). On
+   * rejection `@throwOnDialog` rejects with the dialog's text, leaving the
+   * dialog open — dismiss it via `closeDialog()` — it's the app's shared
    * error modal, so no dedicated close method lives here.
    */
-  async uploadRuleset(): Promise<"success" | "invalid"> {
+  @throwOnDialog()
+  async uploadRuleset(): Promise<void> {
     await this.page.locator(this.UPLOAD_RULESET_BUTTON).click();
 
     const success = this.page.locator(this.VIEW_RULESET_BUTTON);
@@ -592,7 +602,6 @@ export class SpecPage extends BasePage {
       exact: true,
     });
     await expect(success.or(invalid)).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    return (await invalid.isVisible()) ? "invalid" : "success";
   }
 
   /**
@@ -662,7 +671,7 @@ export class SpecPage extends BasePage {
     row: Locator,
   ): Promise<Omit<LintEntry, "lineRefs"> | undefined> {
     const header = row.getByRole("button").first();
-    const text = await header.innerText();
+    const text = await header.innerText({ timeout: 2_000 });
     const match = text.match(/^\((\d+)\)\s*(\S+):\s*(.+)$/s);
     if (!match) return undefined;
 

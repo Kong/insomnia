@@ -3,9 +3,40 @@ import React, { createContext, type FC, type PropsWithChildren, useCallback, use
 import { useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
-import type { BaseTab } from '~/ui/components/tabs/tab';
-import type { OrganizationTabs } from '~/ui/components/tabs/tab-list';
 import uiEventBus from '~/ui/event-bus';
+
+export type TabType =
+  | 'request'
+  | 'folder'
+  | 'environment'
+  | 'mockServer'
+  | 'mockRoute'
+  | 'document'
+  | 'collection'
+  | 'runner'
+  | 'test'
+  | 'testSuite';
+export interface BaseTab {
+  type: TabType;
+  name: string;
+  url: string;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+  projectName: string;
+  workspaceName: string;
+  id: string;
+  // tag is used to display the request method in the tab
+  // method is used to display the tag color
+  tag?: string;
+  method?: string;
+  temporary?: boolean;
+}
+
+export interface OrganizationTabs {
+  tabList: BaseTab[];
+  activeTabId?: string;
+}
 
 interface UpdateInsomniaTabParams {
   organizationId: string;

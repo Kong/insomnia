@@ -46,7 +46,7 @@ if (workersIdx !== -1) {
 export default defineConfig({
   timeout: 90 * 1000,
   testDir: "./tests",
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
