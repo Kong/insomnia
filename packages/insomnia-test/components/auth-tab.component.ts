@@ -486,19 +486,6 @@ export class AuthTabComponent extends TabPanelComponent {
   }
 
   /**
-   * Polls the on-disk request/folder documents until one carries
-   * `authentication[field] === value`, confirming the edit has actually
-   * been saved (the editors autosave through a debounce) rather than just
-   * shown in the UI.
-   */
-  private async waitForAuthFieldPersisted(
-    field: string,
-    value: unknown,
-  ): Promise<void> {
-    await this.waitForAuthFieldsPersisted([{ field, value }]);
-  }
-
-  /**
    * Polls the on-disk request/folder documents until a single one holds
    * every edit in `edits` at once. The app's debounced editors can save
    * from a stale copy of the auth config, so a write may never land, or

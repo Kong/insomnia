@@ -277,23 +277,10 @@ jobs:
         working-directory: packages/insomnia-test
         run: npx playwright install-deps chromium
 
-      # The upgrade specs (misc/upgrade-fixture.ts) build the previous Insomnia release from source, with an `npm ci`
-      # that takes minutes. The trees are one directory per release, so a stale cache only costs the missing ones.
-      - name: Restore previous Insomnia releases
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
-        with:
-          path: ${{ runner.temp }}/insomnia-test-versions
-          key: insomnia-test-versions-${{ runner.os }}-${{ hashFiles('packages/insomnia-test/misc/upgrade-fixture.ts', 'packages/insomnia-test/tests/workspace/field-encryption/legacy-db-migration.spec.ts') }}
-          restore-keys: |
-            insomnia-test-versions-${{ runner.os }}-
-
       - name: Run Playwright tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         working-directory: packages/insomnia-test
         env:
           INSOMNIA_BINARY: ${{ github.workspace }}/packages/insomnia/dist/linux-unpacked/insomnia
-          INSOMNIA_VERSIONS_DIR: ${{ runner.temp }}/insomnia-test-versions
-          # The previous release's `npm ci` reads the same .npmrc, which needs the token for the GitHub registry
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLAYWRIGHT_BLOB_OUTPUT_NAME: blob-report-${{ matrix.shardIndex }}.zip
         run: |
           xvfb-run --auto-servernum npx playwright test --reporter=list,html,blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}

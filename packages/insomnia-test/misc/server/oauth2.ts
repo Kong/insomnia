@@ -4,9 +4,9 @@ import express from "express";
 
 const PORT = process.env.OAUTH2_PORT || 4080;
 
-// Fixed test credentials, the same "no interactive login step" convention
-// as misc/git-server.ts's testuser/testpass — mirrored as exported
-// constants in misc/fixtures.ts, which is the source specs import from.
+// Fixed test credentials, so there is no interactive login step. Mirrored as
+// the OAUTH2_* constants in misc/constants.ts, which is what specs import —
+// keep the two in sync.
 const CLIENT_ID = "test-client-id";
 const CLIENT_SECRET = "test-client-secret";
 const USERNAME = "testuser";

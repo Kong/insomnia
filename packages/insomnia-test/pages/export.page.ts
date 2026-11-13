@@ -3,31 +3,41 @@ import type { ApiSpecExportFormat } from "@package/enums/api-spec-export-format"
 import type { ExportFormat } from "@package/enums/export-format";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
+import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {
-  private readonly exportRequestsModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
-  );
+  // Getters, not fields: the components are bound to the current window, so
+  // building them on access keeps them following `this.page` across an app
+  // restart (see `PageManager.setWindow()`).
+  private get exportRequestsModal(): ModalComponent {
+    return new ModalComponent(this.page, this.page.getByRole("dialog").filter({ hasText: "Export requests" }));
+  }
 
-  private readonly selectExportTypeModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
-  );
+  private get selectExportTypeModal(): ModalComponent {
+    return new ModalComponent(this.page, this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }));
+  }
 
-  private readonly selectSpecFormatModal = new ModalComponent(
-    this.page,
-    this.page
-      .getByRole("dialog")
-      .filter({ hasText: "Select Specification Format" }),
-  );
+  private get selectSpecFormatModal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog").filter({ hasText: "Select Specification Format" }),
+    );
+  }
 
-  private readonly exportRequestsDialog = this.exportRequestsModal.root;
-  private readonly selectExportTypeDialog = this.selectExportTypeModal.root;
-  private readonly selectSpecFormatDialog = this.selectSpecFormatModal.root;
+  private get exportRequestsDialog(): Locator {
+    return this.exportRequestsModal.root;
+  }
+
+  private get selectExportTypeDialog(): Locator {
+    return this.selectExportTypeModal.root;
+  }
+
+  private get selectSpecFormatDialog(): Locator {
+    return this.selectSpecFormatModal.root;
+  }
 
   /**
    * Confirms either the "Export requests" or "Select Export Type" dialog
