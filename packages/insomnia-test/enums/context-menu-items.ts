@@ -7,4 +7,6 @@ export enum ContextMenuItem {
   Duplicate = "Duplicate",
   Pin = "Pin",
   Unpin = "Unpin",
+  Export = "Export",
+  Import = "Import",
 }

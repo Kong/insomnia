@@ -8,7 +8,8 @@ import { SessionContext } from "@package/misc/session-context";
 import { PageManager } from "@package/pages/page-manager";
 import type {
   ElectronApplication,
-  Page} from "@playwright/test";
+  Page,
+  TestInfo} from "@playwright/test";
 import { test as base } from "@playwright/test";
 
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, MOCK_API_SERVER } from "./constants";
@@ -76,6 +77,8 @@ interface Fixtures {
   // thread it through — see git-fixtures.ts, which overrides only this.
   gitCloneUrl: string | undefined;
   user: UserSession;
+  // Like `user`, but touches no UI during setup — for specs whose app starts with a blocking dialog.
+  userAtStartup: UserSession;
 }
 
 export const test = base.extend<Fixtures>({
@@ -285,28 +288,57 @@ export const test = base.extend<Fixtures>({
     await disableFocusModeDefault(flowManager);
     await use({ page: window, pageManager, flowManager });
 
-    // A test that called AppFlow.restart() leaves the relaunched app
-    // behind — the `insomnia`/`window` fixtures only know the original
-    // handles. Collect its coverage and close it here, before they tear down.
-    const currentApp = context.electronApp;
-    if (currentApp && currentApp !== insomnia) {
-      const currentWindow = await currentApp
-        .firstWindow({ timeout: DEFAULT_TIMEOUT })
-        .catch(() => null);
-      if (currentWindow) {
-        if (testInfo.status !== testInfo.expectedStatus) {
-          await testInfo.attach("screenshot-after-restart", {
-            body: await currentWindow.screenshot().catch(() => Buffer.alloc(0)),
-            contentType: "image/png",
-          });
-        }
-        await collectWindowCoverage(currentWindow);
-      }
-      await collectHiddenWindowCoverage(currentApp);
-      await currentApp.close().catch(() => {});
-    }
+    await closeRelaunchedApp(context, insomnia, testInfo);
+  },
+
+  // The `user` fixture's setup clicks through Preferences, which a dialog shown at startup (e.g. the
+  // field-encryption dialogs) blocks, so this one hands the session over exactly as the app starts.
+  userAtStartup: async (
+    { window, insomnia, gitCloneUrl, dataPath, skipOnboarding, vaultKey, vaultSalt },
+    use,
+    testInfo,
+  ) => {
+    const pageManager = new PageManager(window);
+    const context = new SessionContext(insomnia, {
+      dataPath,
+      skipOnboarding,
+      vaultKey,
+      vaultSalt,
+    });
+    const flowManager = new FlowManager(pageManager, context, gitCloneUrl);
+    await use({ page: window, pageManager, flowManager });
+    await closeRelaunchedApp(context, insomnia, testInfo);
   },
 });
+
+/**
+ * A test that called `AppFlow.restart()` / `relaunch()` leaves the relaunched
+ * app behind — the `insomnia`/`window` fixtures only know the original
+ * handles. Collects its coverage and closes it, before they tear down.
+ */
+async function closeRelaunchedApp(
+  context: SessionContext,
+  insomnia: ElectronApplication,
+  testInfo: TestInfo,
+): Promise<void> {
+  const currentApp = context.electronApp;
+  if (currentApp && currentApp !== insomnia) {
+    const currentWindow = await currentApp
+      .firstWindow({ timeout: DEFAULT_TIMEOUT })
+      .catch(() => null);
+    if (currentWindow) {
+      if (testInfo.status !== testInfo.expectedStatus) {
+        await testInfo.attach("screenshot-after-restart", {
+          body: await currentWindow.screenshot().catch(() => Buffer.alloc(0)),
+          contentType: "image/png",
+        });
+      }
+      await collectWindowCoverage(currentWindow);
+    }
+    await collectHiddenWindowCoverage(currentApp);
+    await currentApp.close().catch(() => {});
+  }
+}
 
 // The installed app defaults Settings.sidebarFocusForCollections to true,
 // which auto-narrows the sidebar to a collection's own
