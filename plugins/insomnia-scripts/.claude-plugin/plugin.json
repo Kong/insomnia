@@ -1,0 +1,10 @@
+{
+  "name": "insomnia-scripts",
+  "version": "0.1.0",
+  "description": "Skills for working with Insomnia pre-request and after-response scripts in git projects",
+  "author": {
+    "name": "Kong",
+    "email": "office@konghq.com"
+  },
+  "license": "Apache-2.0"
+}
