@@ -2,6 +2,11 @@ name: Release Build
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_windows_signing:
+        description: Skip Windows code signing (no signing tokens used). The Windows artifacts are unsigned and must not be released.
+        type: boolean
+        default: true
 
 permissions: {}
 
@@ -44,6 +49,7 @@ jobs:
       contents: read
       packages: read
     env:
+      SKIP_WINDOWS_SIGN: ${{ inputs.skip_windows_signing && 'true' || 'false' }}
       INSO_PACKAGE_NAME: insomnia-inso
       INSO_DOCKER_TAR: inso-docker-image.tar
       # DIGICERT_SM_CLIENT_CERT_FILE: sm_client_cert.p12
@@ -52,15 +58,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-large
-            csc_link_secret: DESIGNER_MAC_CSC_LINK
-            csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
+          # - os: macos-15-large
+          #   csc_link_secret: DESIGNER_MAC_CSC_LINK
+          #   csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-24.04
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+          # - os: ubuntu-24.04
+          #   csc_link_secret: ''
+          #   csc_key_password_secret: ''
           # - os: ubuntu-24.04-arm
           #   csc_link_secret: ''
           #   csc_key_password_secret: ''
@@ -142,7 +148,7 @@ jobs:
       # This will install smctl
       # smctl will be used in the next step for signing
       - name: Setup Software Trust Manager
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -182,7 +188,7 @@ jobs:
       # signs unpacked electron-builder contents, in this case only the .exe
       # this installs smctl as well
       - name: Code-sign unpacked .exe (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -215,7 +221,7 @@ jobs:
           SM_KEYPAIR_ALIAS: ${{ secrets.DIGICERT_KEYPAIR_ALIAS }}
 
       - name: Check squirrel exe signature (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         shell: pwsh
         run: |
           $version = $env:INSO_VERSION
@@ -259,7 +265,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign inso exe (Windows only)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && !inputs.skip_windows_signing
         uses: digicert/code-signing-software-trust-action@fae23a455ba4bde62b64fd7cb2f81ade788f5a95 # v1.2.1
         with:
           simple-signing-mode: true
@@ -383,7 +389,7 @@ jobs:
             !packages/insomnia/build/yarn-standalone.js
 
   update-pull-request:
-    if: startsWith(github.ref_name, 'release/')
+    if: startsWith(github.ref_name, 'release/') && !inputs.skip_windows_signing
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-24.04
