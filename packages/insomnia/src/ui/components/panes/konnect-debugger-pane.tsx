@@ -3,7 +3,7 @@ import type { KonnectProject, WorkspaceChildrenForScope } from 'insomnia-data';
 import { type ReactNode, useMemo, useRef, useState } from 'react';
 import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 
-import type { DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
+import type { DebugApiError, DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
 import {
   buildSpanTree,
   flattenVisible,
@@ -122,6 +122,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   } = konnectDebuggerSession;
   const isStartingOrStopping = debugSessionAction !== 'idle';
   const isActive = debugSessionState === 'active';
+
   const isCompleting = debugSessionState === 'completing' || debugSessionState === 'timed_out';
   const isCapturing = isActive || isCompleting;
 
@@ -291,8 +292,9 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   );
 };
 
-const MutationErrorMessage = ({ message }: { message: string }) => {
-  const parsed = useMemo(() => parseKonnectError(message), [message]);
+const MutationErrorMessage = ({ error }: { error: DebugApiError }) => {
+  const { responseText, message } = error;
+  const parsed = useMemo(() => parseKonnectError(responseText), [responseText]);
   const [expanded, setExpanded] = useState(false);
 
   if (!parsed) {
@@ -379,14 +381,21 @@ const StatusBanners = ({
         type="error"
         action={
           <Button
+            className="rounded-xs border border-solid border-current px-2 py-0.5 ring-1 ring-transparent focus:ring-(--hl-md)"
             onPress={() => setIsKonnectSettingsModalOpen(true)}
-            className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-white/40 px-4 py-2 text-sm text-white transition-colors hover:bg-white/10 aria-pressed:bg-white/10"
           >
             Configure
           </Button>
         }
       >
-        <p>{authError.message}</p>
+        <MutationErrorMessage error={authError} />
+        {isKonnectSettingsModalOpen && (
+          <KonnectSettingsModal
+            onClose={() => setIsKonnectSettingsModalOpen(false)}
+            konnectSyncEnabled={konnectSyncEnabled}
+            onlyUpdateKonnectPat
+          />
+        )}
       </StatusBanner>
     );
   }
@@ -394,7 +403,7 @@ const StatusBanners = ({
   if (mutationError) {
     return (
       <StatusBanner type="error" action={<RetryButton onPress={onRetry} />}>
-        <MutationErrorMessage message={mutationError.message} />
+        <MutationErrorMessage error={mutationError} />
       </StatusBanner>
     );
   }
@@ -420,15 +429,23 @@ const StatusBanners = ({
         <StatusBanner type="warning">Current debug session was deleted in Konnect.</StatusBanner>
       )}
       {debugSessionState === 'completing' && <StatusBanner type="info">Wait for the session to complete.</StatusBanner>}
-      {debugSessionState === 'cancelled' && <StatusBanner type="info">Session cancelled.</StatusBanner>}
-      {debugSessionState === 'completed' && <StatusBanner type="info">Session completed.</StatusBanner>}
-      {isKonnectSettingsModalOpen && (
-        <KonnectSettingsModal
-          onClose={() => setIsKonnectSettingsModalOpen(false)}
-          konnectSyncEnabled={konnectSyncEnabled}
-          onlyUpdateKonnectPat
-        />
+      {debugSessionState === 'cancelled' && (
+        <StatusBanner
+          type="info"
+          action={
+            <Button
+              onPress={debug.refreshTraces}
+              isDisabled={debug.isRefreshingTraces}
+              className="rounded-xs border border-solid border-current px-2 py-0.5 ring-1 ring-transparent focus:ring-(--hl-md) disabled:opacity-50"
+            >
+              {debug.isRefreshingTraces ? 'Refreshing…' : 'Refresh traces'}
+            </Button>
+          }
+        >
+          Session cancelled. Traces captured before cancelling may still arrive.
+        </StatusBanner>
       )}
+      {debugSessionState === 'completed' && <StatusBanner type="info">Session completed.</StatusBanner>}
     </>
   );
 };

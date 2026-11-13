@@ -52,11 +52,13 @@ export type DebugErrorKind = 'unauthorized' | 'forbidden' | 'not_found' | 'rate_
 export class DebugApiError extends Error {
   kind: DebugErrorKind;
   retryAfterMs?: number;
-  constructor(kind: DebugErrorKind, message: string, retryAfterMs?: number) {
+  responseText: string;
+  constructor(kind: DebugErrorKind, message: string, responseText: string, retryAfterMs?: number) {
     super(message);
     this.name = 'DebugApiError';
     this.kind = kind;
     this.retryAfterMs = retryAfterMs;
+    this.responseText = responseText;
   }
 }
 
@@ -67,28 +69,29 @@ export async function toDebugApiError(err: unknown): Promise<DebugApiError> {
   if (isApiError(err)) {
     const status = err.response.status;
     const response = err.response;
+    const responseText = response.bodyUsed ? err.message || `HTTP ${status}` : await response.text();
     if (status === 401) {
-      return new DebugApiError('unauthorized', 'Personal access token is invalid or expired.');
+      return new DebugApiError('unauthorized', 'Personal access token is invalid or expired.', responseText);
     }
     if (status === 403) {
-      return new DebugApiError('forbidden', 'Personal access token lacks permission for the debugger.');
+      return new DebugApiError('forbidden', 'Personal access token lacks permission for the debugger.', responseText);
     }
     if (status === 404) {
-      return new DebugApiError('not_found', 'Not found.');
+      return new DebugApiError('not_found', 'Not found.', responseText);
     }
     if (status === 429) {
       const retryAfter = Number.parseInt(err.response.headers.get('Retry-After') ?? '', 10);
       return new DebugApiError(
         'rate_limited',
         'Konnect rate limit reached.',
+        responseText,
         Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : undefined,
       );
     }
-    const responseText = response.bodyUsed ? err.message || `HTTP ${status}` : await response.text();
-    throw new DebugApiError('unknown', `${responseText}`);
+    throw new DebugApiError('unknown', `${responseText}`, responseText);
   }
   const message = err instanceof Error ? err.message : 'Could not reach Konnect.';
-  return new DebugApiError('network', message);
+  return new DebugApiError('network', message, '');
 }
 
 async function request<T>(
