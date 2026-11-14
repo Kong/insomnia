@@ -3,7 +3,7 @@ import type * as InsomniaData from 'insomnia-data';
 import type { BaseModel, ChangeBufferEvent, CollectionWorkspaceChildren, OrganizationData } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
+import { cloudCredentialKeys, organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
 
 vi.mock('insomnia-data', async () => {
   const actual = await vi.importActual<typeof InsomniaData>('insomnia-data');
@@ -198,6 +198,15 @@ describe('updateAppDataOnDbChanges', () => {
     updateAppDataOnDbChanges(queryClient, [change('update', mockServer)]);
 
     expect(queryClient.getQueryState(workspaceChildrenKeys.byWorkspaceId(workspaceId))?.isInvalidated).toBe(true);
+  });
+
+  it('invalidates cloud credentials when a cloud credential changes', () => {
+    queryClient.setQueryData(cloudCredentialKeys.all, []);
+
+    const credential = fakeDoc('CloudCredential', { _id: 'cloudCred_1' });
+    updateAppDataOnDbChanges(queryClient, [change('update', credential)]);
+
+    expect(queryClient.getQueryState(cloudCredentialKeys.all)?.isInvalidated).toBe(true);
   });
 
   it('ignores doc types it does not monitor', () => {

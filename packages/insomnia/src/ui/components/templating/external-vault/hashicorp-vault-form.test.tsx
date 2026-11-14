@@ -16,10 +16,10 @@ import type { HashiCorpSecretConfig } from './types';
 
 const { HashiCorpCredentialType } = models.cloudCredential;
 
-const mockRootLoaderData = vi.hoisted(() => ({ cloudCredentials: [] as unknown[] }));
+const mockCloudCredentialsData = vi.hoisted(() => ({ cloudCredentials: [] as unknown[] }));
 
-vi.mock('~/ui/hooks/use-root-loader-data', () => ({
-  useRootLoaderData: () => mockRootLoaderData,
+vi.mock('~/ui/hooks/data/use-cloud-credentials', () => ({
+  useCloudCredentials: () => ({ cloudCredentials: mockCloudCredentialsData.cloudCredentials, isPending: false }),
 }));
 
 vi.mock('../../help-tooltip', () => ({
@@ -65,7 +65,7 @@ describe('HashiCorpVaultForm', () => {
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
-    mockRootLoaderData.cloudCredentials = [];
+    mockCloudCredentialsData.cloudCredentials = [];
   });
 
   afterEach(() => {
@@ -77,7 +77,7 @@ describe('HashiCorpVaultForm', () => {
 
   describe('legacy tag (cloud credential id stored in the tag)', () => {
     it('renders the on-prem fields', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
 
       render(credentialId);
 
@@ -96,7 +96,7 @@ describe('HashiCorpVaultForm', () => {
 
   describe('new tag (cloud credential id stored in plugin data under the tag key)', () => {
     it('resolves the credential id from plugin data and renders the on-prem fields', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
 
       render(pluginDataKey, [buildPluginData(pluginDataKey, credentialId)]);
 
@@ -106,7 +106,7 @@ describe('HashiCorpVaultForm', () => {
     });
 
     it('renders the HCP Vault Dedicated fields including the namespace option', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.cloudVaultDedicated)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.cloudVaultDedicated)];
 
       render(pluginDataKey, [buildPluginData(pluginDataKey, credentialId)]);
 
@@ -115,7 +115,7 @@ describe('HashiCorpVaultForm', () => {
     });
 
     it('renders the HCP Vault Secrets fields', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.cloudVaultSecrets)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.cloudVaultSecrets)];
 
       render(pluginDataKey, [buildPluginData(pluginDataKey, credentialId)]);
 
@@ -126,7 +126,7 @@ describe('HashiCorpVaultForm', () => {
     });
 
     it('ignores plugin data stored under a different key', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
 
       render(pluginDataKey, [buildPluginData('another-key', credentialId)]);
 
@@ -134,7 +134,7 @@ describe('HashiCorpVaultForm', () => {
     });
 
     it('renders nothing when plugin data is empty', () => {
-      mockRootLoaderData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
+      mockCloudCredentialsData.cloudCredentials = [buildCredential(HashiCorpCredentialType.onPrem)];
 
       render(pluginDataKey, []);
 

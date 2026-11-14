@@ -26,7 +26,6 @@ import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } fro
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
 import { useLogoutFetcher } from '~/routes/auth.logout';
-import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import {
   GIT_PROVIDER_COMPLETE_SIGN_IN_FETCHER_KEY,
   useGitProviderCompleteSignInFetcher,
@@ -47,10 +46,12 @@ import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
+import { AppDataCacheProvider, useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
+import { useCreateCloudCredential } from '~/ui/hooks/data/use-cloud-credentials';
 import { useGlobalCurlPasteImport } from '~/ui/hooks/use-global-curl-paste-import';
-import type { RootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { type RootLoaderData, useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import Modals from '~/ui/modals';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
@@ -182,12 +183,10 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
 export async function clientLoader(_args: Route.ClientLoaderArgs): Promise<RootLoaderData> {
   const settings = await services.settings.get();
   const userSession = await services.userSession.get();
-  const cloudCredentials = await services.cloudCredential.all();
 
   return {
     settings,
     userSession,
-    cloudCredentials,
   };
 }
 
@@ -332,7 +331,7 @@ export const HydrateFallback = () => {
   );
 };
 
-const Root = () => {
+const RootContent = () => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -354,10 +353,7 @@ const Root = () => {
   const handleCurlPaste = async (curl: string) => {
     // The Scratchpad project holds a single collection; keep the import flow
     // out of it so a paste cannot create extra collections there.
-    if (
-      !organizationId ||
-      (projectId && models.project.isScratchpadProject({ _id: projectId }))
-    ) {
+    if (!organizationId || (projectId && models.project.isScratchpadProject({ _id: projectId }))) {
       return;
     }
     const { isValid } = await validateCurl(curl);
@@ -378,7 +374,16 @@ const Root = () => {
   // other entry points are not, so pasting then can stack one more modal.
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
-  const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
+  // Drop the app data cache when the user logs out to avoid showing the previous session's org/project data to the next user.
+  const dbQueryClient = useDBQueryClient();
+  const sessionId = useRootLoaderData()?.userSession.id;
+  useEffect(() => {
+    if (!sessionId) {
+      dbQueryClient.clear();
+    }
+  }, [dbQueryClient, sessionId]);
+
+  const { mutateAsync: createCloudCredentials } = useCreateCloudCredential();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
   const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const { submit: gitProviderCompleteSignInSubmit } = useGitProviderCompleteSignInFetcher({
@@ -671,7 +676,7 @@ const Root = () => {
               credentials: result,
               provider: 'azure',
               isAuthenticated: true,
-            });
+            }).catch(error => showError({ title: 'Failed to save Azure credential', error }));
             const closeModalBtn = document.getElementById('close-add-cloud-credential-modal');
             if (closeModalBtn) {
               // close the modal to hint user Azure oauth url if exists
@@ -802,7 +807,7 @@ const Root = () => {
   }, []);
 
   return (
-    <ServerDataCacheProvider>
+    <>
       <div className="app">
         <Outlet />
         <Toaster />
@@ -822,8 +827,18 @@ const Root = () => {
           from={importTrigger.source}
         />
       )}
-    </ServerDataCacheProvider>
+    </>
   );
 };
+
+// Providers must wrap RootContent (not just its JSX) because RootContent's own hooks use the query clients.
+// The app-data provider stays inside the server-data one so it keeps shadowing it for bare `useQuery`.
+const Root = () => (
+  <ServerDataCacheProvider>
+    <AppDataCacheProvider>
+      <RootContent />
+    </AppDataCacheProvider>
+  </ServerDataCacheProvider>
+);
 
 export default Root;
