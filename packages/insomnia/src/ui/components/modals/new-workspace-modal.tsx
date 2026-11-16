@@ -1,7 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
 import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -205,6 +205,12 @@ export const NewWorkspaceModal = ({
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
   const canCreateFolderInSelected = getPendingDepth(selectedFolder, pendingFolders) < MAX_NEW_FOLDER_DEPTH;
 
+  const repositoryTree = gitRepoTreeFetcher.data?.repositoryTree;
+  const repositoryTreeWithPendingFolders = useMemo(
+    () => (repositoryTree ? mergePendingFolders(repositoryTree, pendingFolders) : null),
+    [repositoryTree, pendingFolders],
+  );
+
   const closeNewFolderInput = () => {
     setNewFolderName(null);
     setNewFolderError(null);
@@ -250,7 +256,6 @@ export const NewWorkspaceModal = ({
     workspaceData.name !== defaultNameByScope[scope],
     hasEditedFileName && workspaceData.fileName !== defaultFileName,
     Boolean(workspaceData.folderPath),
-    pendingFolders.length > 0,
     workspaceData.mockServerType !== defaultMockServerType,
     Boolean(workspaceData.mockServerUrl),
     workspaceData.mockServerCreationType !== defaultMockServerCreationType,
@@ -407,11 +412,7 @@ export const NewWorkspaceModal = ({
                         }}
                         aria-label="Files"
                         selectionMode="single"
-                        items={
-                          gitRepoTreeFetcher.data?.repositoryTree
-                            ? [mergePendingFolders(gitRepoTreeFetcher.data.repositoryTree, pendingFolders)]
-                            : []
-                        }
+                        items={repositoryTreeWithPendingFolders ? [repositoryTreeWithPendingFolders] : []}
                         renderEmptyState={() => (
                           <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-(--hl)">
                             <Icon icon="spinner" className="size-5 animate-spin" />
@@ -425,7 +426,7 @@ export const NewWorkspaceModal = ({
                               className="group flex flex-col rounded-xs border border-solid border-transparent px-2 py-1 pl-(--tree-item-level) outline-hidden transition-colors duration-300 odd:bg-(--hl-xxs) aria-disabled:text-(--hl) aria-selected:border-(--color-surprise) aria-selected:bg-(--hl-lg)"
                               style={{
                                 // @ts-expect-error --tree-item-level is a custom property
-                                '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split('/').length * 1) + 0.5}rem`,
+                                '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split(/[\\/]/).length * 1) + 0.5}rem`,
                                 'color': item.type === 'file' ? 'var(--hl)' : 'var(--color-font)',
                               }}
                               isDisabled={item.type === 'file'}
@@ -478,6 +479,9 @@ export const NewWorkspaceModal = ({
                         <div className="flex items-start gap-2">
                           <TextField
                             aria-label="New folder name"
+                            // Keep this input out of the native form validation so an invalid folder name
+                            // doesn't block submitting the workspace itself.
+                            validationBehavior="aria"
                             autoFocus
                             value={newFolderName}
                             isInvalid={Boolean(newFolderError)}
