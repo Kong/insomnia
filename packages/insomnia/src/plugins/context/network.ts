@@ -7,6 +7,7 @@ import {
   redactResponsePatch,
   withRedaction,
 } from '~/common/network/sensitive-value-collector';
+import { resolveHideSecretValues } from '~/common/organization-features';
 import type { NodeCurlRequestOptions, NodeCurlResponseType, PluginTemplateTagContext } from '~/common/templating/types';
 
 import {
@@ -37,7 +38,7 @@ export function init(): {
 
         // This request renders with purpose 'send', so confidential values are real here and
         // need the same timeline/response redaction the main send path gets.
-        const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+        const collector = createSensitiveValueCollector(resolveHideSecretValues(settings));
         const renderResult = await tryToInterpolateRequest({
           request,
           environment: environment._id,

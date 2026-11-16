@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -12,6 +13,7 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+  hideSecretValuesInPreviewAndConsole: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period
@@ -115,4 +117,14 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 export function useIsGitSyncEnabled(organizationId: string) {
   const { features } = useOrganizationPermissions(organizationId);
   return features.gitSync.enabled;
+}
+
+export function useHideSecretValues() {
+  const { settings } = useRootLoaderData()!;
+  const { features } = useOrganizationPermissions();
+  const isEnforcedByOrganization = features?.hideSecretValuesInPreviewAndConsole?.enabled === true;
+  return {
+    hideSecretValues: (settings.hideSecretValuesInPreviewAndConsole ?? true) || isEnforcedByOrganization,
+    isEnforcedByOrganization,
+  };
 }

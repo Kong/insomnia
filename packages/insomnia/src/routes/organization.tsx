@@ -6,6 +6,7 @@ import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { setCurrentOrganizationFeatures } from '~/common/organization-features';
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -35,6 +36,7 @@ import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
 import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/ui/utils/router';
@@ -231,6 +233,23 @@ const Component = () => {
     window.main.setCurrentOrganizationId(organizationId);
     return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
+
+  // Cache the current organization's features in this renderer and sync them to the main process, so
+  // reads of hideSecretValuesInPreviewAndConsole via resolveHideSecretValues() honour organization
+  // enforcement in both processes.
+  const { features: organizationFeatures } = useOrganizationPermissions(organizationId);
+  useEffect(() => {
+    setCurrentOrganizationFeatures(organizationFeatures);
+    window.main.organizationFeatures.sync(organizationFeatures);
+  }, [organizationFeatures]);
+  useEffect(
+    () => () => {
+      // clear the cached organization features
+      setCurrentOrganizationFeatures();
+      window.main.organizationFeatures.sync();
+    },
+    [],
+  );
 
   useEffect(() => {
     const accountId = userSession.accountId;

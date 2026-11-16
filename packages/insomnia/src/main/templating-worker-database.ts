@@ -12,6 +12,7 @@ import { ProxyScopes, RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { resolveHideSecretValues } from '~/common/organization-features';
 import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
@@ -781,7 +782,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
 
     // Renders with purpose 'send', so confidential values are real here and need the same
     // timeline/response redaction the main send path gets.
-    const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+    const collector = createSensitiveValueCollector(resolveHideSecretValues(settings));
     const renderResult = await tryToInterpolateRequest({
       request,
       environment: environment._id,

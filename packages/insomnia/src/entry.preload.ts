@@ -22,6 +22,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { OrganizationFeaturesBridgeAPI } from './main/ipc/organization-features';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -147,6 +148,10 @@ const secretStorage: secretStorageBridgeAPI = {
 const electronStorage: electronStorageBridgeAPI = {
   getItem: key => invokeWithNormalizedError('electronStorage.getItem', key),
   setItem: (key, value) => invokeWithNormalizedError('electronStorage.setItem', key, value),
+};
+
+const organizationFeatures: OrganizationFeaturesBridgeAPI = {
+  sync: features => ipcRenderer.send('organizationFeatures.sync', features),
 };
 
 const git: GitServiceAPI = {
@@ -291,6 +296,7 @@ const main: Window['main'] = {
   curl,
   secretStorage,
   electronStorage,
+  organizationFeatures,
   trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   setCurrentOrganizationId: organizationId => ipcRenderer.send('analytics.setOrganizationId', organizationId),

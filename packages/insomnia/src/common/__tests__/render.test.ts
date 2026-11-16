@@ -1,11 +1,13 @@
 // @ts-nocheck
 import { createBuilder } from '@develohpanda/fluent-builder';
+import type { FeatureList } from 'insomnia-api';
 import type { Environment, Workspace } from 'insomnia-data';
 import { EnvironmentKvPairDataType, models, services } from 'insomnia-data';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { environmentModelSchema, requestGroupModelSchema } from '../../sync/__schemas__/model-schemas';
 import { createSensitiveValueCollector } from '../network/sensitive-value-collector';
+import { setCurrentOrganizationFeatures } from '../organization-features';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
@@ -1488,6 +1490,37 @@ describe('render tests', () => {
   });
 
   describe('getRenderContext()', () => {
+    describe('hideSecretValuesInPreviewAndConsole', () => {
+      const workspace = { _id: 'wrk_render_hide_secret_test', type: models.workspace.type, parentId: 'proj_test' };
+      const buildContext = () =>
+        renderUtils.getRenderContext({
+          environment: envBuilder.data({}).build(),
+          baseEnvironment: envBuilder.data({}).build(),
+          ancestors: [workspace] as unknown as RenderContextAncestor[],
+          purpose: 'preview',
+        });
+
+      beforeEach(async () => {
+        const settings = await services.settings.getOrCreate();
+        await services.settings.update(settings, { hideSecretValuesInPreviewAndConsole: false });
+      });
+
+      afterEach(() => {
+        setCurrentOrganizationFeatures();
+      });
+
+      it('uses the user setting when the organization does not enforce it', async () => {
+        const context = await buildContext();
+        expect(context.getSettings().hideSecretValuesInPreviewAndConsole).toBe(false);
+      });
+
+      it('is forced on when the cached organization features enforce it', async () => {
+        setCurrentOrganizationFeatures({ hideSecretValuesInPreviewAndConsole: { enabled: true } } as FeatureList);
+        const context = await buildContext();
+        expect(context.getSettings().hideSecretValuesInPreviewAndConsole).toBe(true);
+      });
+    });
+
     it('attributes the environments of a project environment workspace to the project', async () => {
       // The project environment page renders its own workspace, so its base and sub
       // environments arrive as the workspace's own layers rather than as project ones.

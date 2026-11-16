@@ -21,6 +21,7 @@ import {
   getConfidentialBasicAuthHeaderValue,
   type SensitiveValueCollector,
 } from '~/common/network/sensitive-value-collector';
+import { resolveHideSecretValues } from '~/common/organization-features';
 import {
   CONFIDENTIAL_MASK_VALUE,
   type ConfidentialValueKind,
@@ -781,7 +782,7 @@ export async function getRenderContext({
     getProjectId: () => project?._id,
     getSettings: () => ({
       dataFolders: settings.dataFolders,
-      hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
+      hideSecretValuesInPreviewAndConsole: resolveHideSecretValues(settings),
       forceReveal: forceReveal,
     }),
     ...(sensitiveValueCollector != null ? { getSensitiveValueCollector: () => sensitiveValueCollector } : {}),

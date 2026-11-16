@@ -236,6 +236,7 @@ export type MainOnChannels =
   | 'manualUpdateCheck'
   | 'openDeepLink'
   | 'openInBrowser'
+  | 'organizationFeatures.sync'
   | 'path.basename'
   | 'path.dirname'
   | 'path.join'

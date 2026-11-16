@@ -59,6 +59,7 @@ export interface FeatureList {
   aiMockServers: FeatureStatus;
   aiCommitMessages: FeatureStatus;
   aiMcpClient: FeatureStatus;
+  hideSecretValuesInPreviewAndConsole?: FeatureStatus;
 }
 
 export interface Billing {

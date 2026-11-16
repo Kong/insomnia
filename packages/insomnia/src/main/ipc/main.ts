@@ -97,6 +97,7 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
 import extractPostmanDataDumpHandler from './extract-postman-data-dump';
 import type { gRPCBridgeAPI } from './grpc';
+import type { OrganizationFeaturesBridgeAPI } from './organization-features';
 import { resolveUserDataFolder } from './path-guard';
 import type { secretStorageBridgeAPI } from './secret-storage';
 import { registerTemplatingDbAuthIpcHandler } from './templating-db-auth';
@@ -282,6 +283,7 @@ export interface RendererToMainBridgeAPI {
   llm: LLMConfigServiceAPI;
   secretStorage: secretStorageBridgeAPI;
   electronStorage: electronStorageBridgeAPI;
+  organizationFeatures: OrganizationFeaturesBridgeAPI;
   trackAnalyticsEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   setCurrentOrganizationId: (organizationId: string | undefined) => void;

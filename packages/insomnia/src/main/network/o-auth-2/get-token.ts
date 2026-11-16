@@ -24,6 +24,7 @@ import {
   redactResponsePatch,
   withRedaction,
 } from '~/common/network/sensitive-value-collector';
+import { resolveHideSecretValues } from '~/common/organization-features';
 import { invariant } from '~/common/utils/invariant';
 import { authorizeUserInDefaultBrowser } from '~/main/authorize-user-in-default-browser';
 import { authorizeUserInWindow } from '~/main/authorize-user-in-window';
@@ -646,7 +647,7 @@ const sendAccessTokenRequest = async (
     created: Date.now(),
   };
 
-  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const collector = createSensitiveValueCollector(resolveHideSecretValues(settings));
   const renderResult = await tryToInterpolateRequest({
     request: newRequest,
     environment: environment._id,

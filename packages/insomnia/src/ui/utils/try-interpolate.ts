@@ -2,6 +2,7 @@ import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketReques
 import { services } from 'insomnia-data';
 
 import { createSensitiveValueCollector } from '~/common/network/sensitive-value-collector';
+import { resolveHideSecretValues } from '~/common/organization-features';
 import { getRenderContext, render } from '~/common/render';
 import { RenderError } from '~/common/templating/render-error';
 import { showModal } from '~/ui/components/modals';
@@ -46,7 +47,7 @@ export const tryToInterpolateRequestAndCollectSensitiveValues = async ({
 }): Promise<{ rendered: any; sensitiveValues: string[] } | undefined> => {
   try {
     const settings = await services.settings.get();
-    const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+    const collector = createSensitiveValueCollector(resolveHideSecretValues(settings));
     const renderContext = await getRenderContext({
       request,
       environment: environmentId,

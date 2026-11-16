@@ -11,6 +11,7 @@ import { RenderError } from '~/common/templating/render-error';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { useHideSecretValues } from '~/ui/hooks/use-organization-features';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { getGrpcConnectionErrorDetails } from '~/ui/utils/grpc';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
@@ -254,6 +255,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       .map((msg, index) => ({ ...msg, name: `Stream ${index + 1}` })),
   ];
 
+  const { hideSecretValues } = useHideSecretValues();
+
   return (
     <>
       <Pane type="request">
@@ -428,10 +431,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-default"
                         onClick={async () => {
-                          const settings = await services.settings.get();
-                          const collector = createSensitiveValueCollector(
-                            settings.hideSecretValuesInPreviewAndConsole ?? true,
-                          );
+                          const collector = createSensitiveValueCollector(hideSecretValues);
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
                             environment: environmentId,
