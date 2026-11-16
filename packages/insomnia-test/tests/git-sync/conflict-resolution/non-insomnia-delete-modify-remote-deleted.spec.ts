@@ -1,23 +1,40 @@
-import { commitLocalFiles,pushServerFile,test } from '@package/misc/git-fixtures';
+import * as fs from 'node:fs';
+import path from 'node:path';
+
+import { faker } from '@faker-js/faker';
+import { ProjectType } from '@package/enums/project-types';
+import { commitLocalFiles, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
+import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
 
-import { readRepoFile,setupGitProject,waitForRepoFile,WORKFLOW,workflowContent } from './helpers';
+const workflow = (step: string) => `name: deploy\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: ${step}\n`;
+const WORKFLOW = '.github/workflows/main-deployment.yaml';
 
-test('Verify a conflict where the remote deleted a non-Insomnia YAML file is auto-resolved by deleting it locally', async ({
-  user,
-}) => {
+test('Verify a conflict where the remote deleted a non-Insomnia YAML file is auto-resolved by deleting it locally', async ({ user }) => {
   test.fail();
 
-  const { gitSyncFlow } = user.flowManager;
+  const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
-  const { repoPath } = await setupGitProject(user, { [WORKFLOW]: workflowContent('echo base') });
+  await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
+  const project = await workspaceFlow.cloneGitProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Git),
+    GIT_CREDENTIAL.name,
+  );
+  const repoPath = await workspaceFlow.getGitRepositoryPath(project);
 
-  commitLocalFiles(repoPath, [{ path: WORKFLOW, content: workflowContent('echo local') }], 'Local modify');
+  await pushServerFile({ path: WORKFLOW, content: workflow('echo base') });
+  await gitSyncFlow.pull();
+  await expect
+    .poll(() => fs.existsSync(path.join(repoPath, WORKFLOW)), { timeout: DEFAULT_TIMEOUT })
+    .toBe(true);
+
+  commitLocalFiles(repoPath, [{ path: WORKFLOW, content: workflow('echo local') }], 'Local modify');
   await pushServerFile({ path: WORKFLOW, delete: true, message: 'Remote delete' });
   await gitSyncFlow.pull();
-  await waitForRepoFile(repoPath, WORKFLOW);
+  await expect
+    .poll(() => fs.existsSync(path.join(repoPath, WORKFLOW)), { timeout: DEFAULT_TIMEOUT })
+    .toBe(false);
   const pullIssues = await gitSyncFlow.getPullIssues();
 
-  expect(readRepoFile(repoPath, WORKFLOW)).toBeUndefined();
   expect(pullIssues).toEqual({ conflictModalOpen: false, validationErrorShown: false });
 });
