@@ -25,8 +25,6 @@ test("Collection-level OAuth2 token is fetched and stored on the collection", as
 
   await collectionFlow.setOAuth2(collection, oauth2);
 
-  // 1. The request inherits the collection's OAuth2: its token is requested once, stored on the
-  //    collection, and reused by the next send.
   let response = await user.flowManager.httpRequestFlow.send(folderRequest);
   expect(response.statusBar.code).toBe(200);
   const first = (response.preview as { headers: Record<string, string> }).headers.authorization;
@@ -37,8 +35,6 @@ test("Collection-level OAuth2 token is fetched and stored on the collection", as
   expect(response.statusBar.code).toBe(200);
   expect((response.preview as { headers: Record<string, string> }).headers.authorization).toBe(first);
 
-  // 2. The folder defines its own OAuth2: requests in it use the folder's own token, which is stored on
-  //    the folder, while the collection keeps its token for everything outside the folder.
   const folderPage = await folderFlow.open(folders[0]);
   await folderPage.auth.setOAuth2Fields(oauth2);
 

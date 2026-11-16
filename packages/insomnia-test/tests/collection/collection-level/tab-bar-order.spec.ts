@@ -7,7 +7,6 @@ test("Collection shows Auth, Headers, Scripts, Environment and Docs tabs after S
   const { collectionFlow } = user.flowManager;
   const { collection } = await createFixture(user.flowManager);
 
-  // "Tests" is absent: the legacy-tests setting is off and the collection has no legacy tests.
   expect(await collectionFlow.getTabNames(collection)).toEqual([
     "Spec",
     "Auth",

@@ -12,7 +12,6 @@ import { expect } from "@playwright/test";
 
 import { createCollection } from "./support";
 
-/** The first streamed event of `response` whose payload mentions `needle`, once it has arrived. */
 async function waitForEvent(response: ResponseView, needle: string): Promise<string> {
   let found = "";
   await expect
@@ -39,19 +38,15 @@ test("WebSocket connection inherits collection headers and auth", async ({ user 
   });
   const response = await webSocketRequestFlow.send(request);
 
-  // The server answers with the handshake headers it received.
   const { headers } = JSON.parse(await waitForEvent(response, "x-collection"));
   expect(headers["x-collection"]).toBe("c");
   expect(headers.authorization).toBe("Bearer collection-token");
   await webSocketRequestFlow.disconnect(request);
 });
 
-// Socket.IO only applies `singleToken` auth, which the collection's Auth tab does not offer, so
-// the collection's headers are all there is to inherit.
 test("Socket.IO connection inherits collection headers", async ({ user }) => {
   const { collectionFlow, socketIoRequestFlow } = user.flowManager;
   const collection = await createCollection(user.flowManager);
-  // A unique value tells this run's handshake apart from any earlier one the server remembers.
   const marker = faker.string.alphanumeric(12);
   await collectionFlow.setHeaders(collection, [{ name: "x-collection", value: marker }]);
 
@@ -61,7 +56,6 @@ test("Socket.IO connection inherits collection headers", async ({ user }) => {
   });
   await socketIoRequestFlow.connect(request);
 
-  // The server records the handshake it received.
   await expect
     .poll(
       async () => {
@@ -74,8 +68,6 @@ test("Socket.IO connection inherits collection headers", async ({ user }) => {
   await socketIoRequestFlow.disconnect(request);
 });
 
-// gRPC metadata inherits the collection headers; a gRPC request has no auth of its own, so there is no
-// collection auth for it to inherit.
 test("gRPC call inherits collection headers", async ({ user }) => {
   const { collectionFlow, grpcRequestFlow } = user.flowManager;
   const collection = await createCollection(user.flowManager);
@@ -90,6 +82,5 @@ test("gRPC call inherits collection headers", async ({ user }) => {
   const response = await grpcRequestFlow.send(request);
 
   expect(response.status).toEqual({ code: "0", message: "OK" });
-  // The hello server appends the `x-test-header` metadata it received to its reply.
   expect(response.message).toEqual({ reply: "hello world (from-collection)" });
 });

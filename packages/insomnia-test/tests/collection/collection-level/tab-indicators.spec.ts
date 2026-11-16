@@ -17,7 +17,6 @@ test("Tab indicators reflect state (auth dot, headers count, scripts dot)", asyn
     { name: "x-off", value: "3", disabled: true },
   ]);
   await collectionFlow.setScripts(collection, { preRequest: "console.log('pre');" });
-  // The badge counts enabled headers only.
   await collectionPage.expectIndicators({ auth: true, headers: 2, scripts: true });
 
   await collectionFlow.clearAuth(collection);

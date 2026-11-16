@@ -19,7 +19,6 @@ test("Environment tab edits the collection's base and sub-environments in place"
   const collection = (await workspaceFlow.getCollection("Collection Environments")) as Collection;
   expect(collection).toBeTruthy();
 
-  // 1. Edit a base variable and a sub-environment variable in the Environment tab.
   const tab = await collectionFlow.openEnvironmentTab(collection);
   expect(await tab.getEnvironmentNames()).toEqual([BASE, SUB]);
   await tab.selectEnvironment(BASE);
@@ -27,7 +26,6 @@ test("Environment tab edits the collection's base and sub-environments in place"
   await tab.selectEnvironment(SUB);
   await tab.setVariableValue("sub_var", "sub-edited-in-tab");
 
-  // 2. The environment modal shows the same environments with the tab's edits.
   const modal = await collectionFlow.openEnvironmentModal(collection);
   expect(await modal.getEnvironmentNames()).toEqual([BASE, SUB]);
   await modal.selectEnvironment(BASE);
@@ -35,7 +33,6 @@ test("Environment tab edits the collection's base and sub-environments in place"
   await modal.selectEnvironment(SUB);
   expect(await modal.getVariables()).toContainEqual({ name: "sub_var", value: "sub-edited-in-tab" });
 
-  // 3. And the other way round: an edit made in the modal shows up in the tab.
   await modal.selectEnvironment(BASE);
   await modal.setVariableValue("base_var", "base-edited-in-modal");
   await collectionFlow.closeEnvironmentModal();

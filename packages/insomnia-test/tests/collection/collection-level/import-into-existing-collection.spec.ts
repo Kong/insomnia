@@ -12,16 +12,11 @@ const FIXTURE = path.join(import.meta.dirname, "collection-level-properties.yaml
 const FIXTURE_COLLECTION_NAME = "Collection Level Properties";
 const REQUEST_NAME = "Echo Request";
 
-// What collection-level-properties.yaml defines at the collection level.
 const EXPECTED_HEADER = { name: "x-collection", value: "c" };
 const EXPECTED_PRE_REQUEST = "insomnia.request.headers.add({ key: 'x-from-collection-script', value: 'yes' });";
 const EXPECTED_AFTER_RESPONSE = "console.log('collection after-response script');";
 const EXPECTED_AUTHORIZATION = `Basic ${Buffer.from("collection-user:collection-pass").toString("base64")}`;
 
-// `importResourcesToWorkspace` skips the file's workspace resource, so importing into an EXISTING collection
-// brings the requests along but drops the file's collection-level headers, authentication and scripts
-// (`importResourcesToNewWorkspace` keeps them). The expectations below are the behavior the new-collection
-// import has; whether an existing collection should adopt them too is a product decision (see INS-4322).
 test("Importing a file with collection-level properties into an existing collection", async ({ user }) => {
   test.fail(true, "INS-4322");
   const { workspaceFlow, collectionFlow, importFlow, httpRequestFlow } = user.flowManager;
@@ -31,8 +26,6 @@ test("Importing a file with collection-level properties into an existing collect
 
   await importFlow.importFileIntoCollection(project, target.name, FIXTURE);
 
-  // The import ran and went into the existing collection: its request is there, and no new collection
-  // named after the file was created. These are hard asserts so a failed setup is not mistaken for the bug.
   const request = await httpRequestFlow.get(REQUEST_NAME);
   expect(request, "the file's request is imported into the existing collection").toBeTruthy();
   expect(
@@ -40,25 +33,20 @@ test("Importing a file with collection-level properties into an existing collect
     "no new collection is created from the file",
   ).toBeUndefined();
 
-  // Every collection-level property of the file is checked softly so one run reports all that were dropped.
   const collectionPage = await collectionFlow.open(target);
 
-  // Headers tab.
   expect.soft(await collectionPage.headers.getHeaders(), "collection headers").toEqual(
     expect.arrayContaining([expect.objectContaining(EXPECTED_HEADER)]),
   );
   expect.soft(await collectionPage.getHeadersBadge(), "headers badge counts the enabled headers").toBe(1);
 
-  // Auth tab: a Basic auth is set (the exact credentials are checked through the sent request below).
   expect.soft(await collectionPage.hasActiveDot("auth"), "auth tab shows an authentication is set").toBe(true);
 
-  // Scripts tab.
   expect.soft(await collectionPage.hasActiveDot("scripts"), "scripts tab shows a script is set").toBe(true);
   const scripts = await collectionPage.scripts.getScripts();
   expect.soft(scripts?.preRequest?.trim(), "collection pre-request script").toBe(EXPECTED_PRE_REQUEST);
   expect.soft(scripts?.afterResponse?.trim(), "collection after-response script").toBe(EXPECTED_AFTER_RESPONSE);
 
-  // End to end: the properties reach the request that was imported with them.
   const response = await httpRequestFlow.send(request!);
   expect.soft(response.statusBar.code).toBe(200);
   const sent = (response.preview as { headers?: Record<string, string> } | undefined)?.headers ?? {};

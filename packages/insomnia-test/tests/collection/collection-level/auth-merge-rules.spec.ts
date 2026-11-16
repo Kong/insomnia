@@ -23,8 +23,6 @@ test("Authorization header is replaced by the request's value, other headers are
   expect(response.statusBar.code).toBe(200);
   const headers = (response.preview as { headers: Record<string, string> }).headers;
 
-  // Only the closest value is sent for Authorization, not `collection, request`.
   expect.soft(headers.authorization).toBe("Bearer request-token");
-  // Control: any other header is combined, collection first.
   expect.soft(headers["x-merge"]).toBe("collection, request");
 });

@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 
 import { createFixture } from "./support";
 
-/** Asserts `needles` all appear in `text`, in the given order. */
 function expectInOrder(text: string, needles: string[]) {
   const positions = needles.map((needle) => text.indexOf(needle));
   expect(positions, `${needles.join(" < ")} in:\n${text}`).not.toContain(-1);

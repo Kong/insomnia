@@ -8,10 +8,8 @@ import { Folder } from "@package/models/folder";
 import type { HttpRequest, HttpRequestInit } from "@package/models/http-request";
 import { Project } from "@package/models/project";
 
-/** `POST` endpoint of the local mock server that echoes the request's headers back as JSON. */
 export const ECHO_URL = `${HTTP_SERVER}/post`;
 
-/** Creates a local project with an empty collection. */
 export async function createCollection(flowManager: FlowManager): Promise<Collection> {
   const { workspaceFlow } = flowManager;
   const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
@@ -21,16 +19,10 @@ export async function createCollection(flowManager: FlowManager): Promise<Collec
 export interface Fixture {
   project: Project;
   collection: Collection;
-  /** The folders created, outermost first. */
   folders: Folder[];
   request: HttpRequest;
 }
 
-/**
- * Creates a local project with a collection, `folderDepth` nested folders and
- * a request against the echo endpoint in the innermost one (or directly under
- * the collection when `folderDepth` is 0).
- */
 export async function createFixture(
   flowManager: FlowManager,
   { folderDepth = 0, request = {} }: { folderDepth?: number; request?: Partial<HttpRequestInit> } = {},
