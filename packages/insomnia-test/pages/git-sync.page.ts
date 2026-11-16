@@ -18,6 +18,8 @@ export class GitSyncPage extends BasePage {
     this.page.getByRole("dialog", { name: "Commit Changes" }),
   );
 
+  private readonly historyModal = ModalComponent.byTitle(this.page, "History");
+
   /**
    * Waits for a Git Sync surface to become visible: the inline
    * credential-setup card (no credential configured yet), or (once a
@@ -70,6 +72,21 @@ export class GitSyncPage extends BasePage {
     await expect(
       this.commitModal.root.locator('[role="row"][data-key]').first(),
     ).toBeVisible({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Opens the History modal via the Git Sync dropdown's "History" action.
+   * Does not wait for the commit log itself to finish loading — `Table`'s
+   * `renderEmptyState` renders both the "Loading..." and "No history
+   * available" placeholders as a `role="row"` element indistinguishable
+   * from a real commit row by role alone, so that has to be done by
+   * `getLatestCommit()`, which can tell a real commit row apart from a
+   * placeholder by its `data-key` attribute.
+   */
+  async openHistory(): Promise<void> {
+    await this.openSyncMenu();
+    await this.syncMenu.getByTestId("git-sync-menu-history").click();
+    await this.historyModal.waitForVisible();
   }
 
   private async openSyncMenu(): Promise<void> {

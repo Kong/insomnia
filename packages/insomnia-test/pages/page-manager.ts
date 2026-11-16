@@ -13,6 +13,7 @@ import { EnvironmentPage } from "./environment.page";
 import { ExportPage } from "./export.page";
 import { FolderPage } from "./folder.page";
 import { GitCommitDialogPage } from "./git-commit-dialog.page";
+import { GitHistoryDialogPage } from "./git-history-dialog.page";
 import { GitSyncPage } from "./git-sync.page";
 import { GrpcRequestPage } from "./grpc-request.page";
 import { HttpRequestPage } from "./http-request.page";
@@ -38,6 +39,8 @@ const pageRegistry = {
     new ExportPage(page),
   gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
     new GitCommitDialogPage(page),
+  gitHistoryDialogPage: (page: Page): GitHistoryDialogPage =>
+    new GitHistoryDialogPage(page),
   gitSyncPage: (page: Page): GitSyncPage =>
     new GitSyncPage(page),
   grpcRequestPage: (page: Page): GrpcRequestPage =>
