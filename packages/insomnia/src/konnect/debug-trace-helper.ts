@@ -1,6 +1,19 @@
 import type { DebugSession, DebugSpan, DebugTraceDetail, DebugTraceSummary } from './debug-session-api';
 export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out';
 
+// Attribute names used in debug traces
+export const TRACE_ATTRIBUTE_NAMES = {
+  HTTP_REQUEST_METHOD: 'http.request.method',
+  URL_FULL: 'url.full',
+  HTTP_ROUTE: 'http.route',
+  HTTP_RESPONSE_STATUS_CODE: 'http.response.status_code',
+  HTTP_REQUEST_SIZE: 'http.request.size',
+  HTTP_RESPONSE_SIZE: 'http.response.size',
+  PROTOCOL: 'network.protocol.name',
+  ROUTE_ID: 'proxy.kong.route.id',
+  URL_SCHEME: 'url.scheme',
+};
+
 // Derive the state of a debug session from its response
 export function deriveSessionState(session: DebugSession): DebugSessionState {
   if (session.stoppedAt) {
@@ -59,7 +72,7 @@ export interface SpanTree {
 const NANOS_PER_MS = 1_000_000n;
 
 // Span timestamps are unix nanoseconds as strings: too large for a JS number to hold exactly.
-function toBigInt(value: string): bigint {
+export function toBigInt(value: string): bigint {
   try {
     return BigInt(value);
   } catch {
@@ -110,7 +123,6 @@ export function buildSpanTree(detail: DebugTraceDetail): SpanTree {
     }
   }
 
-  // Depth, owner and self time depend on the parent, so fill them in top-down once the tree is linked.
   const finalize = (node: SpanNode, depth: number) => {
     node.depth = depth;
     node.children.sort((a, b) => a.startOffsetMs - b.startOffsetMs);
@@ -123,7 +135,7 @@ export function buildSpanTree(detail: DebugTraceDetail): SpanTree {
   return { roots, totalMs };
 }
 
-/** Depth-first rows for the waterfall, skipping the children of collapsed spans. */
+// Depth-first rows for the waterfall, skipping the children of collapsed spans.
 export function flattenVisible(roots: SpanNode[], collapsed: ReadonlySet<string>): SpanNode[] {
   const result: SpanNode[] = [];
   const visit = (node: SpanNode) => {
@@ -137,6 +149,10 @@ export function flattenVisible(roots: SpanNode[], collapsed: ReadonlySet<string>
 }
 
 export interface TraceSummaryBreakdown {
+  routeId: string;
+  protocol: string;
+  method: string;
+  urlScheme: string;
   totalMs: number;
   kongMs: number;
   upstreamMs: number;
@@ -145,6 +161,8 @@ export interface TraceSummaryBreakdown {
   kongPct: number;
   upstreamPct: number;
   clientPct: number;
+  requestSize: number;
+  responseSize: number;
   thirdPartyPct: number;
 }
 
@@ -155,6 +173,7 @@ const LATENCY_ATTRIBUTES = {
   upstream: 'proxy.kong.latency.upstream',
   client: 'proxy.kong.latency.client',
   thirdParty: 'proxy.kong.latency.3p.total_io',
+  protocol: 'network.protocol.name',
 };
 
 // Some numeric attributes come back as strings (e.g. `proxy.kong.http.response.body.size`).
@@ -189,6 +208,12 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
   const thirdPartyMs = readMs(span.attributes, LATENCY_ATTRIBUTES.thirdParty) ?? 0;
   const sum = kongMs + upstreamMs + clientMs + thirdPartyMs;
   const pct = (value: number) => (sum > 0 ? (value / sum) * 100 : 0);
+  const requestSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_SIZE] || 0;
+  const responseSize = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_RESPONSE_SIZE] || 0;
+  const protocol = span.attributes[TRACE_ATTRIBUTE_NAMES.PROTOCOL] || '';
+  const method = span.attributes[TRACE_ATTRIBUTE_NAMES.HTTP_REQUEST_METHOD] || '';
+  const routeId = span.attributes[TRACE_ATTRIBUTE_NAMES.ROUTE_ID] || '';
+  const urlScheme = span.attributes[TRACE_ATTRIBUTE_NAMES.URL_SCHEME] || '';
   return {
     totalMs: readMs(span.attributes, LATENCY_ATTRIBUTES.total) ?? tree.totalMs,
     kongMs,
@@ -199,6 +224,12 @@ export function summarizeTrace(tree: SpanTree): TraceSummaryBreakdown | null {
     upstreamPct: pct(upstreamMs),
     clientPct: pct(clientMs),
     thirdPartyPct: pct(thirdPartyMs),
+    requestSize,
+    responseSize,
+    protocol,
+    method,
+    routeId,
+    urlScheme,
   };
 }
 
@@ -219,8 +250,6 @@ export function getTracePath(trace: Pick<DebugTraceSummary, 'url' | 'route'>): s
   return trace.route ? normalizePath(trace.route) : null;
 }
 
-const ROUTE_ID_ATTRIBUTE = 'proxy.kong.route.id';
-
 // konnectRouteKey is `${route.id}:${method}:${pathSegment}:${protocol}`
 export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | undefined): string | null {
   if (!konnectRouteKey) {
@@ -230,16 +259,28 @@ export function getRouteIdFromKonnectRouteKey(konnectRouteKey: string | null | u
   return routeId;
 }
 
-/** Ids of the traces having a span served by the Kong route `routeId`. */
-export function findTraceIdsByRouteId(details: Map<string, DebugTraceDetail>, routeId: string | null): Set<string> {
-  const matching = new Set<string>();
-  if (!routeId) {
-    return matching;
-  }
-  for (const [traceId, detail] of details) {
-    if (detail.spans.some(span => span.attributes[ROUTE_ID_ATTRIBUTE] === routeId)) {
-      matching.add(traceId);
-    }
-  }
-  return matching;
+interface ParsedKonnectError {
+  title?: string;
+  detail?: string;
+  traceId?: string;
+  raw: string;
 }
+
+// Parse Konnect JSON error message
+export const parseKonnectError = (message: string): ParsedKonnectError | null => {
+  try {
+    const json = JSON.parse(message);
+    if (!json || typeof json !== 'object' || Array.isArray(json)) {
+      return null;
+    }
+    const title = typeof json.title === 'string' ? json.title : '';
+    const detail = typeof json.detail === 'string' ? json.detail : '';
+    if (!title && !detail) {
+      return null;
+    }
+    const instance = typeof json.instance === 'string' ? json.instance : undefined;
+    return { title, detail, traceId: instance, raw: JSON.stringify(json, null, 2) };
+  } catch {
+    return null;
+  }
+};
