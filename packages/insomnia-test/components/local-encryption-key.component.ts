@@ -29,11 +29,11 @@ export class LocalEncryptionKeyComponent extends PreferencesTabComponent {
     return this.panel.getByTestId("local-encryption-key-unavailable");
   }
 
-  /** The "Keep this key secure and use it on this machine only" confirmation. */
+  /** The "Keep this key private & use it only on this machine" confirmation. */
   get confirmation(): ModalComponent {
     return new ModalComponent(
       this.page,
-      this.page.getByRole("dialog").filter({ hasText: "use it on this machine only" }),
+      this.page.getByRole("dialog").filter({ hasText: "use it only on this machine" }),
     );
   }
 

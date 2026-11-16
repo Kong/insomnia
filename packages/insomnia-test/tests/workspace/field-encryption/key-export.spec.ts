@@ -31,9 +31,9 @@ test("Copy Key puts the key on the clipboard as one line of base64 after a confi
   expect(await fieldEncryptionFlow.readClipboard()).toBe("clipboard before");
 
   const { warning, buttonText } = await fieldEncryptionFlow.copyKey("continue");
-  expect(warning).toContain("Keep this key secure");
-  expect(warning).toContain("use it on this machine only");
-  expect(warning).toContain("Do not use it on any other machine");
+  expect(warning).toContain("Keep this key private");
+  expect(warning).toContain("use it only on this machine");
+  expect(warning).toContain("Never use it on another machine");
   expect(buttonText).toContain("Copied");
 
   // One token, pasteable into a shell as it is: no quotes, no braces, no line breaks
