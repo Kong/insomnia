@@ -1,5 +1,6 @@
-import { getOrganizationRoles } from 'insomnia-api';
-import React, { useState } from 'react';
+import { getOrganizationRoles, getOrgUserPermissions, type Permission } from 'insomnia-api';
+import { models } from 'insomnia-data';
+import React, { useEffect, useState } from 'react';
 import { Button, Input } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -21,6 +22,40 @@ export const InviteBox = ({
   const [inviteQuery, setInviteQuery] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
+  const [userPermission, setUserPermission] = useState<Record<Permission, boolean> | null>(null);
+
+  useEffect(() => {
+    if (isLocalOrganization) {
+      return;
+    }
+    let isCancelled = false;
+    (async () => {
+      try {
+        const permissions = await getOrgUserPermissions({
+          organizationId,
+          sessionId: await getCurrentSessionId(),
+        });
+        if (!isCancelled) {
+          setUserPermission(permissions);
+        }
+      } catch {
+        // if the permissions request fails, still show the box and let the backend handle the error
+      }
+    })();
+    return () => {
+      isCancelled = true;
+      setUserPermission(null);
+    };
+  }, [organizationId, isLocalOrganization]);
+
+  const hasPermissions =
+    userPermission == null || (userPermission['create:invitation'] && userPermission['read:membership']);
+
+  if (isLocalOrganization || !hasPermissions) {
+    return null;
+  }
 
   const sendInvite = async () => {
     const email = inviteQuery.trim();
