@@ -48,7 +48,6 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
   user,
   dataPath,
 }) => {
-  test.fail(true, 'INS-4306');
   const { fieldEncryptionFlow } = user.flowManager;
   const { request, token } = await createBearerRequest(user);
   await expect.poll(() => storedToken(dataPath, request.name)).toMatch(/^enc:insomnia:v1:/);
@@ -66,7 +65,7 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
     expect(await fieldEncryptionFlow.hasErrorDialog()).toBe(false);
 
     const { warning, suggestedPath } = await fieldEncryptionFlow.exportKey("continue", file);
-    expect(warning).toContain("only when you run the inso CLI on this machine");
+    expect(warning).toContain("Never use it on another machine");
     expect(path.basename(suggestedPath ?? "")).toBe("insomnia-encryption-key.json");
 
     const jwk = JSON.parse(await waitForExportedFile(file));
