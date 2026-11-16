@@ -102,7 +102,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   // Get the folder from the gitFilePath
   const effectiveGitFilePath = gitFilePath || metaGitFilePath || '';
-  const selectedFolder = effectiveGitFilePath.split('/').slice(1).join('/') || '';
+  const selectedFolder = effectiveGitFilePath.split('/').slice(0, -1).join('/') || '';
   const fileName = effectiveGitFilePath.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 

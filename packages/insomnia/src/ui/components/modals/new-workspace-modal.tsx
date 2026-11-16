@@ -10,6 +10,7 @@ import {
   Form,
   Heading,
   Input,
+  type Key,
   Label,
   Link,
   Modal,
@@ -30,8 +31,17 @@ import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
+import { validateRepoFolderName } from '../../../sync/git/repo-folder-path';
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
+import {
+  getPendingDepth,
+  getSiblingNames,
+  MAX_NEW_FOLDER_DEPTH,
+  mergePendingFolders,
+  type PendingFolder,
+  removePendingFolder,
+} from './new-workspace-modal-folders';
 
 const titleByScope: Record<WorkspaceScope, string> = {
   [models.workspace.WorkspaceScopeKeys.collection]: 'API Collection',
@@ -107,6 +117,13 @@ export const NewWorkspaceModal = ({
 
   // Once the user manually edits the file name we stop deriving it from the name.
   const [hasEditedFileName, setHasEditedFileName] = useState(false);
+
+  // Folders created from this modal only exist in the UI until the workspace file is written into them.
+  const [pendingFolders, setPendingFolders] = useState<PendingFolder[]>([]);
+  const [expandedFolderKeys, setExpandedFolderKeys] = useState<Set<Key>>(() => new Set(['']));
+  // null means the "new folder" input is hidden.
+  const [newFolderName, setNewFolderName] = useState<string | null>(null);
+  const [newFolderError, setNewFolderError] = useState<string | null>(null);
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const prevCreateNewWorkspaceFetcherState = useRef(createNewWorkspaceFetcher.state);
@@ -186,6 +203,44 @@ export const NewWorkspaceModal = ({
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   const selectedFolder = workspaceData.folderPath || gitRepoTreeFetcher.data?.repositoryTree.id || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
+  const canCreateFolderInSelected = getPendingDepth(selectedFolder, pendingFolders) < MAX_NEW_FOLDER_DEPTH;
+
+  const closeNewFolderInput = () => {
+    setNewFolderName(null);
+    setNewFolderError(null);
+  };
+
+  const createPendingFolder = () => {
+    if (newFolderName === null) {
+      return;
+    }
+
+    const siblingNames = getSiblingNames(selectedFolder, gitRepoTreeFetcher.data?.folderList || {}, pendingFolders);
+    const error = validateRepoFolderName(newFolderName, siblingNames);
+    if (error) {
+      setNewFolderError(error);
+      return;
+    }
+
+    const id = window.path.join(selectedFolder, newFolderName);
+    setPendingFolders([...pendingFolders, { id, parentId: selectedFolder, name: newFolderName }]);
+    setExpandedFolderKeys(new Set([...expandedFolderKeys, selectedFolder]));
+    setWorkspaceData({ ...workspaceData, folderPath: id });
+    closeNewFolderInput();
+  };
+
+  const deletePendingFolder = (folderId: string) => {
+    const remainingFolders = removePendingFolder(folderId, pendingFolders);
+    setPendingFolders(remainingFolders);
+
+    const isSelectedFolderRemoved =
+      pendingFolders.some(folder => folder.id === selectedFolder) &&
+      !remainingFolders.some(folder => folder.id === selectedFolder);
+    if (isSelectedFolderRemoved) {
+      const parentId = pendingFolders.find(folder => folder.id === folderId)?.parentId || '';
+      setWorkspaceData({ ...workspaceData, folderPath: parentId });
+    }
+  };
 
   const defaultMockServerType = isCloudMockDisabled ? 'self-hosted' : 'cloud';
   const defaultMockServerCreationType = sourceApiSpec?.contents ? 'ai' : 'manual';
@@ -195,6 +250,7 @@ export const NewWorkspaceModal = ({
     workspaceData.name !== defaultNameByScope[scope],
     hasEditedFileName && workspaceData.fileName !== defaultFileName,
     Boolean(workspaceData.folderPath),
+    pendingFolders.length > 0,
     workspaceData.mockServerType !== defaultMockServerType,
     Boolean(workspaceData.mockServerUrl),
     workspaceData.mockServerCreationType !== defaultMockServerCreationType,
@@ -317,15 +373,30 @@ export const NewWorkspaceModal = ({
                         </Label>
                         <FieldError className="text-xs text-red-500" />
                       </TextField>
-                      <Label className="text-sm text-(--hl)">
-                        Folder where the file will be saved in the repository:
-                      </Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm text-(--hl)">
+                          Folder where the file will be saved in the repository:
+                        </Label>
+                        <Button
+                          type="button"
+                          isDisabled={!gitRepoTreeFetcher.data || !canCreateFolderInSelected}
+                          onPress={() => {
+                            setNewFolderName('');
+                            setNewFolderError(null);
+                          }}
+                          className="flex shrink-0 items-center gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden data-disabled:opacity-50"
+                        >
+                          <Icon icon="folder-plus" />
+                          New folder
+                        </Button>
+                      </div>
 
                       <Tree
                         className="grid max-h-52 min-h-24 gap-0 overflow-auto rounded-xs border border-solid border-(--hl-sm)"
-                        defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
+                        selectedKeys={[selectedFolder]}
                         disallowEmptySelection
-                        defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
+                        expandedKeys={expandedFolderKeys}
+                        onExpandedChange={setExpandedFolderKeys}
                         onSelectionChange={selection => {
                           if (selection !== 'all') {
                             setWorkspaceData({
@@ -336,7 +407,11 @@ export const NewWorkspaceModal = ({
                         }}
                         aria-label="Files"
                         selectionMode="single"
-                        items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
+                        items={
+                          gitRepoTreeFetcher.data?.repositoryTree
+                            ? [mergePendingFolders(gitRepoTreeFetcher.data.repositoryTree, pendingFolders)]
+                            : []
+                        }
                         renderEmptyState={() => (
                           <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-(--hl)">
                             <Icon icon="spinner" className="size-5 animate-spin" />
@@ -359,26 +434,92 @@ export const NewWorkspaceModal = ({
                               <TreeItemContent>
                                 {({ isExpanded }) => (
                                   <div className="flex items-center gap-2 data-[disabled=true]:text-(--hl)">
-                                    {'children' in item ? (
-                                      item.children.length ? (
+                                    {item.type !== 'file' ? (
+                                      item.children?.length ? (
                                         <Button slot="chevron">
                                           <Icon className="size-4" icon={isExpanded ? 'folder-open' : 'folder'} />
                                         </Button>
                                       ) : (
-                                        <Icon icon={'folder-blank'} />
+                                        <Icon icon={item.isPending ? 'folder-plus' : 'folder-blank'} />
                                       )
                                     ) : (
                                       <Icon icon={'file'} />
                                     )}
-                                    {item.name}
+                                    <span className="truncate">{item.name}</span>
+                                    {item.isPending && (
+                                      <>
+                                        <span className="rounded-xs bg-(--hl-sm) px-1 text-xs text-(--hl)">new</span>
+                                        <Button
+                                          type="button"
+                                          aria-label={`Remove new folder ${item.name}`}
+                                          onPress={() => deletePendingFolder(item.id)}
+                                          className="ml-auto flex aspect-square h-5 items-center justify-center rounded-xs text-xs text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                        >
+                                          <Icon icon="x" />
+                                        </Button>
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               </TreeItemContent>
-                              {item.type !== 'file' && <Collection items={item.children}>{renderItem}</Collection>}
+                              {item.type !== 'file' && (
+                                <Collection items={item.children || []}>{renderItem}</Collection>
+                              )}
                             </TreeItem>
                           );
                         }}
                       </Tree>
+                      {!canCreateFolderInSelected && (
+                        <p className="-mt-2 text-xs text-(--hl)">
+                          You can create up to {MAX_NEW_FOLDER_DEPTH} levels of new folders at a time.
+                        </p>
+                      )}
+                      {newFolderName !== null && (
+                        <div className="flex items-start gap-2">
+                          <TextField
+                            aria-label="New folder name"
+                            autoFocus
+                            value={newFolderName}
+                            isInvalid={Boolean(newFolderError)}
+                            onChange={name => {
+                              setNewFolderName(name);
+                              setNewFolderError(null);
+                            }}
+                            onKeyDown={e => {
+                              // Don't submit the whole workspace form when confirming the folder name.
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                createPendingFolder();
+                              } else if (e.key === 'Escape') {
+                                closeNewFolderInput();
+                              } else {
+                                e.continuePropagation();
+                              }
+                            }}
+                            className="flex flex-1 flex-col gap-1"
+                          >
+                            <Input
+                              placeholder={`New folder in ${selectedFolder || gitRepoTreeFetcher.data?.repositoryTree.name || 'repository root'}`}
+                              className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
+                            />
+                            {newFolderError && <span className="text-xs text-red-500">{newFolderError}</span>}
+                          </TextField>
+                          <Button
+                            type="button"
+                            onPress={createPendingFolder}
+                            className="rounded-xs border border-solid border-(--hl-md) px-3 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                          >
+                            Create folder
+                          </Button>
+                          <Button
+                            type="button"
+                            onPress={closeNewFolderInput}
+                            className="rounded-xs px-3 py-1 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
                     </>
                   )}
                   {workspaceData.scope === 'mock-server' && (
