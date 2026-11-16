@@ -3,6 +3,7 @@ export enum ContextMenuItem {
   HttpRequest = "HTTP Request",
   Folder = "New Folder",
   Environment = "Environment",
+  Settings = "Settings",
   Rename = "Rename",
   Duplicate = "Duplicate",
   Pin = "Pin",
