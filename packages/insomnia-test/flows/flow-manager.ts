@@ -6,6 +6,7 @@ import { CollectionFlow } from "./collection.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
+import { GitSyncFlow } from "./git-sync.flow";
 import { GrpcRequestFlow } from "./grpc-request.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
@@ -32,6 +33,7 @@ const flowRegistry = {
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
+  gitSyncFlow: (m: FlowDeps): GitSyncFlow => new GitSyncFlow(m.context, m.pageManager),
   grpcRequestFlow: (m: FlowDeps): GrpcRequestFlow => new GrpcRequestFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),

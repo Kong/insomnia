@@ -7,14 +7,18 @@ import { findDocs } from "@package/misc/db";
 import type { Page } from "playwright-core";
 
 import type { BasePage } from "./base.page";
+import { CertificatesPage } from "./certificates.page";
 import { CollectionPage } from "./collection.page";
 import { EnvironmentPage } from "./environment.page";
 import { ExportPage } from "./export.page";
 import { FolderPage } from "./folder.page";
+import { GitCommitDialogPage } from "./git-commit-dialog.page";
+import { GitSyncPage } from "./git-sync.page";
 import { GrpcRequestPage } from "./grpc-request.page";
 import { HttpRequestPage } from "./http-request.page";
 import { ImportPage } from "./import.page";
 import { ProjectPage } from "./project.page";
+import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
 import { SocketIORequestPage } from "./socket-io-request.page";
 import { SpecPage } from "./spec.page";
@@ -22,6 +26,8 @@ import { WebSocketRequestPage } from "./web-socket-request.page";
 import { WorkspacePage } from "./workspace.page";
 
 const pageRegistry = {
+  certificatesPage: (page: Page): CertificatesPage =>
+    new CertificatesPage(page),
   collectionPage: (page: Page): CollectionPage =>
     new CollectionPage(page),
   environmentPage: (page: Page): EnvironmentPage =>
@@ -30,6 +36,10 @@ const pageRegistry = {
     new FolderPage(page),
   exportPage: (page: Page): ExportPage =>
     new ExportPage(page),
+  gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
+    new GitCommitDialogPage(page),
+  gitSyncPage: (page: Page): GitSyncPage =>
+    new GitSyncPage(page),
   grpcRequestPage: (page: Page): GrpcRequestPage =>
     new GrpcRequestPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
@@ -49,6 +59,8 @@ const pageRegistry = {
     new PreferencesAiComponent(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
   socketIoRequestPage: (page: Page): SocketIORequestPage =>
     new SocketIORequestPage(page),
   specPage: (page: Page): SpecPage =>

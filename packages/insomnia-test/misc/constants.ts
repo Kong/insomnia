@@ -22,6 +22,12 @@ export const MOCK_API_SERVER = "http://localhost:4010";
 export const HTTP_SERVER = MOCK_API_SERVER;
 
 /**
+ * The same mock server over HTTPS: it requests a client certificate signed by
+ * `mtls-ca.pem` (see `misc/certs.ts`); the routes under `/protected` answer 401 without one.
+ */
+export const MTLS_SERVER = "https://localhost:4011/protected";
+
+/**
  * Fixed test credentials `misc/server/oauth2.ts` accepts for its Authorization
  * Code / Implicit / Client Credentials / Resource Owner Password grants —
  * mirror any change here into that file.

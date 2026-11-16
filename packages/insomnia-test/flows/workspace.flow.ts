@@ -59,6 +59,55 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Creates a new Git Sync Project by cloning the remote repo at `repoUri`,
+   * explicitly selecting `credentialName` (a credential already configured in
+   * Preferences -> Credentials). Clones `branch` (default `master`).
+   */
+  @step()
+  async cloneGitProject(
+    item: Project,
+    credentialName: string,
+    repoUri: string,
+    branch = 'master',
+  ): Promise<Project> {
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
+    await workspacePage.setNewItemName(item.name);
+    await projectPage.setNewProjectType(item.type);
+
+    await projectSettingsPage.selectCredential(credentialName);
+    await projectSettingsPage.setRepositoryUrl(repoUri);
+    await projectSettingsPage.selectBranch(branch);
+    await projectSettingsPage.submitScanForFiles();
+    await projectSettingsPage.confirmClone();
+
+    return this.assertCreated(await this.getProject(item.name), item.name);
+  }
+
+  /**
+   * Creates a new Git Sync Project by adopting `item.folderPath` — an
+   * existing local folder (running `git init` inside it if it isn't
+   * already a repo) — instead of cloning from a remote URL: the "Open
+   * local folder" mode of the create-project dialog's Git sub-form.
+   */
+  @step()
+  async openLocalGitFolder(item: Project): Promise<Project> {
+    if (item.folderPath === undefined) {
+      throw new Error(`openLocalGitFolder(): Project "${item.name}" has no folderPath to open`);
+    }
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
+    await workspacePage.setNewItemName(item.name);
+    await projectPage.setNewProjectType(item.type);
+
+    await projectSettingsPage.selectGitOpenMode();
+    await this.context.stubFileChooser(item.folderPath);
+    await projectSettingsPage.chooseOpenFolderLocation();
+    await projectSettingsPage.confirmOpenFolder();
+    return this.assertCreated(await this.getProject(item.name), item.name);
+  }
+
+  /**
    * Creates a Collection under `parent`. If it carries a `spec`, authors
    * it into the spec editor right after creation and returns the fuller
    * `getCollectionSpec()` read instead of the plain `getCollection()` one.

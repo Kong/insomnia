@@ -29,8 +29,6 @@ test("Header merge rules: append for normal headers, closest wins for single-val
   ]);
 
   const headers = await sendAndReadHeaders(user.flowManager, request);
-  // Appended furthest ancestor first: collection, outer folder, inner folder, request.
   expect(headers["x-level"]).toBe("collection, outer-folder, inner-folder, request");
-  // A single-value header keeps only the closest definition.
   expect(headers["content-type"]).toBe("text/request");
 });

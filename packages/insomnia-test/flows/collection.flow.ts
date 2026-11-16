@@ -3,6 +3,7 @@ import type { KeyValueRow } from "@package/components/key-value-editor.component
 import type { RequestScripts } from "@package/components/script-tab.component";
 import type { WorkspaceEnvironmentsComponent } from "@package/components/workspace-environments.component";
 import { step } from "@package/misc/step";
+import type { ClientCertificate } from "@package/models/client-certificate";
 import type { Collection } from "@package/models/collection";
 import type { CollectionPage } from "@package/pages/collection.page";
 import { expect } from "@playwright/test";
@@ -119,5 +120,31 @@ export class CollectionFlow extends BaseFlow {
   @step()
   async closeEnvironmentModal(): Promise<void> {
     await this.pageManager.collectionPage.closeEnvironmentModal();
+  }
+
+  /**
+   * Sets the collection's workspace-wide CA Certificate, opening the "Manage
+   * Certificates" dialog from the collection's location. Overwrites any CA
+   * certificate already set.
+   */
+  @step()
+  async setCaCertificate(collection: Collection, path: string): Promise<void> {
+    await this.open(collection);
+
+    const { certificatesPage } = this.pageManager;
+    await certificatesPage.open();
+    await certificatesPage.addCaCertificate(path);
+    await certificatesPage.close();
+  }
+
+  /** Adds a client certificate to the collection's workspace via the "Manage Certificates" dialog. */
+  @step()
+  async addClientCertificate(collection: Collection, certificate: ClientCertificate): Promise<void> {
+    await this.open(collection);
+
+    const { certificatesPage } = this.pageManager;
+    await certificatesPage.open();
+    await certificatesPage.addClientCertificate(certificate);
+    await certificatesPage.close();
   }
 }
