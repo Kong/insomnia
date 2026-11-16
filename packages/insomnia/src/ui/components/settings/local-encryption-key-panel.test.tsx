@@ -177,7 +177,11 @@ describe('LocalEncryptionKeyPanel', () => {
       expect(showSaveDialog).toHaveBeenCalledWith(
         expect.objectContaining({ defaultPath: 'insomnia-encryption-key.json' }),
       );
-      expect(writeFile).toHaveBeenCalledWith({ path: 'C:/keys/insomnia-encryption-key.json', content: key.jwk });
+      expect(writeFile).toHaveBeenCalledWith({
+        path: 'C:/keys/insomnia-encryption-key.json',
+        content: key.jwk,
+        mode: 0o600,
+      });
       expect(writeText).not.toHaveBeenCalled();
     });
 

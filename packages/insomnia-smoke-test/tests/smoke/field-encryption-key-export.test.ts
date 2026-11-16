@@ -87,6 +87,10 @@ test.describe('Local Encryption Key in Preferences', () => {
       const keyBytes = keyFromJwk(fs.readFileSync(exportPath, 'utf8'));
       expect.soft(keyBytes).toHaveLength(32);
       expect.soft(JSON.parse(fs.readFileSync(exportPath, 'utf8'))['x-insomnia-host']).toBe(os.hostname());
+      if (process.platform !== 'win32') {
+        // The key opens every encrypted value: only its owner may read the exported file
+        expect.soft(fs.statSync(exportPath).mode & 0o777).toBe(0o600);
+      }
       expect.soft(decrypt(keyBytes, readEncryptedToken(dataPath))).toBe(bearerToken);
     } finally {
       cleanupExportDir(tempDir);

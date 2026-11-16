@@ -95,7 +95,9 @@ export const LocalEncryptionKeyPanel = () => {
       if (canceled || !filePath) {
         return;
       }
-      await window.main.writeFile({ path: filePath, content: jwk });
+      // The key opens every encrypted value of the database, so the file is for its owner only (not on Windows, where
+      // access follows the folder)
+      await window.main.writeFile({ path: filePath, content: jwk, mode: 0o600 });
     } catch (error) {
       showError({ title: 'Could not export the local encryption key', error });
     }
