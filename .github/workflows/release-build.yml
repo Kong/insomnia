@@ -185,8 +185,8 @@ jobs:
           fi
           cat "$f"
 
-      # Built before any Windows code-signing step on purpose: if this fails, no signing token is spent on a run
-      # that cannot finish. It must stay after the app packaging steps, install-libcurl-node swaps the libcurl binary.
+      # Built before the DigiCert signing steps on purpose: if this fails, no DigiCert signing token is spent on a
+      # run that cannot finish. It must stay after the app packaging steps, install-libcurl-node swaps the libcurl binary.
       - name: Package inso
         run: |
           npm run install-libcurl-node
