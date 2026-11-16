@@ -29,6 +29,14 @@ describe('validateRepoFolderName', () => {
     expect(validateRepoFolderName(name)).toMatch(/cannot contain any of the following characters/);
   });
 
+  it.each(['con', 'NUL', 'com1', 'LPT9', 'aux.txt'])('rejects the Windows reserved name %j', name => {
+    expect(validateRepoFolderName(name)).toBe(`"${name}" is a reserved name on Windows`);
+  });
+
+  it.each(['console', 'com10', 'nullable'])('accepts %j which only resembles a reserved name', name => {
+    expect(validateRepoFolderName(name)).toBeNull();
+  });
+
   it.each([' specs', 'specs ', 'specs.'])('rejects leading/trailing whitespace or trailing period in %j', name => {
     expect(validateRepoFolderName(name)).toMatch(/cannot start or end with a space/);
   });

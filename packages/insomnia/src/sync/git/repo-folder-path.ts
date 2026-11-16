@@ -6,6 +6,9 @@ const GIT_DIR_NAME = '.git';
 // eslint-disable-next-line no-control-regex
 const INVALID_FOLDER_NAME_CHARACTERS = /[\\/:*?"<>|\u0000-\u001F]/;
 
+// Device names Windows reserves regardless of extension (e.g. `con`, `nul.txt`, `COM1`).
+const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
+
 /**
  * Validates a single folder name that will be created inside a git repository.
  * Returns an error message, or null when the name is valid.
@@ -31,6 +34,10 @@ export function validateRepoFolderName(name: string, siblingNames: string[] = []
 
   if (INVALID_FOLDER_NAME_CHARACTERS.test(name)) {
     return 'Folder name cannot contain any of the following characters: \\ / : * ? " < > |';
+  }
+
+  if (WINDOWS_RESERVED_NAMES.test(name)) {
+    return `"${name}" is a reserved name on Windows`;
   }
 
   if (name !== trimmedName || name.endsWith('.')) {
