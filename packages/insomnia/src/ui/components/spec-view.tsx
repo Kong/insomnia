@@ -364,25 +364,27 @@ export const SpecView = ({
 
       const lineCounter = new YAML.LineCounter();
       const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
-      const astNode = doc.getIn(pathSegments, true) as YAML.Node;
-      const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
-      if (nodePosition) {
-        scrollPosition.start.line += nodePosition.line;
-      }
-      const isServersSection = pathSegments[0] === 'servers';
-      if (!isServersSection) {
-        scrollPosition.start.line -= 1;
-      }
+      const astNode = doc.getIn(pathSegments, true) as YAML.Node | null;
+      if (astNode) {
+        const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
+        if (nodePosition) {
+          scrollPosition.start.line += nodePosition.line;
+        }
+        const isServersSection = pathSegments[0] === 'servers';
+        if (!isServersSection) {
+          scrollPosition.start.line -= 1;
+        }
 
-      scrollPosition.end.line = scrollPosition.start.line;
-      // NOTE: We're subtracting 1 from everything because YAML CST uses
-      //   1-based indexing and we use 0-based.
-      handleScrollToSelection(
-        scrollPosition.start.col - 1,
-        scrollPosition.end.col - 1,
-        scrollPosition.start.line - 1,
-        scrollPosition.end.line - 1,
-      );
+        scrollPosition.end.line = scrollPosition.start.line;
+        // NOTE: We're subtracting 1 from everything because YAML CST uses
+        //   1-based indexing and we use 0-based.
+        handleScrollToSelection(
+          scrollPosition.start.col - 1,
+          scrollPosition.end.col - 1,
+          scrollPosition.start.line - 1,
+          scrollPosition.end.line - 1,
+        );
+      }
     },
     [apiSpec, handleScrollToSelection],
   );
@@ -396,7 +398,10 @@ export const SpecView = ({
       return;
     }
     if (editor.current?.getDoc()) {
-      navigateToPath(['paths', targetSpecPath, targetSpecMethod]);
+      // Defer a frame so the scroll runs after CodeEditor's own mount-time refresh(); scrolling before it gets clamped to the end.
+      requestAnimationFrame(() => {
+        navigateToPath(['paths', targetSpecPath, targetSpecMethod]);
+      });
       // Clear the search params to avoid repeatedly navigating
       setSearchParams(
         prev => {
