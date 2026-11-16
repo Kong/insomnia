@@ -318,7 +318,9 @@ export const exportRequestsToFile = (
       const baseEnvironment = await services.environment.getByParentId(workspaceId);
 
       const subEnvironments = baseEnvironment ? await services.environment.listByParentId(baseEnvironment._id) : [];
-      const shouldPrompt = includeEnvironments && subEnvironments.some(e => e.isPrivate);
+      // includeEnvironments only applies to the Insomnia format; HAR always prompts when private environments exist
+      const shouldPrompt =
+        (selectedFormat === VALUE_HAR || includeEnvironments) && subEnvironments.some(e => e.isPrivate);
       let shouldExportPrivateEnvironments = false;
       if (shouldPrompt) {
         shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();

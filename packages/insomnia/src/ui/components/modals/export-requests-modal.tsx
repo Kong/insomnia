@@ -351,7 +351,9 @@ export const ExportRequestsModal = ({
                   }}
                 />
               </div>
-              <div className="flex shrink-0 items-center gap-4">
+              <div className="flex shrink-0 flex-col gap-2">
+                <span className="text-xs text-(--hl)">These options apply to the Insomnia format only.</span>
+                <div className="flex items-center gap-4">
                 <Checkbox
                   isSelected={includeCookies}
                   onChange={setIncludeCookies}
@@ -378,6 +380,7 @@ export const ExportRequestsModal = ({
                   </div>
                   Include environments
                 </Checkbox>
+                </div>
               </div>
               <div className="flex flex-1 shrink-0 items-center justify-end gap-2">
                 <Button
