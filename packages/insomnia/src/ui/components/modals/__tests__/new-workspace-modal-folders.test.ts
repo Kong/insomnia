@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PendingFolder, RepoTreeNode } from '../new-workspace-modal-folders';
-import {
-  getPendingDepth,
-  getSiblingNames,
-  mergePendingFolders,
-  removePendingFolder,
-} from '../new-workspace-modal-folders';
+import { getSiblingNames, mergePendingFolders, removePendingFolder } from '../new-workspace-modal-folders';
 
 const tree: RepoTreeNode = {
   id: '',
@@ -45,16 +40,6 @@ describe('mergePendingFolders', () => {
   it('does not mutate the original tree', () => {
     mergePendingFolders(tree, pending);
     expect(tree.children).toHaveLength(2);
-  });
-});
-
-describe('getPendingDepth', () => {
-  it('counts consecutive pending folders', () => {
-    expect(getPendingDepth('', pending)).toBe(0);
-    expect(getPendingDepth('apis', pending)).toBe(0);
-    expect(getPendingDepth('specs', pending)).toBe(1);
-    expect(getPendingDepth('specs/v1', pending)).toBe(2);
-    expect(getPendingDepth('apis/payments', pending)).toBe(1);
   });
 });
 

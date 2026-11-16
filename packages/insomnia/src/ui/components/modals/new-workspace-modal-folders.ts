@@ -1,6 +1,3 @@
-/** Maximum number of consecutive new (not yet on disk) folders a user can create from the new workspace modal. */
-export const MAX_NEW_FOLDER_DEPTH = 2;
-
 /**
  * A folder the user created in the new workspace modal. It only exists in the UI until a workspace file is
  * written into it, at which point the repo file watcher creates it on disk (`mkdir -p`).
@@ -33,20 +30,6 @@ export function mergePendingFolders(tree: RepoTreeNode, pendingFolders: PendingF
     ...tree,
     children: [...pendingChildren, ...(tree.children || [])].map(child => mergePendingFolders(child, pendingFolders)),
   };
-}
-
-/** Number of consecutive pending folders from the given folder up to the first folder that exists on disk. */
-export function getPendingDepth(folderId: string, pendingFolders: PendingFolder[]): number {
-  let depth = 0;
-  let current = pendingFolders.find(folder => folder.id === folderId);
-
-  while (current) {
-    depth++;
-    const parentId = current.parentId;
-    current = pendingFolders.find(folder => folder.id === parentId);
-  }
-
-  return depth;
 }
 
 /** Names of all files and folders (existing and pending) directly inside the given folder. */
