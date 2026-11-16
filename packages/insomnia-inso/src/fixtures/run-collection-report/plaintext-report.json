@@ -105,13 +105,13 @@
         "headers": {
           "x-powered-by": "Express",
           "content-type": "application/json; charset=utf-8",
-          "content-length": "263",
-          "etag": "W/\"107-4RvANbiPgVs3QIOYml7CD9b1VQY\"",
+          "content-length": "288",
+          "etag": "W/\"120-+oczK2O5U/T1szcvEAG4KDMmEN8\"",
           "date": "Mon, 10 Nov 2025 06:23:42 GMT",
           "connection": "keep-alive",
           "keep-alive": "timeout=5"
         },
-        "data": "{\"method\":\"GET\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"api-key\":\"api-key-value\",\"accept\":\"*/*\",\"content-length\":\"25\"},\"data\":\"--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "data": "{\"method\":\"GET\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"accept\":\"*/*\",\"content-length\":\"25\"},\"data\":\"--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
         "responseTime": 3.766
       },
       "tests": [
@@ -188,13 +188,13 @@
         "headers": {
           "x-powered-by": "Express",
           "content-type": "application/json; charset=utf-8",
-          "content-length": "374",
-          "etag": "W/\"176-/xZqOqpzEjCbbk72Hk4zWm66rXM\"",
+          "content-length": "376",
+          "etag": "W/\"178-hFh+wkXhhITkw2/lIB6y4+M9DZg\"",
           "date": "Mon, 10 Nov 2025 06:23:42 GMT",
           "connection": "keep-alive",
           "keep-alive": "timeout=5"
         },
-        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"authorization\":\"Basic dXNlcm5hbWU6cGFzc3dvcmQ=\",\"accept\":\"*/*\",\"content-length\":\"101\"},\"data\":\"--X-INSOMNIA-BOUNDARY\\r\\nContent-Disposition: form-data; name=\\\"key\\\"\\r\\n\\r\\nvalue\\r\\n--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"multipart/form-data; boundary=X-INSOMNIA-BOUNDARY\",\"user-agent\":\"insomnia/11.4.0\",\"accept\":\"*/*\",\"content-length\":\"101\"},\"data\":\"--X-INSOMNIA-BOUNDARY\\r\\nContent-Disposition: form-data; name=\\\"key\\\"\\r\\n\\r\\nvalue\\r\\n--X-INSOMNIA-BOUNDARY--\\r\\n\",\"cookies\":{}}",
         "responseTime": 0.426
       },
       "tests": [
@@ -287,13 +287,13 @@
         "headers": {
           "x-powered-by": "Express",
           "content-type": "application/json; charset=utf-8",
-          "content-length": "348",
-          "etag": "W/\"15c-nysNeZeBrFfZqNEw3jU0n6zGw2w\"",
+          "content-length": "374",
+          "etag": "W/\"176-ClmA6T1gDdzcuP6WqSd1aojgjx8\"",
           "date": "Mon, 10 Nov 2025 06:23:42 GMT",
           "connection": "keep-alive",
           "keep-alive": "timeout=5"
         },
-        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>, <sensitive>\",\"authorization\":\"<sensitive>, <sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
         "responseTime": 0.382
       },
       "tests": [

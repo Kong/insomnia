@@ -197,3 +197,82 @@ describe('collection-level script execution order', () => {
     expect(markersInOrder(executedScripts[0])).toEqual(['COLLECTION', 'REQUEST']);
   });
 });
+
+describe('collection-level authentication persistence', () => {
+  it('keeps authentication when a workspace is created and updated', async () => {
+    const auth = { type: 'basic' as const, username: 'user', password: 'pass' };
+    const workspace = await services.workspace.create({ authentication: auth });
+    expect((await services.workspace.getById(workspace._id))?.authentication).toEqual(auth);
+
+    const bearer = { type: 'bearer' as const, token: 'abc' };
+    await services.workspace.update(workspace, { authentication: bearer });
+    expect((await services.workspace.getById(workspace._id))?.authentication).toEqual(bearer);
+  });
+});
+
+describe('OAuth2 token ownership with inherited authentication', () => {
+  const oauth2 = {
+    type: 'oauth2' as const,
+    grantType: 'client_credentials' as const,
+    accessTokenUrl: 'http://localhost/token',
+    clientId: 'id',
+  };
+  const validToken = { accessToken: 'cached-access-token', expiresAt: Date.now() + 60 * 60 * 1000 };
+
+  const getToken = async (requestId: string) => {
+    const { getOAuth2Token } = await import('~/main/network/o-auth-2/get-token');
+    return getOAuth2Token(requestId, oauth2);
+  };
+
+  it('uses the token stored on the workspace when a request inherits workspace OAuth2', async () => {
+    const workspace = await services.workspace.create({ authentication: oauth2 });
+    const folder = await services.requestGroup.create({ name: 'folder', parentId: workspace._id, metaSortKey: 0 });
+    const request = await services.request.create({ name: 'request', parentId: folder._id });
+    await services.oAuth2Token.create({ ...validToken, parentId: workspace._id });
+
+    const { token, timeline } = await getToken(request._id);
+
+    expect(token?.accessToken).toBe('cached-access-token');
+    expect(timeline.map(entry => entry.value).join('\n')).toContain('inherited from collection');
+  });
+
+  it('prefers the folder token over the workspace token', async () => {
+    const workspace = await services.workspace.create({ authentication: oauth2 });
+    const folder = await services.requestGroup.create({
+      name: 'folder',
+      parentId: workspace._id,
+      metaSortKey: 0,
+      authentication: oauth2,
+    });
+    const request = await services.request.create({ name: 'request', parentId: folder._id });
+    await services.oAuth2Token.create({ ...validToken, accessToken: 'workspace-token', parentId: workspace._id });
+    await services.oAuth2Token.create({ ...validToken, accessToken: 'folder-token', parentId: folder._id });
+
+    expect((await getToken(request._id)).token?.accessToken).toBe('folder-token');
+  });
+
+  it('prefers the request token over folder and workspace tokens', async () => {
+    const workspace = await services.workspace.create({ authentication: oauth2 });
+    const request = await services.request.create({
+      name: 'request',
+      parentId: workspace._id,
+      authentication: oauth2,
+    });
+    await services.oAuth2Token.create({ ...validToken, accessToken: 'workspace-token', parentId: workspace._id });
+    await services.oAuth2Token.create({ ...validToken, accessToken: 'request-token', parentId: request._id });
+
+    expect((await getToken(request._id)).token?.accessToken).toBe('request-token');
+  });
+
+  it.each([
+    ['WebSocket', 'webSocketRequest'],
+    ['Socket.IO', 'socketIORequest'],
+  ] as const)('resolves inherited OAuth2 token ownership for a %s request', async (_label, service) => {
+    const workspace = await services.workspace.create({ authentication: oauth2 });
+    const folder = await services.requestGroup.create({ name: 'folder', parentId: workspace._id, metaSortKey: 0 });
+    const request = await services[service].create({ name: 'realtime', parentId: folder._id });
+    await services.oAuth2Token.create({ ...validToken, parentId: workspace._id });
+
+    expect((await getToken(request._id)).token?.accessToken).toBe('cached-access-token');
+  });
+});

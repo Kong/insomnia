@@ -964,7 +964,16 @@ export const getGitBranches = async ({
   }
 };
 
-export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+export const gitFetchAction = async ({
+  projectId,
+  workspaceId,
+  background = false,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  /** Periodic fetch without user action: must not start interactive sign-ins. */
+  background?: boolean;
+}) => {
   try {
     await assertBranchOnOrigin('fetch');
     const gitRepository = await getGitRepository({ projectId, workspaceId });
@@ -972,6 +981,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
       singleBranch: true,
       depth: 1,
       credentialsId: gitRepository.credentialsId,
+      interactive: !background,
     });
 
     return {

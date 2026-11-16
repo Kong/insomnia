@@ -16,6 +16,7 @@ import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { SyncIpcHandler } from '~/main/cloud-sync/sync-ipc-handler';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
+import { GitIpcHandler } from '~/main/git/git-ipc-handler';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
@@ -112,7 +113,7 @@ app.on('ready', async () => {
   registerMcpHandlers();
   registerSecretStorageHandlers();
   registerElectronStorageHandlers();
-  registerAllIpcHandlers([new SyncIpcHandler(), fieldEncryptionIpcHandler]);
+  registerAllIpcHandlers([new SyncIpcHandler(), new GitIpcHandler(), fieldEncryptionIpcHandler]);
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.

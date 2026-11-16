@@ -1,4 +1,5 @@
 import type { SyncIpcHandler } from '~/main/cloud-sync/sync-ipc-handler';
+import type { GitIpcHandler } from '~/main/git/git-ipc-handler';
 import type { FieldEncryptionIpcHandler } from '~/main/ipc/field-encryption';
 
 type OmitSender<Fn> = Fn extends (sender: any, ...args: infer A) => infer R ? (...args: A) => R : never;
@@ -20,6 +21,7 @@ function createIpcTrigger<T>(domain: string) {
 }
 
 const sync = createIpcTrigger<SyncIpcHandler>('sync');
+const git = createIpcTrigger<GitIpcHandler>('git');
 const fieldEncryption = createIpcTrigger<FieldEncryptionIpcHandler>('fieldEncryption');
 
-export { fieldEncryption, sync };
+export { fieldEncryption, git, sync };

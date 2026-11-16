@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
 import { parse as urlParse } from 'node:url';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import YAML from 'yaml';
 
 import { pathWithParamsAsPathParameters } from '../../../common/path-with-params';
 import type { Converter, ImportRequest } from '../entities';
+import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 export const id = 'openapi3';
@@ -499,7 +499,8 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
  * If multiple types are available, the one for which an example can be generated will be selected first (i.e. application/json)
  */
 const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['body'] => {
-  const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
+  // `content` is missing when the request body is an unresolved (e.g. blocked remote) `$ref`
+  const { content = {} } = (endpointSchema.requestBody || {}) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
   const supportedMimeType = mimeTypes.find(reqMimeType => {
@@ -554,7 +555,7 @@ const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
  * Returns example / default value of the parameter, if any of those are defined. If not, returns value based on parameter type.
  */
 // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
-const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
+const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string, ancestors: unknown[] = []) => {
   const typeExamples = {
     'string': () => 'string',
     'string_email': () => 'user@example.com',
@@ -571,7 +572,10 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
       if (properties) {
         for (const propertyName of Object.keys(properties)) {
-          example[propertyName] = generateParameterExample(properties[propertyName] as OpenAPIV3.SchemaObject);
+          example[propertyName] = generateParameterExample(properties[propertyName] as OpenAPIV3.SchemaObject, [
+            ...ancestors,
+            schema,
+          ]);
         }
       }
 
@@ -580,7 +584,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     'array': (schema: OpenAPIV2.ItemsObject) => {
       // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
-      const value = generateParameterExample(schema.items);
+      const value = generateParameterExample(schema.items, [...ancestors, schema]);
 
       if (schema.collectionFormat === 'csv') {
         return value;
@@ -595,6 +599,11 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   }
 
   if (schema instanceof Object) {
+    // dereferenced circular $refs resolve to the same object, so stop when a schema contains itself
+    if (ancestors.includes(schema)) {
+      return null;
+    }
+
     const {
       type,
       format,
@@ -626,7 +635,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     if (allOf && Array.isArray(allOf)) {
       const mergedExample: Record<string, unknown> = {};
       for (const subSchema of allOf) {
-        const subExample = generateParameterExample(subSchema as OpenAPIV3.SchemaObject);
+        const subExample = generateParameterExample(subSchema as OpenAPIV3.SchemaObject, [...ancestors, schema]);
         if (subExample && typeof subExample === 'object' && !Array.isArray(subExample)) {
           Object.assign(mergedExample, subExample);
         }
@@ -636,12 +645,12 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
     // Handle oneOf by using the first schema (validates against exactly one)
     if (oneOf && Array.isArray(oneOf) && oneOf.length > 0) {
-      return generateParameterExample(oneOf[0] as OpenAPIV3.SchemaObject);
+      return generateParameterExample(oneOf[0] as OpenAPIV3.SchemaObject, [...ancestors, schema]);
     }
 
     // Handle anyOf by using the first schema (validates against any/one or more)
     if (anyOf && Array.isArray(anyOf) && anyOf.length > 0) {
-      return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject);
+      return generateParameterExample(anyOf[0] as OpenAPIV3.SchemaObject, [...ancestors, schema]);
     }
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
@@ -809,15 +818,7 @@ export const convert: Converter = async rawData => {
     return null;
   }
 
-  try {
-    apiDocument = (await SwaggerParser.validate(apiDocument, {
-      dereference: {
-        circular: 'ignore',
-      },
-    })) as OpenAPIV3.Document;
-  } catch (err) {
-    console.log('[openapi-3] Import file validation failed', err);
-  }
+  apiDocument = await resolveOpenApiDocument(apiDocument, '[openapi-3]');
 
   // Import
   const workspace: ImportRequest = {
