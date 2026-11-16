@@ -31,14 +31,25 @@ function valueAt(name: string, level: Level): string {
   return requestValues[name] ?? `${name}-request`;
 }
 
+// Header names are case-insensitive: each level writes the same header with a different casing.
+function nameAt(name: string, level: Level): string {
+  const casings: Record<Level, () => string> = {
+    collection: () => name,
+    "outer-folder": () => name.replace(/(^|-)([a-z])/g, (_, sep, c) => sep + c.toUpperCase()),
+    "inner-folder": () => name.toUpperCase(),
+    request: () => name.replace(/[a-z]/g, (c, i) => (i % 2 ? c.toUpperCase() : c)),
+  };
+  return casings[level]();
+}
+
 function headersAt(level: Level) {
   return [
-    { name: "x-level", value: level },
-    ...SINGLE_VALUE_HEADERS.map((name) => ({ name, value: valueAt(name, level) })),
+    { name: nameAt("x-level", level), value: level },
+    ...SINGLE_VALUE_HEADERS.map((name) => ({ name: nameAt(name, level), value: valueAt(name, level) })),
   ];
 }
 
-test("Header merge rules: append for normal headers, closest wins for single-value headers", async ({ user }) => {
+test("Header merge rules: case-insensitive names, append for normal headers, closest wins for single-value headers", async ({ user }) => {
   const { collectionFlow, folderFlow } = user.flowManager;
   const { collection, folders, request } = await createFixture(user.flowManager, {
     folderDepth: 2,
