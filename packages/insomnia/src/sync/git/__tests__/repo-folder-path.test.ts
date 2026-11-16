@@ -7,10 +7,21 @@ describe('isSafeRepoFolderPath', () => {
     expect(isSafeRepoFolderPath(folderPath)).toBe(true);
   });
 
-  it.each(['.git', '.git/hooks', 'a/.git', 'a\\.GIT\\hooks', '..', 'a/../..', '/etc', '\\abs', 'C:\\Windows'])(
-    'rejects %j',
-    folderPath => {
-      expect(isSafeRepoFolderPath(folderPath)).toBe(false);
-    },
-  );
+  it.each([
+    '.git',
+    '.git/hooks',
+    'a/.git',
+    'a\\.GIT\\hooks',
+    '.git.',
+    '.git ',
+    '.git. ./hooks',
+    '.git::$INDEX_ALLOCATION',
+    '..',
+    'a/../..',
+    '/etc',
+    '\\abs',
+    'C:\\Windows',
+  ])('rejects %j', folderPath => {
+    expect(isSafeRepoFolderPath(folderPath)).toBe(false);
+  });
 });

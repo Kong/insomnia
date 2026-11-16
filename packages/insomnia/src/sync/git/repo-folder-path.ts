@@ -13,5 +13,13 @@ export function isSafeRepoFolderPath(folderPath: string | undefined | null): boo
     return false;
   }
 
-  return folderPath.split(/[\\/]/).every(segment => segment !== '..' && segment.toLowerCase() !== GIT_DIR_NAME);
+  return folderPath.split(/[\\/]/).every(segment => {
+    // `:` would address an NTFS alternate data stream (e.g. `.git::$INDEX_ALLOCATION`).
+    if (segment === '..' || segment.includes(':')) {
+      return false;
+    }
+
+    // Windows ignores trailing dots and spaces in path segments, so `.git.` or `.git ` resolve to `.git`.
+    return segment.replace(/[. ]+$/, '').toLowerCase() !== GIT_DIR_NAME;
+  });
 }
