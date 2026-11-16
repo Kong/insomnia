@@ -10,7 +10,6 @@ import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organizati
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
-import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useEditorHistoryTabCleanup } from '~/ui/components/.client/codemirror/editor-history-cleanup';
 import { CommandPalette } from '~/ui/components/command-palette';
@@ -28,7 +27,6 @@ import { SettingsModal, showSettingsModal } from '~/ui/components/modals/setting
 import { PresentUsers } from '~/ui/components/present-users';
 import { KonnectMovedOnboarding } from '~/ui/components/project/konnect-moved-onboarding';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
-import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
 import { InsomniaEventStreamProvider } from '~/ui/context/app/insomnia-event-stream-context';
 import { SidebarContext } from '~/ui/context/app/insomnia-sidebar-context';
 import { InsomniaTabProvider } from '~/ui/context/app/insomnia-tab-context';
@@ -36,6 +34,7 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useUntrackedProjects } from '~/ui/hooks/use-untracked-projects';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
 import type { AsyncTask } from '~/ui/utils/router';
 
@@ -186,7 +185,6 @@ const Component = () => {
   const navigate = useNavigate();
   const isScratchpadWorkspace =
     workspaceData?.activeWorkspace && models.workspace.isScratchpad(workspaceData.activeWorkspace);
-  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId?: string;
@@ -221,13 +219,6 @@ const Component = () => {
   }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
 
   useEffect(() => {
-    const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
-    if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load();
-    }
-  }, [organizationId, untrackedProjectsFetcher]);
-
-  useEffect(() => {
     window.main.setCurrentOrganizationId(organizationId);
     return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
@@ -244,8 +235,7 @@ const Component = () => {
     });
   }, [userSession.accountId]);
 
-  const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
-  const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
+  const { untrackedProjects, untrackedWorkspaces } = useUntrackedProjects(organizations, userSession.accountId);
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
   const isScratchPad = organizationId === models.organization.SCRATCHPAD_ORGANIZATION_ID;
   const isLocalOrganization = models.organization.isLocalOrganizationId(organizationId);
@@ -296,187 +286,182 @@ const Component = () => {
 
   return (
     <InsomniaEventStreamProvider>
-      <AppDataCacheProvider>
-        <InsomniaTabProvider>
-          <SidebarContext.Provider value={{ isSidebarCollapsed: isSidebarCollapsed ?? false, toggleSidebar }}>
-            <div className="h-full w-full">
-              <div
-                className={`grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)`}
-              >
-                <header className="grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
-                  <div className="flex items-center gap-2">
-                    <div className="flex w-12.5 shrink-0 justify-center py-2">
-                      <InsomniaLogo />
-                    </div>
-                    {!isScratchPad && (
-                      <div ref={setOrgSelectNode}>
-                        <OrganizationSelect
-                          organizationId={organizationId}
-                          organizations={organizations || []}
-                          onSelect={id => {
-                            window.main.trackAnalyticsEvent({ event: AnalyticsEvent.organizationSwitched });
-                            navigate(`/organization/${id}`);
-                          }}
-                          currentPlan={currentPlan}
-                          isScratchpadWorkspace={!!isScratchpadWorkspace}
-                        />
-                      </div>
-                    )}
-
-                    {!user ? <GitHubStarsButton /> : null}
+      <InsomniaTabProvider>
+        <SidebarContext.Provider value={{ isSidebarCollapsed: isSidebarCollapsed ?? false, toggleSidebar }}>
+          <div className="h-full w-full">
+            <div
+              className={`grid-template-app-layout relative grid h-full w-full divide-x divide-solid divide-(--hl-md) bg-(--color-bg)`}
+            >
+              <header className="grid grid-cols-3 items-center border-b border-solid border-(--hl-md) [grid-area:Header]">
+                <div className="flex items-center gap-2">
+                  <div className="flex w-12.5 shrink-0 justify-center py-2">
+                    <InsomniaLogo />
                   </div>
-                  <CommandPalette />
-                  <div className="flex min-w-min items-center justify-end gap-(--padding-sm) space-x-3 p-2">
-                    {user ? (
-                      <LoginUserActions
+                  {!isScratchPad && (
+                    <div ref={setOrgSelectNode}>
+                      <OrganizationSelect
                         organizationId={organizationId}
-                        isMinimal={false}
-                        user={user}
+                        organizations={organizations || []}
+                        onSelect={id => {
+                          window.main.trackAnalyticsEvent({ event: AnalyticsEvent.organizationSwitched });
+                          navigate(`/organization/${id}`);
+                        }}
                         currentPlan={currentPlan}
+                        isScratchpadWorkspace={!!isScratchpadWorkspace}
                       />
-                    ) : (
-                      <ScratchPadAuthActions />
-                    )}
-                  </div>
-                </header>
-                <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
-                  <RunnerProvider>
-                    <Outlet />
-                  </RunnerProvider>
+                    </div>
+                  )}
+
+                  {!user ? <GitHubStarsButton /> : null}
                 </div>
-                <div
-                  className="relative flex items-center overflow-hidden [grid-area:Statusbar]"
-                  data-testid="statusbar"
-                >
-                  <div className="flex w-full items-center gap-2">
-                    <div className="flex h-full shrink grow basis-1/3 items-center">
-                      <TooltipTrigger>
-                        <ToggleButton
-                          className="ml-3 grow-0 gap-2 px-2 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset"
-                          onChange={value => {
-                            setIsSidebarCollapsed(!value);
-                          }}
-                          isSelected={!isSidebarCollapsed}
-                        >
-                          {({ isSelected }) => {
-                            return (
-                              <svg
-                                width={10}
-                                height={10}
-                                viewBox="0 0 16 16"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="currentColor"
-                              >
-                                {isSelected ? (
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                                  />
-                                ) : (
-                                  <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                                )}
-                              </svg>
-                            );
-                          }}
-                        </ToggleButton>
-                        <Tooltip
-                          placement="top"
-                          offset={8}
-                          className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                        >
-                          Toggle sidebar
-                        </Tooltip>
-                      </TooltipTrigger>
-                      <TooltipTrigger>
-                        <Tooltip
-                          placement="top"
-                          offset={8}
-                          className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                        >
-                          Toggle header
-                        </Tooltip>
-                      </TooltipTrigger>
-                      <TooltipTrigger>
+                <CommandPalette />
+                <div className="flex min-w-min items-center justify-end gap-(--padding-sm) space-x-3 p-2">
+                  {user ? (
+                    <LoginUserActions
+                      organizationId={organizationId}
+                      isMinimal={false}
+                      user={user}
+                      currentPlan={currentPlan}
+                    />
+                  ) : (
+                    <ScratchPadAuthActions />
+                  )}
+                </div>
+              </header>
+              <div className="overflow-hidden border-b border-(--hl-md) [grid-area:Content]">
+                <RunnerProvider>
+                  <Outlet />
+                </RunnerProvider>
+              </div>
+              <div className="relative flex items-center overflow-hidden [grid-area:Statusbar]" data-testid="statusbar">
+                <div className="flex w-full items-center gap-2">
+                  <div className="flex h-full shrink grow basis-1/3 items-center">
+                    <TooltipTrigger>
+                      <ToggleButton
+                        className="ml-3 grow-0 gap-2 px-2 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-inset"
+                        onChange={value => {
+                          setIsSidebarCollapsed(!value);
+                        }}
+                        isSelected={!isSidebarCollapsed}
+                      >
+                        {({ isSelected }) => {
+                          return (
+                            <svg
+                              width={10}
+                              height={10}
+                              viewBox="0 0 16 16"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="currentColor"
+                            >
+                              {isSelected ? (
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                                />
+                              ) : (
+                                <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                              )}
+                            </svg>
+                          );
+                        }}
+                      </ToggleButton>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                      >
+                        Toggle sidebar
+                      </Tooltip>
+                    </TooltipTrigger>
+                    <TooltipTrigger>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                      >
+                        Toggle header
+                      </Tooltip>
+                    </TooltipTrigger>
+                    <TooltipTrigger>
+                      <Button
+                        data-testid="settings-button"
+                        className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                        onPress={() => showSettingsModal()}
+                      >
+                        <Icon icon="gear" /> Preferences
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
+                      >
+                        Preferences
+                        <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
+                      </Tooltip>
+                    </TooltipTrigger>
+                    {!isScratchpadWorkspace && !isLocalOrganization && hasUntrackedData && (
+                      <TooltipTrigger delay={500}>
                         <Button
-                          data-testid="settings-button"
-                          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                          onPress={() => showSettingsModal()}
+                          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                          onPress={() => {
+                            window.main.trackAnalyticsEvent({
+                              event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
+                            });
+                            showModal(SettingsModal, { tab: 'data' });
+                          }}
                         >
-                          <Icon icon="gear" /> Preferences
+                          <Icon icon="exclamation-circle" />
                         </Button>
                         <Tooltip
                           placement="top"
                           offset={8}
                           className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
                         >
-                          Preferences
-                          <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
+                          We have detected orphaned projects on your computer, click here to view them.
                         </Tooltip>
                       </TooltipTrigger>
-                      {!isScratchpadWorkspace && !isLocalOrganization && hasUntrackedData && (
-                        <TooltipTrigger delay={500}>
-                          <Button
-                            className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-warning) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
-                            onPress={() => {
-                              window.main.trackAnalyticsEvent({
-                                event: AnalyticsEvent.statusbarOrphanedProjectsClicked,
-                              });
-                              showModal(SettingsModal, { tab: 'data' });
-                            }}
-                          >
-                            <Icon icon="exclamation-circle" />
-                          </Button>
-                          <Tooltip
-                            placement="top"
-                            offset={8}
-                            className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                          >
-                            We have detected orphaned projects on your computer, click here to view them.
-                          </Tooltip>
-                        </TooltipTrigger>
-                      )}
-                    </div>
-                    <div className="flex shrink grow basis-1/3 justify-end">
-                      <div className="flex items-center gap-2">
-                        <NetworkAndSyncIndicator
-                          asyncTaskStatus={asyncTaskStatus}
-                          settings={settings}
-                          sync={syncOrgsAndProjects}
-                        />
+                    )}
+                  </div>
+                  <div className="flex shrink grow basis-1/3 justify-end">
+                    <div className="flex items-center gap-2">
+                      <NetworkAndSyncIndicator
+                        asyncTaskStatus={asyncTaskStatus}
+                        settings={settings}
+                        sync={syncOrgsAndProjects}
+                      />
 
-                        <Link>
-                          <a
-                            className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
-                            href="https://konghq.com/"
-                          >
-                            Made with
-                            <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
-                          </a>
-                        </Link>
-                      </div>
+                      <Link>
+                        <a
+                          className="flex items-center gap-1 px-(--padding-md) text-xs text-(--color-font) focus:underline focus:outline-hidden"
+                          href="https://konghq.com/"
+                        >
+                          Made with
+                          <Icon className="text-(--color-surprise-font)" icon="heart" /> by Kong
+                        </a>
+                      </Link>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            {showKonnectMovedNotice && orgSelectNode && (
-              <KonnectMovedOnboarding triggerElement={orgSelectNode} onDismiss={dismissKonnectMovedNotice} />
-            )}
-            {konnectMigrationGroups.length > 0 && userSession.accountId && (
-              <KonnectOrgMigrationModal
-                accountId={userSession.accountId}
-                groups={konnectMigrationGroups}
-                onDone={() => {
-                  setKonnectMigrationGroups([]);
-                  // The migration can make the organization visible for the first time.
-                  refreshKonnectAccess(userSession.id, userSession.accountId, { force: true });
-                }}
-              />
-            )}
-          </SidebarContext.Provider>
-        </InsomniaTabProvider>
-      </AppDataCacheProvider>
+          </div>
+          {showKonnectMovedNotice && orgSelectNode && (
+            <KonnectMovedOnboarding triggerElement={orgSelectNode} onDismiss={dismissKonnectMovedNotice} />
+          )}
+          {konnectMigrationGroups.length > 0 && userSession.accountId && (
+            <KonnectOrgMigrationModal
+              accountId={userSession.accountId}
+              groups={konnectMigrationGroups}
+              onDone={() => {
+                setKonnectMigrationGroups([]);
+                // The migration can make the organization visible for the first time.
+                refreshKonnectAccess(userSession.id, userSession.accountId, { force: true });
+              }}
+            />
+          )}
+        </SidebarContext.Provider>
+      </InsomniaTabProvider>
     </InsomniaEventStreamProvider>
   );
 };

@@ -1,18 +1,14 @@
 import type { WorkspaceChildren, WorkspaceChildrenForScope, WorkspaceScope } from 'insomnia-data';
-import { services } from 'insomnia-data';
 import { useEffect, useMemo, useState } from 'react';
 
-import { prefetchUncachedWorkspaceChildren, workspaceChildrenKeys } from '~/common/app-data';
+import { prefetchUncachedWorkspaceChildren, workspaceChildrenQuery } from '~/common/app-data';
 import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useDBQueries, useDBQuery } from '~/ui/hooks/use-query';
 
 // Renderer hooks that mapping to the @insomnia-data/node-src/services/app-data/workspace-data functions.
 // The hooks is used to fetch data from the main process and cache it in the renderer process for future use.
 export function useWorkspaceData(workspaceId: string): WorkspaceChildren {
-  const { data } = useDBQuery({
-    queryKey: workspaceChildrenKeys.byWorkspaceId(workspaceId),
-    queryFn: async () => (await services.appData.getWorkspaceChildren([workspaceId])).get(workspaceId),
-  });
+  const { data } = useDBQuery(workspaceChildrenQuery(workspaceId));
   const emptyData: WorkspaceChildren = {
     data: {},
     dataMetas: {},
@@ -59,8 +55,7 @@ export function useMultipleWorkspacesData<S extends WorkspaceScope | undefined =
 
   const results = useDBQueries({
     queries: workspaceIds.map(workspaceId => ({
-      queryKey: workspaceChildrenKeys.byWorkspaceId(workspaceId),
-      queryFn: async () => (await services.appData.getWorkspaceChildren([workspaceId], scope)).get(workspaceId),
+      ...workspaceChildrenQuery(workspaceId, scope),
       // Only enable the query once the prefetch has completed for this workspace ID.
       enabled: prefetchedKey === workspaceIdKeys,
     })),
