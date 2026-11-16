@@ -128,9 +128,7 @@ test.describe('Local Encryption Key in Preferences', () => {
       await confirmationButton(page, 'Cancel').click();
 
       await page.getByTestId('local-encryption-key-export').click();
-      await expect
-        .soft(page.getByRole('dialog').getByText('only when you run the inso CLI on this machine'))
-        .toBeVisible();
+      await expect.soft(page.getByRole('dialog').getByText('Never use it on another machine')).toBeVisible();
       await confirmationButton(page, 'Cancel').click();
 
       expect.soft(await app.evaluate(({ clipboard }) => clipboard.readText())).toBe('clipboard before');
