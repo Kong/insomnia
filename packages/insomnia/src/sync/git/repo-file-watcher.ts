@@ -52,7 +52,7 @@ import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { writeFileWithinDir } from '../../main/safe-fs-write';
 import { getCanonicalInsomniaFileContent } from './canonical-file';
-import { applyEntityDelta, computeEntityDelta, isEmptyDelta } from './entity-delta';
+import { applyEntityDelta, computeEntityDelta, isEmptyDelta, verifyEntityPatch } from './entity-delta';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -85,14 +85,6 @@ export interface FileProblemsChangedPayload {
 /** Compute a SHA-256 hex digest of a string. */
 function contentHash(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
-}
-
-/**
- * Blank the two timestamps the importer fills in. They differ between two DB
- * views of the same file without meaning anything.
- */
-function withoutImportTimestamps(content: string): string {
-  return content.replace(/^(\s+(?:created|modified)): \d+$/gm, '$1: 0');
 }
 
 /**
@@ -153,9 +145,10 @@ class RepoFileWatcher {
   private lastExportHash = new Map<string, string>();
 
   /**
-   * The replay (`export(import(file))`) of the bytes last seen at a path. A
-   * burst of edits rewrites the same workspace repeatedly; the replay of the
-   * file the previous write left behind is the base of the next one.
+   * The base (`export(import(file))`) of the bytes last seen at a path: the
+   * DB export after an import or a write, or a scratch-DB replay when neither
+   * is known. A burst of edits rewrites the same workspace repeatedly; the
+   * base of the file the previous write left behind is the base of the next one.
    */
   private canonicalCache = new Map<string, { fileHash: string; canonical: string }>();
 
@@ -588,6 +581,8 @@ class RepoFileWatcher {
 
         if (isRename) {
           await this.removeWorkspaceFileFromDisk(workspace._id, previousAbsPath);
+          // Removing the old file forgets the workspace's export; the new file holds it.
+          this.lastExportHash.set(workspace._id, contentHash(yamlContent));
         }
 
         this.lastKnownGitFilePath.set(workspace._id, absPath);
@@ -672,12 +667,13 @@ class RepoFileWatcher {
     }
 
     // Writing only what the delta says must leave the file importing to the
-    // DB state. Anything else means the splice went wrong: keep the file.
-    const patchedBase = await getCanonicalInsomniaFileContent(patched);
-    if (patchedBase === null || !this.verifyPatch(patchedBase, yamlContent)) {
+    // DB state. Anything else means the splice went wrong: keep the file. A
+    // patch that produced the DB export itself is the DB state by definition.
+    if (patched !== yamlContent && !verifyEntityPatch(existing, patched, yamlContent, delta)) {
       return this.refuseWrite(absPath, 'Patch verification failed, leaving the YAML file untouched');
     }
-    this.rememberCanonical(normalised, contentHash(patched), patchedBase);
+    // The patched file imports to the DB state, so the DB export is its base.
+    this.rememberCanonical(normalised, contentHash(patched), yamlContent);
 
     await fs.promises.mkdir(path.dirname(absPath), { recursive: true });
     await writeFileWithinDir(this.repoDir, absPath, patched);
@@ -685,20 +681,7 @@ class RepoFileWatcher {
     return 'written';
   }
 
-  /**
-   * Both sides are canonical exports, so equal text means the patch reached the
-   * DB state. The text can differ on the timestamps the importer fills in, and
-   * that is the only difference the entity comparison tolerates — fall back to
-   * it only when the text differs.
-   */
-  private verifyPatch(patchedCanonical: string, dbCanonical: string): boolean {
-    if (withoutImportTimestamps(patchedCanonical) === withoutImportTimestamps(dbCanonical)) {
-      return true;
-    }
-    return isEmptyDelta(computeEntityDelta(patchedCanonical, dbCanonical));
-  }
-
-  /** Keep the replay of a file around: the next write of the same bytes reuses it. */
+  /** Keep the base of a file around: the next write of the same bytes reuses it. */
   private rememberCanonical(normalised: string, fileHash: string, canonical: string): void {
     this.canonicalCache.delete(normalised);
     this.canonicalCache.set(normalised, { fileHash, canonical });
@@ -956,10 +939,12 @@ class RepoFileWatcher {
 
     const workspaceId = docs.find(models.workspace.isWorkspace)?._id;
     if (workspaceId) {
-      // The file now represents the DB, so the next flush has nothing to write.
+      // The file now represents the DB, so the next flush has nothing to write,
+      // and the export is the file as the DB sees it: the base of the next patch.
       const exported = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
       if (exported) {
         this.lastExportHash.set(workspaceId, contentHash(exported));
+        this.rememberCanonical(normalised, result.hash, exported);
       }
     }
 

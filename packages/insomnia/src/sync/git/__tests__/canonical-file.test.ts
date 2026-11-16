@@ -244,3 +244,31 @@ routes:
   });
 
 });
+
+describe('getCanonicalInsomniaFileContent for files the app imports', () => {
+  const flights = fs.readFileSync(path.join(FIXTURE_DIR, 'flights.yaml'), 'utf8');
+
+  it.each([
+    ['a comment on the first line', `# my notes\n${flights}`],
+    ['a document marker on the first line', `---\n${flights}`],
+  ])('replays a file with %s', async (_, content) => {
+    expect(await getCanonicalInsomniaFileContent(content)).toBe(await getCanonicalInsomniaFileContent(flights));
+  });
+
+  it('replays a file without environments, with the base environment the app creates', async () => {
+    const withoutEnvironments = flights.replace(/^environments:\n(?:[ \t-].*\n|\n)*/m, '');
+    expect(withoutEnvironments).not.toContain('\nenvironments:');
+    expect(tryImportV5Data(withoutEnvironments).error).toBeUndefined();
+
+    const canonical = await getCanonicalInsomniaFileContent(withoutEnvironments);
+
+    expect(canonical).not.toBeNull();
+    const parsed = YAML.parse(canonical!) as { meta: { id: string }; environments?: { name: string; meta: { id: string } } };
+    expect(parsed.environments?.name).toBe('Base Environment');
+    expect(parsed.environments?.meta.id).toMatch(/^env_[0-9a-f]{40}$/);
+  });
+
+  it('still rejects a file that is not an Insomnia file', async () => {
+    expect(await getCanonicalInsomniaFileContent('# notes\nopenapi: 3.0.0\ninfo:\n  title: Not ours\n')).toBeNull();
+  });
+});

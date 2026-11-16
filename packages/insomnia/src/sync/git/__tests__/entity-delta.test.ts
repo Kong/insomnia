@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseDocument } from 'yaml';
 
-import { applyEntityDelta, computeEntityDelta, isEmptyDelta } from '../entity-delta';
+import { applyEntityDelta, computeEntityDelta, isEmptyDelta, verifyEntityPatch } from '../entity-delta';
 
 const request = (
   { id, name, url = `https://example.com/${id}`, extra = '' }: { id: string; name: string; url?: string; extra?: string },
@@ -390,5 +390,235 @@ collection:
 
     expect(delta.removed).toEqual(['fld_1']);
     expect(applyEntityDelta(withFolder, withoutFolder, delta)).toBe(withoutFolder);
+  });
+});
+
+describe('root values and single-entity slots', () => {
+  const withDescription = (description: string) =>
+    base.replace('  modified: 1000\ncollection:', `  modified: 1000\n  description: ${description}\ncollection:`);
+  // Every indentation level doubled, sequence items included, like a hand-formatted 4-space file.
+  const reindented = (content: string) =>
+    content.replace(/^( *)(- )?/gm, (_, indent: string, dash?: string) => indent.repeat(2) + (dash ? '-   ' : ''));
+
+  it('removes a root value the DB no longer carries', () => {
+    const described = withDescription('hello');
+    const patched = applyEntityDelta(described, base, computeEntityDelta(described, base));
+
+    expect(patched).toBe(base);
+  });
+
+  it('removes a block scalar root value with all its lines', () => {
+    const described = withDescription('|-\n    line one\n    line two');
+    const patched = applyEntityDelta(described, base, computeEntityDelta(described, base));
+
+    expect(patched).toBe(base);
+  });
+
+  it('keeps comments next to a removed root value', () => {
+    const described = withDescription('hello').replace('  description: hello\n', '  # about\n  description: hello\n');
+    const patched = applyEntityDelta(described, base, computeEntityDelta(described, base));
+
+    expect(patched).toBe(base.replace('  modified: 1000\ncollection:', '  modified: 1000\n  # about\ncollection:'));
+  });
+
+  it('re-indents a multi-line value to the indentation of the file', () => {
+    const described = withDescription('hello');
+    const multiline = withDescription('|-\n    line one\n    line two');
+    const handIndented = reindented(described);
+
+    const patched = applyEntityDelta(handIndented, multiline, computeEntityDelta(described, multiline));
+
+    expect(patched).not.toBeNull();
+    expect(parseDocument(patched!).errors).toEqual([]);
+    expect(parseDocument(patched!).toJSON()).toEqual(parseDocument(multiline).toJSON());
+    expect(patched).toContain('    description: |-\n      line one\n      line two\n');
+  });
+
+  it('inserts a multi-line root value the file does not carry', () => {
+    const multiline = withDescription('|-\n    line one\n    line two');
+    const handIndented = reindented(base);
+
+    const patched = applyEntityDelta(handIndented, multiline, computeEntityDelta(base, multiline));
+
+    expect(patched).not.toBeNull();
+    expect(parseDocument(patched!).errors).toEqual([]);
+    expect(parseDocument(patched!).toJSON()).toEqual(parseDocument(multiline).toJSON());
+    expect(patched).toContain('    modified: 1000\n    description: |-\n      line one\n      line two\n');
+  });
+
+  it('replaces a cookie jar that got a new id in place', () => {
+    const newJar = base.replace('id: jar_test', 'id: jar_new').replace('name: Default Jar', 'name: New Jar');
+    const delta = computeEntityDelta(base, newJar);
+    expect(delta).toMatchObject({ removed: ['jar_test'], added: ['jar_new'] });
+
+    expect(applyEntityDelta(base, newJar, delta)).toBe(newJar);
+  });
+
+  it('replaces a cookie jar that got a new id in a hand-indented file', () => {
+    const newJar = base.replace('id: jar_test', 'id: jar_new');
+    const patched = applyEntityDelta(reindented(base), newJar, computeEntityDelta(base, newJar));
+
+    expect(patched).not.toBeNull();
+    expect(parseDocument(patched!).toJSON()).toEqual(parseDocument(newJar).toJSON());
+    // The new jar is written in Insomnia's own form at the file's column; its neighbours keep theirs.
+    expect(patched).toContain('cookieJar:\n    name: Default Jar\n    meta:\n      id: jar_new');
+    expect(patched).toContain('environments:\n    name: Base Environment\n    meta:\n        id: env_test');
+  });
+});
+
+describe('verifyEntityPatch', () => {
+  const twoRequests = base;
+  const withFolder = file({
+    items: `${folder({ id: 'fld_1', name: 'Folder', children: request({ id: 'req_a', name: 'A' }, '      ') })}\n${request({ id: 'req_b', name: 'B' })}`,
+  });
+  const handEdited = (content: string) => content.replace('collection:\n', 'collection:\n  # by hand\n');
+
+  const patchOf = (fileContent: string, baseContent: string, dbContent: string) => {
+    const delta = computeEntityDelta(baseContent, dbContent);
+    const patched = applyEntityDelta(fileContent, dbContent, delta);
+    expect(patched).not.toBeNull();
+    return { delta, patched: patched! };
+  };
+
+  it.each([
+    ['a replaced entity', twoRequests, twoRequests.replace('name: B', 'name: B renamed')],
+    ['an added entity', twoRequests, file({ items: `${request({ id: 'req_a', name: 'A' })}\n${request({ id: 'req_c', name: 'C' })}\n${request({ id: 'req_b', name: 'B' })}` })],
+    ['a removed entity', twoRequests, file({ items: request({ id: 'req_b', name: 'B' }) })],
+    ['a moved entity', twoRequests, file({ items: folder({ id: 'fld_1', name: 'Folder', children: request({ id: 'req_a', name: 'A' }, '      ') }) + '\n' + request({ id: 'req_b', name: 'B' }) })],
+    ['a child of a folder', withFolder, withFolder.replace('name: A', 'name: A renamed')],
+    ['a root value', twoRequests, twoRequests.replace('name: Test Collection', 'name: Renamed')],
+  ])('accepts a correct patch of %s in a hand-edited file', (_, baseContent, dbContent) => {
+    const fileContent = handEdited(baseContent);
+    const { delta, patched } = patchOf(fileContent, baseContent, dbContent);
+
+    expect(patched).toContain('# by hand');
+    expect(verifyEntityPatch(fileContent, patched, dbContent, delta)).toBe(true);
+  });
+
+  const renamedB = twoRequests.replace('name: B', 'name: B renamed');
+  const setUp = () => {
+    const fileContent = handEdited(twoRequests);
+    const { delta, patched } = patchOf(fileContent, twoRequests, renamedB);
+    return { fileContent, delta, patched };
+  };
+
+  it('rejects a patch that changed an untouched entity', () => {
+    const { fileContent, delta, patched } = setUp();
+    const broken = patched.replace('https://example.com/req_a', 'https://example.com/elsewhere');
+
+    expect(verifyEntityPatch(fileContent, broken, renamedB, delta)).toBe(false);
+  });
+
+  it('rejects a patch whose touched entity does not hold the DB content', () => {
+    const { fileContent, delta, patched } = setUp();
+
+    expect(verifyEntityPatch(fileContent, patched.replace('name: B renamed', 'name: B other'), renamedB, delta)).toBe(false);
+  });
+
+  it('rejects a patch that lost or duplicated an entity', () => {
+    const { fileContent, delta, patched } = setUp();
+    const lost = patched.replace(`${request({ id: 'req_a', name: 'A' })}\n`, '');
+    const duplicated = patched.replace('cookieJar:', `${request({ id: 'req_b', name: 'B' })}\ncookieJar:`);
+
+    expect(verifyEntityPatch(fileContent, lost, renamedB, delta)).toBe(false);
+    expect(verifyEntityPatch(fileContent, duplicated, renamedB, delta)).toBe(false);
+  });
+
+  it('rejects a patch that put an entity under another parent', () => {
+    const fileContent = handEdited(withFolder);
+    const db = withFolder.replace('name: B', 'name: B renamed');
+    const { delta, patched } = patchOf(fileContent, withFolder, db);
+    // Indenting B by four columns makes it a second child of the folder.
+    const misplaced = patched.replace(request({ id: 'req_b', name: 'B renamed' }), request({ id: 'req_b', name: 'B renamed' }, '      '));
+
+    expect(misplaced).not.toBe(patched);
+    expect(verifyEntityPatch(fileContent, misplaced, db, delta)).toBe(false);
+  });
+
+  it('rejects a patch that changed a root value outside the delta', () => {
+    const { fileContent, delta, patched } = setUp();
+
+    expect(verifyEntityPatch(fileContent, patched.replace('name: Test Collection', 'name: Other'), renamedB, delta)).toBe(false);
+  });
+
+  it('rejects text that is not valid YAML', () => {
+    const { fileContent, delta, patched } = setUp();
+
+    expect(verifyEntityPatch(fileContent, `${patched}  - [unclosed\n`, renamedB, delta)).toBe(false);
+  });
+});
+
+describe('second review regressions', () => {
+  const patchAndVerify = (fileContent: string, baseContent: string, dbContent: string) => {
+    const delta = computeEntityDelta(baseContent, dbContent);
+    const patched = applyEntityDelta(fileContent, dbContent, delta);
+    expect(patched).not.toBeNull();
+    expect(parseDocument(patched!).errors).toEqual([]);
+    expect(verifyEntityPatch(fileContent, patched!, dbContent, delta)).toBe(true);
+    return patched!;
+  };
+  const collectionIds = (content: string) =>
+    (parseDocument(content).toJSON() as { collection: ({ meta: { id: string } } | null)[] }).collection.map(
+      item => item?.meta.id ?? null,
+    );
+  const loneDash = base.replace('  - url: https://example.com/req_b\n', '  -\n    url: https://example.com/req_b\n');
+
+  it('removes an item whose dash sits alone on its line, dash included', () => {
+    const patched = patchAndVerify(loneDash, base, file({ items: request({ id: 'req_a', name: 'A' }) }));
+
+    expect(collectionIds(patched)).toEqual(['req_a']);
+    expect(patched).not.toMatch(/^\s*-\s*$/m);
+  });
+
+  it('replaces an item whose dash sits alone on its line without leaving a null item', () => {
+    const renamed = base.replace('name: B', 'name: B renamed');
+    const patched = patchAndVerify(loneDash, base, renamed);
+
+    expect(collectionIds(patched)).toEqual(['req_a', 'req_b']);
+    expect(parseDocument(patched).toJSON()).toEqual(parseDocument(renamed).toJSON());
+  });
+
+  it('rejects a patch that leaves a stray item in a container', () => {
+    const renamed = base.replace('name: B', 'name: B renamed');
+    const delta = computeEntityDelta(base, renamed);
+    const patched = applyEntityDelta(base, renamed, delta)!;
+    const stray = patched.replace('cookieJar:', '  -\ncookieJar:');
+
+    expect(collectionIds(stray)).toEqual(['req_a', 'req_b', null]);
+    expect(verifyEntityPatch(base, stray, renamed, delta)).toBe(false);
+  });
+
+  it('fills a key the file left empty', () => {
+    const described = base.replace('  modified: 1000\ncollection:', '  modified: 1000\n  description: ""\ncollection:');
+    const emptyKey = described.replace('  description: ""\n', '  description:\n');
+    const patched = patchAndVerify(emptyKey, described, described.replace('description: ""', 'description: shop'));
+
+    expect(patched).toBe(emptyKey.replace('  description:\n', '  description: shop\n'));
+  });
+
+  it('inserts an entity the base has but the file does not when the DB changes it', () => {
+    const withoutJar = base.replace(/cookieJar:\n(?: {2}.*\n)*/, '');
+    const renamedJar = base.replace('name: Default Jar', 'name: Renamed Jar');
+    const patched = patchAndVerify(withoutJar, base, renamedJar);
+
+    expect(parseDocument(patched).toJSON()).toEqual(parseDocument(renamedJar).toJSON());
+  });
+
+  it('skips removing an entity the file never had', () => {
+    const withoutJar = base.replace(/cookieJar:\n(?: {2}.*\n)*/, '');
+    const delta = computeEntityDelta(base, withoutJar);
+    expect(delta.removed).toEqual(['jar_test']);
+
+    expect(applyEntityDelta(withoutJar, withoutJar, delta)).toBe(withoutJar);
+  });
+
+  it('keeps CRLF line endings in the lines it writes', () => {
+    const crlf = base.replace(/\n/g, '\r\n');
+    const added = file({ items: `${request({ id: 'req_a', name: 'A renamed' })}\n${request({ id: 'req_c', name: 'C' })}\n${request({ id: 'req_b', name: 'B' })}` });
+    const patched = patchAndVerify(crlf, base, added);
+
+    expect(patched).toContain('name: A renamed\r\n');
+    expect(patched).toContain('id: req_c\r\n');
+    expect(patched.replace(/\r\n/g, '')).not.toContain('\n');
   });
 });

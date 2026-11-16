@@ -165,6 +165,174 @@ export function computeEntityDelta(baseContent: string, dbContent: string): Enti
 }
 
 /**
+ * Whether `patchedContent` (the result of applying `delta` to `fileContent`)
+ * carries exactly the DB state for what the delta touched and leaves the rest
+ * of the file as it was. It checks the YAML structure only, so it is cheap
+ * enough to run on every write:
+ *
+ * - the set of entities is the file's, minus the replaced and removed
+ *   subtrees, plus the DB's replaced and added subtrees;
+ * - every incoming entity sits under the same parent and holds the same
+ *   content as in the DB;
+ * - every other entity sits where it did in the file, and keeps its exact
+ *   bytes (or, when a descendant was touched, its own content);
+ * - the root values in the delta match the DB, all others match the file.
+ *
+ * When this holds, importing the patched file gives what importing the file
+ * gave, with the delta applied: the DB state.
+ */
+export function verifyEntityPatch(
+  fileContent: string,
+  patchedContent: string,
+  dbContent: string,
+  delta: EntityDelta,
+): boolean {
+  let file: Document.Parsed;
+  let patched: Document.Parsed;
+  let db: Document.Parsed;
+  try {
+    file = parseCached(fileContent);
+    patched = parseCached(patchedContent);
+    db = parseCached(dbContent);
+  } catch {
+    return false;
+  }
+  if (file.errors.length > 0 || patched.errors.length > 0 || db.errors.length > 0) {
+    return false;
+  }
+  const fileRoot = asMap(file.contents);
+  const patchedRoot = asMap(patched.contents);
+  const dbRoot = asMap(db.contents);
+  const rootId = entityIdOf(dbRoot);
+  if (!fileRoot || !patchedRoot || !dbRoot || !rootId || entityIdOf(patchedRoot) !== rootId) {
+    return false;
+  }
+
+  try {
+    const fileIndex = indexEntities(file);
+    const patchedIndex = indexEntities(patched);
+    const dbIndex = indexEntities(db);
+
+    const gone = subtreeIds([...delta.replaced, ...delta.removed], fileIndex.entities);
+    const incoming = subtreeIds([...delta.replaced, ...delta.added], dbIndex.entities);
+
+    const expected = new Set<string>(incoming);
+    for (const id of fileIndex.entities.keys()) {
+      if (!gone.has(id)) {
+        expected.add(id);
+      }
+    }
+    if (expected.size !== patchedIndex.entities.size) {
+      return false;
+    }
+    for (const id of patchedIndex.entities.keys()) {
+      if (!expected.has(id)) {
+        return false;
+      }
+    }
+    // A second node with a touched id would import over (or under) the patch.
+    for (const id of patchedIndex.duplicates) {
+      if (incoming.has(id) || gone.has(id)) {
+        return false;
+      }
+    }
+
+    // Entities that contain a touched one: their bytes changed, their own content must not.
+    const enclosing = new Set<string>();
+    const markAncestors = (id: string, entities: Map<string, CollectedEntity>) => {
+      let parentId = entities.get(id)?.parentId ?? null;
+      while (parentId && !enclosing.has(parentId)) {
+        enclosing.add(parentId);
+        parentId = entities.get(parentId)?.parentId ?? null;
+      }
+    };
+    gone.forEach(id => markAncestors(id, fileIndex.entities));
+    incoming.forEach(id => markAncestors(id, dbIndex.entities));
+
+    for (const [id, entity] of patchedIndex.entities) {
+      if (id === rootId) {
+        continue;
+      }
+      if (incoming.has(id)) {
+        const source = dbIndex.entities.get(id);
+        if (
+          !source ||
+          entity.parentId !== source.parentId ||
+          entity.containerKey !== source.containerKey ||
+          ownContent(entity.node) !== ownContent(source.node)
+        ) {
+          return false;
+        }
+        continue;
+      }
+      const original = fileIndex.entities.get(id);
+      if (!original || entity.parentId !== original.parentId || entity.containerKey !== original.containerKey) {
+        return false;
+      }
+      const same = enclosing.has(id)
+        ? ownContent(entity.node) === ownContent(original.node)
+        : sourceOf(patchedContent, entity.node) === sourceOf(fileContent, original.node);
+      if (!same) {
+        return false;
+      }
+    }
+
+    // The root is skipped above: its leaves are checked below, and what its
+    // entity containers hold besides entities must not change.
+    if (stableStringify(containerResidue(patchedRoot)) !== stableStringify(containerResidue(fileRoot))) {
+      return false;
+    }
+
+    const leaves = new Set(delta.leaves);
+    for (const path of new Set([...collectLeafPaths(fileRoot), ...collectLeafPaths(patchedRoot), ...delta.leaves])) {
+      const reference = leaves.has(path) ? dbRoot : fileRoot;
+      if (leafJSON(patchedRoot, path) !== leafJSON(reference, path)) {
+        return false;
+      }
+    }
+    return true;
+  } catch (err) {
+    if (err instanceof EntityDeltaError) {
+      return false;
+    }
+    throw err;
+  }
+}
+
+function leafJSON(root: YAMLMap, path: string): string | undefined {
+  const node = findLeafNode(root, path);
+  return node ? stableStringify(node.toJSON()) : undefined;
+}
+
+/** `roots` and all their descendants. */
+function subtreeIds(roots: string[], entities: Map<string, CollectedEntity>): Set<string> {
+  const ids = new Set<string>();
+  if (roots.length === 0) {
+    return ids;
+  }
+  const children = new Map<string, string[]>();
+  for (const entity of entities.values()) {
+    if (entity.parentId) {
+      const siblings = children.get(entity.parentId);
+      if (siblings) {
+        siblings.push(entity.id);
+      } else {
+        children.set(entity.parentId, [entity.id]);
+      }
+    }
+  }
+  const queue = roots.filter(id => entities.has(id));
+  while (queue.length > 0) {
+    const id = queue.pop() as string;
+    if (!ids.has(id)) {
+      ids.add(id);
+      queue.push(...(children.get(id) ?? []));
+    }
+  }
+  return ids;
+}
+
+/**
  * `fileContent` with the delta applied, or null when it cannot be applied
  * exactly. A null result means "write nothing": the caller must not fall back
  * to regenerating the file.
@@ -198,10 +366,15 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
     const edits: Edit[] = [];
 
     for (const path of delta.leaves) {
-      const before = findLeafNode(fileRoot, path);
-      const after = findLeafNode(dbRoot, path);
+      const before = findLeafPair(fileRoot, path);
+      const after = findLeafPair(dbRoot, path);
       if (!after) {
-        return null;
+        if (!before) {
+          return null;
+        }
+        // The exporter drops empty values, eg. a cleared description.
+        edits.push(removeLeaf(fileContent, before));
+        continue;
       }
       if (!before) {
         const insertion = insertLeaf(fileContent, fileRoot, dbContent, path, after);
@@ -211,13 +384,30 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
         edits.push(insertion);
         continue;
       }
-      const range = before.range;
+      const range = before.value.range;
       if (!range) {
         return null;
       }
+      // A multi-line value (block scalar, folded quotes) is indented relative to
+      // its key, which sits at the file's own column, not the canonical one.
+      const dbText = reindentContinuation(
+        sourceOf(dbContent, after.value),
+        keyColumn(dbContent, after.key),
+        keyColumn(fileContent, before.key),
+      );
+      if (range[0] === range[1]) {
+        // `key:` with no value: its empty node sits at the next token, past the
+        // line break, so the value goes right after the colon instead.
+        const keyEnd = before.key.range?.[1];
+        const colon = keyEnd === undefined ? -1 : fileContent.indexOf(':', keyEnd);
+        if (colon === -1) {
+          return null;
+        }
+        edits.push({ start: colon + 1, end: colon + 1, text: ` ${dbText.replace(/\n$/, '')}` });
+        continue;
+      }
       // A block scalar's range ends after its last newline; an inline value has
       // none, so replacing one with the other would join two lines.
-      const dbText = sourceOf(dbContent, after);
       const fileEndsLine = fileContent[range[1] - 1] === '\n';
       const dbEndsLine = dbText.endsWith('\n');
       const text =
@@ -229,11 +419,18 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
       edits.push({ start: range[0], end: range[1], text });
     }
 
+    // An entity the base has but the file does not (the import filled it in)
+    // has nothing to replace: it is inserted like a new one.
+    const replacedMissing: string[] = [];
     for (const id of delta.replaced) {
       const target = fileEntities.get(id);
       const source = dbEntities.get(id);
-      if (!target || !source) {
+      if (!source) {
         return null;
+      }
+      if (!target) {
+        replacedMissing.push(id);
+        continue;
       }
       const targetSpan = blockSpan(fileContent, target.node);
       const sourceSpan = blockSpan(dbContent, source.node);
@@ -244,11 +441,43 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
       });
     }
 
+    // A slot that holds one entity as a mapping (cookieJar, spec, server, …)
+    // and receives a new one: replace the old entity in place. A delete plus an
+    // insert would both claim the same lines.
+    const removedIds = new Set(delta.removed);
+    const swappedIn = new Set<string>();
+    const swappedOut = new Set<string>();
+    for (const id of delta.added) {
+      const source = dbEntities.get(id);
+      if (!source?.containerKey) {
+        continue;
+      }
+      const parentNode = source.parentId ? fileEntities.get(source.parentId)?.node : fileRoot;
+      const container = parentNode ? pairNode(parentNode, source.containerKey) : null;
+      const oldId = entityIdOf(container);
+      if (!isMap(container) || !oldId || oldId === id || !removedIds.has(oldId)) {
+        continue;
+      }
+      const targetSpan = blockSpan(fileContent, container);
+      const sourceSpan = blockSpan(dbContent, source.node);
+      edits.push({
+        start: targetSpan.start,
+        end: targetSpan.end,
+        text: reindentBlock(dbContent.slice(sourceSpan.start, sourceSpan.end), sourceSpan.column, targetSpan.column),
+      });
+      swappedIn.add(id);
+      swappedOut.add(oldId);
+    }
+
     const drops = containerDrops(fileContent, fileRoot, fileEntities, delta, dbEntities);
     for (const id of delta.removed) {
+      if (swappedOut.has(id)) {
+        continue;
+      }
       const target = fileEntities.get(id);
       if (!target) {
-        return null;
+        // Only the base had it (the import filled it in): nothing to remove.
+        continue;
       }
       const span = blockSpan(fileContent, target.node);
       if (drops.some(drop => span.start >= drop.start && span.end <= drop.end)) {
@@ -258,7 +487,10 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
     }
     edits.push(...drops);
 
-    for (const id of delta.added) {
+    for (const id of [...delta.added, ...replacedMissing]) {
+      if (swappedIn.has(id)) {
+        continue;
+      }
       const source = dbEntities.get(id);
       if (!source) {
         return null;
@@ -268,6 +500,13 @@ export function applyEntityDelta(fileContent: string, dbContent: string, delta: 
         return null;
       }
       edits.push(insertion);
+    }
+
+    // The DB text has LF line endings; a CRLF file keeps its own.
+    if (/^[^\n]*\r\n/.test(fileContent)) {
+      for (const edit of edits) {
+        edit.text = edit.text.replace(/\r?\n/g, '\r\n');
+      }
     }
 
     return applyEdits(fileContent, edits);
@@ -321,6 +560,16 @@ function blockSpan(content: string, node: Node): { start: number; end: number; c
   if (!/^[ \t]*(?:-[ \t]+)?$/.test(content.slice(span.start, span.start + span.column))) {
     // A flow sequence puts siblings on this line: there is no block to replace.
     throw new EntityDeltaError('node is not a block on its own line');
+  }
+  // A sequence item may put its `-` alone on the line above (`-\n  url: …`).
+  // That line belongs to the item: leaving it behind leaves a null item.
+  if (span.start > 0) {
+    const previousStart = content.lastIndexOf('\n', span.start - 2) + 1;
+    const previous = content.slice(previousStart, span.start).replace(/\r?\n$/, '');
+    const dash = /^([ \t]*)-[ \t]*$/.exec(previous);
+    if (dash && dash[1].length < span.column) {
+      return { start: previousStart, end: span.end, column: span.column };
+    }
   }
   return span;
 }
@@ -441,34 +690,64 @@ function childKeyColumn(content: string, node: YAMLMap): number {
 }
 
 /**
- * A root value the file does not carry: append `key: value` to the end of its
- * parent mapping. Only plain scalars are representable inline; anything else
- * makes the caller refuse.
+ * A root value the file does not carry: append the DB's `key: value` lines to
+ * the end of its parent mapping, re-indented to the parent's child column.
  */
 function insertLeaf(
   content: string,
   root: YAMLMap,
   dbContent: string,
   path: string,
-  after: Node,
+  after: LeafPair,
 ): Edit | null {
-  if (!isScalar(after) || (typeof after.type === 'string' && after.type.startsWith('BLOCK'))) {
-    return null;
-  }
   const segments = path.split('.');
-  const key = segments[segments.length - 1];
   const parentPath = segments.slice(0, -1).join('.');
   const parent = parentPath ? findMapNode(root, parentPath) : root;
   if (!parent) {
     return null;
   }
+  const pairText = dbContent.slice(pairLineStart(dbContent, after.key), lineSpan(dbContent, after.value).end);
+  const text = reindentBlock(pairText, keyColumn(dbContent, after.key), childKeyColumn(content, parent));
   const span = blockSpan(content, parent);
   const needsNewline = span.end > 0 && content[span.end - 1] !== '\n';
   return {
     start: span.end,
     end: span.end,
-    text: `${needsNewline ? '\n' : ''}${' '.repeat(childKeyColumn(content, parent))}${key}: ${sourceOf(dbContent, after)}\n`,
+    text: `${needsNewline ? '\n' : ''}${text}${text.endsWith('\n') ? '' : '\n'}`,
   };
+}
+
+/** A root value the DB no longer carries: drop its `key: value` lines. */
+function removeLeaf(content: string, pair: LeafPair): Edit {
+  return { start: pairLineStart(content, pair.key), end: lineSpan(content, pair.value).end, text: '' };
+}
+
+/** Start of the line a key begins on; the key must be the first thing on it. */
+function pairLineStart(content: string, key: Node): number {
+  const range = key.range;
+  if (!range) {
+    throw new EntityDeltaError('node has no range');
+  }
+  const start = content.lastIndexOf('\n', range[0] - 1) + 1;
+  if (content.slice(start, range[0]).trim() !== '') {
+    // A flow mapping puts siblings on this line: there are no lines to take.
+    throw new EntityDeltaError('key is not on its own line');
+  }
+  return start;
+}
+
+function keyColumn(content: string, key: Node): number {
+  const lineStart = pairLineStart(content, key);
+  return (key.range?.[0] ?? lineStart) - lineStart;
+}
+
+/** Shifts every line but the first, which stays on the key's line. */
+function reindentContinuation(text: string, fromColumn: number, toColumn: number): string {
+  const newline = text.indexOf('\n');
+  if (newline === -1 || fromColumn === toColumn) {
+    return text;
+  }
+  return text.slice(0, newline + 1) + reindentBlock(text.slice(newline + 1), fromColumn, toColumn);
 }
 
 function findMapNode(node: YAMLMap, path: string): YAMLMap | null {
@@ -537,8 +816,26 @@ function containerDrops(
 // Collection
 // ---------------------------------------------------------------------------
 
+interface EntityIndex {
+  entities: Map<string, CollectedEntity>;
+  /** Ids carried by more than one node; only the first node is in `entities`. */
+  duplicates: Set<string>;
+}
+
+/** Parsed documents are cached and never mutated, so their index is too. */
+const entityIndexCache = new WeakMap<Document.Parsed, EntityIndex>();
+
 function collectEntities(doc: Document.Parsed): Map<string, CollectedEntity> {
+  return indexEntities(doc).entities;
+}
+
+function indexEntities(doc: Document.Parsed): EntityIndex {
+  const cached = entityIndexCache.get(doc);
+  if (cached) {
+    return cached;
+  }
   const entities = new Map<string, CollectedEntity>();
+  const duplicates = new Set<string>();
 
   const visitEntity = (
     node: YAMLMap,
@@ -547,7 +844,11 @@ function collectEntities(doc: Document.Parsed): Map<string, CollectedEntity> {
     index: number,
   ): void => {
     const id = entityIdOf(node);
-    if (!id || entities.has(id)) {
+    if (!id) {
+      return;
+    }
+    if (entities.has(id)) {
+      duplicates.add(id);
       return;
     }
     const entity: CollectedEntity = { id, node, parentId: parent?.id ?? null, containerKey, index };
@@ -586,18 +887,38 @@ function collectEntities(doc: Document.Parsed): Map<string, CollectedEntity> {
   if (root && entityIdOf(root)) {
     visitEntity(root, null, null, 0);
   }
-  return entities;
+  const index = { entities, duplicates };
+  entityIndexCache.set(doc, index);
+  return index;
 }
+
+const ownContentCache = new WeakMap<YAMLMap, string>();
 
 /** An entity's own content: nested entities are their own delta entries. */
 function ownContent(node: YAMLMap): string {
+  let content = ownContentCache.get(node);
+  if (content === undefined) {
+    content = computeOwnContent(node);
+    ownContentCache.set(node, content);
+  }
+  return content;
+}
+
+function computeOwnContent(node: YAMLMap): string {
   const content: Record<string, unknown> = {};
   for (const pair of node.items) {
     const value = pair.value as Node | null;
-    if (entityIdOf(value) || (isSeq(value) && value.items.some(item => entityIdOf(item as Node)))) {
+    if (entityIdOf(value)) {
+      continue;
+    }
+    if (isEntityContainer(value)) {
       continue;
     }
     content[String(pair.key)] = value ? value.toJSON() : null;
+  }
+  const residue = containerResidue(node);
+  if (residue) {
+    content['\u0000residue'] = residue;
   }
   const meta = content.meta;
   if (meta && typeof meta === 'object') {
@@ -608,6 +929,32 @@ function ownContent(node: YAMLMap): string {
     }
   }
   return stableStringify(content);
+}
+
+function isEntityContainer(value: Node | null): boolean {
+  return isSeq(value) && value.items.some(item => entityIdOf(item as Node));
+}
+
+/**
+ * What sits in `node`'s entity containers besides entities, eg. the null item
+ * a lone `-` leaves behind. The entities are their own delta entries, but
+ * these are not; canonical exports have none, so this is only ever set for a
+ * damaged or hand-made file. Undefined when there is nothing.
+ */
+function containerResidue(node: YAMLMap): Record<string, unknown[]> | undefined {
+  let residue: Record<string, unknown[]> | undefined;
+  for (const pair of node.items) {
+    const value = pair.value as Node | null;
+    if (!isSeq(value) || !isEntityContainer(value)) {
+      continue;
+    }
+    const strays = value.items.filter(item => !entityIdOf(item as Node));
+    if (strays.length > 0) {
+      residue ??= {};
+      residue[String(pair.key)] = strays.map(item => (item as Node | null)?.toJSON() ?? null);
+    }
+  }
+  return residue;
 }
 
 function stableStringify(value: unknown): string {
@@ -674,16 +1021,26 @@ function collectLeafPaths(node: YAMLMap, prefix = ''): string[] {
   return paths;
 }
 
-function findLeafNode(node: YAMLMap, path: string): Node | null {
+interface LeafPair {
+  key: Node;
+  value: Node;
+}
+
+function findLeafPair(node: YAMLMap, path: string): LeafPair | null {
   const [head, ...rest] = path.split('.');
-  const value = pairNode(node, head);
-  if (!value) {
+  const pair = node.items.find(item => String(item.key) === head);
+  const value = (pair?.value as Node | undefined) ?? null;
+  if (!pair || !value) {
     return null;
   }
   if (rest.length === 0) {
-    return value;
+    return { key: pair.key as Node, value };
   }
-  return isMap(value) ? findLeafNode(value, rest.join('.')) : null;
+  return isMap(value) ? findLeafPair(value, rest.join('.')) : null;
+}
+
+function findLeafNode(node: YAMLMap, path: string): Node | null {
+  return findLeafPair(node, path)?.value ?? null;
 }
 
 // ---------------------------------------------------------------------------

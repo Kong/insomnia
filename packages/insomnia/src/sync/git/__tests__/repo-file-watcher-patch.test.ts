@@ -6,7 +6,14 @@ import { services } from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { database as db } from '../../../common/database';
+import { getInsomniaV5DataExport } from '../../../common/insomnia-v5';
+import { getCanonicalInsomniaFileContent } from '../canonical-file';
 import { RepoFileWatcherRegistry } from '../repo-file-watcher';
+
+vi.mock('../canonical-file', async importOriginal => {
+  const actual = await importOriginal<{ getCanonicalInsomniaFileContent: typeof getCanonicalInsomniaFileContent }>();
+  return { ...actual, getCanonicalInsomniaFileContent: vi.fn(actual.getCanonicalInsomniaFileContent) };
+});
 
 const REPO_ID = 'git_repo_patch';
 const PROJECT_ID = 'proj_patch';
@@ -108,6 +115,46 @@ describe('RepoFileWatcher DB→FS patching', () => {
     expect(after.indexOf('name: B')).toBeLessThan(after.indexOf('name: A renamed'));
   });
 
+  it('does not replay an imported file through a scratch database on later edits', async () => {
+    await writeRepoFile(collectionYaml());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+    vi.mocked(getCanonicalInsomniaFileContent).mockClear();
+
+    await services.request.update((await services.request.getById('req_a'))!, { name: 'A renamed' });
+    await registry.flushNow(REPO_ID);
+    await services.request.update((await services.request.getById('req_b'))!, { name: 'B renamed' });
+    await registry.flushNow(REPO_ID);
+
+    const after = await readRepoFile();
+    expect(after).toContain('  # kept, and so is this order');
+    expect(after).toContain('    name: A renamed');
+    expect(after).toContain('    name: B renamed');
+    // The base comes from the import, then from each write; the patch is verified structurally.
+    expect(getCanonicalInsomniaFileContent).not.toHaveBeenCalled();
+  });
+
+  it('writes what a whole-file export would write when the file is canonical', async () => {
+    await services.workspace.update((await services.workspace.getById(WORKSPACE_ID))!, { scope: 'collection' });
+    await services.environment.getOrCreateForParentId(WORKSPACE_ID);
+    await services.request.create({ _id: 'req_m', parentId: WORKSPACE_ID, name: 'M', url: 'https://example.com/m' });
+    await services.request.create({ _id: 'req_z', parentId: WORKSPACE_ID, name: 'Z', url: 'https://example.com/z' });
+    const exportNow = async () =>
+      (await getInsomniaV5DataExport({ workspaceId: WORKSPACE_ID, includePrivateEnvironments: false }))!;
+    await writeRepoFile(await exportNow());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    // A new folder with a request in it, and a request between the existing ones.
+    await services.requestGroup.create({ _id: 'fld_new', parentId: WORKSPACE_ID, name: 'New Folder' });
+    await services.request.create({ _id: 'req_in', parentId: 'fld_new', name: 'Inside', url: 'https://example.com/in' });
+    await services.request.create({ _id: 'req_p', parentId: WORKSPACE_ID, name: 'P', url: 'https://example.com/p' });
+    await registry.flushNow(REPO_ID);
+
+    const written = await readRepoFile();
+    expect(written).toBe(await exportNow());
+    expect(written).toContain('name: New Folder');
+    expect(written).toContain('name: Inside');
+  });
+
   it('keeps the file intact across two edits in a row', async () => {
     await writeRepoFile(collectionYaml());
     await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
@@ -203,6 +250,69 @@ environments:`,
 
     expect(await readRepoFile()).toBe(duplicated);
   });
+
+  it('reports a file it cannot patch and leaves it untouched', async () => {
+    const flow = collectionYaml(
+      'collection: [{url: https://example.com/a, name: A, meta: {id: req_a, created: 1000, modified: 1000}, method: GET}]',
+    );
+    await writeRepoFile(flow);
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    await services.request.update((await services.request.getById('req_a'))!, { name: 'A renamed' });
+    await registry.flushNow(REPO_ID);
+
+    expect(await readRepoFile()).toBe(flow);
+    expect(registry.getProblems(REPO_ID)).toEqual([
+      expect.objectContaining({ kind: 'write-blocked', message: 'Could not patch the YAML file, leaving it untouched' }),
+    ]);
+  });
+
+  it('does not re-read a renamed file when the DB has not changed since', async () => {
+    await writeRepoFile(collectionYaml());
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    const meta = await services.workspaceMeta.getByParentId(WORKSPACE_ID);
+    await services.workspaceMeta.update(meta!, { gitFilePath: 'renamed.yaml' });
+    await registry.flushNow(REPO_ID);
+    const renamedPath = path.join(repoDir, 'renamed.yaml');
+    expect(fs.existsSync(renamedPath)).toBe(true);
+    expect(fs.existsSync(absPath)).toBe(false);
+
+    const readFile = vi.spyOn(fs.promises, 'readFile');
+    try {
+      await registry.flushNow(REPO_ID);
+      expect(readFile.mock.calls.filter(([file]) => path.normalize(String(file)) === path.normalize(renamedPath))).toEqual([]);
+    } finally {
+      readFile.mockRestore();
+    }
+  });
+
+  it('writes a cleared and a multi-line workspace description into a 4-space file', async () => {
+    const fourSpace = collectionYaml()
+      .replace(/^( *)(- )?/gm, (_, indent: string, dash?: string) => indent.repeat(2) + (dash ? '-   ' : ''))
+      .replace('    modified: 1000\ncollection:', '    modified: 1000\n    description: hello\ncollection:');
+    await writeRepoFile(fourSpace);
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    const workspace = await services.workspace.getById(WORKSPACE_ID);
+    await services.workspace.update(workspace!, { description: '' });
+    await registry.flushNow(REPO_ID);
+
+    const cleared = await readRepoFile();
+    // The exporter keeps an empty string, so clearing is a value change.
+    expect(cleared).toBe(fourSpace.replace('    description: hello\n', '    description: ""\n'));
+    expect(registry.getProblems(REPO_ID)).toEqual([]);
+
+    await services.workspace.update((await services.workspace.getById(WORKSPACE_ID))!, {
+      description: 'line one\nline two',
+    });
+    await registry.flushNow(REPO_ID);
+
+    expect(await readRepoFile()).toBe(
+      cleared.replace('    description: ""\n', '    description: |-\n      line one\n      line two\n'),
+    );
+    expect(registry.getProblems(REPO_ID)).toEqual([]);
+  });
 });
 
 const FIXTURE_DIR = path.join(__dirname, '..', '..', '..', 'common', '__fixtures__', 'insomnia-v5-roundtrip');
@@ -233,6 +343,15 @@ describe('RepoFileWatcher leaves untouched files byte-identical', () => {
       await registry.flushNow(REPO_ID);
 
       expect(await fs.promises.readFile(absPath, 'utf8')).toBe(content);
+
+      // The flush above stops at the "DB did not change" gate. A change in the
+      // app goes through delta, patch and verification, and must touch only
+      // the line it changed.
+      await services.workspace.update(workspaces[0], { name: 'Renamed by the app' });
+      await registry.flushNow(REPO_ID);
+
+      expect(await fs.promises.readFile(absPath, 'utf8')).toBe(content.replace(/^name: .*$/m, 'name: Renamed by the app'));
+      expect(registry.getProblems(REPO_ID)).toEqual([]);
     } finally {
       registry.stopAll();
       await fs.promises.rm(repoDir, { recursive: true, force: true });

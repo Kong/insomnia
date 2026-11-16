@@ -8,6 +8,9 @@
  * entity into the file on disk and replay the result.
  */
 
+import crypto from 'node:crypto';
+
+import type { Environment } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { createNedbDatabase } from 'insomnia-data/node';
 import { parse } from 'yaml';
@@ -40,6 +43,18 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
     await scratchDb.update(doc);
   }
 
+  // The app creates a base environment for every workspace (and the exporter
+  // requires one), so a file without `environments:` imports to a workspace
+  // that has it. Same deterministic id as `getOrCreateForParentId`.
+  if (!data.some(doc => models.environment.isEnvironment(doc) && doc.parentId === workspace._id)) {
+    await scratchDb.docCreate<Environment>(models.environment.type, {
+      _id: `${models.environment.prefix}_${crypto.createHash('sha1').update(workspace._id).digest('hex')}`,
+      parentId: workspace._id,
+      name: 'Base Environment',
+      environmentType: models.environment.EnvironmentType.KVPAIR,
+    });
+  }
+
   const exportedContent = await getInsomniaV5DataExport({
     workspaceId: workspace._id,
     includePrivateEnvironments: false,
@@ -50,10 +65,13 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
 }
 
 // Whether `content` declares itself an Insomnia file on its first line (eg. `type: collection.insomnia.rest/5.0`).
+// Comments, blank lines and YAML document markers or directives before it do not count.
 function isInsomniaFileContent(content: string) {
-  const newLineIndex = content.indexOf('\n');
-  const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
-  return InsomniaFileTypeValues.some(type => firstLine.includes(type));
+  const firstLine = content
+    .split('\n', 50)
+    .map(line => line.trim())
+    .find(line => line !== '' && !line.startsWith('#') && !line.startsWith('%') && line !== '---');
+  return firstLine !== undefined && InsomniaFileTypeValues.some(type => firstLine.includes(type));
 }
 
 export type InsomniaFileFormatIssue = 'invalid' | 'non-canonical';
