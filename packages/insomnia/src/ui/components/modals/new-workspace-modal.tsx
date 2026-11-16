@@ -35,9 +35,7 @@ import { validateRepoFolderName } from '../../../sync/git/repo-folder-path';
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import {
-  getPendingDepth,
   getSiblingNames,
-  MAX_NEW_FOLDER_DEPTH,
   mergePendingFolders,
   type PendingFolder,
   removePendingFolder,
@@ -203,7 +201,6 @@ export const NewWorkspaceModal = ({
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   const selectedFolder = workspaceData.folderPath || gitRepoTreeFetcher.data?.repositoryTree.id || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
-  const canCreateFolderInSelected = getPendingDepth(selectedFolder, pendingFolders) < MAX_NEW_FOLDER_DEPTH;
 
   const repositoryTree = gitRepoTreeFetcher.data?.repositoryTree;
   const repositoryTreeWithPendingFolders = useMemo(
@@ -384,7 +381,7 @@ export const NewWorkspaceModal = ({
                         </Label>
                         <Button
                           type="button"
-                          isDisabled={!gitRepoTreeFetcher.data || !canCreateFolderInSelected}
+                          isDisabled={!gitRepoTreeFetcher.data}
                           onPress={() => {
                             setNewFolderName('');
                             setNewFolderError(null);
@@ -470,11 +467,6 @@ export const NewWorkspaceModal = ({
                           );
                         }}
                       </Tree>
-                      {!canCreateFolderInSelected && (
-                        <p className="-mt-2 text-xs text-(--hl)">
-                          You can create up to {MAX_NEW_FOLDER_DEPTH} levels of new folders at a time.
-                        </p>
-                      )}
                       {newFolderName !== null && (
                         <div className="flex items-start gap-2">
                           <TextField
