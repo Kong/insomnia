@@ -301,11 +301,14 @@ export const fetchWorkspaceData = async (workspaceId: string) => {
   const responseId = generateId('res');
   const timelinePath = await getRuntime().network.getTimelinePath(responseId);
 
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
+
   return {
     environment,
     settings,
-    clientCertificates: [] as ClientCertificate[],
-    caCert: undefined,
+    clientCertificates,
+    caCert,
     activeEnvironmentId,
     timelinePath,
     responseId,
