@@ -294,6 +294,20 @@ describe('unTokenizeTag()', () => {
     expect(result).toEqual("{% name true, 'foo', foo.length, 'foo/bar/baz', 'id_123', 10, 'foo', var %}");
   });
 
+  it('escapes leading and consecutive quotes without swallowing the next arg', () => {
+    const tagData: NunjucksParsedTag = {
+      name: 'name',
+      args: [
+        { type: 'string', value: "'secret", quotedBy: "'" },
+        { type: 'string', value: "a''b", quotedBy: "'" },
+        { type: 'string', value: 'token_secret', quotedBy: "'" },
+      ],
+    };
+    const result = utils.unTokenizeTag(tagData);
+    expect(result).toEqual("{% name '\\'secret', 'a\\'\\'b', 'token_secret' %}");
+    expect(utils.tokenizeTag(result)).toEqual(tagData);
+  });
+
   it('fixes missing quotedBy attribute', () => {
     const tagData: NunjucksParsedTag = {
       name: 'name',
