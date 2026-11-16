@@ -1,7 +1,7 @@
 import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
 
-import { createFixture, sendAndReadHeaders } from "./support";
+import { createFixture } from "./support";
 
 test("Collection-level headers are sent with a request", async ({ user }) => {
   const { collectionFlow } = user.flowManager;
@@ -9,7 +9,9 @@ test("Collection-level headers are sent with a request", async ({ user }) => {
 
   await collectionFlow.setHeaders(collection, [{ name: "x-collection", value: "c" }]);
 
-  const headers = await sendAndReadHeaders(user.flowManager, request);
+  const response = await user.flowManager.httpRequestFlow.send(request);
+  expect(response.statusBar.code).toBe(200);
+  const headers = (response.preview as { headers: Record<string, string> }).headers;
   expect(headers["x-collection"]).toBe("c");
 
   const collectionPage = await collectionFlow.open(collection);

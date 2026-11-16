@@ -5,7 +5,7 @@ import { test } from "@package/misc/fixtures";
 import type { HttpRequest } from "@package/models/http-request";
 import { expect } from "@playwright/test";
 
-import { createFixture, ECHO_URL, sendAndReadHeaders } from "./support";
+import { createFixture, ECHO_URL } from "./support";
 
 const oauth2 = {
   grantType: "client_credentials",
@@ -27,22 +27,30 @@ test("Collection-level OAuth2 token is fetched and stored on the collection", as
 
   // 1. The request inherits the collection's OAuth2: its token is requested once, stored on the
   //    collection, and reused by the next send.
-  const first = (await sendAndReadHeaders(user.flowManager, folderRequest)).authorization;
+  let response = await user.flowManager.httpRequestFlow.send(folderRequest);
+  expect(response.statusBar.code).toBe(200);
+  const first = (response.preview as { headers: Record<string, string> }).headers.authorization;
   expect(first).toMatch(/^Bearer access_/);
   const collectionTokens = await collectionFlow.getOAuth2Tokens(collection);
   expect(first).toBe(`Bearer ${collectionTokens.accessToken}`);
-  expect((await sendAndReadHeaders(user.flowManager, folderRequest)).authorization).toBe(first);
+  response = await user.flowManager.httpRequestFlow.send(folderRequest);
+  expect(response.statusBar.code).toBe(200);
+  expect((response.preview as { headers: Record<string, string> }).headers.authorization).toBe(first);
 
   // 2. The folder defines its own OAuth2: requests in it use the folder's own token, which is stored on
   //    the folder, while the collection keeps its token for everything outside the folder.
   const folderPage = await folderFlow.open(folders[0]);
   await folderPage.auth.setOAuth2Fields(oauth2);
 
-  const inFolder = (await sendAndReadHeaders(user.flowManager, folderRequest)).authorization;
+  response = await user.flowManager.httpRequestFlow.send(folderRequest);
+  expect(response.statusBar.code).toBe(200);
+  const inFolder = (response.preview as { headers: Record<string, string> }).headers.authorization;
   const folderTokens = await (await folderFlow.open(folders[0])).auth.getOAuth2Tokens();
   expect(inFolder).toBe(`Bearer ${folderTokens.accessToken}`);
   expect(inFolder).not.toBe(first);
 
-  expect((await sendAndReadHeaders(user.flowManager, collectionRequest)).authorization).toBe(first);
+  response = await user.flowManager.httpRequestFlow.send(collectionRequest);
+  expect(response.statusBar.code).toBe(200);
+  expect((response.preview as { headers: Record<string, string> }).headers.authorization).toBe(first);
   expect((await collectionFlow.getOAuth2Tokens(collection)).accessToken).toBe(collectionTokens.accessToken);
 });

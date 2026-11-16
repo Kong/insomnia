@@ -1,7 +1,7 @@
 import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
 
-import { createFixture, sendAndReadHeaders } from "./support";
+import { createFixture } from "./support";
 
 test("Header merge rules: append for normal headers, closest wins for single-value headers", async ({ user }) => {
   const { collectionFlow, folderFlow } = user.flowManager;
@@ -28,7 +28,9 @@ test("Header merge rules: append for normal headers, closest wins for single-val
     { name: "Content-Type", value: "text/collection" },
   ]);
 
-  const headers = await sendAndReadHeaders(user.flowManager, request);
+  const response = await user.flowManager.httpRequestFlow.send(request);
+  expect(response.statusBar.code).toBe(200);
+  const headers = (response.preview as { headers: Record<string, string> }).headers;
   expect(headers["x-level"]).toBe("collection, outer-folder, inner-folder, request");
   expect(headers["content-type"]).toBe("text/request");
 });

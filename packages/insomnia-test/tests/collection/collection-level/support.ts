@@ -55,19 +55,3 @@ export async function createFixture(
   } as HttpRequest);
   return { project, collection, folders, request: created };
 }
-
-/** Sends `request` and returns the headers the echo endpoint received. */
-export async function sendAndReadHeaders(
-  flowManager: FlowManager,
-  request: HttpRequest,
-): Promise<Record<string, string>> {
-  const response = await flowManager.httpRequestFlow.send(request);
-  if (response.statusBar.code !== 200) {
-    throw new Error(`Expected 200 from the echo endpoint, got "${response.statusBar.text}"`);
-  }
-  return (response.preview as { headers: Record<string, string> }).headers;
-}
-
-export function basicAuthHeader(username: string, password: string): string {
-  return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-}
