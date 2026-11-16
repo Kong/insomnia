@@ -26,7 +26,7 @@ const COOKIE_VALUE = "cookie-value-written-by-the-previous-release";
 const COOKIE_DOMAIN = "example.com";
 
 // The last release before the field encryption: it writes every secret as plaintext
-const PREVIOUS_RELEASE = "core@13.3.0";
+const PREVIOUS_RELEASE = "core@13.4.0";
 
 // Which models carry the user's own structure: projects, collections, requests
 const STRUCTURE_MODELS = ["Project", "Workspace", "Request"];
