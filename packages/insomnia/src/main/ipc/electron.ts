@@ -192,6 +192,7 @@ export type HandleChannels =
   | 'writeFile'
   | 'deleteCompiledRuleset'
   | 'refreshCompiledRuleset'
+  | 'ensureCompiledRuleset'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
   | 'vault.decryptSecretValue'

@@ -523,10 +523,10 @@ export const SpecView = ({
   const handleOpenLintCLIModal = async () => {
     let compiledPath: string | undefined;
     // Git projects use the repo's .spectral.yaml, which the RepoFileWatcher keeps in sync. Otherwise make sure the
-    // compiled ruleset file exists and is current before handing its path to inso.
+    // compiled ruleset file exists before handing its path to inso.
     if (rulesetContent && !(isConnectedGitProject && gitSyncRulesetPath)) {
       try {
-        ({ compiledPath } = await window.main.refreshCompiledRuleset({ projectId, rulesetContent }));
+        ({ compiledPath } = await window.main.ensureCompiledRuleset({ projectId, rulesetContent }));
       } catch (err) {
         showError({
           title: 'Lint via CLI Failed',

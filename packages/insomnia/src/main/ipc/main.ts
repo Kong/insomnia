@@ -245,6 +245,7 @@ export interface RendererToMainBridgeAPI {
   writeFile: (options: { path: string; content: string | Uint8Array }) => Promise<string>;
   deleteCompiledRuleset: (options: { projectId: string }) => Promise<void>;
   refreshCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
+  ensureCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -482,6 +483,10 @@ export function registerMainHandlers() {
     invalidateCompiledRulesetCache(options.projectId);
     return writeCompiledRuleset(options.projectId, options.rulesetContent);
   });
+  // Unlike refreshCompiledRuleset, keeps the content-hash cache so an unchanged ruleset isn't recompiled or re-fetched.
+  ipcMainHandle('ensureCompiledRuleset', (_, options: { projectId: string; rulesetContent: string }) =>
+    writeCompiledRuleset(options.projectId, options.rulesetContent),
+  );
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);

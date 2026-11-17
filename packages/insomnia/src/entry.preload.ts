@@ -252,6 +252,7 @@ const main: Window['main'] = {
   writeFile: options => invokeWithNormalizedError('writeFile', options),
   deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
   refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
+  ensureCompiledRuleset: options => invokeWithNormalizedError('ensureCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
   getAuthHeader: (
     renderedRequest: RenderedRequest,
