@@ -21,6 +21,7 @@ import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
+import { assertSafeSyncedDoc } from '../../common/synced-doc-validation';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
@@ -150,6 +151,9 @@ export class NeDBClient {
       console.log(`[git] Ignoring non-syncable document type ${doc.type} at ${filePath}`);
       return;
     }
+
+    // The repo is untrusted: _id/parentId end up in on-disk names later, so they must be a single safe segment
+    assertSafeSyncedDoc(doc);
 
     // Special handling for workspaces: ensure they stay in the correct project
     if (models.workspace.isWorkspace(doc)) {

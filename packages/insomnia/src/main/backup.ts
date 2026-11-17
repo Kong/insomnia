@@ -8,6 +8,7 @@ import { getUpdateUrl } from '~/main/updates';
 
 import { version } from '../../package.json';
 import { getClientString } from '../common/constants';
+import { isPathInsideDir } from './ipc/path-guard';
 import { assertPathWithinDir } from './safe-fs-write';
 
 export async function backupIfNewerVersionAvailable() {
@@ -60,16 +61,29 @@ export async function backup() {
   }
 }
 
-export async function restoreBackup(version: string) {
-  try {
-    const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-    const backupsDir = path.join(dataPath, 'backups');
-    const versionPath = path.join(backupsDir, version);
+// `version` comes from the renderer; it must name a single directory directly under `backups/`.
+const resolveBackupVersionPath = (dataPath: string, version: string): string => {
+  const backupsDir = path.join(dataPath, 'backups');
+  const versionPath = path.resolve(backupsDir, version);
+  if (
+    typeof version !== 'string' ||
+    !version ||
+    version === '.' ||
+    version === '..' ||
+    /[/\\\0]/.test(version) ||
+    path.dirname(versionPath) !== path.resolve(backupsDir) ||
+    !isPathInsideDir(versionPath, backupsDir)
+  ) {
+    throw new Error('restoreBackup: invalid backup version');
+  }
+  return versionPath;
+};
 
-    // `version` is renderer-supplied over IPC — a traversal sequence here
-    // (e.g. `../../../../some/dir`) must never let this read/copy `.db`
-    // files from outside the app's own backups directory.
-    await assertPathWithinDir(backupsDir, versionPath);
+export async function restoreBackup(version: string) {
+  const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
+  const versionPath = resolveBackupVersionPath(dataPath, version);
+  try {
+    await assertPathWithinDir(path.join(dataPath, 'backups'), versionPath);
 
     const files = await readdir(versionPath);
     if (!files.length) {

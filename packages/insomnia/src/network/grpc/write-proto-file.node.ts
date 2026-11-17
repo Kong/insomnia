@@ -27,6 +27,17 @@ const assertWithinTempRoot = (tempRoot: string, candidatePath: string): void => 
   }
 };
 
+// `_id` and `modified` come from synced docs and are interpolated into on-disk names, so they must
+// be a single safe path segment (no separators, no `..`).
+const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+const SAFE_MODIFIED_PATTERN = /^[0-9]+$/;
+const toVersionedSegment = (doc: Pick<BaseModel, '_id' | 'modified'>): string => {
+  if (!SAFE_ID_PATTERN.test(String(doc._id)) || !SAFE_MODIFIED_PATTERN.test(String(doc.modified))) {
+    throw new Error(`Unsafe proto document id or modified timestamp: "${doc._id}.${doc.modified}"`);
+  }
+  return `${doc._id}.${doc.modified}`;
+};
+
 const recursiveWriteProtoDirectory = async (
   dir: ProtoDirectory,
   descendants: BaseModel[],
@@ -91,7 +102,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     const tempRoot = path.join(
       os.tmpdir(),
       'insomnia-grpc',
-      `${rootAncestorProtoDirectory._id}.${rootAncestorProtoDirectory.modified}`,
+      toVersionedSegment(rootAncestorProtoDirectory),
     );
     const treeRootDirs = await recursiveWriteProtoDirectory(
       rootAncestorProtoDirectory,
@@ -115,13 +126,14 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
   const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
   fs.mkdirSync(rootDir, { recursive: true });
 
-  const filePath = `${protoFile._id}.${protoFile.modified}.proto`;
+  const filePath = `${toVersionedSegment(protoFile)}.proto`;
   const result = {
     filePath,
     dirs: [rootDir],
   };
   // Check if file already exists
   const fullPath = path.join(rootDir, filePath);
+  assertWithinTempRoot(rootDir, fullPath);
   if (fs.existsSync(fullPath)) {
     return result;
   }

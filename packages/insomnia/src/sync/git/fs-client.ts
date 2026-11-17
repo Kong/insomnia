@@ -171,14 +171,18 @@ export const fsClient = (basePath: string, onBlockedWrite?: BlockedWriteHandler)
       return fn(modifiedPath, ...args);
     };
 
+  // isomorphic-git calls `symlink(target, filepath)`. The target is the stored link text and is kept
+  // verbatim, but both the link's location and where it points must stay inside basePath.
   const wrapSymlink =
     (fn: typeof fs.promises.symlink) =>
-    async (filePath: string, target: string, ...args: any[]) => {
-      const modifiedPath = await resolveOrReport(filePath);
-      // The symlink target must also resolve within the git working directory.
-      const modifiedTarget = await resolveOrReport(target);
+    async (target: string, filePath: string, ...args: any[]) => {
+      const linkPath = await resolveOrReport(filePath);
+      // The link must also point inside the git working directory (a relative target is interpreted
+      // against the link's own directory). The stored link text itself is passed through unchanged.
+      const resolvedTarget = path.resolve(path.dirname(linkPath), target);
+      await resolveOrReport(path.relative(basePath, resolvedTarget));
 
-      return fn(modifiedPath, modifiedTarget, ...args);
+      return fn(target, linkPath, ...args);
     };
 
   return {

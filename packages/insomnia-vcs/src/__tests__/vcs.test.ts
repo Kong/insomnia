@@ -592,12 +592,12 @@ describe('VCS', () => {
       // Add something to master
       const status1 = await v.status([
         {
-          key: 'foo',
+          key: 'bar',
           name: 'Foo',
           document: newDoc('bar'),
         },
       ]);
-      await v.stage([status1.unstaged.foo]);
+      await v.stage([status1.unstaged.bar]);
       await v.takeSnapshot('Add foo');
       // Checkout branch
       await v.checkout([], 'new-branch');
@@ -742,14 +742,14 @@ describe('VCS', () => {
       const status1 = await v.status(
         [
           {
-            key: 'a',
+            key: 'aaa',
             name: 'A',
             document: newDoc('aaa'),
           },
         ],
         {},
       );
-      await v.stage([status1.unstaged.a]);
+      await v.stage([status1.unstaged.aaa]);
       await v.takeSnapshot('Add A');
       expect(await v.getHistory()).toEqual([
         {
@@ -762,7 +762,7 @@ describe('VCS', () => {
           state: [
             {
               blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
-              key: 'a',
+              key: 'aaa',
               name: 'A',
             },
           ],
@@ -775,14 +775,14 @@ describe('VCS', () => {
       const status2 = await v.status(
         [
           {
-            key: 'b',
+            key: 'bbb',
             name: 'B',
             document: newDoc('bbb'),
           },
         ],
         {},
       );
-      await v.stage([status2.unstaged.b]);
+      await v.stage([status2.unstaged.bbb]);
       await v.takeSnapshot('Add B');
       expect(await v.getHistory()).toEqual([
         {
@@ -795,7 +795,7 @@ describe('VCS', () => {
           state: [
             {
               blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
-              key: 'a',
+              key: 'aaa',
               name: 'A',
             },
           ],
@@ -810,12 +810,12 @@ describe('VCS', () => {
           state: [
             {
               blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
-              key: 'a',
+              key: 'aaa',
               name: 'A',
             },
             {
               blob: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
-              key: 'b',
+              key: 'bbb',
               name: 'B',
             },
           ],
@@ -836,7 +836,7 @@ describe('VCS', () => {
           state: [
             {
               blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
-              key: 'a',
+              key: 'aaa',
               name: 'A',
             },
           ],
@@ -851,12 +851,12 @@ describe('VCS', () => {
           state: [
             {
               blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
-              key: 'a',
+              key: 'aaa',
               name: 'A',
             },
             {
               blob: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
-              key: 'b',
+              key: 'bbb',
               name: 'B',
             },
           ],
