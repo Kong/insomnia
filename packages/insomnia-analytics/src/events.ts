@@ -88,6 +88,11 @@ export enum AnalyticsEvent {
   installPlugin = 'Plugin Installed',
   AppMenuPreferencesClicked = 'App Menu Preferences Clicked',
   keyboardShortcutUsed = 'Keyboard Shortcut Used',
+  konnectPluginDocsClicked = 'Konnect Plugin Docs Clicked',
+  konnectPluginAddInKonnectClicked = 'Konnect Plugin Add in Konnect Clicked',
+  konnectPluginEditInKonnectClicked = 'Konnect Plugin Edit in Konnect Clicked',
+  konnectPluginDeckCommandClicked = 'Konnect Plugin decK Command Clicked',
+  konnectPluginViewAllPluginsClicked = 'Konnect Plugin View All Plugins Clicked',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
