@@ -126,6 +126,20 @@ describe('absorbKey', () => {
     expect(insomniaApi.getUserProfile).toHaveBeenCalledWith({ sessionId: SESSION_ID });
     expect(insomniaApi.getEncryptionKeys).toHaveBeenCalledWith({ sessionId: SESSION_ID });
   });
+
+  it('throws a readable error when encryption keys are missing from the API response', async () => {
+    vi.mocked(insomniaApi.getEncryptionKeys).mockResolvedValue({
+      public_key: JSON.stringify(MOCK_PUBLIC_KEY),
+      enc_private_key: JSON.stringify(MOCK_ENC_PRIVATE_KEY),
+      enc_symmetric_key: undefined as unknown as string,
+      salt_enc: 'salt',
+      enc_driver_key: '',
+    });
+
+    await expect(absorbKey(SESSION_ID, RAW_KEY)).rejects.toThrow(
+      'Missing encrypted symmetric key from account encryption keys',
+    );
+  });
 });
 
 describe('getPrivateKey', () => {

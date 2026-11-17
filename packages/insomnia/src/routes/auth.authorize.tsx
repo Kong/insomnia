@@ -1,13 +1,13 @@
 import { getVault } from 'insomnia-api';
 import { services } from 'insomnia-data';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetchers, useNavigate } from 'react-router';
 
 import { invariant } from '~/common/utils/invariant';
 import { getVaultKeyFromStorage } from '~/common/utils/vault';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
+import { ensureSessionKeyPair, getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { validateVaultKey } from '~/ui/vault-key.client';
@@ -75,7 +75,21 @@ export const useAuthorizeActionFetcher = createFetcherSubmitHook(
 );
 
 const Component = () => {
-  const url = getLoginUrl();
+  const [url, setUrl] = useState('');
+  const [loginUrlError, setLoginUrlError] = useState<string | null>(null);
+
+  useEffect(() => {
+    ensureSessionKeyPair()
+      .then(() => {
+        setUrl(getLoginUrl());
+        setLoginUrlError(null);
+      })
+      .catch(error => {
+        const message = error instanceof Error ? error.message : 'Failed to prepare login URL.';
+        setLoginUrlError(message);
+      });
+  }, []);
+
   const copyUrl = () => {
     window.clipboard.writeText(url);
   };
@@ -104,21 +118,25 @@ const Component = () => {
               If you were not redirected back here after creating an account, please copy and paste the following URL
               into your browser to complete login.
             </p>
-            <div className="form-control form-control--outlined no-pad-top flex">
-              <input type="text" value={url} style={{ marginRight: 'var(--padding-sm)' }} readOnly />
-              <button
-                className="btn btn--super-compact btn--outlined"
-                onClick={copyUrl}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--padding-xs)',
-                }}
-              >
-                <i className="fa fa-clipboard" aria-hidden="true" />
-                Copy
-              </button>
-            </div>
+            {loginUrlError ? (
+              <p>{loginUrlError}</p>
+            ) : (
+              <div className="form-control form-control--outlined no-pad-top flex">
+                <input type="text" value={url} style={{ marginRight: 'var(--padding-sm)' }} readOnly />
+                <button
+                  className="btn btn--super-compact btn--outlined"
+                  onClick={copyUrl}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--padding-xs)',
+                  }}
+                >
+                  <i className="fa fa-clipboard" aria-hidden="true" />
+                  Copy
+                </button>
+              </div>
+            )}
             <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If your browser does not open the Insomnia app automatically you can manually add the generated token
               here.
