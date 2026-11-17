@@ -1,16 +1,10 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
 import { ModalComponent } from "@package/components/modal.component";
-import { SearchFieldComponent } from "@package/components/search-field.component";
-import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TableComponent } from "@package/components/table.component";
-import { TreeComponent } from "@package/components/tree.component";
-import type { ContextMenuItem } from "@package/enums/context-menu-items";
 import { HttpMethod } from "@package/enums/http-method";
 import { LintSeverity } from "@package/enums/lint-severity";
-import { ProjectType } from "@package/enums/project-types";
 import { RulesetType } from "@package/enums/ruleset-type";
 import type { SpecFormat } from "@package/enums/spec-format";
-import { TreeNodeType } from "@package/enums/tree-node-types";
 import { ACTION_TIMEOUT, DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
 import type { LintEntry, PathItem } from "@package/models/collection";
@@ -100,7 +94,6 @@ export class SpecPage extends BasePage {
   private readonly LINT_PANEL_TOGGLE = '[data-testid="lint-panel-toggle"]';
   private readonly NEW_TEST_BUTTON = 'button[aria-label="New test"]';
   private readonly NO_LINT_PROBLEMS = "No lint problems";
-  private readonly PANE_ONE = '[data-panel-id="spec-pane-one"]';
   private readonly PANE_TWO = '[data-panel-id="pane-two"]';
   private readonly PREVIEW_OPERATION = "#swagger-ui .opblock";
   private readonly PREVIEW_TOGGLE = '[data-testid="preview-toggle"]';
