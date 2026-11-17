@@ -34,6 +34,7 @@ import { RequestUrlBar, type RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 import { RequestPluginsTab } from './request-plugins-tab';
+import { ScriptsAIPluginTip } from './scripts-ai-plugin-tip';
 
 const { getCombinedPathParametersFromUrl } = models.request;
 
@@ -379,6 +380,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 )}
               </Tab>
             </TabList>
+            {activeProject && models.project.isGitProject(activeProject) && <ScriptsAIPluginTip />}
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary
                 // Stable per-script key: a volatile key remounts the editor on every

@@ -1,5 +1,5 @@
 import type { EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentType } from 'insomnia-data';
+import { EnvironmentType, models } from 'insomnia-data';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useSearchParams } from 'react-router';
@@ -21,10 +21,11 @@ import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
+import { ScriptsAIPluginTip } from './scripts-ai-plugin-tip';
 
 export const RequestGroupPane: FC = () => {
   const { activeRequestGroup } = useRequestGroupLoaderData()!;
-  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, activeProject, vcsVersion } = useWorkspaceLoaderData()!;
   const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   const patchRequestGroup = useRequestGroupPatcher();
   const gitVersion = useGitVCSVersion();
@@ -196,6 +197,7 @@ export const RequestGroupPane: FC = () => {
                 )}
               </Tab>
             </TabList>
+            {activeProject && models.project.isGitProject(activeProject) && <ScriptsAIPluginTip />}
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
