@@ -8,6 +8,7 @@ export enum ContextMenuItem {
   Environment = "Environment",
   Rename = "Rename",
   Duplicate = "Duplicate",
+  DuplicateWorkspace = "Duplicate / Move",
   Pin = "Pin",
   Unpin = "Unpin",
   Import = "Import",

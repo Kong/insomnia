@@ -6,7 +6,6 @@ import { expect } from "@playwright/test";
 import { createCollection } from "./support";
 
 test("Verify fetching a collection-level OAuth2 token from the Auth tab uses the collection's client certificate and CA", async ({ user }) => {
-  test.fail(true, "INS-4318");
   const { collectionFlow, preferencesFlow } = user.flowManager;
 
   await preferencesFlow.set({ dataFolders: [CERT_DIR] });

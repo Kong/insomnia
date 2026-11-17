@@ -164,6 +164,33 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Duplicates a Collection via its context menu's "Duplicate" action,
+   * optionally moving the copy into `targetProject`, then re-fetches it as
+   * its full model.
+   */
+  @step()
+  async duplicateCollection(item: Collection, newName: string, targetProject?: Project): Promise<Collection> {
+    await this.duplicateViaContextMenu(item, newName, targetProject);
+    return this.assertCreated(await this.getCollection(newName), newName);
+  }
+
+  private async duplicateViaContextMenu(
+    item: Collection | Environment,
+    newName: string,
+    targetProject?: Project,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(item);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(
+      node.type === TreeNodeType.Workspace ? ContextMenuItem.DuplicateWorkspace : ContextMenuItem.Duplicate,
+    );
+    await workspace.setDuplicateName(newName);
+    await workspace.selectDuplicateProject(targetProject?.name);
+    await workspace.clickDuplicate();
+  }
+
+  /**
    * Right-clicks the tree node matching `request` and pins it via the
    * context menu's "Pin" action.
    */

@@ -67,6 +67,42 @@ export class CollectionPage extends BasePage {
     return this.panel.tabs.tab(key);
   }
 
+  /**
+   * Clicks the `from` tab, then presses `key` so focus moves to the
+   * neighbouring tab by keyboard, which is when react-aria marks a tab
+   * as focus-visible.
+   */
+  async moveTabFocusWithKeyboard(from: string, key: "ArrowLeft" | "ArrowRight"): Promise<void> {
+    await this.tab(from).click();
+    await this.page.keyboard.press(key);
+  }
+
+  /** Presses `key` on whichever element currently holds focus. */
+  async pressKey(key: "ArrowLeft" | "ArrowRight"): Promise<void> {
+    await this.page.keyboard.press(key);
+  }
+
+  /** The `data-key` of the currently selected tab. */
+  async getSelectedTabKey(): Promise<string | null> {
+    return this.page
+      .locator(`${this.PANE} [role="tab"][aria-selected="true"]`)
+      .first()
+      .evaluate((el) => (el as HTMLElement).dataset.key ?? null);
+  }
+
+  /**
+   * How the tab `key` shows keyboard focus: whether it holds focus,
+   * whether react-aria flags it focus-visible, and its computed
+   * `box-shadow`, where the focus ring is drawn.
+   */
+  async getTabFocusIndicator(key: string): Promise<{ focused: boolean; focusVisible: boolean; boxShadow: string }> {
+    return this.tab(key).evaluate((el) => ({
+      focused: el === document.activeElement,
+      focusVisible: (el as HTMLElement).dataset.focusVisible !== undefined,
+      boxShadow: getComputedStyle(el).boxShadow,
+    }));
+  }
+
   /** Whether the tab shows its green "has a value" dot (Auth, Scripts). */
   async hasActiveDot(tab: "auth" | "scripts"): Promise<boolean> {
     return this.tab(tab).getByTestId("tab-active-dot").isVisible();

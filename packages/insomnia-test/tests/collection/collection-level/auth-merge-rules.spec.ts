@@ -4,7 +4,6 @@ import { expect } from "@playwright/test";
 import { createFixture } from "./support";
 
 test("Authorization header is replaced by the request's value, other headers are appended", async ({ user }) => {
-  test.fail(true, "INS-4321");
   const { collectionFlow, httpRequestFlow } = user.flowManager;
   const { collection, request } = await createFixture(user.flowManager, {
     request: {
