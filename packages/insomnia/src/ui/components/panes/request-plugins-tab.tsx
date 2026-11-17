@@ -21,6 +21,7 @@ import {
   resolveKonnectSyncedRoute,
   selectApplicablePlugins,
 } from '../../../konnect/plugin-scope';
+import { AnalyticsEvent } from '../../analytics';
 import { useKonnectPlugins } from '../../hooks/use-konnect-plugins';
 import { Icon } from '../icon';
 import { DeckCommandModal } from '../modals/deck-command-modal';
@@ -42,6 +43,15 @@ const SCOPE_LABELS: Record<PluginScope, string> = {
 };
 
 const ACTION_CLASS = 'rounded-xs px-2 py-1 text-xs text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)';
+
+function trackPluginEvent(event: AnalyticsEvent, pluginName?: string) {
+  window.main.trackAnalyticsEvent({ event, properties: pluginName ? { plugin_name: pluginName } : undefined });
+}
+
+function openPluginUrl(url: string, event: AnalyticsEvent, pluginName?: string) {
+  trackPluginEvent(event, pluginName);
+  window.main.openInBrowser(url);
+}
 
 /**
  * Keeps the action column on the same row while there is room for it, and
@@ -88,15 +98,29 @@ function PluginRow({
     <PluginRowLayout
       actions={
         <>
-          <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(getPluginDocsUrl(plugin.name))}>
+          <Button
+            className={ACTION_CLASS}
+            onPress={() =>
+              openPluginUrl(getPluginDocsUrl(plugin.name), AnalyticsEvent.konnectPluginDocsClicked, plugin.name)
+            }
+          >
             Docs
           </Button>
           {editUrl && (
-            <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(editUrl)}>
+            <Button
+              className={ACTION_CLASS}
+              onPress={() => openPluginUrl(editUrl, AnalyticsEvent.konnectPluginEditInKonnectClicked, plugin.name)}
+            >
               Edit in Konnect
             </Button>
           )}
-          <Button className={ACTION_CLASS} onPress={() => onShowDeck(plugin)}>
+          <Button
+            className={ACTION_CLASS}
+            onPress={() => {
+              trackPluginEvent(AnalyticsEvent.konnectPluginDeckCommandClicked, plugin.name);
+              onShowDeck(plugin);
+            }}
+          >
             decK command
           </Button>
         </>
@@ -323,7 +347,7 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
             action={
               <Button
                 className="shrink-0 rounded-xs px-2 py-1 text-xs text-(--hl) hover:bg-(--hl-sm) hover:text-(--color-font)"
-                onPress={() => window.main.openInBrowser(getPluginHubUrl())}
+                onPress={() => openPluginUrl(getPluginHubUrl(), AnalyticsEvent.konnectPluginViewAllPluginsClicked)}
               >
                 View all plugins
               </Button>
@@ -338,18 +362,32 @@ export const RequestPluginsTab = ({ activeRequest, activeWorkspace, activeProjec
                   <>
                     <Button
                       className={ACTION_CLASS}
-                      onPress={() => window.main.openInBrowser(getPluginDocsUrl(suggestion.name))}
+                      onPress={() =>
+                        openPluginUrl(
+                          getPluginDocsUrl(suggestion.name),
+                          AnalyticsEvent.konnectPluginDocsClicked,
+                          suggestion.name,
+                        )
+                      }
                     >
                       Docs
                     </Button>
                     {addUrl && (
-                      <Button className={ACTION_CLASS} onPress={() => window.main.openInBrowser(addUrl)}>
+                      <Button
+                        className={ACTION_CLASS}
+                        onPress={() =>
+                          openPluginUrl(addUrl, AnalyticsEvent.konnectPluginAddInKonnectClicked, suggestion.name)
+                        }
+                      >
                         Add in Konnect
                       </Button>
                     )}
                     <Button
                       className={ACTION_CLASS}
-                      onPress={() => setDeckModal({ mode: 'add', pluginName: suggestion.name })}
+                      onPress={() => {
+                        trackPluginEvent(AnalyticsEvent.konnectPluginDeckCommandClicked, suggestion.name);
+                        setDeckModal({ mode: 'add', pluginName: suggestion.name });
+                      }}
                     >
                       decK command
                     </Button>
