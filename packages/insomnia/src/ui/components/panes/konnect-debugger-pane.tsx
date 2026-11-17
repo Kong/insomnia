@@ -172,7 +172,6 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   // Prevents reporting sessions loaded from another client and prevents duplicate "finished" events.
   useEffect(() => {
     if (debugSessionState === 'completed' && projectsPendingFinishEvent.has(projectId)) {
-      console.log(`Debug session finished with ${originTraces.length} traces captured.`);
       projectsPendingFinishEvent.delete(projectId);
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.konnectDebugSessionFinished,
