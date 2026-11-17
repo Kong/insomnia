@@ -1,6 +1,8 @@
 import { ipcRenderer } from 'electron';
+import type { FeatureList } from 'insomnia-api';
 import { initDatabase, initServices } from 'insomnia-data';
 
+import { setCurrentOrganizationFeatures } from './common/organization-features';
 import { setTemplatingDbAuthToken } from './common/templating/liquid-extension-worker';
 import { pluginWindowDatabase } from './main/database.plugin-window';
 import { invokePluginMethod } from './plugins/invoke-method';
@@ -13,6 +15,12 @@ interface PluginInvokeMessage {
   method: Parameters<typeof invokePluginMethod>[0];
   args: unknown;
 }
+
+// Main forwards the current organization's features on change and when this window becomes ready,
+// so plugin `context.network.sendRequest` honours organization-enforced secret hiding.
+ipcRenderer.on('organizationFeatures.sync', (_event, features?: FeatureList) => {
+  setCurrentOrganizationFeatures(features);
+});
 
 ipcRenderer.on('plugins.invoke', async (_event, { id, method, args }: PluginInvokeMessage) => {
   try {

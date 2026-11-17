@@ -5,11 +5,17 @@ import type { Settings } from 'insomnia-data';
 // - renderer: written directly by the organization layout (routes/organization.tsx)
 // - main: written via the `organizationFeatures.sync` IPC sent by that same layout
 //   (see main/ipc/organization-features.ts)
+// - plugin window: forwarded by main via `organizationFeatures.sync` whenever the features change
+//   and whenever the plugin window becomes ready (see main/plugin-window.ts)
 // Empty until the features load (or for local orgs), in which case only the user setting applies.
 let currentFeatures: FeatureList | undefined;
 
 export function setCurrentOrganizationFeatures(features?: FeatureList) {
   currentFeatures = features;
+}
+
+export function getCurrentOrganizationFeatures() {
+  return currentFeatures;
 }
 
 export function isHideSecretValuesEnforcedByOrganization() {

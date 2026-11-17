@@ -172,9 +172,53 @@ describe('plugin-window.ts IPC dispatch: sender authorization', () => {
       expect.objectContaining({ method: 'applyRequestHooks', args: legitimateArgs }),
     );
 
-    const [, { id }] = fakePluginWebContents.send.mock.calls[0];
+    const [, { id }] = fakePluginWebContents.send.mock.calls.find(([channel]) => channel === 'plugins.invoke')!;
     const invokeResultListener = registeredListeners.get('plugins.invokeResult');
     invokeResultListener!({ sender: fakePluginWebContents }, { id, result: {} });
     await expect(invokePromise).resolves.toEqual({});
+  });
+});
+
+describe('plugin-window.ts organization features sync', () => {
+  const enforcedFeatures = { hideSecretValuesInPreviewAndConsole: { enabled: true } };
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    registeredHandlers.clear();
+    registeredListeners.clear();
+    fakePluginWebContents.send.mockClear();
+  });
+
+  // Starts the plugin window through a real invoke and fires its ready signal.
+  const startPluginWindow = async () => {
+    const pluginWindowModule = await import('../plugin-window');
+    pluginWindowModule.registerPluginIpcHandlers();
+    const getThemesHandler = registeredHandlers.get('plugins.getThemes')!;
+    getThemesHandler({ sender: fakeMainWebContents });
+    await vi.advanceTimersByTimeAsync(0);
+    registeredListeners.get('plugins.windowReady')!({ sender: fakePluginWebContents });
+    await vi.advanceTimersByTimeAsync(100);
+    return pluginWindowModule;
+  };
+
+  it('pushes the current features when the plugin window becomes ready, before any invoke', async () => {
+    const { setCurrentOrganizationFeatures } = await import('~/common/organization-features');
+    setCurrentOrganizationFeatures(enforcedFeatures as any);
+
+    await startPluginWindow();
+
+    const channels = fakePluginWebContents.send.mock.calls.map(([channel]) => channel);
+    expect(fakePluginWebContents.send).toHaveBeenCalledWith('organizationFeatures.sync', enforcedFeatures);
+    expect(channels.indexOf('organizationFeatures.sync')).toBeLessThan(channels.indexOf('plugins.invoke'));
+  });
+
+  it('pushes changed features to an existing plugin window', async () => {
+    const { syncOrganizationFeaturesToPluginWindow } = await startPluginWindow();
+    fakePluginWebContents.send.mockClear();
+
+    syncOrganizationFeaturesToPluginWindow(enforcedFeatures as any);
+
+    expect(fakePluginWebContents.send).toHaveBeenCalledWith('organizationFeatures.sync', enforcedFeatures);
   });
 });

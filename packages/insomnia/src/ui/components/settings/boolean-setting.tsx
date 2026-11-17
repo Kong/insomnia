@@ -15,21 +15,33 @@ export const BooleanSetting: FC<{
   confirmBeforeToggle?: boolean;
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
+  /** When set: the checkbox shows it, is locked and explains why. */
+  enforcedValue?: boolean;
   /** Called with the new value when the toggle is accepted. The patch may still be in flight. */
   onAfterToggle?: (isChecked: boolean) => void;
-}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false, onAfterToggle }) => {
+}> = ({
+  help,
+  label,
+  setting,
+  confirmBeforeToggle = false,
+  confirmMessage,
+  disabled = false,
+  enforcedValue,
+  onAfterToggle,
+}) => {
   const { settings } = useRootLoaderData()!;
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
   const patchSettings = useSettingsPatcher();
+  const isEnforced = enforcedValue !== undefined;
 
   return (
     <>
       <div className="">
         <label className="flex items-center gap-2" data-testid={`setting-${setting}`}>
           <input
-            checked={Boolean(settings[setting])}
+            checked={isEnforced ? enforcedValue : Boolean(settings[setting])}
             name={setting}
             onChange={event => {
               const isChecked = event.currentTarget.checked;
@@ -52,7 +64,7 @@ export const BooleanSetting: FC<{
               }
             }}
             type="checkbox"
-            disabled={disabled}
+            disabled={disabled || isEnforced}
           />
           {label}
           {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}

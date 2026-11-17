@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
 import { app, BrowserWindow, ipcMain, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
+import type { FeatureList } from 'insomnia-api';
+
+import { getCurrentOrganizationFeatures } from '~/common/organization-features';
 
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { getMainWindow } from './window-utils';
@@ -131,6 +134,9 @@ function ensureIpcListeners() {
   ipcListenersRegistered = true;
 
   onFromPluginWindow<void>('plugins.windowReady', () => {
+    // A (re)loaded plugin window starts with an empty cache. Sent before `windowReady` flips so it is
+    // delivered ahead of any `plugins.invoke` (messages to one webContents keep their order).
+    syncOrganizationFeaturesToPluginWindow(getCurrentOrganizationFeatures());
     windowReady = true;
     const startedAt = bridgeMetrics.lastStartupAt;
     const startupMs = startedAt ? Date.now() - startedAt : 0;
@@ -172,6 +178,14 @@ function ensureIpcListeners() {
 
 export function getPluginWindow() {
   return pluginWindow;
+}
+
+// Plugin actions/hooks run `context.network.sendRequest` in the plugin window, which reads the
+// organization-enforced hideSecretValuesInPreviewAndConsole from its own process-local cache.
+export function syncOrganizationFeaturesToPluginWindow(features?: FeatureList) {
+  if (pluginWindow && !pluginWindow.isDestroyed()) {
+    pluginWindow.webContents.send('organizationFeatures.sync', features);
+  }
 }
 
 export function createPluginWindow() {

@@ -2,6 +2,7 @@ import type { FeatureList } from 'insomnia-api';
 
 import { setCurrentOrganizationFeatures } from '~/common/organization-features';
 
+import { syncOrganizationFeaturesToPluginWindow } from '../plugin-window';
 import { ipcMainOn } from './electron';
 
 export interface OrganizationFeaturesBridgeAPI {
@@ -12,5 +13,6 @@ export interface OrganizationFeaturesBridgeAPI {
 export function registerOrganizationFeaturesHandlers() {
   ipcMainOn('organizationFeatures.sync', (_, features: FeatureList | undefined) => {
     setCurrentOrganizationFeatures(features);
+    syncOrganizationFeaturesToPluginWindow(features);
   });
 }

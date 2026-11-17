@@ -1,6 +1,7 @@
 import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
+import { useHideSecretValues } from '~/ui/hooks/use-organization-features';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
@@ -46,6 +47,7 @@ const onHideConfidentialValuesToggled = (isHiding: boolean) => {
 export const General: FC = () => {
   const { settings, userSession } = useRootLoaderData()!;
   const isLoggedIn = Boolean(userSession.id);
+  const { isEnforcedByOrganization } = useHideSecretValues();
 
   return (
     <div className="relative p-4">
@@ -83,6 +85,7 @@ export const General: FC = () => {
             label="Hide Confidential values in Preview/Console"
             setting="hideSecretValuesInPreviewAndConsole"
             onAfterToggle={onHideConfidentialValuesToggled}
+            {...(isEnforcedByOrganization ? { enforcedValue: true, help: 'Enforced by your organization' } : {})}
           />
         </div>
       </div>
