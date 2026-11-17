@@ -25,7 +25,6 @@ afterEach(() => {
 
 const open = async (options: { key?: typeof key; dbPath?: string } = {}) => {
   let internals!: {
-    getFieldDecryptionFailures: () => unknown[];
     refreshFieldDecryptionFailures: () => Promise<unknown[]>;
     resetFieldDecryptionFailures: () => Promise<number>;
   };
@@ -36,7 +35,6 @@ const open = async (options: { key?: typeof key; dbPath?: string } = {}) => {
   await db.init({ dbPath: options.dbPath ?? dir, fieldEncryptionKey: options.key });
   return {
     db,
-    failures: () => internals.getFieldDecryptionFailures(),
     refresh: () => internals.refreshFieldDecryptionFailures(),
     reset: () => internals.resetFieldDecryptionFailures(),
   };
@@ -93,7 +91,7 @@ describe('encryption through a real datastore', () => {
       'secret-password',
     );
     expect(readFile('Request')).not.toContain('secret-password');
-    expect(restarted.failures()).toEqual([]);
+    expect(await restarted.refresh()).toEqual([]);
   });
 
   it('keeps queries on encrypted fields working, because the in-memory data is plaintext', async () => {
@@ -158,7 +156,7 @@ describe('migration: the first load with the key encrypts the existing plaintext
 
   it('encrypts every sensitive field on every datastore, keeps the data and leaves the rest readable', async () => {
     seed();
-    const { db, failures } = await open({ key });
+    const { db, refresh } = await open({ key });
 
     for (const secret of ['secret-token', 'cookie-secret', 'cert-passphrase', 'CERT-PEM', 'compressed-secret']) {
       for (const type of ['Request', 'CookieJar', 'ClientCertificate', 'RequestVersion']) {
@@ -176,7 +174,7 @@ describe('migration: the first load with the key encrypts the existing plaintext
     expect((await db.findOne<any>('RequestVersion', { _id: 'rvr_1' }))?.compressedRequest).toBe(
       'H4sIAAAAAAAA/compressed-secret',
     );
-    expect(failures()).toEqual([]);
+    expect(await refresh()).toEqual([]);
   });
 
   it('reads a datastore that is partly plaintext and partly encrypted', async () => {
@@ -184,11 +182,11 @@ describe('migration: the first load with the key encrypts the existing plaintext
       encryptWith(key, request({ _id: 'req_encrypted' })),
       JSON.stringify(request({ _id: 'req_plaintext', authentication: { type: 'bearer', token: 'plain-token' } })),
     ]);
-    const { db, failures } = await open({ key });
+    const { db, refresh } = await open({ key });
     expect((await db.findOne<any>('Request', { _id: 'req_encrypted' }))?.authentication.token).toBe('secret-token');
     expect((await db.findOne<any>('Request', { _id: 'req_plaintext' }))?.authentication.token).toBe('plain-token');
     expect(readFile('Request')).not.toContain('plain-token');
-    expect(failures()).toEqual([]);
+    expect(await refresh()).toEqual([]);
   });
 
   it('encrypts again on every launch without changing the data', async () => {
@@ -245,11 +243,11 @@ describe('failed decryption', () => {
   it('loads every document, keeps the values byte for byte through the rewrite, and reports exactly the affected fields', async () => {
     seedWithOtherKey();
     const before = readLines('Request');
-    const { db, failures } = await open({ key });
+    const { db, refresh } = await open({ key });
 
     expect(await db.count('Request')).toBe(2);
     expect(readLines('Request')).toEqual(before);
-    expect(failures()).toEqual([
+    expect(await refresh()).toEqual([
       { type: 'Request', _id: 'req_1', path: 'authentication.token' },
       { type: 'Request', _id: 'req_2', path: 'authentication.password' },
     ]);
@@ -260,7 +258,7 @@ describe('failed decryption', () => {
     // the values are recoverable once the right key is back
     const recovered = await open({ key: otherKey });
     expect((await recovered.db.findOne<any>('Request', { _id: 'req_1' }))?.authentication.token).toBe('secret-token');
-    expect(recovered.failures()).toEqual([]);
+    expect(await recovered.refresh()).toEqual([]);
   });
 
   it('does not report fields of documents that were replaced or deleted by a later line', async () => {
@@ -271,8 +269,8 @@ describe('failed decryption', () => {
       encryptWith(key, request({ _id: 'req_replaced', authentication: { type: 'bearer', token: 'fresh' } })),
       { $$deleted: true, _id: 'req_deleted' },
     ]);
-    const { db, failures } = await open({ key });
-    expect(failures()).toEqual([{ type: 'Request', _id: 'req_failing', path: 'authentication.token' }]);
+    const { db, refresh } = await open({ key });
+    expect(await refresh()).toEqual([{ type: 'Request', _id: 'req_failing', path: 'authentication.token' }]);
     expect((await db.findOne<any>('Request', { _id: 'req_replaced' }))?.authentication.token).toBe('fresh');
     expect(await db.count('Request')).toBe(2);
   });
@@ -280,9 +278,9 @@ describe('failed decryption', () => {
   it('starts with an empty report on every init()', async () => {
     seedWithOtherKey();
     const failedOpen = await open({ key });
-    expect(failedOpen.failures()).toHaveLength(2);
+    expect(await failedOpen.refresh()).toHaveLength(2);
     const reopened = await open({ key: otherKey, dbPath: dir });
-    expect(reopened.failures()).toEqual([]);
+    expect(await reopened.refresh()).toEqual([]);
   });
 
   it('does not report values that only look like ciphertext', async () => {
@@ -294,8 +292,8 @@ describe('failed decryption', () => {
         description: `${ENCRYPTED_VALUE_PREFIX}${Buffer.alloc(40, 1).toString('base64')}`,
       }),
     ]);
-    const { failures } = await open({ key });
-    expect(failures()).toEqual([]);
+    const { refresh } = await open({ key });
+    expect(await refresh()).toEqual([]);
   });
 });
 
@@ -308,12 +306,12 @@ describe('keeping the failure report current after the load', () => {
 
   it('resetting clears the failed fields, keeps the rest of the documents and empties the report', async () => {
     seedWithOtherKey();
-    const { db, failures, reset } = await open({ key });
-    expect(failures()).toHaveLength(2);
+    const { db, refresh, reset } = await open({ key });
+    expect(await refresh()).toHaveLength(2);
 
     expect(await reset()).toBe(2);
 
-    expect(failures()).toEqual([]);
+    expect(await refresh()).toEqual([]);
     expect((await db.findOne<any>('Request', { _id: 'req_1' }))?.authentication).toEqual({ type: 'bearer', token: '' });
     expect((await db.findOne<any>('Request', { _id: 'req_2' }))?.authentication.password).toBe('');
     expect((await db.findOne<any>('Request', { _id: 'req_2' }))?.name).toBe('A request');
@@ -330,7 +328,7 @@ describe('keeping the failure report current after the load', () => {
 
     // a new launch has nothing to report
     const restarted = await open({ key });
-    expect(restarted.failures()).toEqual([]);
+    expect(await restarted.refresh()).toEqual([]);
     expect((await restarted.db.findOne<any>('Request', { _id: 'req_1' }))?.authentication.token).toBe('');
   });
 
@@ -346,8 +344,8 @@ describe('keeping the failure report current after the load', () => {
         ],
       }),
     ]);
-    const { db, reset, failures } = await open({ key });
-    expect(failures().map((failure: any) => failure.path)).toEqual(['cookies[0].value', 'cookies[1].value']);
+    const { db, reset, refresh } = await open({ key });
+    expect((await refresh()).map((failure: any) => failure.path)).toEqual(['cookies[0].value', 'cookies[1].value']);
 
     await db.update({
       ...(await db.findOne<any>('CookieJar', { _id: 'jar_1' })),
@@ -378,8 +376,8 @@ describe('keeping the failure report current after the load', () => {
         ],
       }),
     ]);
-    const { db, reset, failures } = await open({ key });
-    expect(failures()).toHaveLength(3);
+    const { db, reset, refresh } = await open({ key });
+    expect(await refresh()).toHaveLength(3);
     const listener = vi.fn();
     db.onChange(listener);
 
@@ -391,7 +389,7 @@ describe('keeping the failure report current after the load', () => {
       ['b', '', 'x'],
       ['c', '', 'x'],
     ]);
-    expect(failures()).toEqual([]);
+    expect(await refresh()).toEqual([]);
     // one update for the document, whose patch holds the whole array with every field cleared
     expect(listener).toHaveBeenCalledTimes(1);
     const [[event, , patches]] = listener.mock.calls[0][0];
@@ -508,7 +506,7 @@ describe('degraded mode: no key', () => {
     expect((await healthy.db.findOne<any>('Request', { _id: 'req_encrypted' }))?.authentication.token).toBe(
       'secret-token',
     );
-    expect(healthy.failures()).toEqual([]);
+    expect(await healthy.refresh()).toEqual([]);
   });
 });
 

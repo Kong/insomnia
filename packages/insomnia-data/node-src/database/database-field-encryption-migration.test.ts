@@ -101,13 +101,13 @@ const withoutEncryptedLeaves = (doc: Record<string, any>, type: string) => {
 };
 
 const open = async (dbPath: string, options: { encrypt?: boolean } = { encrypt: true }) => {
-  let internals!: { getFieldDecryptionFailures: () => unknown[] };
+  let internals!: { refreshFieldDecryptionFailures: () => Promise<unknown[]> };
   const db = createNedbDatabase((nedbDatabase, nedbInternals) => {
     internals = nedbInternals;
     return nedbDatabase;
   });
   await db.init({ dbPath, fieldEncryptionKey: options.encrypt ? key : undefined });
-  return { db, failures: () => internals.getFieldDecryptionFailures() };
+  return { db, failures: () => internals.refreshFieldDecryptionFailures() };
 };
 
 // Loading also gives random ids to nested items that have none (such as environment key-value pairs)
@@ -224,11 +224,11 @@ describe('the first launch with the key', () => {
 
     const first = await open(migrated);
     expect(await viewOf(first.db, types)).toEqual(expected);
-    expect(first.failures()).toEqual([]);
+    expect(await first.failures()).toEqual([]);
 
     const second = await open(migrated);
     expect(await viewOf(second.db, types)).toEqual(expected);
-    expect(second.failures()).toEqual([]);
+    expect(await second.failures()).toEqual([]);
   });
 });
 
@@ -265,7 +265,7 @@ describe('a launch that was interrupted', () => {
     const { db, failures } = await open(migrated);
 
     expect(await viewOf(db, types)).toEqual(expected);
-    expect(failures()).toEqual([]);
+    expect(await failures()).toEqual([]);
     expectMigrated(migrated);
   });
 
@@ -282,7 +282,7 @@ describe('a launch that was interrupted', () => {
     const { db, failures } = await open(migrated);
 
     expect(await viewOf(db, types)).toEqual(expected);
-    expect(failures()).toEqual([]);
+    expect(await failures()).toEqual([]);
     expect(fs.readdirSync(migrated).filter(file => file.endsWith('~'))).toEqual([]);
     expectMigrated(migrated);
   });
@@ -305,7 +305,7 @@ describe('a launch that was interrupted', () => {
       const { db, failures } = await open(migrated);
 
       expect(await viewOf(db, types)).toEqual(expected);
-      expect(failures()).toEqual([]);
+      expect(await failures()).toEqual([]);
       expect(fs.readdirSync(migrated).filter(file => file.endsWith('~'))).toEqual([]);
       expectMigrated(migrated);
     },

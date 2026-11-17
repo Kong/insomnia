@@ -54,8 +54,6 @@ type FlushChangesImpl = (id?: number, fake?: boolean) => Promise<ChangeBufferEve
 
 interface DatabaseInternals {
   flushChangesImpl: FlushChangesImpl;
-  /** The fields that could not be decrypted when the datastores were loaded by the last `init()`. */
-  getFieldDecryptionFailures: () => FieldDecryptionFailure[];
   /**
    * Checks the failure report against the data as it is now, drops the entries that no longer describe it (the field was
    * reset or edited, or the document was removed since the load), and returns what is left.
@@ -749,7 +747,6 @@ export const createNedbDatabase = <O = initOptions>(
   const database = wrapper
     ? wrapper(originalDatabase, {
         flushChangesImpl,
-        getFieldDecryptionFailures: () => fieldDecryptionFailureReport.list(),
         refreshFieldDecryptionFailures,
         resetFieldDecryptionFailures,
       })
