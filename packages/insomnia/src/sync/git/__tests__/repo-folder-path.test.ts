@@ -41,6 +41,13 @@ describe('validateRepoFolderName', () => {
     expect(validateRepoFolderName(name)).toMatch(/cannot start or end with a space/);
   });
 
+  it('rejects names longer than 255 bytes', () => {
+    expect(validateRepoFolderName('a'.repeat(255))).toBeNull();
+    expect(validateRepoFolderName('a'.repeat(256))).toBe('Folder name is too long');
+    // Multi-byte characters count by their UTF-8 length.
+    expect(validateRepoFolderName('文'.repeat(86))).toBe('Folder name is too long');
+  });
+
   it('rejects names that collide with a sibling, case-insensitively', () => {
     expect(validateRepoFolderName('Specs', ['specs', 'README.md'])).toBe(
       'A file or folder with the same name already exists',

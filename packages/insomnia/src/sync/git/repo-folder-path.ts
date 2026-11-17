@@ -2,6 +2,9 @@ import { isWindows } from 'insomnia-data/common';
 
 const GIT_DIR_NAME = '.git';
 
+// Most filesystems cap a single path component at 255 bytes (ext4, APFS) or 255 UTF-16 units (NTFS).
+const MAX_FOLDER_NAME_BYTES = 255;
+
 // Characters that are invalid in a file/folder name on at least one supported platform (Windows is the strictest).
 // eslint-disable-next-line no-control-regex
 const INVALID_FOLDER_NAME_CHARACTERS = /[\\/:*?"<>|\u0000-\u001F]/;
@@ -42,6 +45,10 @@ export function validateRepoFolderName(name: string, siblingNames: string[] = []
 
   if (name !== trimmedName || name.endsWith('.')) {
     return 'Folder name cannot start or end with a space, or end with a period';
+  }
+
+  if (new TextEncoder().encode(name).length > MAX_FOLDER_NAME_BYTES) {
+    return 'Folder name is too long';
   }
 
   const lowerCaseName = name.toLowerCase();
