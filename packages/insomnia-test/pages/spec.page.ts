@@ -220,7 +220,7 @@ export class SpecPage extends BasePage {
       if (!summary) continue;
 
       if ((await row.getAttribute("aria-expanded")) !== "true") {
-        await row.getByRole("button").first().click({ timeout: 2_000 });
+        await row.getByRole("button").first().click({ timeout: SHORT_TIMEOUT });
       }
       const lineRefs = await row.getByText(/^Ln \d+$/).allInnerTexts();
       entries.push({ ...summary, lineRefs });
@@ -845,7 +845,7 @@ export class SpecPage extends BasePage {
     row: Locator,
   ): Promise<Omit<LintEntry, "lineRefs"> | undefined> {
     const header = row.getByRole("button").first();
-    const text = await header.innerText({ timeout: 2_000 });
+    const text = await header.innerText({ timeout: SHORT_TIMEOUT });
     const match = text.match(/^\((\d+)\)\s*(\S+):\s*(.+)$/s);
     if (!match) return undefined;
 
