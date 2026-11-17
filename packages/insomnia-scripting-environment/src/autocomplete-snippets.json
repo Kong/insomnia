@@ -955,21 +955,6 @@
     "value": "insomnia.vault.get()"
   },
   {
-    "displayValue": "insomnia.vault.set()",
-    "name": "insomnia.vault.set()",
-    "value": "insomnia.vault.set()"
-  },
-  {
-    "displayValue": "insomnia.vault.unset()",
-    "name": "insomnia.vault.unset()",
-    "value": "insomnia.vault.unset()"
-  },
-  {
-    "displayValue": "insomnia.vault.clear()",
-    "name": "insomnia.vault.clear()",
-    "value": "insomnia.vault.clear()"
-  },
-  {
     "displayValue": "insomnia.vault.replaceIn()",
     "name": "insomnia.vault.replaceIn()",
     "value": "insomnia.vault.replaceIn()"

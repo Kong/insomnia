@@ -84,6 +84,9 @@
     },
     "jshint": {
       "lodash": "4.18.1"
+    },
+    "httpsnippet": {
+      "form-data": "4.0.6"
     }
   },
   "dependencies": {

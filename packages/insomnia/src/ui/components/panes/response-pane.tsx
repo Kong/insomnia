@@ -2,11 +2,13 @@ import type { ResponseTimelineEntry } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
+import { useFetcher, useParams } from 'react-router';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { KongLogo } from '~/ui/components/kong-logo';
+import { useOpenKonnectDebuggerTab } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -41,13 +43,19 @@ interface Props {
 }
 
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
+  const { organizationId, projectId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+  };
   const { activeRequest, activeRequestMeta, activeResponse, responses, requestVersions } =
     useRequestLoaderData() as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
   const { settings } = useRootLoaderData()!;
+  const openKonnectDebuggerTab = useOpenKonnectDebuggerTab();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
+  const isKonnectRequest = 'konnectRouteKey' in activeRequest && !!activeRequest.konnectRouteKey;
   const handleSetFilter = async (responseFilter: string) => {
     if (!activeResponse) {
       return;
@@ -155,6 +163,15 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             <StatusTag statusCode={activeResponse.statusCode} statusMessage={activeResponse.statusMessage} />
             <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
+            {isKonnectRequest && (
+              <Button
+                className="inline-flex items-center justify-center gap-2 rounded-xs border border-transparent px-(--padding-sm) py-(--padding-xs) align-middle leading-[1em] text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                onPress={() => openKonnectDebuggerTab(organizationId, projectId)}
+              >
+                <KongLogo width="1em" height="1em" />
+                Debug
+              </Button>
+            )}
           </div>
           <ResponseHistoryDropdown
             activeResponse={activeResponse}
