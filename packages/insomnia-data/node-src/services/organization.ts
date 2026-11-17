@@ -156,7 +156,7 @@ export async function clearFeaturesCache() {
  * enforcement. Never write this back to settings — settings are global and the user's own,
  * while enforcement is per organization.
  */
-export async function resolveHideSecretValues({
+export async function resolveHideSecretValuesForOrg({
   organizationId,
   settings,
 }: {
@@ -192,8 +192,8 @@ export async function getOrgIdForDoc(doc: BaseModel): Promise<string | undefined
   return ancestors.find(models.project.isProject)?.parentId;
 }
 
-/** {@link resolveHideSecretValues} for a doc, skipping the ancestor lookup when the user preference already hides. */
-export async function resolveHideSecretValuesForDoc(
+/** {@link resolveHideSecretValuesForOrg} for a doc, skipping the ancestor lookup when the user preference already hides. */
+export async function resolveHideSecretValues(
   doc: BaseModel,
   settings: { hideSecretValuesInPreviewAndConsole?: boolean },
 ): Promise<boolean> {
@@ -204,5 +204,5 @@ export async function resolveHideSecretValuesForDoc(
   if (!orgId) {
     return true;
   }
-  return resolveHideSecretValues({ organizationId: orgId, settings });
+  return resolveHideSecretValuesForOrg({ organizationId: orgId, settings });
 }

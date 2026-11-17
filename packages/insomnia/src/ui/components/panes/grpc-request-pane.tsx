@@ -430,7 +430,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         onClick={async () => {
                           const settings = await services.settings.get();
                           const collector = createSensitiveValueCollector(
-                            await services.organization.resolveHideSecretValuesForDoc(activeRequest, settings),
+                            await services.organization.resolveHideSecretValues(activeRequest, settings),
                           );
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,

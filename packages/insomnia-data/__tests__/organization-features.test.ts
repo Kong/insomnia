@@ -76,38 +76,38 @@ describe('services.organization.getFeatures', () => {
   });
 });
 
-describe('services.organization.resolveHideSecretValues', () => {
+describe('services.organization.resolveHideSecretValuesForOrg', () => {
   it('returns true without fetching when the user setting hides', async () => {
     expect(
-      await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings: { hideSecretValuesInPreviewAndConsole: true } }),
+      await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings: { hideSecretValuesInPreviewAndConsole: true } }),
     ).toBe(true);
-    expect(await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings: {} })).toBe(true);
+    expect(await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings: {} })).toBe(true);
     expect(getOrganizationFeaturesMock).not.toHaveBeenCalled();
   });
 
   it('ORs the user setting with the organization enforcement', async () => {
     const settings = { hideSecretValuesInPreviewAndConsole: false };
-    expect(await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings })).toBe(true);
+    expect(await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings })).toBe(true);
 
     await services.organization.clearFeaturesCache();
     getOrganizationFeaturesMock.mockResolvedValue({ features: featuresWithHide(false), billing: {} });
-    expect(await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings })).toBe(false);
+    expect(await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings })).toBe(false);
 
     // Older API versions do not return the flag at all.
     await services.organization.clearFeaturesCache();
     getOrganizationFeaturesMock.mockResolvedValue({ features: {}, billing: {} });
-    expect(await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings })).toBe(false);
+    expect(await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings })).toBe(false);
   });
 
   it('falls back to the user setting when the features are unavailable', async () => {
     getOrganizationFeaturesMock.mockRejectedValue(new Error('offline'));
     expect(
-      await services.organization.resolveHideSecretValues({ organizationId: ORG_ID, settings: { hideSecretValuesInPreviewAndConsole: false } }),
+      await services.organization.resolveHideSecretValuesForOrg({ organizationId: ORG_ID, settings: { hideSecretValuesInPreviewAndConsole: false } }),
     ).toBe(false);
   });
 });
 
-describe('services.organization.resolveHideSecretValuesForDoc', () => {
+describe('services.organization.resolveHideSecretValues', () => {
   it('resolves the organization through the project of a nested request', async () => {
     const project = await services.project.create({ _id: 'proj_1', name: 'Project', parentId: ORG_ID });
     const workspace = await services.workspace.create({
@@ -123,7 +123,7 @@ describe('services.organization.resolveHideSecretValuesForDoc', () => {
 
     expect(await services.organization.getOrgIdForDoc(request)).toBe(ORG_ID);
     expect(await services.organization.getOrgIdForDoc(child)).toBe(ORG_ID);
-    expect(await services.organization.resolveHideSecretValuesForDoc(child, { hideSecretValuesInPreviewAndConsole: false })).toBe(true);
+    expect(await services.organization.resolveHideSecretValues(child, { hideSecretValuesInPreviewAndConsole: false })).toBe(true);
     expect(getOrganizationFeaturesMock).toHaveBeenCalledWith(
       expect.objectContaining({ path: `/v1/organizations/${ORG_ID}/features`, sessionId: 'session_1' }),
     );

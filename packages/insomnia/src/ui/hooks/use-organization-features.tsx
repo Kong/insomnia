@@ -44,11 +44,6 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
     queryFn: async () => {
       const { id: sessionId } = await services.userSession.get();
       const result = await getOrganizationFeatures({ organizationId, sessionId });
-      // Share the fresh result with the render/send code path, which reads org features
-      // through the organization service (main-process cache) rather than this query cache.
-      if (result?.features) {
-        await services.organization.setFeatures(organizationId, result.features);
-      }
       return result;
     },
     enabled: isEnabled,
@@ -122,7 +117,7 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
 /**
  * Effective "hide confidential values in Preview/Console" for the current organization:
- * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValues,
+ * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValuesForOrg,
  * which the render/send code path uses.
  */
 export function useHideSecretValues() {

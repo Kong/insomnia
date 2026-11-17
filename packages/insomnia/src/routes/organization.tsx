@@ -1,6 +1,6 @@
 import { type CurrentPlan, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
@@ -231,6 +231,17 @@ const Component = () => {
     window.main.setCurrentOrganizationId(organizationId);
     return () => window.main.setCurrentOrganizationId(undefined);
   }, [organizationId]);
+
+  // Clear the organization features cache (kept in the main process) on an actual organization
+  // switch, so the next render/send fetches the new organization's enforced settings fresh.
+  const previousOrganizationId = reactUse.usePrevious(organizationId);
+  useEffect(() => {
+    // No previous organization means first entry, not a switch.
+    if (!previousOrganizationId || previousOrganizationId === organizationId) {
+      return;
+    }
+    services.organization.clearFeaturesCache();
+  }, [organizationId, previousOrganizationId]);
 
   useEffect(() => {
     const accountId = userSession.accountId;
