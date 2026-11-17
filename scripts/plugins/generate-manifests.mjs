@@ -2,10 +2,12 @@
 // so name/version/description/license are never edited by hand in four places. CI fails if the output is stale.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
-const { marketplace, plugins } = readJson('plugins/plugins.json');
-const { license, author } = readJson('package.json');
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const { marketplace, plugins } = readJson(path.join(repoRoot, 'plugins/plugins.json'));
+const { license, author } = readJson(path.join(repoRoot, 'package.json'));
 
 // The repo's `author` field ("Name <email>") is the owner of the plugins too.
 const [, ownerName, ownerEmail] = author.match(/^(.*?)\s*<(.+)>$/) ?? [];
@@ -22,7 +24,7 @@ const writeJson = (file, data) => {
 
 const sourceOf = plugin => `./plugins/${plugin.name}`;
 
-writeJson('.claude-plugin/marketplace.json', {
+writeJson(path.join(repoRoot, '.claude-plugin/marketplace.json'), {
   name: marketplace.name,
   owner,
   metadata: { description: marketplace.description },
@@ -34,7 +36,7 @@ writeJson('.claude-plugin/marketplace.json', {
   })),
 });
 
-writeJson('.agents/plugins/marketplace.json', {
+writeJson(path.join(repoRoot, '.agents/plugins/marketplace.json'), {
   name: marketplace.name,
   interface: { displayName: marketplace.displayName },
   plugins: plugins.map(plugin => ({
@@ -46,7 +48,7 @@ writeJson('.agents/plugins/marketplace.json', {
 });
 
 for (const plugin of plugins) {
-  const dir = path.join('plugins', plugin.name);
+  const dir = path.join(repoRoot, 'plugins', plugin.name);
 
   writeJson(path.join(dir, '.claude-plugin/plugin.json'), {
     name: plugin.name,

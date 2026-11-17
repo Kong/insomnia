@@ -221,6 +221,9 @@ jobs:
         run: |
           # Manifests are generated from plugins/plugins.json; never edit them by hand.
           npm run generate:plugins
+          # `git add -N` marks newly-generated manifests as intent-to-add so
+          # `git diff` flags them when they were never committed.
+          git add -N .claude-plugin .agents plugins
           if ! git diff --exit-code -- .claude-plugin .agents plugins; then
             echo "::error::AI plugin manifests are out of date. Run 'npm run generate:plugins' and commit the result."
             exit 1

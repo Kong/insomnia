@@ -32,7 +32,7 @@ Requests and folders are nested under `collection:` (folders hold `children:`). 
       insomnia.environment.set('ts', Date.now());
     afterResponse: |-
       insomnia.test('returns 200', () => {
-        insomnia.expect(insomnia.response.status).to.eql(200);
+        insomnia.expect(insomnia.response.code).to.eql(200);
       });
 ```
 
@@ -53,7 +53,7 @@ Pre-request:
 - Send another request: `insomnia.sendRequest(urlOrObject, callback)`; wrap it in a Promise to `await` it.
 
 After-response:
-- Response: `insomnia.response.status`, `.responseTime`, `.json()`, `.text()`, `.headers`, `.cookies`.
+- Response: `insomnia.response.code` (numeric status code, e.g. `200`), `.status` (reason phrase, e.g. `'OK'`, not the code), `.responseTime`, `.json()`, `.text()`, `.headers`, `.cookies`.
 - Tests: `insomnia.test(name, fn)` with `insomnia.expect(...)` (chai).
 
 Both:
