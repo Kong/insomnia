@@ -1691,9 +1691,10 @@ export class GitVCS {
   }
 
   /**
-   * Whether a conflicted file is an Insomnia file, judged by its raw content (the first line declares an
-   * Insomnia file `type`) on whichever sides still have the file. Reads raw text instead of parsing, since
-   * unrelated files (e.g. Helm templates) are not necessarily valid YAML.
+   * Whether a conflicted file is an Insomnia file, judged by its content (a top-level `type` that is an
+   * Insomnia file type) on whichever sides still have the file. Not by the first line, so a hand-written
+   * comment above `type` doesn't make an Insomnia file look foreign. Content that isn't valid YAML
+   * (e.g. a Helm template) is not an Insomnia file.
    */
   async isInsomniaFileConflict(
     filepath: string,
@@ -1710,11 +1711,13 @@ export class GitVCS {
     }
     for (const oid of oids) {
       const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
-      const content = Buffer.from(blob).toString('utf8');
-      const newLineIndex = content.indexOf('\n');
-      const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
-      if (InsomniaFileTypeValues.some(type => firstLine.includes(type))) {
-        return true;
+      try {
+        const type = parse(Buffer.from(blob).toString('utf8'))?.type;
+        if (typeof type === 'string' && (InsomniaFileTypeValues as string[]).includes(type)) {
+          return true;
+        }
+      } catch {
+        // Not valid YAML, so not an Insomnia file
       }
     }
     return false;

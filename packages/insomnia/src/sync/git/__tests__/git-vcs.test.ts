@@ -725,6 +725,64 @@ collection:
       }
     });
 
+    it('should still return Insomnia files with a comment above `type` as conflicts (INS-4332)', async () => {
+      const fsClient = MemClient.createClient();
+      const deleteModifyFile = 'abcdefghij.yaml';
+      const bothModifiedFile = 'klmnopqrst.yaml';
+      const insomniaContent = (comment: string, name: string) =>
+        `${comment}\ntype: collection.insomnia.rest/5.0\nname: ${name}\n`;
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd(deleteModifyFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await writeAndAdd(bothModifiedFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Local: a hand-written comment above `type` in both files
+      await writeAndAdd(deleteModifyFile, insomniaContent('# local', 'base'));
+      await writeAndAdd(bothModifiedFile, insomniaContent('# local', 'base'));
+      await GitVCS.commit('Local changes');
+
+      // Remote: deletes one file and puts a different comment above `type` in the other
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: deleteModifyFile });
+      await fsClient.promises.unlink(deleteModifyFile);
+      await writeAndAdd(bothModifiedFile, insomniaContent('# remote', 'base'));
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      try {
+        await GitVCS.buildManualResolutionFromTrees();
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        // Both go to the conflict UI; nothing is silently resolved to the remote version
+        expect(mergeErr.data.conflicts.map(c => c.key).sort()).toEqual([deleteModifyFile, bothModifiedFile].sort());
+        expect(mergeErr.data.autoResolvedConflicts).toEqual([]);
+      }
+    });
+
     it('should auto-resolve unrelated YAML files (not Insomnia files) to theirs instead of returning them as conflicts', async () => {
       const fsClient = MemClient.createClient();
       const insomniaFile = '.insomnia/Environment/env_1.yaml';
