@@ -1987,16 +1987,19 @@ export class GitVCS {
     depth,
     credentialsId,
     relative = false,
+    interactive = true,
   }: {
     singleBranch: boolean;
     depth?: number;
     credentialsId?: string | null;
     relative?: boolean;
+    /** False for background fetches: authentication must not start a sign-in. */
+    interactive?: boolean;
   }) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
-      ...gitCallbacks(credentialsId),
+      ...gitCallbacks(credentialsId, undefined, { interactive }),
       singleBranch,
       remote: 'origin',
       relative,

@@ -53,7 +53,11 @@ import {
   KonnectSyncResultPanel,
   useKonnectSyncBar,
 } from './konnect-sync-bar';
-import { getSidebarGridListItemId, getSidebarItemParentId, getSidebarPinnedHeaderId } from './project-navigation-sidebar-utils';
+import {
+  getSidebarGridListItemId,
+  getSidebarItemParentId,
+  getSidebarPinnedHeaderId,
+} from './project-navigation-sidebar-utils';
 import { ProjectNode } from './project-node';
 import { PinnedHeaderNode, RequestNode } from './request-node';
 import type { FlatItem } from './types';
@@ -1216,6 +1220,7 @@ const ProjectNavigationSidebarInner = (
                           depthOffset={treeDepthOffset}
                           onRename={() => showRenameModal(item)}
                           onDelete={() => showDeleteModal(item)}
+                          apiSpec={collectionByWorkspaceIds.get(item.workspace._id)?.data.apiSpec}
                         />
                       )}
 

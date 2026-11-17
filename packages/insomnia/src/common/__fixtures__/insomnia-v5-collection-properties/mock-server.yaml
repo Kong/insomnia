@@ -1,0 +1,6 @@
+type: mock.insomnia.rest/5.0
+name: Mock Workspace
+schema_version: "5.1"
+server:
+  url: https://example.com
+routes: []
