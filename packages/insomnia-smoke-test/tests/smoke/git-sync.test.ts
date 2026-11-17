@@ -276,6 +276,17 @@ test.describe('Git Sync', () => {
     await modal.getByRole('button', { name: 'Create', exact: true }).click();
     await modal.waitFor({ state: 'hidden' });
 
+    // Existing nested folders can be expanded by selecting their rows, not only via the folder icon.
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await tree.getByRole('row', { name: 'specs', exact: true }).click();
+    await tree.getByRole('row', { name: 'v1', exact: true }).click();
+    await expect.soft(tree.getByRole('row', { name: 'folder_test.yaml', exact: true })).toBeVisible();
+    await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await modal.waitFor({ state: 'hidden' });
+
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
     await expect.soft(page.getByLabel('Unstaged changes')).toContainText('specs/v1/folder_test.yaml');

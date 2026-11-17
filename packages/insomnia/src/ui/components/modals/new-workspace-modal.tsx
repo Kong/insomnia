@@ -384,10 +384,13 @@ export const NewWorkspaceModal = ({
                         onExpandedChange={setExpandedFolderKeys}
                         onSelectionChange={selection => {
                           if (selection !== 'all') {
+                            const folderPath = selection.values().next().value as string;
                             setWorkspaceData({
                               ...workspaceData,
-                              folderPath: selection.values().next().value as string,
+                              folderPath,
                             });
+                            // Selecting a folder also expands it, so users don't have to hit the small folder icon.
+                            setExpandedFolderKeys(new Set([...expandedFolderKeys, folderPath]));
                           }
                         }}
                         aria-label="Files"
