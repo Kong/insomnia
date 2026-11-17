@@ -22,6 +22,13 @@ export function useDBQueries<T extends any[], TCombinedResult = QueriesResults<T
 }
 
 // Binds to the server-data (network) query client
+export function useServerQueries<T extends any[], TCombinedResult = QueriesResults<T>>(options: {
+  queries: readonly [...QueriesOptions<T>];
+  combine?: (result: QueriesResults<T>) => TCombinedResult;
+}): TCombinedResult {
+  return useQueries(options, useServerDataQueryClient());
+}
+
 export function useServerQuery<
   TQueryFnData = unknown,
   TError = unknown,

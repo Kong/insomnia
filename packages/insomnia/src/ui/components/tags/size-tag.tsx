@@ -10,44 +10,46 @@ interface Props {
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
+  showTooltip?: boolean;
 }
 
-export const SizeTag: FC<Props> = memo(({ bytesRead, bytesContent, small, className, tooltipDelay }) => {
-  const responseSizeReadStringShort = misc.describeByteSize(bytesRead);
-  const responseSizeReadString = misc.describeByteSize(bytesRead, true);
-  const responseSizeRawString = misc.describeByteSize(bytesContent, true);
-  const message = (
-    <table>
-      <tbody>
-        <tr>
-          <td className="pad-right text-left">Read</td>
-          <td className="selectable no-wrap text-right">{responseSizeReadString}</td>
-        </tr>
-        {bytesContent >= 0 && (
+export const SizeTag: FC<Props> = memo(
+  ({ bytesRead, bytesContent, small, className, tooltipDelay, showTooltip = true }) => {
+    const responseSizeReadStringShort = misc.describeByteSize(bytesRead);
+    const responseSizeReadString = misc.describeByteSize(bytesRead, true);
+    const responseSizeRawString = misc.describeByteSize(bytesContent, true);
+    const message = (
+      <table>
+        <tbody>
           <tr>
-            <td className="pad-right text-left">Content</td>
-            <td className="selectable no-wrap text-right">{responseSizeRawString}</td>
+            <td className="pad-right text-left">Read</td>
+            <td className="selectable no-wrap text-right">{responseSizeReadString}</td>
           </tr>
+          {bytesContent >= 0 && (
+            <tr>
+              <td className="pad-right text-left">Content</td>
+              <td className="selectable no-wrap text-right">{responseSizeRawString}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    );
+    return (
+      <div
+        className={classnames(
+          'tag',
+          {
+            'tag--small': small,
+          },
+          className,
         )}
-      </tbody>
-    </table>
-  );
-  return (
-    <div
-      data-testid="response-size-tag"
-      className={classnames(
-        'tag',
-        {
-          'tag--small': small,
-        },
-        className,
-      )}
-    >
-      <Tooltip message={message} position="bottom" delay={tooltipDelay}>
-        {responseSizeReadStringShort}
-      </Tooltip>
-    </div>
-  );
-});
+      >
+        <Tooltip message={showTooltip ? message : null} position="bottom" delay={tooltipDelay}>
+          {responseSizeReadStringShort}
+        </Tooltip>
+      </div>
+    );
+  },
+);
 
 SizeTag.displayName = 'SizeTag';

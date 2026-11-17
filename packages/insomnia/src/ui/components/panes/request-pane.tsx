@@ -26,12 +26,14 @@ import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { RequestScriptEditor } from '../editors/request-script-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
+import { KongLogo } from '../kong-logo';
 import { MarkdownEditor } from '../markdown-editor';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar, type RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
+import { RequestPluginsTab } from './request-plugins-tab';
 
 const { getCombinedPathParametersFromUrl } = models.request;
 
@@ -77,7 +79,8 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   };
   const gitVersion = useGitVCSVersion();
 
-  const { activeEnvironment, activeGlobalEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, activeGlobalEnvironment, activeProject, activeWorkspace, vcsVersion } =
+    useWorkspaceLoaderData()!;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?._id}::${activeEnvironment?.modified}::${activeGlobalEnvironment?._id}::${activeGlobalEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
 
@@ -187,6 +190,17 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               </span>
             )}
           </Tab>
+          {activeProject?.konnectControlPlaneId && (
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
+              id="plugins"
+            >
+              <span>Plugins</span>
+              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center">
+                <KongLogo width={14} height={13} />
+              </span>
+            </Tab>
+          )}
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           <div className="shrink-0 p-4">
@@ -418,6 +432,17 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             onChange={(description: string) => patchRequest(requestId, { description })}
           />
         </TabPanel>
+        {activeProject?.konnectControlPlaneId && (
+          <TabPanel className="w-full flex-1 overflow-y-auto" id="plugins">
+            <ErrorBoundary key={`${activeRequest._id}:plugins`} errorClassName="font-error pad text-center">
+              <RequestPluginsTab
+                activeRequest={activeRequest}
+                activeWorkspace={activeWorkspace}
+                activeProject={activeProject}
+              />
+            </ErrorBoundary>
+          </TabPanel>
+        )}
       </Tabs>
       {isRequestSettingsModalOpen && (
         <RequestSettingsModal request={activeRequest} onHide={() => setIsRequestSettingsModalOpen(false)} />

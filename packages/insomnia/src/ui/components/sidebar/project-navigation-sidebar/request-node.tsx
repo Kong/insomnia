@@ -1,4 +1,5 @@
 import type {
+  ApiSpec,
   GrpcRequest,
   McpRequest,
   Request,
@@ -51,21 +52,30 @@ function MethodBadge({ doc }: { doc: Request | WebSocketRequest | GrpcRequest | 
   const docShortHand = getRequestMethodShortHand(doc);
   if (models.webSocketRequest.isWebSocketRequest(doc)) {
     return (
-      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
+      <span
+        data-testid="node-type-label"
+        className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)"
+      >
         {docShortHand}
       </span>
     );
   }
   if (models.socketIORequest.isSocketIORequest(doc)) {
     return (
-      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)">
+      <span
+        data-testid="node-type-label"
+        className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-(--color-font-notice)"
+      >
         {docShortHand}
       </span>
     );
   }
   if (models.grpcRequest.isGrpcRequest(doc)) {
     return (
-      <span data-testid="node-type-label" className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)">
+      <span
+        data-testid="node-type-label"
+        className="flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-(--color-font-info)"
+      >
         {docShortHand}
       </span>
     );
@@ -123,6 +133,7 @@ export const getRequestNameOrFallback = (
 
 interface RequestNodeProps {
   item: CollectionChildFlatItem | PinnedRequestFlatItem;
+  apiSpec?: ApiSpec;
   onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
   className?: string;
   // Number of ancestor indent levels to strip when the sidebar is focused on a
@@ -139,6 +150,7 @@ export const RequestNode = ({
   depthOffset = 0,
   onRename,
   onDelete,
+  apiSpec,
 }: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
   const isPinnedRequest = kind === 'pinnedRequest';
@@ -169,7 +181,11 @@ export const RequestNode = ({
         </Button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
-        {isFolder ? <Icon icon="folder" className={ICON_CLASS} data-testid="node-type-icon" /> : <MethodBadge doc={doc} />}
+        {isFolder ? (
+          <Icon icon="folder" className={ICON_CLASS} data-testid="node-type-icon" />
+        ) : (
+          <MethodBadge doc={doc} />
+        )}
         <EditableInput
           value={getRequestNameOrFallback(doc)}
           name="request name"
@@ -228,6 +244,7 @@ export const RequestNode = ({
           isPinned={item.pinned}
           isOpen={isContextMenuOpen}
           onOpenChange={setIsContextMenuOpen}
+          apiSpec={apiSpec}
         />
       )}
     </>

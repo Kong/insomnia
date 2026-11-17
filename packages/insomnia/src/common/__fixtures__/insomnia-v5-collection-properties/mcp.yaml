@@ -1,0 +1,8 @@
+type: mcpClient.insomnia/5.0
+name: MCP Workspace
+schema_version: "5.1"
+mcpRequest:
+  name: MCP Workspace
+  url: https://example.com/mcp
+  transportType: streamable-http
+

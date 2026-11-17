@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
 
-import SwaggerParser from '@apidevtools/swagger-parser';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
+import { pathWithParamsAsVariables, REQUEST_BASE_URL } from '../../../common/path-with-params';
 import type { Converter, Header, ImportRequest } from '../entities';
+import { resolveOpenApiDocument } from '../resolve-openapi-document';
 import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
@@ -139,7 +140,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `${REQUEST_BASE_URL}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body,
     description: endpointSchema.description || '',
     headers,
@@ -271,15 +272,6 @@ const setupAuthentication = (
 };
 
 /**
- * Return path with parameters replaced by insomnia variables
- *
- * I.e. "/foo/:bar" => "/foo/{{ bar }}"
- */
-const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
-};
-
-/**
  * Imports insomnia definitions of query parameters.
  */
 const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
@@ -338,7 +330,7 @@ const prepareBody = (
 
     if (type === 'object') {
       const { schema } = bodyParameter as OpenAPIV2.ParameterObject;
-      if (schema.$ref) {
+      if (schema.$ref?.startsWith('#/')) {
         const definition = resolve$ref(document, schema.$ref);
         text = JSON.stringify(example(definition), null, 2);
       } else {
@@ -501,13 +493,10 @@ export const convert: Converter = async rawData => {
     return null;
   } // Await here so we catch any exceptions
 
-  try {
-    api = await SwaggerParser.validate(api);
-  } catch (err) {
-    // We already know it's a Swagger doc so we will try to import it anyway instead
-    // of bailing out here.
-    console.log('[swagger] Import file validation failed', err);
-  } // Import
+  // We already know it's a Swagger doc, so validation errors are only logged and we import it anyway
+  api = await resolveOpenApiDocument(api, '[swagger]');
+
+  // Import
 
   const workspace: ImportRequest = {
     _type: 'workspace',

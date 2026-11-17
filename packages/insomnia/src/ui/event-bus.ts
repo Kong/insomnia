@@ -6,6 +6,8 @@ export const CLOUD_SYNC_FILE_CHANGE = 'CLOUD_SYNC_FILE_CHANGE';
 // Lets the Konnect settings modal start a sync without being handed a callback by whichever
 // sidebar variant happens to be rendered (they're mutually exclusive routes).
 export const KONNECT_SYNC_TRIGGER = 'KONNECT_SYNC_TRIGGER';
+// This event is emitted when the Konnect Personal Access Token (PAT) changes.
+export const KONNECT_PAT_CHANGE = 'KONNECT_PAT_CHANGE';
 // Asks the current workspace to open its environments edit modal (the picker's manage
 // dialog) with an environment preselected. Emitted from editors whose "open variable
 // source" action targets a collection environment of the workspace they belong to.
@@ -17,7 +19,8 @@ type UIEventType =
   | typeof CLOUD_SYNC_FILE_CHANGE
   | typeof OAUTH2_AUTHORIZATION_STATUS_CHANGE
   | typeof KONNECT_SYNC_TRIGGER
-  | typeof OPEN_ENVIRONMENTS_MODAL;
+  | typeof OPEN_ENVIRONMENTS_MODAL
+  | typeof KONNECT_PAT_CHANGE;
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
@@ -26,6 +29,7 @@ class EventBus {
     [OAUTH2_AUTHORIZATION_STATUS_CHANGE]: [],
     [KONNECT_SYNC_TRIGGER]: [],
     [OPEN_ENVIRONMENTS_MODAL]: [],
+    [KONNECT_PAT_CHANGE]: [],
   };
 
   // Subscribe to event, returns unsubscribe function
