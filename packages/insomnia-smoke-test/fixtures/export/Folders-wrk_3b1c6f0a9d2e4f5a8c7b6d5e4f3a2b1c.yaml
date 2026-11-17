@@ -1,0 +1,101 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Export Folders
+meta:
+  id: wrk_3b1c6f0a9d2e4f5a8c7b6d5e4f3a2b1c
+  created: 1770798742203
+  modified: 1770800022824
+  description: ""
+collection:
+  - name: Folder One
+    meta:
+      id: fld_1a1a1a1a1a1a4a1a8a1a1a1a1a1a1a1a
+      created: 1770798745000
+      modified: 1770798745000
+      sortKey: -1770798745000
+      description: ""
+    children:
+      - url: httpbin.org/get
+        name: Folder One Request
+        meta:
+          id: req_1b1b1b1b1b1b4b1b8b1b1b1b1b1b1b1b
+          created: 1770798745128
+          modified: 1770798745128
+          isPrivate: false
+          description: ""
+          sortKey: -1770798745128
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Folder Two
+    meta:
+      id: fld_2a2a2a2a2a2a4a2a8a2a2a2a2a2a2a2a
+      created: 1770798746000
+      modified: 1770798746000
+      sortKey: -1770798746000
+      description: ""
+    children:
+      - url: httpbin.org/post
+        name: Folder Two Request
+        meta:
+          id: req_2b2b2b2b2b2b4b2b8b2b2b2b2b2b2b2b
+          created: 1770798746128
+          modified: 1770798746128
+          isPrivate: false
+          description: ""
+          sortKey: -1770798746128
+        method: POST
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - url: httpbin.org/anything
+    name: Root Request
+    meta:
+      id: req_3b3b3b3b3b3b4b3b8b3b3b3b3b3b3b3b
+      created: 1770798747128
+      modified: 1770798747128
+      isPrivate: false
+      description: ""
+      sortKey: -1770798747128
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_3c3c3c3c3c3c4c3c8c3c3c3c3c3c3c3c
+    created: 1770798742205
+    modified: 1770798742205
+  cookies:
+    - id: 7d1e3f0a-1111-4222-8333-444455556666
+      key: exportcookie
+      value: exportvalue
+      domain: httpbin.org
+      expires: 2038-01-19T03:14:07.000Z
+      path: /
+environments:
+  name: Base Environment
+  meta:
+    id: env_3d3d3d3d3d3d4d3d8d3d3d3d3d3d3d3d
+    created: 1770798742204
+    modified: 1770798742204
+    isPrivate: false
+  data:
+    exportVar: exportValue
