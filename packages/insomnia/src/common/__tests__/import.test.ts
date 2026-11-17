@@ -8,7 +8,12 @@ import { parse } from 'yaml';
 
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
-import { getInsomniaV5DataExport, mcpUrlToInsomniaV5Yaml, tryImportV5Data } from '../insomnia-v5';
+import {
+  getInsomniaV5DataExport,
+  importInsomniaV5Data,
+  mcpUrlToInsomniaV5Yaml,
+  tryImportV5Data,
+} from '../insomnia-v5';
 import { generateId } from '../misc';
 
 describe('pathPatternMatches', () => {
@@ -670,6 +675,48 @@ describe('export/import round-trip is deterministic', () => {
     expect(parsed?.openapi).toBe('3.0.4');
     expect(parsed?.info?.title).toBe('Bookings API');
     expect(parsed?.paths?.['/bookings']).toBeTruthy();
+  });
+
+  it('preserves the collection description', async () => {
+    const sourceWorkspace = await services.workspace.create({
+      name: 'Described',
+      scope: 'collection',
+      description: '# About\nThis collection has a description.',
+    });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+
+    expect(workspace.description).toBe('# About\nThis collection has a description.');
+  });
+
+  it('preserves the description when duplicating a workspace the way the move route does', async () => {
+    const sourceWorkspace = await services.workspace.create({
+      name: 'Described',
+      scope: 'collection',
+      description: 'Move me with my description',
+    });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    const targetProject = await services.project.create();
+
+    const exported = await getInsomniaV5DataExport({
+      workspaceId: sourceWorkspace._id,
+      includePrivateEnvironments: true,
+    });
+    const data = importInsomniaV5Data(exported);
+    const newWorkspace = await importUtil.importResourcesToNewWorkspace({
+      projectId: targetProject._id,
+      workspaceToImport: { ...sourceWorkspace, name: 'Described (moved)' },
+      resourceCacheItem: {
+        resources: data,
+        content: JSON.stringify(data, null, 2),
+        importer: { id: 'insomnia-v5', name: 'Insomnia v5 Importer', description: '' },
+      },
+    });
+
+    expect(newWorkspace.name).toBe('Described (moved)');
+    expect(newWorkspace.description).toBe('Move me with my description');
+    expect((await services.workspace.getById(newWorkspace._id))?.description).toBe('Move me with my description');
   });
 
   it('preserves a collection with a folder and request', async () => {

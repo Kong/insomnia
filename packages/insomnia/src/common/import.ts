@@ -616,6 +616,7 @@ export const importResourcesToNewWorkspace = async ({
           preRequestScript: workspaceToImport.preRequestScript,
           afterResponseScript: workspaceToImport.afterResponseScript,
           authentication: workspaceToImport.authentication,
+          description: workspaceToImport.description || '',
         }
       : {};
   // support import from both insomnia export and api spec yaml
