@@ -206,8 +206,6 @@ export class FieldEncryptionIpcHandler extends BaseIpcHandler {
   }
 }
 
-export const fieldEncryptionIpcHandler = new FieldEncryptionIpcHandler();
-
 const CANCEL = 0;
 
 /**

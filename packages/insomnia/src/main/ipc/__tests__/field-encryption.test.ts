@@ -361,7 +361,7 @@ describe('the IPC handler', () => {
   it('is reached on the fieldEncryption channel and answers from the controller it was given', async () => {
     const controller = fakeController();
     handlerModule.provideFieldEncryptionController(controller as never);
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
     expect(await rendererInvoke('fieldEncryption', 'getStatus')).toEqual({ kind: 'ok' });
     expect(await rendererInvoke('fieldEncryption', 'resetFailedFields')).toBe(3);
@@ -374,7 +374,7 @@ describe('the IPC handler', () => {
   it('answers isKeyAvailable and getKey from the controller, and getKey only when asked', async () => {
     const controller = fakeController();
     handlerModule.provideFieldEncryptionController(controller as never);
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
     expect(await rendererInvoke('fieldEncryption', 'isKeyAvailable')).toBe(true);
     expect(controller.getKey).not.toHaveBeenCalled();
@@ -389,7 +389,7 @@ describe('the IPC handler', () => {
     const controller = fakeController();
     controller.getKey.mockRejectedValue(new Error('There is no local encryption key in this session'));
     handlerModule.provideFieldEncryptionController(controller as never);
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
     await expect(rendererInvoke('fieldEncryption', 'getKey')).rejects.toThrow('no local encryption key');
   });
@@ -397,7 +397,7 @@ describe('the IPC handler', () => {
   it('passes the window that asked to resetKey, so the confirmation is shown on top of it', async () => {
     const controller = fakeController();
     handlerModule.provideFieldEncryptionController(controller as never);
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
     expect(await rendererInvoke('fieldEncryption', 'resetKey')).toBe(true);
     expect(controller.resetKey).toHaveBeenCalledWith(sender);
@@ -406,7 +406,7 @@ describe('the IPC handler', () => {
   it('does not pass the arguments of the renderer on: the controller decides from its own state', async () => {
     const controller = fakeController();
     handlerModule.provideFieldEncryptionController(controller as never);
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
     await rendererInvoke('fieldEncryption', 'resetFailedFields', { degraded: false }, 'anything');
     await rendererInvoke('fieldEncryption', 'dismiss', 'anything');
@@ -419,7 +419,7 @@ describe('the IPC handler', () => {
   });
 
   it('refuses to answer before the database has given it a controller', async () => {
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
     await expect(rendererInvoke('fieldEncryption', 'getStatus')).rejects.toThrow('not available yet');
     await expect(rendererInvoke('fieldEncryption', 'resetKey')).rejects.toThrow('not available yet');
     await expect(rendererInvoke('fieldEncryption', 'isKeyAvailable')).rejects.toThrow('not available yet');
@@ -427,7 +427,7 @@ describe('the IPC handler', () => {
   });
 
   it('can be replaced when the database is opened again', async () => {
-    registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+    registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
     const first = fakeController();
     const second = fakeController();
     handlerModule.provideFieldEncryptionController(first as never);
@@ -450,7 +450,7 @@ describe('the IPC handler', () => {
         'resetFailedFields',
         'resetKey',
       ]);
-      expect(Object.getOwnPropertyNames(handlerModule.fieldEncryptionIpcHandler)).toEqual(['channel']);
+      expect(Object.getOwnPropertyNames(new handlerModule.FieldEncryptionIpcHandler())).toEqual(['channel']);
     });
 
     it.each(['provideFieldEncryptionController', 'getController', 'controller', 'channel', 'register', 'nope'])(
@@ -458,7 +458,7 @@ describe('the IPC handler', () => {
       async name => {
         const controller = fakeController();
         handlerModule.provideFieldEncryptionController(controller as never);
-        registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+        registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
 
         await expect(
           rendererInvoke('fieldEncryption', name, { getStatus: async () => ({ kind: 'ok' }) }),
@@ -469,7 +469,7 @@ describe('the IPC handler', () => {
     );
 
     it('does not answer on another channel', async () => {
-      registerAllIpcHandlers([handlerModule.fieldEncryptionIpcHandler]);
+      registerAllIpcHandlers([new handlerModule.FieldEncryptionIpcHandler()]);
       await expect(rendererInvoke('fieldencryption', 'getStatus')).rejects.toThrow('No IPC handler registered');
     });
   });
