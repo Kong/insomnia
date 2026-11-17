@@ -67,8 +67,8 @@ export class SpecPage extends BasePage {
   /**
    * Reads the spec's own "Info"/"Paths" outline panel (the collapsible
    * section list next to the spec editor, driven by `[role="option"]`
-   * rows under `data-key="info.*"` and `[role="row"]` rows under
-   * `data-key="paths.*"`) instead of parsing the raw spec text. Sections
+   * rows with `data-testid="spec-outline-info-*"` and
+   * `data-testid="spec-outline-path"` rows) instead of parsing the raw spec text. Sections
    * render collapsed by default. Note: this panel doesn't expose
    * `host`/`basePath`/`schemes` (no "Servers" section renders for a
    * Swagger 2.0 doc) or the license's `url` (only the license name is
@@ -78,13 +78,13 @@ export class SpecPage extends BasePage {
     const infoButton = this.page.getByRole("button", { name: "Info" });
     if ((await infoButton.count()) === 0) return undefined;
 
-    await this.expandOutlineSection(infoButton, '[data-key^="info."]');
+    await this.expandOutlineSection(infoButton, '[data-testid^="spec-outline-info-"]');
     const infoData = await this.page
-      .locator('[role="option"][data-key^="info."]')
+      .locator('[data-testid^="spec-outline-info-"]')
       .evaluateAll((els) =>
         Object.fromEntries(
           els.map((el) => {
-            const key = el.dataset.key!.replace("info.", "");
+            const key = el.dataset.testid!.replace("spec-outline-info-", "");
             const text = el.textContent ?? "";
             return [key, text.slice(text.indexOf(":") + 1).trim()];
           }),
@@ -92,12 +92,12 @@ export class SpecPage extends BasePage {
       );
 
     const pathsButton = this.page.getByRole("button", { name: "Paths" });
-    await this.expandOutlineSection(pathsButton, '[data-key^="paths."]');
+    await this.expandOutlineSection(pathsButton, '[data-testid="spec-outline-path"]');
     const pathRows = await this.page
-      .locator('[role="row"][data-key^="paths."]')
+      .locator('[data-testid="spec-outline-path"]')
       .evaluateAll((rows) =>
         rows.map((row) => ({
-          path: row.dataset.key!.replace(/^paths\./, ""),
+          path: row.querySelector<HTMLElement>('[data-testid="spec-outline-path-name"]')!.textContent ?? "",
           methods: Array.from(
             row.querySelectorAll<HTMLElement>(
               '[data-testid^="spec-outline-method-"]',
