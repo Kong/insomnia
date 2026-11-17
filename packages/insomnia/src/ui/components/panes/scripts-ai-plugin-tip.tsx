@@ -2,6 +2,7 @@ import React, { type FC, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
 import * as reactUse from 'react-use';
 
+import { AnalyticsEvent } from '../../analytics';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 
@@ -23,11 +24,14 @@ const AGENTS = {
 
 type Agent = keyof typeof AGENTS;
 
+// Where the tip is shown. Sent as the shared `source` property so more skill prompts can be added and grouped later.
+type TipSource = 'Request Scripts' | 'Folder Scripts';
+
 /**
  * Tip shown above the script editors of a git project, pointing users at the AI plugins that
  * teach a coding agent how to edit the project's script files.
  */
-export const ScriptsAIPluginTip: FC = () => {
+export const ScriptsAIPluginTip: FC<{ source: TipSource }> = ({ source }) => {
   const [dismissed, setDismissed] = reactUse.useLocalStorage('dismissScriptsAIPluginTip', '');
   const [agent, setAgent] = useState<Agent>('claude');
 
@@ -80,7 +84,17 @@ export const ScriptsAIPluginTip: FC = () => {
         >
           {AGENTS[agent].command}
         </code>
-        <CopyButton size="small" content={AGENTS[agent].command} title="Copy install command">
+        <CopyButton
+          size="small"
+          content={AGENTS[agent].command}
+          title="Copy install command"
+          onClick={() => {
+            window.main.trackAnalyticsEvent({
+              event: AnalyticsEvent.skillCopyPromptClicked,
+              properties: { source, model: agent },
+            });
+          }}
+        >
           Copy
         </CopyButton>
       </div>

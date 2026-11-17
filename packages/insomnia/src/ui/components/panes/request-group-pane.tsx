@@ -197,7 +197,7 @@ export const RequestGroupPane: FC = () => {
                 )}
               </Tab>
             </TabList>
-            {activeProject && models.project.isGitProject(activeProject) && <ScriptsAIPluginTip />}
+            {activeProject && models.project.isGitProject(activeProject) && <ScriptsAIPluginTip source="Folder Scripts" />}
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
