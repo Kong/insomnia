@@ -646,7 +646,7 @@ const sendAccessTokenRequest = async (
     created: Date.now(),
   };
 
-  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(newRequest));
   const renderResult = await tryToInterpolateRequest({
     request: newRequest,
     environment: environment._id,

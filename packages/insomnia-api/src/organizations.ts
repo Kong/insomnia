@@ -59,6 +59,9 @@ export interface FeatureList {
   aiMockServers: FeatureStatus;
   aiCommitMessages: FeatureStatus;
   aiMcpClient: FeatureStatus;
+  // enabled: true means the organization enforces hiding confidential values in Preview/Console,
+  // regardless of the user's own setting. Optional because older API versions do not return it.
+  hideSecretValuesInPreviewAndConsole?: FeatureStatus;
 }
 
 export interface Billing {
