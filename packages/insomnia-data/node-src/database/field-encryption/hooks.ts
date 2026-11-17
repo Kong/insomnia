@@ -81,6 +81,11 @@ export const reconcileFieldDecryptionFailures = async (
     });
     for (const failure of failures) {
       const value = valueAtPath.get(failure.path);
+      // The failure was reported for a line of the file, and a later line of the same document may have replaced that
+      // value. The document as loaded is what the user has, so the failure is kept only while this path still holds
+      // well-formed ciphertext: the value that could not be decrypted is then still there. Anything else (plaintext, an
+      // empty string, null, a path that no longer exists, a value that is not a string) means the undecryptable value is
+      // gone, so there is nothing left to report or to reset.
       if (typeof value === 'string' && isWellFormedCiphertext(value)) {
         keep.add(getFailureKey(failure));
       }
