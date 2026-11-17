@@ -8,6 +8,7 @@ import type {
   ResponseInfo,
   RunnerResultPerRequestPerIteration,
   UserUploadEnvironment,
+  Workspace,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
@@ -412,15 +413,18 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
         if (activeRequest) {
           const [requestAndAncestors, clientCertificates] = await Promise.all([
-            db.withAncestors<Request | RequestGroup>(activeRequest as Request, [
+            db.withAncestors<Request | RequestGroup | Workspace>(activeRequest as Request, [
               models.request.type,
               models.requestGroup.type,
+              models.workspace.type,
             ]),
             services.clientCertificate.findByParentId(workspaceId),
           ]);
           const docsWithScripts = requestAndAncestors.filter(
-            (doc): doc is Request | RequestGroup =>
-              models.request.isRequest(doc) || models.requestGroup.isRequestGroup(doc),
+            (doc): doc is Request | RequestGroup | Workspace =>
+              models.request.isRequest(doc) ||
+              models.requestGroup.isRequestGroup(doc) ||
+              models.workspace.isWorkspace(doc),
           );
           const allPreScripts = docsWithScripts.map(doc => doc.preRequestScript).filter((s): s is string => !!s);
           const allPostScripts = docsWithScripts.map(doc => doc.afterResponseScript).filter((s): s is string => !!s);

@@ -5,7 +5,7 @@ import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-c
 import { database } from '~/common/database';
 import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { AnalyticsEvent } from '~/ui/analytics';
-import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
+import uiEventBus, { KONNECT_PAT_CHANGE, KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -15,6 +15,7 @@ export const KonnectSettingsModal = ({
   onClose,
   onDisconnect,
   konnectSyncEnabled = true,
+  onlyUpdateKonnectPat = false,
 }: {
   onClose: () => void;
   onDisconnect?: () => void;
@@ -22,6 +23,8 @@ export const KonnectSettingsModal = ({
    * when false, mirroring the sidebar's Sync button — connecting a PAT here would validate and
    * store it but syncing still could not run. */
   konnectSyncEnabled?: boolean;
+  // Whether the modal is only for updating the Konnect PAT, without affecting sync settings.
+  onlyUpdateKonnectPat?: boolean;
 }) => {
   const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
@@ -79,9 +82,12 @@ export const KonnectSettingsModal = ({
       return;
     }
     await window.main.secretStorage.setSecret('konnectPat', trimmed);
+    uiEventBus.emit(KONNECT_PAT_CHANGE, trimmed);
     setConnectedPat(trimmed);
     patchSettings({ hasKonnectPat: true, konnectOrganizationId: orgId ?? null });
-    uiEventBus.emit(KONNECT_SYNC_TRIGGER, orgId ?? null);
+    if (!onlyUpdateKonnectPat) {
+      uiEventBus.emit(KONNECT_SYNC_TRIGGER, orgId ?? null);
+    }
     onClose();
   };
 
@@ -233,7 +239,13 @@ export const KonnectSettingsModal = ({
                       className="rounded-xs border border-solid border-(--hl-sm) px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs) disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       isDisabled={!pat.trim() || status === 'validating' || isPatUnchanged || !konnectSyncEnabled}
                     >
-                      {status === 'validating' ? <Icon icon="spinner" className="animate-spin" /> : 'Connect & Sync'}
+                      {status === 'validating' ? (
+                        <Icon icon="spinner" className="animate-spin" />
+                      ) : onlyUpdateKonnectPat ? (
+                        'Update PAT'
+                      ) : (
+                        'Connect & Sync'
+                      )}
                     </Button>
                     {hasStoredPat && (
                       <Button

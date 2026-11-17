@@ -21,6 +21,16 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
+// Temporary: replaced by `encrypted()` field marks once this model is migrated to a Zod schema.
+// `token` and `refreshToken` are the legacy top-level fields; the rest live under `credentials`.
+export const encryptedFields = [
+  'token',
+  'refreshToken',
+  'credentials.token',
+  'credentials.refreshToken',
+  'credentials.password',
+];
+
 export function init(): Partial<BaseGitCredentials> {
   return {
     name: '',

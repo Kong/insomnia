@@ -12,6 +12,7 @@ import type {
   RequestParameter,
   Response,
   ResponseTimelineEntry,
+  Workspace,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import { escapeRegex, setDefaultProtocol } from 'insomnia-data/common';
@@ -413,22 +414,31 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 
   try {
     if (!models.mcpRequest.isMcpRequestId(requestId)) {
-      const activeRequest = await services.request.getById(requestId);
-      const requestGroups = (
-        await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-      ).filter(isRequestGroup) as RequestGroup[];
+      const activeRequest = (await services.helpers.getRequestById(requestId)) as Request | undefined;
+      const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(activeRequest, [
+        models.requestGroup.type,
+        models.workspace.type,
+      ]);
+      const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+      const workspace = ancestors.find(models.workspace.isWorkspace);
       // requestGroups is of order leaf to root
       const closestFolderAuth = requestGroups.find(
         ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
       );
       const isRequestAuthEnabled =
         getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-      closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+      const isWorkspaceAuthEnabled =
+        getAuthObjectOrNull(workspace?.authentication) && isAuthEnabled(workspace?.authentication);
+      closestAuthId = isRequestAuthEnabled
+        ? requestId
+        : closestFolderAuth?._id || (isWorkspaceAuthEnabled && workspace?._id) || requestId;
 
       if (isRequestAuthEnabled) {
         refreshTimeline.push(logEntry('Using OAuth2 auth from request'));
       } else if (closestFolderAuth) {
         refreshTimeline.push(logEntry(`Using OAuth2 auth inherited from folder "${closestFolderAuth.name}"`));
+      } else if (isWorkspaceAuthEnabled) {
+        refreshTimeline.push(logEntry('Using OAuth2 auth inherited from collection'));
       }
     }
 

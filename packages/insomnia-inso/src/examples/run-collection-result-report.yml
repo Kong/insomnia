@@ -5,6 +5,22 @@ meta:
   created: 1762508027498
   modified: 1762508027498
   description: ''
+headers:
+  - id: pair_aa7cdfd5c82d4f4cb7737ad41e357221
+    name: Authorization
+    value: <sensitive>
+  - id: pair_32ad47361f6c40bcb3f84273b1b4ce51
+    name: Auth
+    value: <sensitive>
+authentication:
+  type: basic
+  useISO88591: false
+  disabled: false
+  username: col-username
+  password: col-password
+scripts:
+  preRequest: "console.log('Collection pre request script executed');"
+  afterResponse: "console.log('Collection after response script executed');"
 collection:
   - url: http://localhost:4010/echo
     name: Request With Sensitive Headers

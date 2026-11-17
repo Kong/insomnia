@@ -98,6 +98,81 @@ describe('renderRealtimeConnectPayload', () => {
     );
   });
 
+  describe('collection-level headers and authentication', () => {
+    const basic = { type: 'basic' as const, username: 'workspace', password: 'workspace-pass' };
+
+    const setWorkspaceDefaults = async () => {
+      const workspace = (await services.workspace.getById(workspaceId))!;
+      await services.workspace.update(workspace, {
+        headers: [
+          { name: 'X-Level', value: 'workspace' },
+          { name: 'X-Workspace-Only', value: 'w' },
+        ],
+        authentication: basic,
+      });
+    };
+
+    const renderedPayload = () => tryToInterpolateRequestAndCollectSensitiveValues.mock.calls[0][0].payload;
+
+    it.each([
+      ['WebSocket', 'webSocketRequest'],
+      ['Socket.IO', 'socketIORequest'],
+    ] as const)('inherits workspace and folder headers and workspace auth for a %s request', async (_label, service) => {
+      await setWorkspaceDefaults();
+      const folder = await services.requestGroup.create({
+        name: 'Folder',
+        parentId: workspaceId,
+        metaSortKey: 0,
+        headers: [{ name: 'X-Level', value: 'folder' }],
+      });
+      const realtimeRequest = await services[service].create({
+        name: 'realtime',
+        parentId: folder._id,
+        url: 'ws://localhost',
+        headers: [{ name: 'X-Level', value: 'request' }],
+      });
+      await mockRendered();
+
+      await renderRealtimeConnectPayload({ request: realtimeRequest, environmentId, workspaceId });
+
+      expect(renderedPayload().headers).toEqual([
+        { name: 'X-Level', value: 'workspace, folder, request' },
+        { name: 'X-Workspace-Only', value: 'w' },
+      ]);
+      expect(renderedPayload().authentication).toEqual(basic);
+    });
+
+    it.each([
+      ['WebSocket', 'webSocketRequest'],
+      ['Socket.IO', 'socketIORequest'],
+    ] as const)('lets a %s request override the workspace auth', async (_label, service) => {
+      await setWorkspaceDefaults();
+      const realtimeRequest = await services[service].create({
+        name: 'realtime',
+        parentId: workspaceId,
+        url: 'ws://localhost',
+        authentication: { type: 'bearer', token: 'request-token' },
+      });
+      await mockRendered();
+
+      await renderRealtimeConnectPayload({ request: realtimeRequest, environmentId, workspaceId });
+
+      expect(renderedPayload().authentication).toEqual({ type: 'bearer', token: 'request-token' });
+    });
+
+    it('suppresses the user agent when the only user-agent header is a disabled workspace one', async () => {
+      const workspace = (await services.workspace.getById(workspaceId))!;
+      await services.workspace.update(workspace, {
+        headers: [{ name: 'User-Agent', value: 'workspace-agent', disabled: true }],
+      });
+      await mockRendered();
+
+      const result = await renderRealtimeConnectPayload({ request, environmentId, workspaceId });
+
+      expect(result?.suppressUserAgent).toBe(true);
+    });
+  });
+
   it('returns undefined when rendering fails', async () => {
     tryToInterpolateRequestAndCollectSensitiveValues.mockImplementation(async () => {});
 

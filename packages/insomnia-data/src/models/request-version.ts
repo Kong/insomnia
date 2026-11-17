@@ -15,6 +15,10 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
+// Temporary: replaced by an `encrypted()` field mark once this model is migrated to a Zod schema.
+// `compressedRequest` is a gzip + base64 copy of the whole request, including its authentication.
+export const encryptedFields = ['compressedRequest'];
+
 interface BaseRequestVersion {
   compressedRequest: string | null;
 }

@@ -35,12 +35,14 @@ import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
+import { KongLogo } from '../kong-logo';
 import { MarkdownEditor } from '../markdown-editor';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
+import { RequestPluginsTab } from '../panes/request-plugins-tab';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar, type WebSocketActionBarHandle } from './action-bar';
 
@@ -186,7 +188,7 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const { activeRequest, activeRequestMeta } = useRequestLoaderData() as WebSocketRequestLoaderData;
-  const { vcsVersion } = useWorkspaceLoaderData()!;
+  const { activeProject, activeWorkspace, vcsVersion } = useWorkspaceLoaderData()!;
   const { workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -341,6 +343,17 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           >
             Docs
           </Tab>
+          {activeProject?.konnectControlPlaneId && (
+            <Tab
+              className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
+              id="plugins"
+            >
+              <span>Plugins</span>
+              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center">
+                <KongLogo width={14} height={13} />
+              </span>
+            </Tab>
+          )}
         </TabList>
         <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
           {disabled && <PaneReadOnlyBanner />}
@@ -498,6 +511,17 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             onChange={(description: string) => patchRequest(requestId, { description })}
           />
         </TabPanel>
+        {activeProject?.konnectControlPlaneId && (
+          <TabPanel className="h-full w-full overflow-y-auto" id="plugins">
+            <ErrorBoundary key={`${activeRequest._id}:plugins`} errorClassName="font-error pad text-center">
+              <RequestPluginsTab
+                activeRequest={activeRequest}
+                activeWorkspace={activeWorkspace}
+                activeProject={activeProject}
+              />
+            </ErrorBoundary>
+          </TabPanel>
+        )}
       </Tabs>
       {isRequestSettingsModalOpen && (
         <RequestSettingsModal request={activeRequest} onHide={() => setIsRequestSettingsModalOpen(false)} />
