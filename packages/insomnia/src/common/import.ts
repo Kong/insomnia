@@ -606,6 +606,18 @@ export const importResourcesToNewWorkspace = async ({
   const resources = resourceCacheItem.resources;
   const ResourceIdMap = new Map();
   let newWorkspace: Workspace;
+  // Collection-level headers, scripts and authentication parsed from the import file.
+  const collectionProperties =
+    workspaceToImport &&
+    ['collection', 'design'].includes(workspaceToImport.scope) &&
+    models.workspace.isWorkspace(workspaceToImport)
+      ? {
+          headers: workspaceToImport.headers,
+          preRequestScript: workspaceToImport.preRequestScript,
+          afterResponseScript: workspaceToImport.afterResponseScript,
+          authentication: workspaceToImport.authentication,
+        }
+      : {};
   // support import from both insomnia export and api spec yaml
   const apiSpecResource = resources.find(isApiSpec);
   if (apiSpecResource || isApiSpecImport(resourceCacheItem.importer)) {
@@ -613,6 +625,7 @@ export const importResourcesToNewWorkspace = async ({
       name: workspaceToImport?.name,
       scope: workspaceToImport?.scope ?? 'collection',
       parentId: projectId,
+      ...collectionProperties,
     });
 
     // For an Insomnia v5 export the parsed spec resource already holds just the
@@ -629,6 +642,7 @@ export const importResourcesToNewWorkspace = async ({
       name: workspaceToImport?.name || 'Imported API Collection',
       scope: workspaceToImport?.scope || 'collection',
       parentId: projectId,
+      ...collectionProperties,
     });
   }
 

@@ -26,6 +26,10 @@ export interface RAToastContent {
     url: string;
     external: boolean;
   };
+  action?: {
+    label: string;
+    onPress: () => void;
+  };
   status?: Status;
   time?: string;
 }
@@ -81,14 +85,24 @@ export const queue = new ToastQueue<RAToastContent>({
   },
 });
 
-export const showToast = (content: RAToastContent, options?: { timeout?: number | null }) => {
+export const showToast = (
+  content: RAToastContent,
+  options?: {
+    timeout?: number | null;
+    /** Called when the toast is closed, including while it is still waiting in the queue. */
+    onClose?: () => void;
+  },
+) => {
   // Add a new toast to the queue.
   if (!content.time) {
     content.time = format(new Date(), 'HH:mm:ss aa');
   }
 
   // Pass timeout: null to keep the toast persistent (no auto-dismiss).
-  const toastOptions: { timeout?: number } = options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 };
+  const toastOptions: { timeout?: number; onClose?: () => void } = {
+    ...(options?.timeout === null ? {} : { timeout: options?.timeout ?? 3000 }),
+    ...(options?.onClose ? { onClose: options.onClose } : {}),
+  };
 
   const key = queue.add(content, toastOptions);
   // Return the key for further reference if needed.
@@ -175,6 +189,17 @@ export const Toaster = () => (
                   <span className="underline">{toast.content.link.label}</span>
                   {toast.content.link.external && <FontAwesomeIcon icon="arrow-up-right-from-square" className="size-3" />}
                 </Link>
+              )}
+              {toast.content.action && (
+                <Button
+                  onPress={() => {
+                    toast.content.action?.onPress();
+                    queue.close(toast.key);
+                  }}
+                  className="w-fit text-xs text-(--color-surprise) underline hover:opacity-80"
+                >
+                  {toast.content.action.label}
+                </Button>
               )}
             </div>
           </div>

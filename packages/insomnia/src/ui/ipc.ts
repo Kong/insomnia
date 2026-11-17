@@ -1,4 +1,5 @@
 import type { SyncIpcHandler } from '~/main/cloud-sync/sync-ipc-handler';
+import type { GitIpcHandler } from '~/main/git/git-ipc-handler';
 
 type OmitSender<Fn> = Fn extends (sender: any, ...args: infer A) => infer R ? (...args: A) => R : never;
 
@@ -19,5 +20,6 @@ function createIpcTrigger<T>(domain: string) {
 }
 
 const sync = createIpcTrigger<SyncIpcHandler>('sync');
+const git = createIpcTrigger<GitIpcHandler>('git');
 
-export { sync };
+export { git, sync };

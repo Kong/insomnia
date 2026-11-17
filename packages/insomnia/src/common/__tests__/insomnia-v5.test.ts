@@ -896,6 +896,110 @@ spec:
     });
   });
 
+  describe('collection-level headers, scripts, authentication and description', () => {
+    beforeEach(async () => {
+      await services.environment.getOrCreateForParentId('wrk_test');
+    });
+
+    it('round-trips workspace headers and scripts through the v5 format', async () => {
+      await services.workspace.update('wrk_test', {
+        headers: [{ name: 'X-Collection', value: 'shared', description: 'for all requests' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+      });
+
+      const exported = await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false });
+      const parsed = YAML.parse(exported);
+      expect(parsed.headers).toEqual([{ name: 'X-Collection', value: 'shared', description: 'for all requests' }]);
+      expect(parsed.scripts).toEqual({ preRequest: 'console.log("before");', afterResponse: 'console.log("after");' });
+
+      const [workspace] = importInsomniaV5Data(exported);
+      expect(workspace).toMatchObject({
+        type: 'Workspace',
+        headers: [{ name: 'X-Collection', value: 'shared', description: 'for all requests' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+      });
+    });
+
+    it('round-trips workspace authentication through the v5 format', async () => {
+      const authentication = { type: 'basic', username: 'user', password: 'pass' } as const;
+      await services.workspace.update('wrk_test', { authentication });
+
+      const exported = await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false });
+      expect(YAML.parse(exported).authentication).toEqual(authentication);
+
+      const [workspace] = importInsomniaV5Data(exported);
+      expect(workspace).toMatchObject({ type: 'Workspace', authentication });
+    });
+
+    it('round-trips workspace description through the v5 meta', async () => {
+      await services.workspace.update('wrk_test', { description: 'Shared by every request' });
+
+      const exported = await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false });
+      expect(YAML.parse(exported).meta.description).toBe('Shared by every request');
+
+      const [workspace] = importInsomniaV5Data(exported);
+      expect(workspace).toMatchObject({ type: 'Workspace', description: 'Shared by every request' });
+    });
+
+    it('round-trips headers, scripts and authentication for a design workspace', async () => {
+      const authentication = { type: 'bearer', token: 'abc123' } as const;
+      const workspace = await services.workspace.create({
+        _id: 'wrk_design_collection_props',
+        name: 'Design Collection Props',
+        parentId: 'proj_test',
+        scope: 'design',
+        description: 'Design description',
+        headers: [{ name: 'X-Design', value: 'shared' }],
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        authentication,
+      });
+      await services.environment.getOrCreateForParentId(workspace._id);
+      await services.apiSpec.getOrCreateForParentId(workspace._id, {
+        _id: 'spec_collection_props',
+        contents: '{"openapi": "3.0.0"}',
+        contentType: 'json',
+      });
+
+      const exported = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
+      const parsed = YAML.parse(exported);
+      expect(parsed.type).toBe('spec.insomnia.rest/5.0');
+      expect(parsed.authentication).toEqual(authentication);
+      expect(parsed.meta.description).toBe('Design description');
+
+      const imported = importInsomniaV5Data(exported).find(doc => doc.type === 'Workspace');
+      expect(imported).toMatchObject({
+        description: 'Design description',
+        headers: [{ name: 'X-Design', value: 'shared' }],
+        preRequestScript: 'pre',
+        afterResponseScript: 'after',
+        authentication,
+      });
+    });
+
+    it('omits headers, scripts and authentication from the export when the workspace has none', async () => {
+      const parsed = YAML.parse(
+        await getInsomniaV5DataExport({ workspaceId: 'wrk_test', includePrivateEnvironments: false }),
+      );
+      expect(parsed).not.toHaveProperty('headers');
+      expect(parsed).not.toHaveProperty('scripts');
+      expect(parsed).not.toHaveProperty('authentication');
+    });
+
+    it('imports a collection without authentication as empty authentication', () => {
+      const [workspace] = importInsomniaV5Data(`
+        type: collection.insomnia.rest/5.0
+        name: Test Collection
+        meta:
+          id: wrk_test
+        collection: []
+      `);
+      expect(workspace).toMatchObject({ type: 'Workspace', authentication: {}, description: '' });
+    });
+  });
+
   describe('confidentialKeys', () => {
     const kvPair = (name: string, value: string, isConfidential: boolean, enabled = true) => ({
       id: `envPair_${name}_${value}`,

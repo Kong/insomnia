@@ -202,6 +202,57 @@ describe('importRaw()', () => {
     );
   });
 
+  it('should persist collection-level headers, scripts and authentication when importing a v5 collection', async () => {
+    const authentication = { type: 'basic', username: 'user', password: 'pass' };
+    const fixturePath = path.join(
+      __dirname,
+      '..',
+      '__fixtures__',
+      'insomnia-v5-collection-properties',
+      'collection.yaml',
+    );
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+    const projectToImportTo = await services.project.create();
+
+    const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+    expect(scanResult[0].errors.length).toBe(0);
+
+    await importUtil.importResourcesToProject({ projectId: projectToImportTo._id });
+
+    const [workspace] = await services.workspace.listByParentId(projectToImportTo._id);
+    expect(workspace).toMatchObject({
+      name: 'With Collection Props',
+      headers: [{ name: 'X-Collection', value: 'shared' }],
+      preRequestScript: 'console.log("before");',
+      afterResponseScript: 'console.log("after");',
+      authentication,
+    });
+  });
+
+  it.each([
+    ['mcp client', 'mcp', 'mcp.yaml'],
+    ['mock server', 'mock-server', 'mock-server.yaml'],
+  ])(
+    'should not set collection-level properties when importing an %s workspace',
+    async (_label, scope, fixtureName) => {
+      const fixturePath = path.join(__dirname, '..', '__fixtures__', 'insomnia-v5-collection-properties', fixtureName);
+      const content = fs.readFileSync(fixturePath, 'utf8').toString();
+      const projectToImportTo = await services.project.create();
+
+      const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+      expect(scanResult[0].errors.length).toBe(0);
+
+      await importUtil.importResourcesToProject({ projectId: projectToImportTo._id });
+
+      const [workspace] = await services.workspace.listByParentId(projectToImportTo._id);
+      expect(workspace.scope).toBe(scope);
+      expect(workspace.headers).toBeUndefined();
+      expect(workspace.preRequestScript).toBeUndefined();
+      expect(workspace.afterResponseScript).toBeUndefined();
+      expect(workspace.authentication).toBeUndefined();
+    },
+  );
+
   it('should import a curl request to an existing workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
