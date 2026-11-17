@@ -1,21 +1,22 @@
 /**
- * Predicts what the Git Sync pipeline writes back to disk for a given Insomnia YAML file.
+ * Replays the Git Sync import → export round-trip for a file: what Insomnia
+ * would write for a given YAML file, and how the file on disk differs from
+ * that.
  *
- * After a discard, RepoFileWatcher imports the restored file into the DB and then
- * re-exports the workspace to disk. When the restored file is not in the exact format
- * Insomnia generates (e.g. it was edited by hand or by an older version), the re-export
- * differs from it and the file shows up as changed again, so the change can never be
- * discarded. This module replays that import → export round-trip against a scratch
- * in-memory database, so such files can be detected up front without touching app data.
+ * The DB→FS writer takes the base of the file on disk from it and verifies its
+ * patch against it (see entity-delta.ts). The visual diff uses it to splice one
+ * entity into the file on disk and replay the result.
  */
 
+import crypto from 'node:crypto';
+
+import type { Environment } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { createNedbDatabase } from 'insomnia-data/node';
 import { parse } from 'yaml';
 
 import { InsomniaFileTypeValues } from '~/common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '~/common/insomnia-v5';
-import { hasSignificantChanges } from '~/common/significant-diff-detection';
 
 /**
  * Returns the content the Git Sync pipeline would write to disk after importing `content`,
@@ -42,6 +43,18 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
     await scratchDb.update(doc);
   }
 
+  // The app creates a base environment for every workspace (and the exporter
+  // requires one), so a file without `environments:` imports to a workspace
+  // that has it. Same deterministic id as `getOrCreateForParentId`.
+  if (!data.some(doc => models.environment.isEnvironment(doc) && doc.parentId === workspace._id)) {
+    await scratchDb.docCreate<Environment>(models.environment.type, {
+      _id: `${models.environment.prefix}_${crypto.createHash('sha1').update(workspace._id).digest('hex')}`,
+      parentId: workspace._id,
+      name: 'Base Environment',
+      environmentType: models.environment.EnvironmentType.KVPAIR,
+    });
+  }
+
   const exportedContent = await getInsomniaV5DataExport({
     workspaceId: workspace._id,
     includePrivateEnvironments: false,
@@ -52,10 +65,13 @@ export async function getCanonicalInsomniaFileContent(content: string): Promise<
 }
 
 // Whether `content` declares itself an Insomnia file on its first line (eg. `type: collection.insomnia.rest/5.0`).
+// Comments, blank lines and YAML document markers or directives before it do not count.
 function isInsomniaFileContent(content: string) {
-  const newLineIndex = content.indexOf('\n');
-  const firstLine = (newLineIndex === -1 ? content : content.slice(0, newLineIndex)).trim();
-  return InsomniaFileTypeValues.some(type => firstLine.includes(type));
+  const firstLine = content
+    .split('\n', 50)
+    .map(line => line.trim())
+    .find(line => line !== '' && !line.startsWith('#') && !line.startsWith('%') && line !== '---');
+  return firstLine !== undefined && InsomniaFileTypeValues.some(type => firstLine.includes(type));
 }
 
 export type InsomniaFileFormatIssue = 'invalid' | 'non-canonical';
@@ -117,34 +133,4 @@ function collectMetaIds(value: unknown, ids = new Set<string>()) {
     Object.values(value).forEach(item => collectMetaIds(item, ids));
   }
   return ids;
-}
-
-/**
- * Whether the whole difference between the baseline and working copy of a file comes from
- * Insomnia re-generating the baseline. The baseline is what a discard restores: the staged
- * content, or the HEAD content when nothing is staged. Such a change reappears after every
- * discard and can only be resolved by committing it.
- */
-export async function isUndiscardableChange({
-  filepath,
-  baselineContent,
-  workingCopyContent,
-}: {
-  filepath: string;
-  baselineContent: string | null;
-  workingCopyContent: string | null;
-}) {
-  if (!baselineContent || !workingCopyContent || baselineContent === workingCopyContent) {
-    return false;
-  }
-
-  const canonicalContent = await getCanonicalInsomniaFileContent(baselineContent);
-  if (canonicalContent === null || canonicalContent === baselineContent) {
-    return false;
-  }
-
-  // Compare with the same rules the Unstaged changes list uses. Import fills missing
-  // `meta.created`/`modified` with the current time, so the replay and the working copy can
-  // differ in those alone even though both come from re-generating the same baseline.
-  return !hasSignificantChanges(canonicalContent, workingCopyContent, filepath);
 }
