@@ -21,7 +21,8 @@ import {
 // The themed methods use the existing theme colour families (so they recolour
 // with the active theme); in the default theme they render as the design hexes:
 // POST #7ECF2B, PUT #FF9A1F, PATCH #F0E137, DELETE #FF5631, OPTIONS/HEAD #46C1E6.
-const METHOD_PILL_CLASSES: Record<string, string> = {
+export const METHOD_PILL_CLASSES: Record<string, string> = {
+  [METHOD_GET]: 'bg-(--color-surprise) text-(--color-font-surprise)',
   [METHOD_POST]: 'bg-(--color-success) text-(--color-font-success)',
   [METHOD_PUT]: 'bg-(--color-warning) text-(--color-font-warning)',
   [METHOD_PATCH]: 'bg-(--color-notice) text-(--color-font-notice)',

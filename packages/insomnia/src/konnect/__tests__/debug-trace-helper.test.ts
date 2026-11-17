@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DebugTraceDetail } from '../debug-session-api';
-import { findTraceIdsByRouteId, getRouteIdFromKonnectRouteKey } from '../debug-trace-helper';
+import { getRouteIdFromKonnectRouteKey, type SpanTree, summarizeTrace } from '../debug-trace-helper';
 
 const detail = (traceId: string, attributes: Record<string, any>[]): DebugTraceDetail => ({
   traceId,
@@ -30,18 +30,36 @@ describe('getRouteIdFromKonnectRouteKey', () => {
   });
 });
 
-describe('findTraceIdsByRouteId', () => {
-  const details = new Map([
-    ['t1', detail('t1', [{ 'http.route': '/a' }, { 'proxy.kong.route.id': 'route-1' }])],
-    ['t2', detail('t2', [{ 'proxy.kong.route.id': 'route-2' }])],
-    ['t3', detail('t3', [{}])],
-  ]);
-
-  it('matches traces having a span with the same proxy.kong.route.id', () => {
-    expect([...findTraceIdsByRouteId(details, 'route-1')]).toEqual(['t1']);
+describe('summarizeTrace', () => {
+  const treeWith = (attributes: Record<string, any>): SpanTree => ({
+    roots: [
+      {
+        span: { ...detail('t1', [attributes]).spans[0] },
+        name: 'span',
+        depth: 0,
+        startOffsetMs: 0,
+        durationMs: 1,
+        children: [],
+      },
+    ],
+    totalMs: 1,
   });
 
-  it('matches nothing without a route id', () => {
-    expect(findTraceIdsByRouteId(details, null).size).toBe(0);
+  it('reads the route id, method, protocol and url scheme from the latency span', () => {
+    const summary = summarizeTrace(
+      treeWith({
+        'proxy.kong.latency.total': 10,
+        'proxy.kong.route.id': 'route-1',
+        'http.request.method': 'GET',
+        'network.protocol.name': 'http',
+        'url.scheme': 'https',
+      }),
+    );
+    expect(summary).toMatchObject({ routeId: 'route-1', method: 'GET', protocol: 'http', urlScheme: 'https' });
+  });
+
+  it('defaults the route fields to empty strings when absent', () => {
+    const summary = summarizeTrace(treeWith({ 'proxy.kong.latency.total': 10 }));
+    expect(summary).toMatchObject({ routeId: '', method: '', protocol: '', urlScheme: '' });
   });
 });
