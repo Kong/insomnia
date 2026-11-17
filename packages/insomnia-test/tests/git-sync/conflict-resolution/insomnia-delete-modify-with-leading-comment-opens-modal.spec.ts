@@ -4,13 +4,13 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { ProjectType } from '@package/enums/project-types';
 import { DEFAULT_TIMEOUT } from '@package/misc/constants';
-import { buildCollectionFile, commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
+import { commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
 
-test('Verify a conflict on an Insomnia file with a hand-written comment on its first line still opens the Resolve conflicts modal', async ({ user }) => {
-  test.fail();
+test('Verify a delete/modify conflict on an Insomnia file with a hand-written comment on its first line still opens the Resolve conflicts modal', async ({ user }) => {
+  test.fail(true, 'INS-4332');
 
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
@@ -30,21 +30,17 @@ test('Verify a conflict on an Insomnia file with a hand-written comment on its f
   );
   await gitSyncFlow.commitAndPush(faker.string.alphanumeric(10));
 
-  const handWrittenComment = `# ${faker.string.alpha(10)}`;
   const original = fs.readFileSync(path.join(repoPath, filePath), 'utf8');
-  commitLocalFiles(repoPath, [{ path: filePath, content: `${handWrittenComment}\n${original}` }], faker.string.alphanumeric(10));
-  const remoteCollection = new Collection(faker.string.alpha(10));
-  await pushServerFile({ path: filePath, content: buildCollectionFile(remoteCollection.name) });
+  commitLocalFiles(repoPath, [{ path: filePath, content: `# ${faker.string.alpha(10)}\n${original}` }], faker.string.alphanumeric(10));
+  await pushServerFile({ path: filePath, delete: true, message: faker.string.alphanumeric(10) });
 
   const conflicted = await gitSyncFlow.pullExpectingConflicts();
   await gitSyncFlow.resolvePullConflicts('Current');
   const pullIssues = await gitSyncFlow.getPullIssues();
 
-  expect(conflicted).toHaveLength(1);
-  expect([collection.name, remoteCollection.name]).toContain(conflicted[0]);
+  expect(conflicted).toEqual([collection.name]);
   expect(pullIssues.conflictModalOpen).toBe(false);
   await expect
-    .poll(() => fs.readFileSync(path.join(repoPath, filePath), 'utf8'), { timeout: DEFAULT_TIMEOUT })
+    .poll(() => (fs.existsSync(path.join(repoPath, filePath)) ? fs.readFileSync(path.join(repoPath, filePath), 'utf8') : undefined), { timeout: DEFAULT_TIMEOUT })
     .toContain(collection.name);
-  expect(fs.readFileSync(path.join(repoPath, filePath), 'utf8')).not.toContain(remoteCollection.name);
 });

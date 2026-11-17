@@ -11,7 +11,7 @@ const workflow = (step: string) => `name: deploy\non: push\njobs:\n  build:\n   
 const WORKFLOW = '.github/workflows/main-deployment.yaml';
 
 test('Verify a conflict where the remote deleted a non-Insomnia YAML file is auto-resolved by deleting it locally', async ({ user }) => {
-  test.fail();
+  test.fail(true, 'INS-4331');
 
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
