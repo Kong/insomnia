@@ -315,6 +315,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       gitFetchFetcher.submit({
         projectId,
         workspaceId,
+        background: true,
       });
     },
     1000 * 60 * 5,

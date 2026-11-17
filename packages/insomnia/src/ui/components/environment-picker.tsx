@@ -38,6 +38,23 @@ const InheritanceTooltip = () => (
   </Tooltip>
 );
 
+// The trigger caps its width, so the label container must be allowed to shrink (min-w-0) for the
+// ellipsis to render. The tooltip carries the full name above the picker's scope hint.
+const EnvironmentLabel = ({ name, description }: { name: string; description: string }) => (
+  <Tooltip
+    className="min-w-0 overflow-hidden"
+    position="top"
+    message={
+      <span className="flex flex-col gap-1 text-left">
+        <span className="font-bold">{name}</span>
+        <span className="text-xs text-(--hl)">{description}</span>
+      </span>
+    }
+  >
+    <span className="block truncate">{name}</span>
+  </Tooltip>
+);
+
 export const EnvironmentPicker = ({
   isOpen,
   onOpenChange,
@@ -96,6 +113,10 @@ export const EnvironmentPicker = ({
   const activeBaseEnvironment = baseEnvironment;
   const activeSubEnvironment = subEnvironments.find(e => e._id === activeEnvironment._id);
   const activeCollectionEnvironmentName = activeSubEnvironment ? activeSubEnvironment.name : activeBaseEnvironment.name;
+  const projectEnvironmentName =
+    activeGlobalEnvironment && activeGlobalBaseEnvironment
+      ? activeGlobalEnvironment.name
+      : 'No Project Environment';
 
   const navigate = useNavigate();
 
@@ -158,13 +179,10 @@ export const EnvironmentPicker = ({
               style={{ color: activeGlobalEnvironment?.color || '' }}
               className="w-4 shrink-0"
             />
-            <Tooltip position="top" message="Project environment — shared by every collection in this project.">
-              <span className="truncate">
-                {activeGlobalEnvironment && activeGlobalBaseEnvironment
-                  ? activeGlobalEnvironment.name
-                  : 'No Project Environment'}
-              </span>
-            </Tooltip>
+            <EnvironmentLabel
+              name={projectEnvironmentName}
+              description="Project environment — shared by every collection in this project."
+            />
             <Icon icon="caret-down" className="w-2.5 shrink-0 text-(--hl)" />
           </Button>
           <Popover className={popoverClassName} placement="bottom start" offset={8}>
@@ -193,7 +211,6 @@ export const EnvironmentPicker = ({
                 aria-label="Select a Project Environment"
                 selectionMode="single"
                 disallowEmptySelection
-                key={activeGlobalEnvironment?._id || 'none'}
                 items={projectEnvironmentItems}
                 selectedKeys={[activeGlobalEnvironment?._id || activeGlobalBaseEnvironment?._id || '']}
                 onSelectionChange={keys => {
@@ -260,9 +277,10 @@ export const EnvironmentPicker = ({
             style={{ color: activeEnvironment.color || '' }}
             className="w-4 shrink-0"
           />
-          <Tooltip position="top" message="Collection environment — used only by this API collection.">
-            <span className="truncate">{activeCollectionEnvironmentName}</span>
-          </Tooltip>
+          <EnvironmentLabel
+            name={activeCollectionEnvironmentName}
+            description="Collection environment — used only by this API collection."
+          />
           <Icon icon="caret-down" className="w-2.5 shrink-0 text-(--hl)" />
         </Button>
         <Popover className={popoverClassName} placement="bottom start" offset={8}>
@@ -288,7 +306,6 @@ export const EnvironmentPicker = ({
             <ListBox
               aria-label="Select an API Collection Environment"
               selectionMode="single"
-              key={activeEnvironment._id}
               items={collectionEnvironmentList}
               selectedKeys={[activeEnvironment._id || baseEnvironment._id || '']}
               disallowEmptySelection

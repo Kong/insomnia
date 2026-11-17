@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   fetchAllControlPlanes,
+  fetchAllPlugins,
   fetchAllServices,
+  fetchAvailablePluginNames,
   fetchKonnectOrganizationId,
   fetchRoutesForService,
   validatePat,
@@ -381,6 +383,101 @@ describe('fetchRoutesForService', () => {
       expression: null,
       service: null,
     });
+  });
+});
+
+// ─── fetchAllPlugins — offset pagination and normalization ───────────────────
+
+describe('fetchAllPlugins', () => {
+  it('follows offset pagination across multiple pages', async () => {
+    const page1 = [{ id: 'p-1', name: 'key-auth', enabled: true, route: { id: 'route-1' } }];
+    const page2 = [{ id: 'p-2', name: 'rate-limiting', enabled: true, service: { id: 'service-1' } }];
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ data: page1, offset: 'cursor-abc' }))
+      .mockResolvedValueOnce(jsonResponse({ data: page2, offset: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchAllPlugins('faketoken', 'cp-1', 'us');
+
+    expect(result.map(plugin => plugin.id)).toEqual(['p-1', 'p-2']);
+    expect(fetchMock.mock.calls[0][0]).toContain('/core-entities/plugins');
+    expect(fetchMock.mock.calls[1][0]).toContain('offset=cursor-abc');
+  });
+
+  it('normalizes omitted nullable fields to null', async () => {
+    const rawPlugin = { id: 'p-1', name: 'key-auth' };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ data: [rawPlugin], offset: null })));
+
+    const result = await fetchAllPlugins('faketoken', 'cp-1', 'us');
+
+    expect(result[0]).toEqual({
+      ...rawPlugin,
+      instance_name: null,
+      enabled: true,
+      config: null,
+      protocols: null,
+      tags: null,
+      condition: null,
+      ordering: null,
+      route: null,
+      service: null,
+      consumer: null,
+      consumer_group: null,
+    });
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 403 })));
+
+    await expect(fetchAllPlugins('faketoken', 'cp-1', 'us')).rejects.toThrow('Konnect API error 403');
+  });
+});
+
+// ─── fetchAvailablePluginNames ───────────────────────────────────────────────
+
+describe('fetchAvailablePluginNames', () => {
+  it('reads names from the available-plugins endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ names: ['datakit', 'key-auth', 'cors'] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual([
+      'datakit',
+      'key-auth',
+      'cors',
+    ]);
+    expect(fetchMock.mock.calls[0][0]).toContain('/core-entities/v1/available-plugins');
+  });
+
+  it('returns an empty list when no plugins are available', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ names: [] })));
+
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).resolves.toEqual([]);
+  });
+
+  it('throws when names is missing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ nope: true })));
+
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).rejects.toThrow(
+      'Unexpected Konnect available-plugins response shape',
+    );
+  });
+
+  it('throws when names contains a non-string item', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ names: ['datakit', { name: 'cors' }] })));
+
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).rejects.toThrow(
+      'Unexpected Konnect available-plugins item shape',
+    );
+  });
+
+  it('throws on non-ok responses', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 500 })));
+
+    await expect(fetchAvailablePluginNames('faketoken', 'cp-1', 'us')).rejects.toThrow(
+      'Konnect API error 500 fetching available plugins',
+    );
   });
 });
 

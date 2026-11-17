@@ -7,6 +7,8 @@ import type { Route } from './+types/git.fetch';
 interface FetchGitData {
   projectId: string;
   workspaceId?: string;
+  /** Periodic fetch without user action: must not start interactive sign-ins. */
+  background?: boolean;
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

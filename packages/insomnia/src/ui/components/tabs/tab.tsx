@@ -6,6 +6,7 @@ import { Button, GridListItem } from 'react-aria-components';
 
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '~/common/get-workspace-label';
 import type { WorkspaceFileIssue } from '~/main/git-service';
+import { KongLogo } from '~/ui/components/kong-logo';
 import { scrollElementIntoView } from '~/ui/utils';
 
 import { type BaseTab, type TabType, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -94,6 +95,10 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
       return <Icon icon="play" />;
     }
 
+    if (type === 'konnectDebugger') {
+      return <KongLogo />;
+    }
+
     if (type === 'testSuite') {
       return <Icon icon="check" />;
     }
@@ -151,7 +156,11 @@ export const InsomniaTab = ({ tab, fileIssue }: { tab: BaseTab; fileIssue?: Work
       ref={scrollIntoView}
     >
       {({ isSelected, isHovered }) => (
-        <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className="h-full">
+        <Tooltip
+          delay={1000}
+          message={tab.workspaceName ? `${tab.projectName} / ${tab.workspaceName}` : tab.projectName}
+          className="h-full"
+        >
           <div
             onDoubleClick={handleDoubleClick}
             onAuxClick={e => handleAuxClick(e, tab.id)}

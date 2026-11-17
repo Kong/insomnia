@@ -40,7 +40,7 @@ type CollectionRequestMeta = RequestMeta | GrpcRequestMeta | WebSocketRequestMet
 
 export interface CollectionWorkspaceChildren
   extends CommonWorkspaceChildren<
-    { requestsAndGroups: CollectionChildDoc[] },
+    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[] },
     {
       allRequestMetas: CollectionRequestMeta[];
       requestGroupMetas: RequestGroupMeta[];
