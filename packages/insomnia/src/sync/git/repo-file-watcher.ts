@@ -281,7 +281,6 @@ class RepoFileWatcher {
           const gitFilePath = meta?.gitFilePath ?? `insomnia.${workspace._id}.yaml`;
           absPath = path.resolve(this.repoDir, gitFilePath);
 
-          // Path-traversal guard
           if (this.isUnsafeWorkspaceFilePath(absPath)) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
@@ -1162,7 +1161,6 @@ class RepoFileWatcher {
    * local-only workspaces (never synced to git) that are not yet on disk.
    */
   private async flushWorkspaceToDisk(workspace: Workspace, absPath: string): Promise<void> {
-    // Path-traversal guard
     if (this.isUnsafeWorkspaceFilePath(absPath)) {
       return;
     }
