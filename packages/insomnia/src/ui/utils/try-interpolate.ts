@@ -45,8 +45,7 @@ export const tryToInterpolateRequestAndCollectSensitiveValues = async ({
   payload: any;
 }): Promise<{ rendered: any; sensitiveValues: string[] } | undefined> => {
   try {
-    const settings = await services.settings.get();
-    const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(request, settings));
+    const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(request));
     const renderContext = await getRenderContext({
       request,
       environment: environmentId,

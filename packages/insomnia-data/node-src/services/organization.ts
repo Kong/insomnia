@@ -1,6 +1,7 @@
 import { type FeatureList, getOrganizationFeatures, getSpaces, type Organization } from 'insomnia-api';
 import { type BaseModel, database as db, models } from 'insomnia-data';
 
+import * as settingsService from './settings';
 import * as userSessionService from './user-session';
 
 function sortOrganizations(organizations: Organization[]): Organization[] {
@@ -151,23 +152,10 @@ export async function clearFeaturesCache() {
   lastFeaturesSweepAt = 0;
 }
 
-/**
- * Effective "hide confidential values" setting: the user's preference OR the organization's
- * enforcement. Never write this back to settings — settings are global and the user's own,
- * while enforcement is per organization.
- */
-export async function resolveHideSecretValuesForOrg({
-  organizationId,
-  settings,
-}: {
-  organizationId: string | undefined;
-  settings: { hideSecretValuesInPreviewAndConsole?: boolean };
-}): Promise<boolean> {
-  // The user preference defaults to true, so most renders never need the network.
-  if (settings.hideSecretValuesInPreviewAndConsole ?? true) {
-    return true;
-  }
-  return models.organization.isHideSecretValuesEnforcedByOrganization(await getFeatures(organizationId));
+/** The user's own "hide confidential values" preference, read from the settings service (defaults to true). */
+async function isHideSecretValuesPreferredByUser(): Promise<boolean> {
+  const settings = await settingsService.get();
+  return settings.hideSecretValuesInPreviewAndConsole ?? true;
 }
 
 /** The organization a request/folder/workspace belongs to, via its project's parentId. */
@@ -192,17 +180,42 @@ export async function getOrgIdForDoc(doc: BaseModel): Promise<string | undefined
   return ancestors.find(models.project.isProject)?.parentId;
 }
 
-/** {@link resolveHideSecretValuesForOrg} for a doc, skipping the ancestor lookup when the user preference already hides. */
-export async function resolveHideSecretValues(
-  doc: BaseModel,
-  settings: { hideSecretValuesInPreviewAndConsole?: boolean },
-): Promise<boolean> {
-  if (settings.hideSecretValuesInPreviewAndConsole ?? true) {
+/**
+ * Effective "hide confidential values" setting: the user's preference OR the organization's
+ * enforcement. Never write this back to settings — settings are global and the user's own,
+ * while enforcement is per organization.
+ *
+ * `target` is either an organization id or a doc whose organization is resolved through its
+ * ancestors (skipped when the user preference already hides). A doc whose organization cannot be
+ * resolved hides; a missing organization id (e.g. Inso, which has no projects) falls back to the
+ * user preference.
+ */
+export async function resolveHideSecretValues(modelOrOrgId: BaseModel | string | undefined): Promise<boolean> {
+  // The user preference defaults to true, so most renders never need the network.
+  const userPrefersHideSecretValues = await isHideSecretValuesPreferredByUser();
+  if (userPrefersHideSecretValues) {
     return true;
   }
-  const orgId = await getOrgIdForDoc(doc);
-  if (!orgId) {
-    return true;
+  if (modelOrOrgId && typeof modelOrOrgId === 'object') {
+    const orgId = await getOrgIdForDoc(modelOrOrgId);
+    if (!orgId) {
+      return userPrefersHideSecretValues;
+    }
+    modelOrOrgId = orgId;
   }
-  return resolveHideSecretValuesForOrg({ organizationId: orgId, settings });
+  return models.organization.isHideSecretValuesEnforcedByOrganization(await getFeatures(modelOrOrgId));
+}
+
+export async function resolveHideSecretValuesAndOrgEnforced(
+  orgId: string,
+): Promise<{ resolved: boolean; orgEnforced: boolean }> {
+  const resolved = await resolveHideSecretValues(orgId);
+  const isLocal = models.organization.isLocalOrganizationId(orgId);
+  const orgEnforced = isLocal
+    ? false
+    : models.organization.isHideSecretValuesEnforcedByOrganization(await getFeatures(orgId));
+  return {
+    resolved,
+    orgEnforced,
+  };
 }

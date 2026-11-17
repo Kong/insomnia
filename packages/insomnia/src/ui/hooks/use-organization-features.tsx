@@ -117,13 +117,22 @@ export function useAIFeatureStatus(): AIFeatureStatus {
 
 /**
  * Effective "hide confidential values in Preview/Console" for the current organization:
- * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValuesForOrg,
+ * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValues,
  * which the render/send code path uses.
  */
-export function useHideSecretValues() {
+export function useHideSecretValues(organizationIdParam?: string) {
+  const params = useParams() as { organizationId?: string };
+  const organizationId = organizationIdParam ?? params.organizationId ?? '';
   const { settings } = useRootLoaderData()!;
-  const { features } = useOrganizationPermissions();
-  const isEnforcedByOrganization = models.organization.isHideSecretValuesEnforcedByOrganization(features);
+
+  // Only the organization's enforcement comes from the main process. The user's preference is read
+  // from the root loader so toggling it takes effect immediately; this query would not refetch on its own.
+  const { data: isEnforcedByOrganization = false } = useServerQuery({
+    queryKey: ['organization-hide-secret-values', organizationId],
+    queryFn: async () =>
+      (await services.organization.resolveHideSecretValuesAndOrgEnforced(organizationId)).orgEnforced,
+  });
+
   return {
     hideSecretValues: (settings.hideSecretValuesInPreviewAndConsole ?? true) || isEnforcedByOrganization,
     isEnforcedByOrganization,

@@ -37,7 +37,7 @@ export function init(): {
 
         // This request renders with purpose 'send', so confidential values are real here and
         // need the same timeline/response redaction the main send path gets.
-        const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(request, settings));
+        const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(request));
         const renderResult = await tryToInterpolateRequest({
           request,
           environment: environment._id,

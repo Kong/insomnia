@@ -768,10 +768,9 @@ export async function getRenderContext({
   const settings = await services.settings.get();
   // User preference OR organization enforcement, resolved once here so every consumer of
   // getSettings() (masking policy, templating worker, external vault tags) sees the same value.
-  const hideSecretValuesInPreviewAndConsole = await services.organization.resolveHideSecretValuesForOrg({
-    organizationId: project?.parentId,
-    settings,
-  });
+  const hideSecretValuesInPreviewAndConsole = await services.organization.resolveHideSecretValues(
+    project?.parentId,
+  );
 
   // Add meta data helper function
   const baseContext: Omit<BaseRenderContext, 'getKeysContext'> = {

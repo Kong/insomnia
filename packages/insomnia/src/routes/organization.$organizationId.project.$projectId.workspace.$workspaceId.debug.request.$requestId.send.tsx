@@ -141,7 +141,7 @@ export const sendActionImplementation = async (options: {
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
   const collector = createSensitiveValueCollector(
-    await services.organization.resolveHideSecretValues(requestData.request, requestData.settings),
+    await services.organization.resolveHideSecretValues(requestData.request),
   );
   if (collector) {
     // Pre-fill with every isConfidential:true KV pair's raw value across all five
