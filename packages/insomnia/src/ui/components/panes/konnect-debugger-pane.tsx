@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import type { KonnectProject, WorkspaceChildrenForScope } from 'insomnia-data';
-import { type ReactNode, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 
 import type { DebugApiError, DebugSessionApiContext, DebugTraceSummary } from '~/konnect/debug-session-api';
@@ -20,6 +20,7 @@ import {
   type KonnectRouteRequest,
   listKonnectRouteRequests,
 } from '~/konnect/route-request-lookup';
+import { AnalyticsEvent } from '~/ui/analytics';
 import { KonnectSettingsModal } from '~/ui/components/modals/konnect-settings-modal';
 import { SizeTag } from '~/ui/components/tags/size-tag';
 import { StatusTag } from '~/ui/components/tags/status-tag';
@@ -34,6 +35,10 @@ import { METHOD_PILL_CLASSES } from '~/ui/utils/method-colors';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
+
+// Projects whose debug session was started by this client and has not yet finished.
+// Module-level so it survives the pane unmounting (e.g. switching tabs)
+const projectsPendingFinishEvent = new Set<string>();
 
 const captureDurations: { id: number; name: string }[] = [
   { id: 15, name: '15 seconds' },
@@ -163,7 +168,35 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   const hasSession = !!debugSession;
   const showEmptyState = !hasSession && !isStartingOrStopping;
 
-  const reRunDebugSession = () => startDebugSession(durationSecs);
+  // Capture event when a session started from this client is awaiting its natural end.
+  // Prevents reporting sessions loaded from another client and prevents duplicate "finished" events.
+  useEffect(() => {
+    if (debugSessionState === 'completed' && projectsPendingFinishEvent.has(projectId)) {
+      projectsPendingFinishEvent.delete(projectId);
+      window.main.trackAnalyticsEvent({
+        event: AnalyticsEvent.konnectDebugSessionFinished,
+        properties: { session_cancelled: false, number_of_request_captured: originTraces.length },
+      });
+    }
+  }, [debugSessionState, originTraces.length, projectId]);
+
+  const startDebugSessionWithAnalytics = () => {
+    projectsPendingFinishEvent.add(projectId);
+    startDebugSession(durationSecs);
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.konnectDebugSessionStarted,
+      properties: { session_length: durationSecs },
+    });
+  };
+
+  const stopDebugSessionWithAnalytics = () => {
+    projectsPendingFinishEvent.delete(projectId);
+    stopDebugSession();
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.konnectDebugSessionFinished,
+      properties: { session_cancelled: true, number_of_request_captured: originTraces.length },
+    });
+  };
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden text-sm">
@@ -173,7 +206,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
         region={typeof konnectRegion === 'string' ? konnectRegion : null}
         debugSessionId={debuggerSessionId}
       />
-      <StatusBanners debug={konnectDebuggerSession} onRetry={reRunDebugSession} />
+      <StatusBanners debug={konnectDebuggerSession} onRetry={startDebugSessionWithAnalytics} />
       <div className="flex shrink-0 flex-row flex-wrap items-center gap-3 border-b border-solid border-(--hl-md) px-3 py-2">
         {!isCapturing && (
           <>
@@ -214,7 +247,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
             <Button
               // Disable the start button if a session is starting/stopping, konnect PAT is missing, or current debug session is loading.
               isDisabled={isStartingOrStopping || !debugSessionContext.pat || isLoadingDebugSession}
-              onPress={() => startDebugSession(durationSecs)}
+              onPress={startDebugSessionWithAnalytics}
               className="rounded-xs bg-(--color-surprise) px-3 py-1 font-semibold text-(--color-font-surprise) transition-all hover:brightness-90 focus:brightness-90 disabled:opacity-50"
             >
               {hasSession ? 'Restart' : 'Start debugging'}
@@ -230,7 +263,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
             </span>
             <Button
               isDisabled={isStartingOrStopping}
-              onPress={() => stopDebugSession()}
+              onPress={stopDebugSessionWithAnalytics}
               className="rounded-xs border border-solid border-(--hl-md) px-3 py-1 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-50"
             >
               Stop
