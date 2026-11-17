@@ -13,6 +13,7 @@ import { GitCommitDialogPage } from "./git-commit-dialog.page";
 import { GitHistoryDialogPage } from "./git-history-dialog.page";
 import { GitSyncPage } from "./git-sync.page";
 import { HttpRequestPage } from "./http-request.page";
+import { MockServerPage } from "./mock-server.page";
 import { ProjectPage } from "./project.page";
 import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
@@ -32,6 +33,8 @@ const pageRegistry = {
     new GitHistoryDialogPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
+  mockServerPage: (page: Page): MockServerPage =>
+    new MockServerPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
