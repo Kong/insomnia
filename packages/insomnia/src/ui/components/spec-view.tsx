@@ -1032,24 +1032,28 @@ export const SpecView = ({
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id={toJsonStrItemId('info', 'title')}
+                      data-testid="spec-outline-info-title"
                     >
                       <span className="truncate">Title: {info.title}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id={toJsonStrItemId('info', 'description')}
+                      data-testid="spec-outline-info-description"
                     >
                       <span className="truncate">Description: {info.description}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id={toJsonStrItemId('info', 'version')}
+                      data-testid="spec-outline-info-version"
                     >
                       <span className="truncate">Version: {info.version}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
                       id={toJsonStrItemId('info', 'license')}
+                      data-testid="spec-outline-info-license"
                     >
                       <span className="truncate">License: {info.license?.name}</span>
                     </ListBoxItem>
@@ -1122,9 +1126,12 @@ export const SpecView = ({
                       <GridListItem
                         className="group outline-hidden select-none"
                         id={toJsonStrItemId('paths', item.path)}
+                        data-testid="spec-outline-path"
                       >
                         <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                          <span className="truncate">{item.path}</span>
+                          <span data-testid="spec-outline-path-name" className="truncate">
+                            {item.path}
+                          </span>
                           <span className="flex-1" />
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button

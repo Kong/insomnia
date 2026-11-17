@@ -369,6 +369,136 @@ spec:
       expect(parsed.collection[0].name).toBe('Request 1');
     });
 
+    it('omits folders that contain no selected requests', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_folder_filter',
+        name: 'Folder Filter Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+      await services.environment.create({
+        _id: 'env_folder_filter',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+      const keptOuter = await services.requestGroup.create({
+        _id: 'fld_kept_outer',
+        name: 'Kept',
+        parentId: workspace._id,
+      });
+      const keptInner = await services.requestGroup.create({
+        _id: 'fld_kept_inner',
+        name: 'Inner',
+        parentId: keptOuter._id,
+      });
+      const skipped = await services.requestGroup.create({
+        _id: 'fld_skipped',
+        name: 'Skipped',
+        parentId: workspace._id,
+      });
+      const selected = await services.request.create({
+        _id: 'req_selected',
+        name: 'Selected',
+        parentId: keptInner._id,
+        url: 'https://api.example.com/selected',
+        method: 'GET',
+      });
+      await services.request.create({
+        _id: 'req_unselected',
+        name: 'Unselected',
+        parentId: skipped._id,
+        url: 'https://api.example.com/unselected',
+        method: 'GET',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [selected._id],
+      });
+
+      const parsed = YAML.parse(result);
+      expect(parsed.collection).toHaveLength(1);
+      expect(parsed.collection[0].name).toBe('Kept');
+      expect(parsed.collection[0].children[0].name).toBe('Inner');
+      expect(parsed.collection[0].children[0].children[0].name).toBe('Selected');
+    });
+
+    it('keeps empty folders when every request is selected', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_all_selected',
+        name: 'All Selected Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+      await services.environment.create({
+        _id: 'env_all_selected',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: {},
+      });
+      await services.requestGroup.create({
+        _id: 'fld_empty',
+        name: 'Empty',
+        parentId: workspace._id,
+      });
+      const folder = await services.requestGroup.create({
+        _id: 'fld_with_request',
+        name: 'With Request',
+        parentId: workspace._id,
+      });
+      const request = await services.request.create({
+        _id: 'req_all_selected',
+        name: 'Only Request',
+        parentId: folder._id,
+        url: 'https://api.example.com/only',
+        method: 'GET',
+      });
+
+      const result = await getInsomniaV5DataExport({
+        workspaceId: workspace._id,
+        includePrivateEnvironments: false,
+        requestIds: [request._id],
+      });
+
+      const names = YAML.parse(result).collection.map((item: { name: string }) => item.name);
+      expect(names).toEqual(expect.arrayContaining(['Empty', 'With Request']));
+    });
+
+    it('omits cookies and environments when excluded', async () => {
+      const workspace = await services.workspace.create({
+        _id: 'wrk_exclude_test',
+        name: 'Exclude Workspace',
+        parentId: 'proj_test',
+        scope: 'collection',
+      });
+      await services.environment.create({
+        _id: 'env_exclude',
+        name: 'Base Env',
+        parentId: workspace._id,
+        data: { a: 1 },
+      });
+      await services.cookieJar.create({ _id: 'jar_exclude', parentId: workspace._id });
+
+      const withBoth = YAML.parse(
+        await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false }),
+      );
+      expect(withBoth.environments).toBeDefined();
+      expect(withBoth.cookieJar).toBeDefined();
+
+      const withNeither = YAML.parse(
+        await getInsomniaV5DataExport({
+          workspaceId: workspace._id,
+          includePrivateEnvironments: false,
+          includeCookies: false,
+          includeEnvironments: false,
+        }),
+      );
+      expect(withNeither.environments).toBeUndefined();
+      expect(withNeither.cookieJar).toBeUndefined();
+    });
+
     it('handles design workspace correctly', async () => {
       const workspace = await services.workspace.create({
         _id: 'wrk_design_test',
