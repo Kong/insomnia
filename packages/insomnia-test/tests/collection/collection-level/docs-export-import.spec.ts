@@ -10,7 +10,6 @@ import { createFixture } from "./support";
 const DOCS = "# Collection docs\n\nShared by **every** request.";
 
 test("Collection Docs survive export and re-import as a new collection (v5 YAML)", async ({ user }, testInfo) => {
-  test.fail(true, "INS-4334");
   const { collectionFlow, exportFlow, importFlow, workspaceFlow } = user.flowManager;
   const { project, collection } = await createFixture(user.flowManager);
   await collectionFlow.setDocs(collection, DOCS);

@@ -17,7 +17,6 @@ async function keyboardFocusShadow(page: CollectionPage, tab: string): Promise<s
 }
 
 test("Collection tabs show a focus ring when focused with the keyboard", async ({ user }) => {
-  test.fail(true, "INS-4336");
   const { collectionFlow } = user.flowManager;
   const { collection } = await createFixture(user.flowManager);
   const page = await collectionFlow.open(collection);

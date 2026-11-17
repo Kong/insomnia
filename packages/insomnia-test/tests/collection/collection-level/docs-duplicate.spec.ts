@@ -9,7 +9,6 @@ import { createFixture } from "./support";
 const DOCS = "# Collection docs\n\nShared by **every** request.";
 
 test("Collection Docs survive duplicating the collection to another project", async ({ user }) => {
-  test.fail(true, "INS-4335");
   const { collectionFlow, workspaceFlow } = user.flowManager;
   const target = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   const { collection } = await createFixture(user.flowManager);
