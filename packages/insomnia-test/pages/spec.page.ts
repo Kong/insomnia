@@ -1,6 +1,6 @@
 import { HttpMethod } from "@package/enums/http-method";
 import { RulesetType } from "@package/enums/ruleset-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from '@package/misc/constants';
 import type {
   PathItem} from "@package/models/collection";
 import {
@@ -183,13 +183,13 @@ export class SpecPage extends BasePage {
     button: Locator,
     rowSelector: string,
   ): Promise<void> {
-    const isCollapsed =
-      (await button.locator('svg[data-icon="plus"]').count()) > 0;
-    if (isCollapsed) {
-      await button.click();
-    }
-    await expect(this.page.locator(rowSelector).first()).toBeVisible({
-      timeout: DEFAULT_TIMEOUT,
-    });
+    await expect(async () => {
+      if ((await button.locator('svg[data-icon="plus"]').count()) > 0) {
+        await button.click({ timeout: SHORT_TIMEOUT });
+      }
+      await expect(this.page.locator(rowSelector).first()).toBeVisible({
+        timeout: SHORT_TIMEOUT,
+      });
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 }
