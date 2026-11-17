@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import NeDB from '@seald-io/nedb';
 import { models } from 'insomnia-data';
 import {
   createFieldDecryptionFailureReport,
@@ -234,6 +235,71 @@ describe('neDbAdapter()', () => {
         const db = await load(exportFieldEncryptionKey(key).base64);
 
         expect(tokenOf(db, 'req_1')).toBe('updated');
+      });
+    });
+
+    describe('with a datastore that cannot be loaded', () => {
+      // More than 90% of the lines are not JSON: NeDB refuses to start, which would otherwise be an unhandled rejection
+      // that ends the process with a stack trace, or a promise that never settles
+      const writeCorruptDatastore = () =>
+        fs.writeFileSync(path.join(dir, 'insomnia.Request.db'), 'not json\nnot json either\n{broken\nmore garbage\n');
+
+      it.each([
+        ['without a key', undefined],
+        ['with a key', () => exportFieldEncryptionKey(key).base64],
+      ])('fails with an error that names the file and the reason, %s', async (_, getKey) => {
+        writeCorruptDatastore();
+
+        const error = await load(getKey?.()).catch(e => e);
+
+        expect(error).toBeInstanceOf(InsoError);
+        expect(error.message).toMatch(/^Failed to load datastores in /);
+        expect(error.message).toContain(dir);
+        expect(error.message).toMatch(/Request \(.+\)/);
+      });
+
+      it('fails when only one of several datastores cannot be loaded', async () => {
+        writeCorruptDatastore();
+
+        const error = await neDbAdapter(dir, ['Workspace', 'Request']).catch(e => e);
+
+        expect(error).toBeInstanceOf(InsoError);
+        expect(error.message).toMatch(/Request \(.+\)/);
+        expect(error.message).not.toContain('Workspace (');
+      });
+
+      it('names every datastore that cannot be loaded, not only the first', async () => {
+        writeCorruptDatastore();
+        fs.writeFileSync(
+          path.join(dir, 'insomnia.Environment.db'),
+          ['garbage', 'more garbage', '{nope', ''].join('\n'),
+        );
+
+        const error = await neDbAdapter(dir, ['Workspace', 'Request', 'Environment']).catch(e => e);
+
+        expect(error).toBeInstanceOf(InsoError);
+        expect(error.message).toMatch(/Request \(.+\)/);
+        expect(error.message).toMatch(/Environment \(.+\)/);
+        expect(error.message).not.toContain('Workspace (');
+      });
+
+      it('waits for the other datastores to finish loading before it fails', async () => {
+        // inso exits right after it reports an error, so no datastore may still be loading (and rewriting its file) then
+        const load = NeDB.prototype.loadDatabaseAsync;
+        let slowLoadFinished = false;
+        vi.spyOn(NeDB.prototype, 'loadDatabaseAsync').mockImplementation(async function (this: NeDB) {
+          if ((this as unknown as { filename: string }).filename.endsWith('insomnia.Request.db')) {
+            throw new Error('fails at once');
+          }
+          await new Promise(resolve => setTimeout(resolve, 100));
+          await load.call(this);
+          slowLoadFinished = true;
+        });
+
+        const error = await neDbAdapter(dir, ['Workspace', 'Request']).catch(e => e);
+
+        expect(error).toBeInstanceOf(InsoError);
+        expect(slowLoadFinished).toBe(true);
       });
     });
 

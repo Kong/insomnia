@@ -78,6 +78,10 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes, encryptionKey) => {
     warnIfKeyIsFromAnotherMachine(encryptionKey);
   }
   const failureReport = createFieldDecryptionFailureReport();
+  // Derive the encrypted path table now, so a broken model schema fails here instead of at the first hook call
+  const encryptedFieldPaths: Record<string, readonly string[]> | undefined = key
+    ? models.getEncryptedFieldPathsByType()
+    : undefined;
   const hooks = key
     ? createFieldEncryptionHooks(key, { getEncryptedFieldPaths: models.getEncryptedFieldPathsForType, failureReport })
     : {};
@@ -86,28 +90,41 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes, encryptionKey) => {
   const types = filterTypes?.length ? filterTypes : (Object.keys(db) as (keyof Database)[]);
   // Loading a datastore makes NeDB rewrite its file. With the key, the rewrite also encrypts the plaintext values that
   // are still in the file, so a key must only be used on the machine it came from (the Insomnia preferences say so).
-  const promises = types.map(
-    t =>
-      new Promise((resolve, reject) => {
-        const filePath = path.join(dir, `insomnia.${t}.db`);
-        const collection = new NeDB({
-          autoload: true,
-          filename: filePath,
-          corruptAlertThreshold: 0.9,
-          // Only the datastores that have encrypted fields need the hooks
-          ...getHooksForType(hooks, t, models.getEncryptedFieldPathsForType),
-        });
-        collection.find({}, (err: Error, docs: BaseModel[]) => {
-          if (err) {
-            return reject(err);
-          }
+  const datastores = types.map(type => ({
+    type,
+    collection: new NeDB({
+      filename: path.join(dir, `insomnia.${type}.db`),
+      corruptAlertThreshold: 0.9,
+      // Without an onload handler NeDB rethrows a failed load as an unhandled rejection. The loads are awaited below.
+      onload: () => {},
+      autoload: true,
+      // Only the datastores that have encrypted fields need the hooks
+      ...getHooksForType(hooks, type, t => encryptedFieldPaths?.[t] ?? []),
+    }),
+  }));
 
-          (db[t] as {}[]).push(...docs);
-          resolve(null);
-        });
-      }),
+  // Wait for every datastore to load, also after one has failed: inso exits right after it reports an error, which would
+  // end the process while the other datastores are still being rewritten. A datastore whose load failed never becomes
+  // ready, so it is reported here instead of waiting for ever at the first query.
+  const results = await Promise.allSettled(datastores.map(({ collection }) => collection.autoloadPromise));
+  const failures = results.flatMap((result, i) =>
+    result.status === 'rejected' ? [{ type: datastores[i].type, reason: result.reason }] : [],
   );
-  await Promise.all(promises);
+  if (failures.length > 0) {
+    const description = failures
+      .map(({ type, reason }) => `${type} (${reason instanceof Error ? reason.message : String(reason)})`)
+      .join(', ');
+    throw new InsoError(`Failed to load datastores in "${dir}": ${description}`);
+  }
+
+  await Promise.all(
+    datastores.map(async ({ type, collection }) => {
+      const docs = await new Promise<BaseModel[]>((resolve, reject) => {
+        collection.find({}, (err: Error, found: BaseModel[]) => (err ? reject(err) : resolve(found)));
+      });
+      (db[type] as {}[]).push(...docs);
+    }),
+  );
 
   if (key) {
     // The read hook reports every line it cannot decrypt, including old lines that a later line replaced
