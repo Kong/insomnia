@@ -18,7 +18,6 @@ const EXPECTED_AFTER_RESPONSE = "console.log('collection after-response script')
 const EXPECTED_AUTHORIZATION = `Basic ${Buffer.from("collection-user:collection-pass").toString("base64")}`;
 
 test("Importing a file with collection-level properties into an existing collection", async ({ user }) => {
-  test.fail(true, "INS-4322");
   const { workspaceFlow, collectionFlow, importFlow, httpRequestFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
