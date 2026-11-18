@@ -146,4 +146,3 @@ export const test = base.extend<GitFixtures>({
   },
 });
 
-export { DEFAULT_TIMEOUT } from "./fixtures";

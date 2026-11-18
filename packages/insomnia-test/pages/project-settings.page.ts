@@ -87,7 +87,7 @@ export class ProjectSettingsPage extends BasePage {
     // A scan so fast it never paints this is fine to skip: it has finished already.
     await this.dialog
       .getByText("Scanning remote repo for Insomnia files")
-      .waitFor({ state: "visible", timeout: 3000 })
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT })
       .catch(() => {});
   }
 

@@ -70,7 +70,7 @@ export class GitSyncPage extends BasePage {
         exact: true,
       });
       try {
-        await expect(commitItem).toBeEnabled({ timeout: 3000 });
+        await expect(commitItem).toBeEnabled({ timeout: DEFAULT_TIMEOUT });
       } catch (error) {
         await this.page.keyboard.press("Escape");
         throw error;
