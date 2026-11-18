@@ -13,10 +13,6 @@ import type { PageManager } from '@package/pages/page-manager';
 import { BaseFlow } from './base.flow';
 import type { PreferencesFlow } from './preferences.flow';
 
-interface RequestLookup<T> {
-  get(item: { name: string; id?: string }): Promise<T | undefined>;
-}
-
 /**
  * The per-protocol request flows `WorkspaceFlow` resolves tree nodes
  * through. `FlowManager` satisfies it structurally; depending on this shape
@@ -24,7 +20,6 @@ interface RequestLookup<T> {
  * from forming an import cycle with `WorkspaceFlow`.
  */
 export interface RequestFlows {
-  readonly httpRequestFlow: RequestLookup<HttpRequest>;
 }
 
 type RequestItem = HttpRequest;
@@ -100,6 +95,58 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Dismisses the currently open dialog (e.g. an error dialog surfaced by
+   * an action decorated with `@throwOnDialog`) by clicking its "Ok"
+   * button, so a test can continue with further steps afterward.
+   */
+  @step()
+  async closeDialog(): Promise<void> {
+    await this.pageManager.workspacePage.closeDialog();
+  }
+
+  /**
+   * Right-clicks the tree node matching `request` and reads back the
+   * generated code snippet via "Generate Code" — available for regular
+   * requests, not gRPC.
+   */
+  @step()
+  async generateCode(
+    request: HttpRequest,
+    options?: { target?: string; client?: string },
+  ): Promise<string> {
+    const { workspacePage } = this.pageManager;
+    const node = await workspacePage.findItemNode(request);
+    if (!node) throw new Error(`Failed to find "${request.name}" to generate code for`);
+    await workspacePage.rightClick(node);
+    await workspacePage.clickContextMenu(ContextMenuItem.GenerateCode);
+    if (options?.target) await workspacePage.setGenerateCodeTarget(options.target);
+    if (options?.client) await workspacePage.setGenerateCodeClient(options.client);
+    return workspacePage.getGeneratedCode();
+  }
+
+  /**
+   * Duplicates an Environment via its context menu's "Duplicate" action,
+   * optionally moving the copy into `targetProject`, then re-fetches it as
+   * its full model.
+   */
+  @step()
+  async duplicateEnvironment(item: Environment, newName: string, targetProject?: Project): Promise<Environment> {
+    await this.duplicateViaContextMenu(item, newName, targetProject);
+
+    // Duplicating only renames the copy's project-tree title; its inner
+    // Base Environment document still carries the source environment's
+    // original name, so it must be renamed separately to keep both in
+    // sync — mirroring createBaseEnvironment()'s own rename step — and to
+    // populate `containerName` the way environmentFlow.createBaseEnvironment() does.
+    if (item.name !== newName) {
+      await this.pageManager.environmentPage.navigate();
+      await this.pageManager.environmentPage.renameEnvironment(item.name, newName);
+    }
+    const duplicated = await this.assertCreated(await this.getEnvironment(newName), newName);
+    return Object.assign(duplicated, { containerName: newName });
+  }
+
+  /**
    * Duplicates a request in place via its dedicated "Duplicate" dialog.
    */
   @step()
@@ -112,6 +159,22 @@ export class WorkspaceFlow extends BaseFlow {
     await workspace.clickDuplicateRequest();
     const newNode = await workspace.findNode(newName, TreeNodeType.Request);
     return this.assertCreated(newNode ? { id: newNode._id, name: newName } : undefined, newName);
+  }
+
+  private async duplicateViaContextMenu(
+    item: Collection | Environment,
+    newName: string,
+    targetProject?: Project,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(item);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(
+      node.type === TreeNodeType.Workspace ? ContextMenuItem.DuplicateWorkspace : ContextMenuItem.Duplicate,
+    );
+    await workspace.setDuplicateName(newName);
+    await workspace.selectDuplicateProject(targetProject?.name);
+    await workspace.clickDuplicate();
   }
 
   /**

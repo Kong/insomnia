@@ -1,3 +1,4 @@
+import { ModalComponent } from "@package/components/modal.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
@@ -101,7 +102,7 @@ export class PreferencesComponent extends PreferencesTabComponent {
    * Switches the open Preferences dialog to the Proxy tab.
    */
   async openProxyTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Proxy" }).click();
+    await this.tabs.tabByName("Proxy").click();
   }
 
   /**
@@ -167,11 +168,12 @@ export class PreferencesComponent extends PreferencesTabComponent {
         checked: enabled,
         timeout: DEFAULT_TIMEOUT,
       });
-      const alert = this.page
-        .getByRole("dialog")
-        .filter({ hasText: /Confidential Variables/ });
-      await alert.getByRole("button", { name: "Ok" }).click();
-      await expect(alert).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+      const alert = new ModalComponent(
+        this.page,
+        this.page.getByRole("dialog").filter({ hasText: /Confidential Variables/ }),
+      );
+      await alert.clickButton("Ok", false);
+      await alert.waitForHidden();
     }
   }
 

@@ -13,7 +13,7 @@ export class PreferencesPluginsComponent extends PreferencesTabComponent {
    * template-tag sandbox toggle and per-rule-group sandbox switches live.
    */
   async openScriptingTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Scripting" }).click();
+    await this.tabs.tabByName("Scripting").click();
   }
 
   /**

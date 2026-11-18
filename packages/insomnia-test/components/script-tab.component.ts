@@ -26,9 +26,7 @@ export class ScriptTabComponent extends TabPanelComponent {
    * if both scripts are empty.
    */
   async getScripts(): Promise<RequestScripts | undefined> {
-    await this.page
-      .locator(`${this.PANE} [data-key="scripts"][role="tab"]`)
-      .click();
+    await this.tabs.tab("scripts").click();
     const panel = this.page.locator(this.TABPANEL);
     const editors = panel.locator(".CodeMirror");
 

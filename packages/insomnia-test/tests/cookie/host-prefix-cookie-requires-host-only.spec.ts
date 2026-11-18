@@ -1,0 +1,54 @@
+import { faker } from "@faker-js/faker";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+const url = `${HTTP_SERVER}/cookies`;
+
+test("Verify __Host- Prefixed Cookie Is Only Sent When Marked HostOnly", async ({
+  user,
+}) => {
+  const { cookieFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const request = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Get,
+    url,
+  });
+
+  const hostOnlyCookie = {
+    key: `__Host-${faker.string.alphanumeric(8)}`,
+    value: faker.string.alphanumeric(8),
+    domain: "localhost",
+    path: "/",
+    secure: true,
+    hostOnly: true,
+  };
+  const nonHostOnlyCookie = {
+    key: `__Host-${faker.string.alphanumeric(8)}`,
+    value: faker.string.alphanumeric(8),
+    domain: "localhost",
+    path: "/",
+    secure: true,
+  };
+  await cookieFlow.link(request, [hostOnlyCookie, nonHostOnlyCookie]);
+
+  const responseView = await httpRequestFlow.send(request);
+
+  const { cookies } = responseView.preview as { cookies: Record<string, string> };
+  expect(cookies).toMatchObject({
+    [hostOnlyCookie.key]: hostOnlyCookie.value,
+  });
+  expect(cookies).not.toHaveProperty(nonHostOnlyCookie.key);
+});

@@ -1,10 +1,15 @@
 import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
+import { CertificatesFlow } from "./certificates.flow";
+import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
+import { ImportFlow } from "./import.flow";
 import { PreferencesFlow } from "./preferences.flow";
+import { TemplateTagFlow } from "./template-tag.flow";
+import { VariableSourceFlow } from "./variable-source.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
@@ -19,10 +24,15 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
+  certificatesFlow: (m: FlowDeps): CertificatesFlow => new CertificatesFlow(m.context, m.pageManager),
+  cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
+  importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
+  templateTagFlow: (m: FlowDeps): TemplateTagFlow => new TemplateTagFlow(m.context, m.pageManager),
+  variableSourceFlow: (m: FlowDeps): VariableSourceFlow => new VariableSourceFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
 } satisfies Record<string, (m: FlowDeps) => unknown>;

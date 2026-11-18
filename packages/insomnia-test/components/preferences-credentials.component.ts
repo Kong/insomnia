@@ -1,6 +1,6 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DropdownComponent } from "@package/components/dropdown.component";
+import { ModalComponent } from "@package/components/modal.component";
 import type { CloudCredential } from "@package/models/settings";
-import { expect } from "@playwright/test";
 
 import { PreferencesTabComponent } from "./preferences-tab.component";
 
@@ -21,7 +21,7 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
    * credentials are added/managed.
    */
   async openCredentialsTab(): Promise<void> {
-    await this.dialog.getByRole("tab", { name: "Credentials" }).click();
+    await this.tabs.tabByName("Credentials").click();
   }
 
   /**
@@ -38,25 +38,28 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createAwsCloudCredential(
     credential: Omit<AwsCloudCredential, "provider">,
   ): Promise<void> {
-    await this.dialog
-      .getByRole("button", { name: "Create Cloud Credential" })
-      .click();
-    await this.page.getByRole("menuitemradio", { name: "AWS" }).click();
-    const modal = this.page.getByRole("dialog", {
+    await new DropdownComponent(
+      this.page,
+      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
+    ).select("AWS", false);
+    const modal = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", {
       name: /Authenticate With AWS/,
-    });
-    await modal
+      }),
+    );
+    await modal.root
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal.getByRole("radio", { name: "Credential File" }).check();
-    await modal
+    await modal.root.getByRole("radio", { name: "Credential File" }).check();
+    await modal.root
       .getByRole("textbox", { name: "Section Name:" })
       .fill(credential.credentials.section);
-    await modal
+    await modal.root
       .getByRole("textbox", { name: "Region:" })
       .fill(credential.credentials.region);
-    await modal.getByRole("button", { name: "Create", exact: true }).click();
-    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
+    await modal.waitForHidden();
   }
 
   /**
@@ -70,21 +73,24 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createGcpCloudCredential(
     credential: Omit<GcpCloudCredential, "provider">,
   ): Promise<void> {
-    await this.dialog
-      .getByRole("button", { name: "Create Cloud Credential" })
-      .click();
-    await this.page.getByRole("menuitemradio", { name: "GCP" }).click();
-    const modal = this.page.getByRole("dialog", {
+    await new DropdownComponent(
+      this.page,
+      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
+    ).select("GCP", false);
+    const modal = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", {
       name: /Authenticate With GCP/,
-    });
-    await modal
+      }),
+    );
+    await modal.root
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal
+    await modal.root
       .getByRole("textbox", { name: "Input Service Account Key Path" })
       .fill(credential.credentials.serviceAccountKeyFilePath);
-    await modal.getByRole("button", { name: "Create", exact: true }).click();
-    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
+    await modal.waitForHidden();
   }
 
   /**
@@ -100,26 +106,29 @@ export class PreferencesCredentialsComponent extends PreferencesTabComponent {
   async createHashiCorpCloudCredential(
     credential: Omit<HashiCorpCloudCredential, "provider">,
   ): Promise<void> {
-    await this.dialog
-      .getByRole("button", { name: "Create Cloud Credential" })
-      .click();
-    await this.page.getByRole("menuitemradio", { name: "HashiCorp" }).click();
-    const modal = this.page.getByRole("dialog", {
+    await new DropdownComponent(
+      this.page,
+      this.dialog.getByRole("button", { name: "Create Cloud Credential" }),
+    ).select("HashiCorp", false);
+    const modal = new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", {
       name: /Authenticate With HashiCorp/,
-    });
-    await modal
+      }),
+    );
+    await modal.root
       .getByRole("textbox", { name: "Credential Name:" })
       .fill(credential.name);
-    await modal
+    await modal.root
       .getByRole("textbox", { name: "Server Address:" })
       .fill(credential.credentials.serverAddress);
-    await modal
+    await modal.root
       .getByRole("textbox", { name: "Role Id:" })
       .fill(credential.credentials.role_id);
-    await modal
+    await modal.root
       .getByRole("textbox", { name: "Secret Id:" })
       .fill(credential.credentials.secret_id);
-    await modal.getByRole("button", { name: "Create", exact: true }).click();
-    await expect(modal).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+    await modal.root.getByRole("button", { name: "Create", exact: true }).click();
+    await modal.waitForHidden();
   }
 }

@@ -126,4 +126,6 @@ export class Settings implements SettingsInit {
     this.aiUrlBackend = init.aiUrlBackend;
     this.cloudCredentials = init.cloudCredentials;
   }
+
+  aiSmartCommits?: boolean;
 }
