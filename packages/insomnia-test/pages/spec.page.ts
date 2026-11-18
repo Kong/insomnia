@@ -58,20 +58,33 @@ export type OutlineSection =
 
 const OUTLINE_SECTIONS: Record<
   OutlineSection,
-  { label: string; prefix: string }
+  { label: string; segments: string[] }
 > = {
-  info: { label: "Info", prefix: "info." },
-  servers: { label: "Servers", prefix: "servers." },
-  paths: { label: "Paths", prefix: "paths." },
+  info: { label: "Info", segments: ["info"] },
+  servers: { label: "Servers", segments: ["servers"] },
+  paths: { label: "Paths", segments: ["paths"] },
   requestBodies: {
     label: "Request bodies",
-    prefix: "components.requestBodies.",
+    segments: ["components", "requestBodies"],
   },
-  responses: { label: "Responses", prefix: "components.responses." },
-  parameters: { label: "Parameters", prefix: "components.parameters." },
-  headers: { label: "Headers", prefix: "components.headers." },
-  schemas: { label: "Schemas", prefix: "components.schemas." },
-  securitySchemes: { label: "Security", prefix: "components.securitySchemes." },
+  responses: { label: "Responses", segments: ["components", "responses"] },
+  parameters: { label: "Parameters", segments: ["components", "parameters"] },
+  headers: { label: "Headers", segments: ["components", "headers"] },
+  schemas: { label: "Schemas", segments: ["components", "schemas"] },
+  securitySchemes: { label: "Security", segments: ["components", "securitySchemes"] },
+};
+
+/** Outline row ids are `JSON.stringify([...segments, name])` (see spec-view.tsx). */
+const outlineKeyPrefixSelector = (section: OutlineSection) =>
+  `[data-key^='${JSON.stringify(OUTLINE_SECTIONS[section].segments).slice(0, -1)},']`;
+
+const outlineRowSelector = (
+  section: OutlineSection,
+  name: string | number,
+  base: string,
+) => {
+  const key = JSON.stringify([...OUTLINE_SECTIONS[section].segments, name]);
+  return `${base}[data-key='${key}']`;
 };
 
 /** A single row read back from the "Tests passed/failed" result screen. */
@@ -665,17 +678,22 @@ export class SpecPage extends BasePage {
    * every entry under it, in panel order.
    */
   async getOutlineEntryKeys(section: OutlineSection): Promise<string[]> {
-    const prefix = OUTLINE_SECTIONS[section].prefix;
+    const selector = outlineKeyPrefixSelector(section);
     await this.expandOutlineSection(
       this.page.getByRole("button", {
         name: OUTLINE_SECTIONS[section].label,
         exact: true,
       }),
-      `[data-key^="${prefix}"]`,
+      selector,
     );
+    // Row ids are JSON-encoded segment arrays; return them dot-joined.
     return this.page
-      .locator(`[data-key^="${prefix}"]`)
-      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.key!));
+      .locator(selector)
+      .evaluateAll((els) =>
+        els.map((el) =>
+          (JSON.parse((el as HTMLElement).dataset.key!) as (string | number)[]).join("."),
+        ),
+      );
   }
 
   /**
@@ -688,9 +706,10 @@ export class SpecPage extends BasePage {
     name: string | number,
     method?: HttpMethod,
   ): Promise<void> {
-    const key = `${OUTLINE_SECTIONS[section].prefix}${name}`;
     await this.getOutlineEntryKeys(section);
-    const entry = this.page.locator(`[data-key="${key}"]`);
+    const entry = this.page.locator(
+      outlineRowSelector(section, name, "[data-key]"),
+    );
     await (method
       ? entry.getByTestId(`spec-outline-method-${method}`).click()
       : entry.click());
@@ -721,7 +740,7 @@ export class SpecPage extends BasePage {
   async getPathMethodBadges(path: string): Promise<OutlineMethodBadge[]> {
     await this.getOutlineEntryKeys("paths");
     return this.page
-      .locator(`[role="row"][data-key="paths.${path}"]`)
+      .locator(outlineRowSelector("paths", path, '[role="row"]'))
       .locator('[data-testid^="spec-outline-method-"]')
       .evaluateAll((badges) =>
         badges.map((badge) => ({
@@ -742,7 +761,7 @@ export class SpecPage extends BasePage {
   async clickPathMethodBadge(path: string, method: string): Promise<void> {
     await this.getOutlineEntryKeys("paths");
     await this.page
-      .locator(`[role="row"][data-key="paths.${path}"]`)
+      .locator(outlineRowSelector("paths", path, '[role="row"]'))
       .getByTestId(`spec-outline-method-${method}`)
       .click();
   }

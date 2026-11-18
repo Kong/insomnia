@@ -70,14 +70,12 @@ test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 
   expect(wildcard!.headers).toContainEqual(
     expect.objectContaining({ name: "Accept", value: "text/event-stream" }),
   );
+  // A declared Accept header parameter is ignored in favour of text/event-stream.
   expect(withAccept!.headers).toContainEqual(
-    expect.objectContaining({
-      name: "Accept",
-      value: "text/event-stream, application/json",
-    }),
+    expect.objectContaining({ name: "Accept", value: "text/event-stream" }),
   );
   expect(withAccept!.headers).not.toContainEqual(
-    expect.objectContaining({ name: "Accept", value: "text/event-stream" }),
+    expect.objectContaining({ value: "text/event-stream, application/json" }),
   );
 });
 
