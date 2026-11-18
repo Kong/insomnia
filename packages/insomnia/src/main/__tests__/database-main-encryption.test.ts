@@ -104,12 +104,13 @@ describe('mainDatabase.init()', () => {
     const controllerDeps = () => vi.mocked(createFieldEncryptionController).mock.calls[0][0];
 
     it('gives the controller to the IPC handler, and the database is not degraded when there is a key', async () => {
-      vi.mocked(getLocalEncryptionKey).mockResolvedValue(generateKeySync('aes', { length: 256 }));
+      const key = generateKeySync('aes', { length: 256 });
+      vi.mocked(getLocalEncryptionKey).mockResolvedValue(key);
 
       await mainDatabase.init();
 
       expect(provideFieldEncryptionController).toHaveBeenCalledTimes(1);
-      expect(controllerDeps().degraded).toBe(false);
+      expect(controllerDeps().key).toBe(key);
       expect(controllerDeps().refreshFailures).toBe(refreshFieldDecryptionFailures);
       expect(controllerDeps().resetFailures).toBe(resetFieldDecryptionFailures);
     });
@@ -120,7 +121,7 @@ describe('mainDatabase.init()', () => {
 
       await mainDatabase.init();
 
-      expect(controllerDeps().degraded).toBe(true);
+      expect(controllerDeps().key).toBeUndefined();
     });
 
     it('gives the handler nothing for an in-memory instance, which has no key and is not degraded', async () => {
