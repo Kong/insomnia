@@ -1,8 +1,13 @@
-import type { IncomingMessage, Server } from 'node:http';
+import fs from 'node:fs';
+import type { IncomingMessage, Server, ServerResponse } from 'node:http';
+import { createServer } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
 import type { Socket } from 'node:net';
 
 import type { WebSocket } from 'ws';
 import { WebSocketServer } from 'ws';
+
+import { certPath } from '../certs.ts';
 
 /**
  * Starts an echo WebSocket server that receives messages from a client and echoes them back.
@@ -102,3 +107,39 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
     wss.emit('connection', ws, request);
   });
 };
+
+/**
+ * Plain echo WebSocket servers the specs address by fixed port: every message
+ * is echoed back (after `x-reply-delay-ms`, if sent), preceded by a greeting.
+ *   4040  ws   4041  wss
+ */
+export function startWsEchoServers() {
+  const handleRequest = (_req: IncomingMessage, res: ServerResponse) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ws-echo-server ok');
+  };
+
+  const handleEchoConnection = (ws: WebSocket, req: IncomingMessage) => {
+    const delayMs = Number(req.headers['x-reply-delay-ms']) || 0;
+    const sendAfterDelay = (data: any, opts?: any) => {
+      setTimeout(() => {
+        if (ws.readyState === ws.OPEN) ws.send(data, opts);
+      }, delayMs);
+    };
+    sendAfterDelay('Request served by insomnia-mock-ws-echo-server');
+    ws.on('message', (data: any, isBinary: boolean) => {
+      sendAfterDelay(data, { binary: isBinary });
+    });
+  };
+
+  const httpServer = createServer(handleRequest);
+  const httpsServer = createHttpsServer(
+    { key: fs.readFileSync(certPath('localhost-key.pem')), cert: fs.readFileSync(certPath('localhost-cert.pem')) },
+    handleRequest,
+  );
+  new WebSocketServer({ server: httpServer }).on('connection', handleEchoConnection);
+  new WebSocketServer({ server: httpsServer }).on('connection', handleEchoConnection);
+
+  httpServer.listen(4040, '127.0.0.1', () => console.log('ws echo server listening at ws://localhost:4040'));
+  httpsServer.listen(4041, '127.0.0.1', () => console.log('ws echo server listening at wss://localhost:4041'));
+}

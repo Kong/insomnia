@@ -9,6 +9,29 @@ import { BaseFlow } from "./base.flow";
 
 export class ImportFlow extends BaseFlow {
   /**
+   * Opens the Import dialog from `project`'s context menu, scans clipboard
+   * content pasted into the import source, then imports it into the project.
+   */
+  @step()
+  async importClipboard(project: Project, content: string): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const projectNode = (await workspace.getTree())
+      .flatten()
+      .find((n) => n.name === project.name)!;
+    await workspace.rightClick(projectNode);
+    await workspace.clickContextMenu(ContextMenuItem.Import);
+
+    const importPage = this.pageManager.importPage;
+    await importPage.navigate();
+    await importPage.selectSource(ImportSource.Clipboard);
+    await importPage.setClipboardContent(content);
+    await importPage.clickScan();
+
+    await importPage.selectProject(project.name);
+    await importPage.clickImport();
+  }
+
+  /**
    * Opens the Import dialog from `project`'s context menu, scans a raw curl
    * command, then imports it into the given collection within that project.
    */
@@ -54,6 +77,52 @@ export class ImportFlow extends BaseFlow {
     await importPage.navigate();
     await importPage.selectSource(ImportSource.File);
     await importPage.setFile(filePath);
+    await importPage.clickScan();
+
+    await importPage.selectProject(project.name);
+    await importPage.clickImport();
+  }
+
+  /**
+   * Opens the Import dialog from `project`'s context menu, scans an MCP
+   * server URL, then imports it into the project.
+   */
+  @step()
+  async importMcp(project: Project, url: string): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const projectNode = (await workspace.getTree())
+      .flatten()
+      .find((n) => n.name === project.name)!;
+    await workspace.rightClick(projectNode);
+    await workspace.clickContextMenu(ContextMenuItem.Import);
+
+    const importPage = this.pageManager.importPage;
+    await importPage.navigate();
+    await importPage.selectSource(ImportSource.Mcp);
+    await importPage.setMcpUrl(url);
+    await importPage.clickScan();
+
+    await importPage.selectProject(project.name);
+    await importPage.clickImport();
+  }
+
+  /**
+   * Opens the Import dialog from `project`'s context menu, scans content
+   * fetched from a URL, then imports it into the project.
+   */
+  @step()
+  async importUrl(project: Project, url: string): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const projectNode = (await workspace.getTree())
+      .flatten()
+      .find((n) => n.name === project.name)!;
+    await workspace.rightClick(projectNode);
+    await workspace.clickContextMenu(ContextMenuItem.Import);
+
+    const importPage = this.pageManager.importPage;
+    await importPage.navigate();
+    await importPage.selectSource(ImportSource.Url);
+    await importPage.setUrl(url);
     await importPage.clickScan();
 
     await importPage.selectProject(project.name);

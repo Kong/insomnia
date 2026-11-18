@@ -24,6 +24,56 @@ export * from "./constants";
 export { launchInsomniaElectron, SESSION_ID };
 
 /**
+ * Toggles misc/mock-api.ts's `features.gitSync.enabled` flag, which the app
+ * reads once at startup to decide whether the Git project type is offered
+ * at all. Must be called from a `test.beforeAll()` (before the `insomnia`
+ * fixture launches Electron for the first test in the file) — toggling it
+ * mid-session has no effect on an already-running app. Always pair with a
+ * matching `test.afterAll(() => setGitSyncFeatureFlag(true))` so later specs
+ * aren't affected by a flag this one left disabled.
+ *
+ * Scoped to this worker's SESSION_ID, so it never affects Electron instances
+ * running concurrently in other workers — see SESSION_ID's comment.
+ */
+export async function setGitSyncFeatureFlag(enabled: boolean): Promise<void> {
+  await fetch(`${MOCK_API_SERVER}/_admin/features/git-sync`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled, sessionId: SESSION_ID }),
+  });
+}
+
+/**
+ * Toggles misc/mock-api.ts's storage-rule `enableGitSync` flag, which the
+ * app reads once at startup to decide whether Git projects are disabled by
+ * org storage policy. Same pre-launch timing/reset requirements and
+ * per-worker scoping as `setGitSyncFeatureFlag()`.
+ */
+export async function setGitSyncStorageRule(enabled: boolean): Promise<void> {
+  await fetch(`${MOCK_API_SERVER}/_admin/storage-rule/git-sync`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled, sessionId: SESSION_ID }),
+  });
+}
+
+/**
+ * Toggles misc/mock-api.ts's `GET /v1/user/entitlements` response, which the
+ * app reads on startup to decide whether the account holds the Konnect
+ * control-planes entitlement — the Konnect organization ("Control Planes")
+ * only appears in the organization switcher once this (or a local Konnect
+ * project) makes it visible. Same pre-launch timing/reset requirements and
+ * per-worker scoping as `setGitSyncFeatureFlag()`.
+ */
+export async function setKonnectEntitlement(enabled: boolean): Promise<void> {
+  await fetch(`${MOCK_API_SERVER}/_admin/features/konnect-entitlement`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled, sessionId: SESSION_ID }),
+  });
+}
+
+/**
  * Resets misc/mock-api.ts's Cloud Sync mutable state (new snapshots/blobs,
  * deleted-project ids, "remote has new commit" flag) back to its seeded
  * defaults, scoped to this worker's SESSION_ID — mirrors the isolation
@@ -57,6 +107,7 @@ export async function resetVaultState(): Promise<void> {
     body: JSON.stringify({ sessionId: SESSION_ID }),
   });
 }
+
 
 export interface UserSession {
   page: Page;

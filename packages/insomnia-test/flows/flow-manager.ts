@@ -1,15 +1,27 @@
 import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
+import { AppFlow } from "./app.flow";
 import { CertificatesFlow } from "./certificates.flow";
+import { CloudSyncFlow } from "./cloud-sync.flow";
 import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
+import { EventStreamRequestFlow } from "./event-stream-request.flow";
+import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
+import { GitSyncFlow } from "./git-sync.flow";
+import { GraphQLRequestFlow } from "./graphql-request.flow";
+import { GrpcRequestFlow } from "./grpc-request.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
+import { McpClientFlow } from "./mcp-client.flow";
+import { MockServerFlow } from "./mock-server.flow";
+import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
+import { SocketIORequestFlow } from "./socket-io-request.flow";
 import { TemplateTagFlow } from "./template-tag.flow";
 import { VariableSourceFlow } from "./variable-source.flow";
+import { WebSocketRequestFlow } from "./web-socket-request.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
@@ -24,15 +36,27 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
+  appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
   certificatesFlow: (m: FlowDeps): CertificatesFlow => new CertificatesFlow(m.context, m.pageManager),
+  cloudSyncFlow: (m: FlowDeps): CloudSyncFlow => new CloudSyncFlow(m.context, m.pageManager),
   cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
+  eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
+  exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
+  gitSyncFlow: (m: FlowDeps): GitSyncFlow => new GitSyncFlow(m.context, m.pageManager),
+  graphqlRequestFlow: (m: FlowDeps): GraphQLRequestFlow => new GraphQLRequestFlow(m.context, m.pageManager),
+  grpcRequestFlow: (m: FlowDeps): GrpcRequestFlow => new GrpcRequestFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
+  mcpClientFlow: (m: FlowDeps): McpClientFlow => new McpClientFlow(m.context, m.pageManager, m.workspaceFlow),
+  mockServerFlow: (m: FlowDeps): MockServerFlow => new MockServerFlow(m.context, m.pageManager),
+  organizationFlow: (m: FlowDeps): OrganizationFlow => new OrganizationFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
+  socketIoRequestFlow: (m: FlowDeps): SocketIORequestFlow => new SocketIORequestFlow(m.context, m.pageManager),
   templateTagFlow: (m: FlowDeps): TemplateTagFlow => new TemplateTagFlow(m.context, m.pageManager),
   variableSourceFlow: (m: FlowDeps): VariableSourceFlow => new VariableSourceFlow(m.context, m.pageManager),
+  webSocketRequestFlow: (m: FlowDeps): WebSocketRequestFlow => new WebSocketRequestFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
 } satisfies Record<string, (m: FlowDeps) => unknown>;

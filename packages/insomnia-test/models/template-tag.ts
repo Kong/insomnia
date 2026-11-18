@@ -14,6 +14,8 @@ export type TemplateTagName =
   | "vault"
   | "custom";
 
+export type TemplateTagArgumentInputType = "Static Value" | "Environment Variable";
+
 export type HashAlgorithm = "md5" | "sha1" | "sha256" | "sha512";
 
 export type DigestEncoding = "hex" | "base64";

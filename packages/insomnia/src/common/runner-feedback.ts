@@ -3,15 +3,6 @@ import { RESPONSE_CODE_REASONS } from 'insomnia-data/common';
 
 import { describeByteSize } from './misc';
 
-export interface RequestRow {
-  id: string;
-  name: string;
-  ancestors: { id: string; name: string }[];
-  method: string;
-  url: string;
-  parentId: string;
-}
-
 export type RunnerItemStatus = 'pending' | 'running' | 'completed' | 'failed' | 'canceled' | 'skipped';
 
 export interface RunnerLiveItem {

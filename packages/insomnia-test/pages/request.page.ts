@@ -4,6 +4,7 @@ import { KeyValueEditorComponent } from "@package/components/key-value-editor.co
 import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { SelectComponent } from "@package/components/select.component";
 import { TabPanelComponent } from "@package/components/tab-panel.component";
+import { TabsComponent } from "@package/components/tabs.component";
 import { PressedToggleComponent } from "@package/components/toggle.component";
 import type { HttpMethod } from "@package/enums/http-method";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
@@ -14,6 +15,7 @@ import type {
   RequestHeader,
   RequestParameter,
 } from "insomnia-data";
+import type { Page } from "playwright-core";
 
 import { BasePage } from "./base.page";
 
@@ -23,6 +25,11 @@ interface KeyValuePair {
   name: string;
   value: string;
   disabled?: boolean;
+}
+
+export interface RequestBody {
+  contentType: string;
+  content: string;
 }
 
 export abstract class RequestPage extends BasePage {
@@ -74,6 +81,11 @@ export abstract class RequestPage extends BasePage {
     return this.panel.TABPANEL;
   }
 
+  /** The tab bar of this request's pane. */
+  protected get tabs(): TabsComponent {
+    return this.panel.tabs;
+  }
+
   /** The Auth tab component for this request's own pane. */
   get auth(): AuthTabComponent {
     return new AuthTabComponent(this.page, this.PANE);
@@ -109,10 +121,128 @@ export abstract class RequestPage extends BasePage {
   }
 
   /**
+   * The URL bar editor's container element — the app sets a
+   * `data-focused` attribute on this element on focus/blur, so pass this
+   * to BasePage's hasFocus() to check whether the URL bar is focused.
+   */
+  get urlBarContainer(): Locator {
+    return this.page
+      .locator(this.PANE)
+      .getByTestId("one-line-editor-container")
+      .filter({ has: this.page.locator(`#${this.urlBarId}`) });
+  }
+
+  /**
+   * The Send button — a plain DOM button, not a CodeMirror editor, so
+   * pass this to BasePage's isFocused() (not hasFocus()) to check focus.
+   */
+  get sendButton(): Locator {
+    return this.sendButtonLocator;
+  }
+
+  /**
+   * Clicks the Connect/Disconnect button to open a connection (for
+   * streaming request types) and waits for it to flip to "Disconnect".
+   * If an error dialog (e.g. "Failed to Render Request") appears instead,
+   * throws using its text rather than waiting out the full timeout for a
+   * button that will never appear.
+   */
+  async connect({
+    expectConnected = true,
+  }: { expectConnected?: boolean } = {}): Promise<void> {
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click();
+    if (!expectConnected) return;
+
+    const disconnectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: "Disconnect", exact: true });
+    const dialog = this.page.getByRole("dialog").first();
+    await disconnectButton
+      .or(dialog)
+      .first()
+      .waitFor({ state: "visible", timeout: DEFAULT_TIMEOUT });
+    if (await dialog.isVisible()) {
+      throw new Error((await dialog.innerText()).trim());
+    }
+  }
+
+  /**
+   * Runs the given callback (e.g. to perform assertions or actions while
+   * connected) until it passes within the timeout, then clicks the
+   * Connect/Disconnect button to close the connection and waits for it
+   * to flip back to "Connect".
+   */
+  async disconnect(
+    callback: () => Promise<void> | void = () => {},
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      await callback();
+    }).toPass({ timeout });
+
+    const connectButton = this.page
+      .locator(this.PANE)
+      .getByRole("button", { name: /^(Connect|Disconnect)$/ });
+    await connectButton.click();
+    await expect(connectButton).toHaveText("Connect", {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
+   * Reads back the currently selected body content type and its
+   * content. Returns undefined when no body type is selected or the
+   * selected type matches the given "no body" sentinel value.
+   */
+  protected async getContentTypeBody(
+    noBodyValue: string,
+  ): Promise<RequestBody | undefined> {
+    await this.switchTab("content-type");
+    const panel = this.page.locator(this.TABPANEL);
+    const raw = await new SelectComponent(this.page, panel).nativeValue(panel);
+    if (!raw || raw === noBodyValue) return undefined;
+    const editor = panel.locator(".CodeMirror").first();
+    if ((await editor.count()) === 0) return undefined;
+    const content = await this.readCodeMirror(editor);
+    return { contentType: raw, content };
+  }
+
+  /**
    * Reads back the request's current headers.
    */
   async getHeaders(): Promise<RequestHeader[]> {
     return this.readKeyValuePairs("headers");
+  }
+
+  /**
+   * Switches to the params tab and clicks its "Add" button, appending a
+   * new blank row.
+   */
+  async addParam(): Promise<Locator> {
+    return this.clickAddButton("params");
+  }
+
+  /**
+   * Switches to the headers tab and clicks its "Add" button, appending a
+   * new blank row.
+   */
+  async addHeader(): Promise<Locator> {
+    return this.clickAddButton("headers");
+  }
+
+  /**
+   * Switches to the given tab and clicks its key/value editor's "Add"
+   * button, appending a new blank row.
+   */
+  private async clickAddButton(tab: string): Promise<Locator> {
+    await this.switchTab(tab);
+    const panel = this.page.locator(this.TABPANEL);
+    await panel.getByRole("button", { name: "Add", exact: true }).click();
+    const rows = panel.locator('[role="listbox"] [role="option"]');
+    return rows.last().getByTestId("one-line-editor-container").first();
   }
 
   /**
@@ -173,6 +303,34 @@ export abstract class RequestPage extends BasePage {
   }
 
   /**
+   * Polls the URL bar until it reads `expected` and returns that value —
+   * for a read right after navigating to another request (a tab switch,
+   * the command palette), where the URL bar can still show the previous
+   * request's URL until the route settles.
+   */
+  async waitForUrl(expected: string): Promise<string> {
+    let url = "";
+    await expect(async () => {
+      url = await this.getUrl();
+      expect(url).toBe(expected);
+    }).toPass({ timeout: DEFAULT_TIMEOUT });
+    return url;
+  }
+
+  /**
+   * Polls the app's on-disk request store until a request holds `url`,
+   * confirming a URL typed into the URL bar has been saved (the editor
+   * saves through a debounce) before the caller navigates away from it.
+   */
+  async waitForUrlPersisted(url: string): Promise<void> {
+    await this.waitForFieldPersisted(
+      [this.persistedDbFile],
+      (doc) => doc.url,
+      url,
+    );
+  }
+
+  /**
    * Reads back all key/value pairs currently shown on the given tab,
    * including each row's enabled/disabled toggle state. Rows with no
    * toggle button are treated as always enabled.
@@ -205,6 +363,20 @@ export abstract class RequestPage extends BasePage {
   @throwOnDialog()
   async send(): Promise<void> {
     await this.sendButtonLocator.click();
+  }
+
+  /**
+   * Sets the request body: selects the given content type, then writes
+   * the body content into the CodeMirror editor if one is present for
+   * that body type (some body types, e.g. "No Body", have no editor).
+   */
+  protected async setContentTypeBody(body: RequestBody): Promise<void> {
+    await this.selectBodyType(body.contentType);
+
+    const panel = this.page.locator(this.TABPANEL);
+    const editor = panel.locator(".CodeMirror").first();
+    if ((await editor.count()) === 0) return;
+    await this.setCodeMirrorValue(editor, body.content);
   }
 
   /**
@@ -465,5 +637,86 @@ export abstract class RequestPage extends BasePage {
    */
   async setUrl(url: string): Promise<void> {
     await this.setCodeMirrorValue(this.page.locator(this.URL_BAR), url);
+  }
+
+  /**
+   * Clicks into the URL bar, moves the cursor to the end, and types the
+   * given text via real keystrokes (rather than replacing the value
+   * outright like setUrl()), so it builds genuine CodeMirror undo
+   * history the way a user's typing would.
+   */
+  async typeUrl(text: string): Promise<void> {
+    const urlBar = this.page.locator(this.URL_BAR);
+    await urlBar.click();
+    await this.page.keyboard.press("End");
+    await this.page.keyboard.type(text);
+  }
+
+  /**
+   * Clicks into the URL bar and sends the platform's Undo shortcut
+   * (Cmd+Z on macOS, Ctrl+Z elsewhere).
+   */
+  async undoUrl(): Promise<void> {
+    await this.undo(() => this.page.locator(this.URL_BAR).click());
+  }
+
+  /**
+   * Reads the resolved-value tooltip (`title`) off the first environment
+   * variable tag rendered inline in the URL bar, e.g. `{{ _.exampleString }}`.
+   * Empty string if no tag is currently rendered there.
+   */
+  async getUrlPreview(): Promise<string> {
+    const tag = this.page.locator(`${this.URL_BAR} [data-nunjucks-tag]`).first();
+    return (await tag.count()) === 0 ? "" : (await tag.getAttribute("title")) ?? "";
+  }
+
+  /**
+   * Switches to the Docs tab and clicks the Markdown editor's Write or
+   * Preview sub-tab.
+   */
+  async setDocsMode(mode: "write" | "preview"): Promise<void> {
+    await this.switchTab("docs");
+    await new TabsComponent(this.page, this.page.locator(this.TABPANEL))
+      .tab(mode)
+      .click();
+  }
+
+  /**
+   * Reads the current value of the Docs tab's Markdown editor.
+   */
+  async getDocs(): Promise<string> {
+    await this.switchTab("docs");
+    return this.readCodeMirror(
+      this.page.locator(this.TABPANEL).locator(".CodeMirror").first(),
+    );
+  }
+
+  /**
+   * Switches to the Docs tab's Write sub-tab, clicks into its Markdown
+   * editor, moves the cursor to the end, and types the given text via
+   * real keystrokes (rather than replacing the value outright), so it
+   * builds genuine CodeMirror undo history the way a user's typing would.
+   */
+  async typeDocs(text: string): Promise<void> {
+    await this.setDocsMode("write");
+    const editor = this.page.locator(this.TABPANEL).locator(".CodeMirror").first();
+    await editor.click();
+    await this.page.keyboard.press("End");
+    await this.page.keyboard.type(text);
+    const typed = await this.readCodeMirror(editor);
+    await this.waitForFieldPersisted(
+      [this.persistedDbFile],
+      (doc) => doc.description,
+      typed,
+    );
+  }
+
+  /**
+   * Clicks into the Docs tab's Markdown editor and sends the platform's
+   * Undo shortcut (Cmd+Z on macOS, Ctrl+Z elsewhere).
+   */
+  async undoDocs(): Promise<void> {
+    const editor = this.page.locator(this.TABPANEL).locator(".CodeMirror").first();
+    await this.undo(() => editor.click());
   }
 }

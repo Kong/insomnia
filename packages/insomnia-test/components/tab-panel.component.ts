@@ -75,4 +75,49 @@ export class TabPanelComponent extends BaseComponent {
   protected async readPersistedDocs(dbFile: string): Promise<any[]> {
     return findDocs(this.page, dbFile);
   }
+
+  /**
+   * Polls the app's database until any live document in one of
+   * `dbFiles` satisfies `predicate`. Use in place of a fixed sleep after
+   * an edit the app saves through a debounce.
+   */
+  protected async waitForPersisted(
+    dbFiles: string[],
+    predicate: (doc: any) => boolean,
+    timeout = DEFAULT_TIMEOUT,
+  ): Promise<void> {
+    await expect(async () => {
+      let matched = false;
+      for (const file of dbFiles) {
+        if ((await this.readPersistedDocs(file)).some(predicate)) matched = true;
+      }
+      expect(matched).toBe(true);
+    }).toPass({ timeout });
+  }
+
+  /**
+   * Polls the app's database until any live document in one of
+   * `dbFiles` holds `expected` at the value `read` extracts from it — the
+   * single-field form of `waitForPersisted()`.
+   */
+  protected async waitForFieldPersisted(
+    dbFiles: string[],
+    read: (doc: any) => unknown,
+    expected: unknown,
+  ): Promise<void> {
+    await this.waitForPersisted(dbFiles, (doc) => read(doc) === expected);
+  }
+
+  /**
+   * Sends the platform's Undo shortcut (Cmd+Z on macOS, Ctrl+Z elsewhere)
+   * to whatever currently has focus.
+   */
+  protected async undo(focus?: () => Promise<void>): Promise<void> {
+    if (focus) {
+      await focus();
+    }
+    await this.page.keyboard.press(
+      process.platform === "darwin" ? "Meta+z" : "Control+z",
+    );
+  }
 }
