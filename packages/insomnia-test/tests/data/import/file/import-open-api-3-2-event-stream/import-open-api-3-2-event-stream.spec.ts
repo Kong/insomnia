@@ -84,8 +84,6 @@ test("Verify itemSchema With Sequential Media Types Imports As Plain HTTP While 
 test("Verify An Accept Header Parameter Is Ignored So A text/event-stream Response Still Imports As An Event Stream Request", async ({
   user,
 }) => {
-  test.fail(true, "INS-4297");
-
   const { eventStreamRequestFlow, importFlow, workspaceFlow } =
     user.flowManager;
 

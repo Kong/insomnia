@@ -9,8 +9,6 @@ import { expect } from "@playwright/test";
 test("Verify An Operation Header Overrides A Path Level Header With The Same Name In Different Casing", async ({
   user,
 }) => {
-  test.fail(true, "INS-4296");
-
   const { eventStreamRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(
