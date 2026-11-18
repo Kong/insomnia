@@ -75,4 +75,15 @@ export class WorkspacePage extends BasePage {
     // Select export format
     await this.exportModal.selectExportFormat(format);
   }
+
+  /**
+   * Opens the export requests picker from the workspace dropdown (all requests selected by default).
+   */
+  async openExportPicker(workspaceName: string): Promise<void> {
+    await this.navigationSidebar.selectWorkspaceDropdownOption({
+      actionName: 'Export',
+      workspaceName,
+    });
+    await this.page.getByRole('dialog').getByRole('heading', { name: 'Export requests' }).waitFor();
+  }
 }

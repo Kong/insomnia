@@ -192,6 +192,7 @@ export type HandleChannels =
   | 'writeFile'
   | 'deleteCompiledRuleset'
   | 'refreshCompiledRuleset'
+  | 'ensureCompiledRuleset'
   | 'writeResponseBodyToFile'
   | 'vault.encryptSecretValue'
   | 'vault.decryptSecretValue'
@@ -302,6 +303,7 @@ export type RendererOnChannels =
   | 'git.db-synced'
   | 'git.file-problems-changed'
   | 'git.native-sign-in-status'
+  | 'git.native-credential-error'
   | 'llm.changed';
 
 export const ipcMainOn = (

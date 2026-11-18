@@ -120,6 +120,17 @@ export const prefix = 'cloudCred';
 export const canDuplicate = false;
 export const canSync = false;
 
+// Temporary: replaced by `encrypted()` field marks once this model is migrated to a Zod schema
+export const encryptedFields = [
+  'credentials.accessKeyId',
+  'credentials.secretAccessKey',
+  'credentials.sessionToken',
+  'credentials.client_secret',
+  'credentials.secret_id',
+  'credentials.access_token',
+  'credentials.accessToken',
+];
+
 export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential =>
   model.type === type;
 export const isCloudCredentialId = (id: string): boolean => id.startsWith(`${prefix}_`);

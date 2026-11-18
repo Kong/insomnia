@@ -1,6 +1,6 @@
 import { services } from 'insomnia-data';
 
-import type { NativeSignInStatus } from '~/sync/git/providers/native';
+import type { NativeCredentialError, NativeSignInStatus } from '~/sync/git/providers/native';
 import { queue, type RAToastContent, showToast } from '~/ui/components/toast-notification';
 import { git } from '~/ui/ipc';
 import * as themes from '~/ui/plugins/misc';
@@ -95,4 +95,48 @@ window.main.on('ui.prompt', (_, id: string, options: Record<string, any>) => {
       window.main.notifyPromptResult(id, null);
     },
   });
+});
+
+const nativeCredentialErrorMessages: Record<NativeCredentialError['reason'], (host: string) => RAToastContent> = {
+  'git-not-found': () => ({
+    title: 'Git not found',
+    description: 'System Git Credentials uses the git installed on this computer. Install git, then try again.',
+  }),
+  'git-failed-to-start': () => ({
+    title: "Couldn't start git",
+    description:
+      'System Git Credentials could not run the git installed on this computer. Check that git works and that Insomnia is allowed to run it, then try again.',
+  }),
+  'no-credentials': host => ({
+    title: "Couldn't get git credentials",
+    description: `Your system git credential manager didn't provide credentials for ${host}. Try again, or use an Access Token credential instead. To sign in from Insomnia, use Git Credential Manager.`,
+  }),
+  'rejected': host => ({
+    title: 'Git credentials rejected',
+    description: `${host} rejected the credentials from your system git credential manager. Update them in your credential manager, or use an Access Token credential instead.`,
+  }),
+};
+
+// Credential error toasts stay until dismissed; keep at most one per host and reason
+// so repeated failures do not stack up. An entry lives until its toast is closed, including
+// while the toast is still waiting in the queue behind other notifications.
+const nativeCredentialErrorToasts = new Set<string>();
+
+window.main.on('git.native-credential-error', (_, error: NativeCredentialError) => {
+  const toastId = `${error.host}\n${error.reason}`;
+  if (nativeCredentialErrorToasts.has(toastId)) {
+    return;
+  }
+
+  const content = nativeCredentialErrorMessages[error.reason](error.host);
+  nativeCredentialErrorToasts.add(toastId);
+  showToast(
+    {
+      ...content,
+      icon: 'key',
+      status: 'warning',
+      description: error.detail ? `${content.description} (${error.detail})` : content.description,
+    },
+    { timeout: null, onClose: () => nativeCredentialErrorToasts.delete(toastId) },
+  );
 });

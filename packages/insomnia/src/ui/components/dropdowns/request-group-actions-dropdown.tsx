@@ -20,6 +20,7 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
+import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -151,6 +152,7 @@ export const RequestGroupActionsDropdown = ({
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const openInNewTab = () => {
     tabNavigate(
@@ -308,6 +310,12 @@ export const RequestGroupActionsDropdown = ({
           action: () => handleRequestGroupDuplicate(),
         },
         {
+          id: 'Export',
+          name: 'Export',
+          icon: 'file-export',
+          action: () => setIsExportModalOpen(true),
+        },
+        {
           id: 'Rename',
           name: 'Rename',
           icon: 'edit',
@@ -410,6 +418,13 @@ export const RequestGroupActionsDropdown = ({
             });
           }}
           onHide={() => setPasteCurlModalOpen(false)}
+        />
+      )}
+      {isExportModalOpen && (
+        <ExportRequestsModal
+          workspaceIdToExport={workspaceId}
+          initialSelectedId={requestGroup._id}
+          onClose={() => setIsExportModalOpen(false)}
         />
       )}
     </Fragment>

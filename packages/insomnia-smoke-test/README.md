@@ -8,9 +8,25 @@ Playwright E2E tests for the Insomnia desktop app.
 
 ```
 tests/
-  smoke/      # Main suite — runs on every CI push (Ubuntu only)
+  smoke/      # Main suite — Ubuntu runs all of it, Windows runs the @libcurl specs
   critical/   # Single critical-path test — runs on release
   migration/  # Data migration tests
+```
+
+### Tags
+
+Specs can carry Playwright tags to select them per platform or job:
+
+```ts
+test('can send HTTP/2 requests', { tag: '@libcurl' }, async ({ page }) => { … });
+```
+
+`@libcurl` marks the specs whose behaviour depends on the native libcurl binding
+(HTTP/2, TLS/mTLS, the IPv6 resolver). Windows CI runs only those, to keep runner
+minutes down; run them locally with:
+
+```bash
+npm run test:smoke:build -- --grep @libcurl
 ```
 
 All commands below must be run from the **repo root**.

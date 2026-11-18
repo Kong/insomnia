@@ -77,13 +77,7 @@ export const AuthWrapper: FC<{
   return (
     <>
       <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
-        <AuthDropdown
-          authentication={authentication}
-          authTypes={authTypes}
-          hideOthers={hideOthers}
-          hideInherit={hideInherit}
-          disabled={disabled}
-        />
+        <AuthDropdown authTypes={authTypes} hideOthers={hideOthers} hideInherit={hideInherit} disabled={disabled} />
       </Toolbar>
       <div className="flex-1 overflow-y-auto">{authBody}</div>
     </>

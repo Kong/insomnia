@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type {
+  ApiSpec,
   GrpcRequest,
   Project,
   Request,
@@ -10,11 +11,12 @@ import type {
 } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import type { PlatformKeyCombinations } from 'insomnia-data/common';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useParams } from 'react-router';
 
 import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
+import { findSpecOperationForRequest, type SpecOperationLocation } from '~/common/spec-operation';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
@@ -27,6 +29,7 @@ import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -39,6 +42,7 @@ interface Props {
   activeProject: Project;
   activeWorkspace: Workspace;
   requestGroup?: RequestGroup;
+  apiSpec?: ApiSpec;
   isOpen: boolean;
   triggerRef?: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
@@ -54,6 +58,7 @@ export const RequestActionsDropdown = ({
   activeWorkspace,
   triggerRef,
   onOpenChange,
+  apiSpec,
   onRename,
   onDelete,
 }: Props) => {
@@ -70,6 +75,7 @@ export const RequestActionsDropdown = ({
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const tabNavigate = useTabNavigate();
 
   const openInNewTab = async () => {
@@ -84,6 +90,32 @@ export const RequestActionsDropdown = ({
       {
         withTab: true,
         shouldNavigate: true,
+      },
+    );
+  };
+
+  const specPosition = useMemo<SpecOperationLocation | null>(() => {
+    if (!isOpen || !apiSpec || !isRequest(request)) {
+      return null;
+    }
+    return findSpecOperationForRequest(apiSpec.contents, request);
+  }, [isOpen, request, apiSpec]);
+
+  const viewSpec = () => {
+    if (!specPosition) {
+      return;
+    }
+    tabNavigate(
+      {
+        organization: organizationId,
+        project: activeProject,
+        workspace: activeWorkspace,
+        item: activeWorkspace,
+      },
+      {
+        withTab: false,
+        shouldNavigate: true,
+        searchParams: new URLSearchParams({ specPath: specPosition.path, specMethod: specPosition.method }),
       },
     );
   };
@@ -251,6 +283,16 @@ export const RequestActionsDropdown = ({
           icon: 'external-link-alt',
           hint: hotKeyRegistry.request_openInNewTab,
         },
+        ...(specPosition
+          ? [
+              {
+                id: 'ViewSpec',
+                name: 'View Spec',
+                action: viewSpec,
+                icon: 'file-lines' as IconName,
+              },
+            ]
+          : []),
         {
           id: 'Pin',
           name: isPinned ? 'Unpin' : 'Pin',
@@ -264,6 +306,12 @@ export const RequestActionsDropdown = ({
           action: handleDuplicateRequest,
           icon: 'copy',
           hint: hotKeyRegistry.request_showDuplicate,
+        },
+        {
+          id: 'Export',
+          name: 'Export',
+          action: () => setIsExportModalOpen(true),
+          icon: 'file-export',
         },
         {
           id: 'Rename',
@@ -359,6 +407,13 @@ export const RequestActionsDropdown = ({
         </Popover>
       </MenuTrigger>
       {isSettingsModalOpen && <RequestSettingsModal request={request} onHide={() => setIsSettingsModalOpen(false)} />}
+      {isExportModalOpen && (
+        <ExportRequestsModal
+          workspaceIdToExport={workspaceId}
+          initialSelectedId={request._id}
+          onClose={() => setIsExportModalOpen(false)}
+        />
+      )}
     </Fragment>
   );
 };

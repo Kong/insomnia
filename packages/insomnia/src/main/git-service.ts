@@ -3760,7 +3760,11 @@ const getRepositoryDirectoryTree = async ({
     return emptyTree;
   }
 
-  const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
+  // Never expose the `.git` directory (or a submodule's `.git` file): it must not be selectable as a
+  // destination for workspace files, and walking its object store is expensive for large repositories.
+  const withoutGitDir = (entries: string[]) => entries.filter(entry => entry !== '.git');
+
+  const rootContents = withoutGitDir(await fs.promises.readdir(GIT_CLONE_DIR));
 
   const folderList: Record<string, string[]> = {
     '': rootContents,
@@ -3772,7 +3776,7 @@ const getRepositoryDirectoryTree = async ({
         const fileOrDirPath = path.join(parentPath, file);
         const stats = await fs.promises.lstat(fileOrDirPath);
         if (await stats.isDirectory()) {
-          const subDirectoryContents = await fs.promises.readdir(fileOrDirPath);
+          const subDirectoryContents = withoutGitDir(await fs.promises.readdir(fileOrDirPath));
           folderList[fileOrDirPath] = subDirectoryContents;
           return {
             id: fileOrDirPath,

@@ -11,6 +11,7 @@ import { AlertModal } from './components/modals/alert-modal';
 import { AskModal } from './components/modals/ask-modal';
 import { CodePromptModal } from './components/modals/code-prompt-modal';
 import { ErrorModal } from './components/modals/error-modal';
+import { FieldEncryptionIssueModal } from './components/modals/field-encryption-issue-modal';
 import { GenerateCodeModal } from './components/modals/generate-code-modal';
 import { GitProjectStagingModal } from './components/modals/git-project-staging-modal';
 import { LogoutModal } from './components/modals/logout-modal';
@@ -71,6 +72,8 @@ const Modals = () => {
         <LogoutModal ref={instance => registerModal(instance, 'LogoutModal')} />
 
         <OAuthAuthorizationStatusModal />
+
+        <FieldEncryptionIssueModal />
       </ErrorBoundary>
     </div>
   );

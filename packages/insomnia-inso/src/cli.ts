@@ -62,6 +62,7 @@ export interface GlobalOptions {
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
+  encryptionKey?: string;
 }
 
 if (!isDevelopment()) {
@@ -152,7 +153,7 @@ const getWorkingDir = (options: { workingDir?: string }): string => {
 const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
   const pathToSearch = getWorkingDir(options);
 
-  const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
+  const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'], encryptionKey: options.encryptionKey });
   if (!db.ApiSpec.length) {
     throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
   }
@@ -307,7 +308,9 @@ export const go = (args?: string[]) => {
     };
     logger.level = options.verbose ? LogLevels.verbose : LogLevels.info;
     options.ci && logger.setReporters([new BasicReporter()]);
-    options.printOptions && logger.log('Loaded options', options, '\n');
+    // The key is a secret, and the output of a CI run is often kept
+    options.printOptions &&
+      logger.log('Loaded options', { ...options, ...(options.encryptionKey && { encryptionKey: '***' }) }, '\n');
 
     return options;
   };
@@ -342,6 +345,13 @@ export const go = (args?: string[]) => {
 `,
     )
     .option('-w, --workingDir <dir>', 'set working directory/file: .insomnia folder, *.db.json, export.yaml', '')
+    .addOption(
+      new commander.Option(
+        '--encryption-key <key>',
+        'key that decrypts the sensitive fields in the Insomnia data directory: the base64 text from "Copy Key" or the JWK JSON from "Export Key". ' +
+          'A command line argument stays in the shell history, so prefer the INSOMNIA_ENCRYPTION_KEY environment variable',
+      ).env('INSOMNIA_ENCRYPTION_KEY'),
+    )
     .option('--verbose', 'show additional logs while running the command', false)
     .option('--ci', 'run in CI, disables all prompts, defaults to false', false)
     .option('--config <path>', 'path to configuration file containing above options (.insorc)', '')
@@ -402,6 +412,7 @@ export const go = (args?: string[]) => {
         const db = await loadDb({
           pathToSearch,
           filterTypes: [],
+          encryptionKey: options.encryptionKey,
         });
 
         // Find suites
@@ -603,6 +614,7 @@ export const go = (args?: string[]) => {
         const db = await loadDb({
           pathToSearch,
           filterTypes: [],
+          encryptionKey: options.encryptionKey,
         });
 
         const workspace = await getWorkspaceOrFallback(db, identifier, options.ci);

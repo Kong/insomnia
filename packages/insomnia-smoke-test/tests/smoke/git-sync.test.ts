@@ -224,6 +224,73 @@ test.describe('Git Sync', () => {
     await page.getByRole('button', { name: 'Yes' }).click();
     await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
   });
+
+  // Creates nested folders from the "New folder" popover in the new collection modal and saves the
+  // collection into them. New folders only exist in the UI until the file is written, so the commit
+  // dialog must list the file under the new path.
+  test('Create a collection inside new nested folders', async ({ page, insomnia }) => {
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    const modal = page.getByRole('dialog', { name: 'Create or update dialog' });
+    const tree = modal.getByRole('treegrid', { name: 'Files' });
+    await tree.getByRole('row').first().waitFor();
+    // The .git directory must never be offered as a destination.
+    await expect.soft(tree.getByRole('row', { name: '.git', exact: true })).toHaveCount(0);
+
+    await modal.getByRole('textbox', { name: 'Name', exact: true }).fill('Folder Test');
+    await modal.getByRole('textbox', { name: 'File name' }).fill('folder_test');
+
+    const popover = page.getByRole('dialog', { name: 'New folder' });
+    const folderNameInput = popover.getByRole('textbox', { name: 'Folder name' });
+
+    // Escape only closes the popover, not the surrounding modal.
+    await modal.getByRole('button', { name: 'New folder', exact: true }).click();
+    await expect.soft(folderNameInput).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect.soft(popover).toBeHidden();
+    await expect.soft(modal).toBeVisible();
+
+    // An invalid name shows an error and must not create the folder or submit the workspace form.
+    await modal.getByRole('button', { name: 'New folder', exact: true }).click();
+    await folderNameInput.fill('.git');
+    await popover.getByRole('button', { name: 'Create', exact: true }).click();
+    await expect.soft(popover.getByText('Folder name ".git" is reserved')).toBeVisible();
+    await expect.soft(modal).toBeVisible();
+
+    await folderNameInput.fill('specs');
+    await popover.getByRole('button', { name: 'Create', exact: true }).click();
+    await expect.soft(popover).toBeHidden();
+    await expect.soft(modal).toBeVisible();
+    await expect.soft(tree.getByRole('row', { name: 'specs', exact: true })).toHaveAttribute('aria-selected', 'true');
+
+    // Nested folder inside the folder that was just created.
+    await modal.getByRole('button', { name: 'New folder', exact: true }).click();
+    await expect.soft(popover).toContainText('specs');
+    await folderNameInput.fill('v1');
+    await page.keyboard.press('Enter');
+    await expect.soft(popover).toBeHidden();
+    await expect.soft(tree.getByRole('row', { name: 'v1', exact: true })).toHaveAttribute('aria-selected', 'true');
+
+    await modal.getByRole('button', { name: 'Create', exact: true }).click();
+    await modal.waitFor({ state: 'hidden' });
+
+    // Existing nested folders can be expanded by selecting their rows, not only via the folder icon.
+    await insomnia.navigationSidebar.selectProjectDropdownOption({
+      actionName: 'Collection',
+      projectName: GIT_PROJECT_NAME,
+    });
+    await tree.getByRole('row', { name: 'specs', exact: true }).click();
+    await tree.getByRole('row', { name: 'v1', exact: true }).click();
+    await expect.soft(tree.getByRole('row', { name: 'folder_test.yaml', exact: true })).toBeVisible();
+    await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await modal.waitFor({ state: 'hidden' });
+
+    await page.getByTestId('git-dropdown').click();
+    await page.getByRole('menuitemradio', { name: 'Commit' }).click();
+    await expect.soft(page.getByLabel('Unstaged changes')).toContainText('specs/v1/folder_test.yaml');
+  });
 });
 
 async function addAccessTokenGitCredential(insomnia: InsomniaApp) {

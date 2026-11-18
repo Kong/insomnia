@@ -102,9 +102,13 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   // Get the folder from the gitFilePath
   const effectiveGitFilePath = gitFilePath || metaGitFilePath || '';
-  const selectedFolder = effectiveGitFilePath.split('/').slice(1).join('/') || '';
-  const fileName = effectiveGitFilePath.split('/').pop() || '';
-  const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
+  // gitFilePath and folderList keys use the platform separator (backslashes on Windows), but files imported from the
+  // repository may be stored with forward slashes, so accept both.
+  const gitFilePathSegments = effectiveGitFilePath.split(/[\\/]/);
+  const fileName = gitFilePathSegments.pop() || '';
+  const folderList = gitRepoTreeFetcher.data?.folderList || {};
+  const selectedFolderChildren =
+    folderList[gitFilePathSegments.join('/')] || folderList[gitFilePathSegments.join('\\')] || [];
 
   const [fileNameValue, setFileNameValue] = useState<string>(safeToUseInsomniaFileName(fileName || ''));
 

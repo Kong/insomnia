@@ -25,7 +25,7 @@
     "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
-    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
+    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --prepackaged ./dist/win-unpacked",
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
@@ -59,7 +59,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^3.0.2",
-    "@getinsomnia/node-libcurl": "3.3.0",
+    "@getinsomnia/node-libcurl": "3.3.2",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.13",
@@ -219,8 +219,8 @@
     "vite": "^7.1.3"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-ai": "^1.0.12",
-    "@kong/insomnia-plugin-external-vault": "0.1.5"
+    "@kong/insomnia-plugin-ai": "^1.0.13",
+    "@kong/insomnia-plugin-external-vault": "0.1.6"
   },
   "dev": {
     "dev-server-port": 3334

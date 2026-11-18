@@ -13,6 +13,7 @@ import {
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
+import { InviteBox } from './invite-modal/invite-box';
 
 const { isRequest } = models.request;
 
@@ -189,11 +190,31 @@ export const Tree: FC<{
   return <ul className="flex flex-col">{renderChildren(root)}</ul>;
 };
 
+const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {
+  if (id == null || node.doc._id === id) {
+    // Switch the flags of all children in this subtree.
+    node.children.forEach(child => setItemSelected(child, isSelected));
+    node.selectedRequests = isSelected ? node.totalRequests : 0;
+    return true;
+  }
+  for (const child of node.children) {
+    const found = setItemSelected(child, isSelected, id);
+    if (found) {
+      node.selectedRequests = node.children.map(ch => ch.selectedRequests).reduce((acc, selected) => acc + selected, 0);
+      return true;
+    }
+  }
+  return false;
+};
+
 export const ExportRequestsModal = ({
   workspaceIdToExport,
+  initialSelectedId,
   onClose,
 }: {
   workspaceIdToExport: string;
+  /** When set, only this request or folder (and its descendants) is selected initially. */
+  initialSelectedId?: string;
   onClose: () => void;
 }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
@@ -201,6 +222,8 @@ export const ExportRequestsModal = ({
   const [state, setState] = useState<{
     treeRoot: Node | null;
   }>();
+  const [includeCookies, setIncludeCookies] = useState(true);
+  const [includeEnvironments, setIncludeEnvironments] = useState(true);
 
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
@@ -233,29 +256,29 @@ export const ExportRequestsModal = ({
     };
     const requestTree = workspaceLoaderData?.requestTree || [];
     const children: Node[] = requestTree.map(child => createTreeNode(child));
-    setState({
-      treeRoot: {
-        doc: {
-          ...models.requestGroup.init(),
-          _id: 'all',
-          type: models.requestGroup.type,
-          name: 'All requests',
-          parentId: '',
-          modified: 0,
-          created: 0,
-          isPrivate: false,
-        },
-        collapsed: false,
-        children: children,
-        totalRequests: children
-          .map(child => child.totalRequests)
-          .reduce((acc, totalRequests) => acc + totalRequests, 0),
-        selectedRequests: children
-          .map(child => child.totalRequests)
-          .reduce((acc, totalRequests) => acc + totalRequests, 0), // Default select all
+    const totalSelected = children.reduce((acc, child) => acc + child.totalRequests, 0);
+    const treeRoot: Node = {
+      doc: {
+        ...models.requestGroup.init(),
+        _id: 'all',
+        type: models.requestGroup.type,
+        name: 'All requests',
+        parentId: '',
+        modified: 0,
+        created: 0,
+        isPrivate: false,
       },
-    });
-  }, [workspaceLoaderData?.requestTree]);
+      collapsed: false,
+      children: children,
+      totalRequests: children.map(child => child.totalRequests).reduce((acc, totalRequests) => acc + totalRequests, 0),
+      selectedRequests: totalSelected, // Default select all
+    };
+    if (initialSelectedId) {
+      setItemSelected(treeRoot, false);
+      setItemSelected(treeRoot, true, initialSelectedId);
+    }
+    setState({ treeRoot });
+  }, [workspaceLoaderData?.requestTree, initialSelectedId]);
 
   if (!workspaceLoaderData) {
     return null;
@@ -271,25 +294,6 @@ export const ExportRequestsModal = ({
       return [node.doc._id];
     }
     return node.children.flatMap(child => getSelectedRequestIds(child));
-  };
-
-  const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {
-    if (id == null || node.doc._id === id) {
-      // Switch the flags of all children in this subtree.
-      node.children.forEach(child => setItemSelected(child, isSelected));
-      node.selectedRequests = isSelected ? node.totalRequests : 0;
-      return true;
-    }
-    for (const child of node.children) {
-      const found = setItemSelected(child, isSelected, id);
-      if (found) {
-        node.selectedRequests = node.children
-          .map(ch => ch.selectedRequests)
-          .reduce((acc, selected) => acc + selected, 0);
-        return true;
-      }
-    }
-    return false;
   };
 
   const setRequestGroupCollapsed = (node: Node, isCollapsed: boolean, requestGroupId: string): boolean => {
@@ -333,6 +337,9 @@ export const ExportRequestsModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
+              <InviteBox source="export-modal" />
+              <hr className="m-0 shrink-0 border-0 border-t border-solid border-(--hl-md)" />
+              <p className="shrink-0 text-lg font-semibold">Select requests to export:</p>
               <div className="max-h-96 min-h-80 w-full overflow-y-auto rounded-sm border border-solid border-(--hl-sm) select-none">
                 <Tree
                   root={state?.treeRoot}
@@ -347,6 +354,37 @@ export const ExportRequestsModal = ({
                     }
                   }}
                 />
+              </div>
+              <div className="flex shrink-0 flex-col gap-2">
+                <span className="text-xs text-(--hl)">These options apply to the Insomnia format only.</span>
+                <div className="flex items-center gap-4">
+                <Checkbox
+                  isSelected={includeCookies}
+                  onChange={setIncludeCookies}
+                  className="group flex items-center gap-2"
+                >
+                  <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                    <Icon
+                      icon="check"
+                      className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                    />
+                  </div>
+                  Include cookies
+                </Checkbox>
+                <Checkbox
+                  isSelected={includeEnvironments}
+                  onChange={setIncludeEnvironments}
+                  className="group flex items-center gap-2"
+                >
+                  <div className="flex h-4 w-4 items-center justify-center rounded-sm ring-1 ring-(--hl-sm) transition-colors group-focus:ring-2 group-data-selected:bg-(--hl-xs)">
+                    <Icon
+                      icon="check"
+                      className="h-3 w-3 opacity-0 group-data-selected:text-(--color-success) group-data-selected:opacity-100"
+                    />
+                  </div>
+                  Include environments
+                </Checkbox>
+                </div>
               </div>
               <div className="flex flex-1 shrink-0 items-center justify-end gap-2">
                 <Button
@@ -366,7 +404,11 @@ export const ExportRequestsModal = ({
                         },
                       });
                     }
-                    state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
+                    state?.treeRoot &&
+                      exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot), {
+                        includeCookies,
+                        includeEnvironments,
+                      });
                     close();
                   }}
                   isDisabled={isExportDisabled}

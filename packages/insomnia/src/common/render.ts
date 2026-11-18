@@ -46,6 +46,7 @@ import { database as db } from './database';
 
 const { applyPathParametersToUrl } = models.request;
 const { isRequestGroup } = models.requestGroup;
+const { isWorkspace } = models.workspace;
 
 // Source labels read as `<environment type> : <name>`; the type alone stands in
 // when an environment has no name.
@@ -765,6 +766,11 @@ export async function getRenderContext({
     : await services.environment.getById('n/a');
 
   const settings = await services.settings.get();
+  // User preference OR organization enforcement, resolved once here so every consumer of
+  // getSettings() (masking policy, templating worker, external vault tags) sees the same value.
+  const hideSecretValuesInPreviewAndConsole = await services.organization.resolveHideSecretValues(
+    project?.parentId,
+  );
 
   // Add meta data helper function
   const baseContext: Omit<BaseRenderContext, 'getKeysContext'> = {
@@ -780,7 +786,7 @@ export async function getRenderContext({
     getProjectId: () => project?._id,
     getSettings: () => ({
       dataFolders: settings.dataFolders,
-      hideSecretValuesInPreviewAndConsole: settings.hideSecretValuesInPreviewAndConsole,
+      hideSecretValuesInPreviewAndConsole,
       forceReveal: forceReveal,
     }),
     ...(sensitiveValueCollector != null ? { getSensitiveValueCollector: () => sensitiveValueCollector } : {}),
@@ -849,7 +855,7 @@ export async function getRenderedRequestAndContext({
   context: Record<string, any>;
 }> {
   const ancestors = await getRenderContextAncestors(request);
-  const workspace = ancestors.find(models.workspace.isWorkspace);
+  const workspace = ancestors.find(isWorkspace);
   // requestGroups is of order leaf to root
   const requestGroups = ancestors.filter(isRequestGroup);
 
@@ -881,9 +887,9 @@ export async function getRenderedRequestAndContext({
   const description = request.description;
   request.description = '';
 
-  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups });
-  request.headers = getOrInheritHeaders({ request, requestGroups });
-  request.authentication = getOrInheritAuthentication({ request, requestGroups });
+  const suppressUserAgent = shouldSuppressUserAgent({ request, requestGroups, workspace });
+  request.headers = getOrInheritHeaders({ request, requestGroups, workspace });
+  request.authentication = getOrInheritAuthentication({ request, requestGroups, workspace });
   // Only manually-authored cookies may contain live template syntax. Server-set cookie values
   // are excluded from rendering here too, not just in the Cookie Jar UI, so that a template
   // placed in a cookie by a response is never re-evaluated on a later request.

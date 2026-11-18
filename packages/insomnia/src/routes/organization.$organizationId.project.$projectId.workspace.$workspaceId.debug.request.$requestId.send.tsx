@@ -140,7 +140,9 @@ export const sendActionImplementation = async (options: {
   window.main.startExecution({ requestId });
   const requestData = await fetchRequestData(requestId);
   const requestMeta = await services.requestMeta.getOrCreateByParentId(requestId);
-  const collector = createSensitiveValueCollector(requestData.settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const collector = createSensitiveValueCollector(
+    await services.organization.resolveHideSecretValues(requestData.request),
+  );
   if (collector) {
     // Pre-fill with every isConfidential:true KV pair's raw value across all five
     // environment layers, before the pre-request script (and its own early-exit paths:

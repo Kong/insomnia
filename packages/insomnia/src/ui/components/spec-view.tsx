@@ -9,6 +9,7 @@ import {
   GridList,
   GridListItem,
   Heading,
+  type Key,
   ListBox,
   ListBoxItem,
   Menu,
@@ -28,6 +29,7 @@ import {
   PanelGroup,
   PanelResizeHandle,
 } from 'react-resizable-panels';
+import { useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -51,6 +53,7 @@ import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
+import { LintCLIModal } from '~/ui/components/modals/lint-cli-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
@@ -116,6 +119,9 @@ const getMethodsFromOpenApiPathItem = (pathItem: OpenAPIV3.PathItemObject): stri
   return methods;
 };
 
+// Path and components might contain '.' characters, so  JSON-encode the segments to create unique IDs.
+const toJsonStrItemId = (...segments: (string | number)[]) => JSON.stringify(segments);
+
 const lintOptions = {
   delay: 1000,
 };
@@ -145,10 +151,12 @@ export const SpecView = ({
   parsedSpec,
   apiSpec,
 }: SpecViewProps) => {
-  const { activeProject, vcsVersion, activeWorkspace } = useWorkspaceLoaderData()!;
+  const { activeProject, vcsVersion, activeWorkspace, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
   const { settings } = useRootLoaderData()!;
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
+  const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);
+  const [lintCLIRulesetPath, setLintCLIRulesetPath] = useState<string | undefined>();
   const [isNewMockServerModalOpen, setNewMockServerModalOpen] = useState(false);
 
   const storageRules = useOrganizationStorageRule(organizationId);
@@ -171,6 +179,7 @@ export const SpecView = ({
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
   const [selectedRulesetPath, setSelectedRulesetPath] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Spectral requires a file path on disk to lint with a ruleset. Ref: lint-process.mjs.
   // Cloud/local projects have no RepoFileWatcher, so rulesetContent from NeDB is mirrored
@@ -180,6 +189,9 @@ export const SpecView = ({
     () => window.path.join(window.app.getPath('userData'), `projects/${projectId}/.spectral.yaml`),
     [projectId],
   );
+
+  // Mirrors the main process, which prefers INSOMNIA_DATA_PATH over Electron's userData.
+  const appDataDir = window.env.INSOMNIA_DATA_PATH || window.app.getPath('userData');
 
   const rulesetHasRemoteExtendsEntries = useMemo(() => {
     if (!rulesetContent) return false;
@@ -340,44 +352,75 @@ export const SpecView = ({
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 
-  const navigateToPath = (path: string): void => {
-    if (!apiSpec) {
+  const navigateToPath = useCallback(
+    (pathSegments: (string | number)[]): void => {
+      if (!apiSpec) {
+        return;
+      }
+      const scrollPosition = {
+        start: { line: 0, col: 0 },
+        end: { line: 0, col: 200 },
+      };
+
+      try {
+        JSON.parse(apiSpec.contents);
+        // Account for JSON (as string) line number shift
+        scrollPosition.start.line = 1;
+      } catch {}
+
+      const lineCounter = new YAML.LineCounter();
+      const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
+      const astNode = doc.getIn(pathSegments, true) as YAML.Node | null;
+      if (astNode) {
+        const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
+        if (nodePosition) {
+          scrollPosition.start.line += nodePosition.line;
+        }
+        const isServersSection = pathSegments[0] === 'servers';
+        if (!isServersSection) {
+          scrollPosition.start.line -= 1;
+        }
+
+        scrollPosition.end.line = scrollPosition.start.line;
+        // NOTE: We're subtracting 1 from everything because YAML CST uses
+        //   1-based indexing and we use 0-based.
+        handleScrollToSelection(
+          scrollPosition.start.col - 1,
+          scrollPosition.end.col - 1,
+          scrollPosition.start.line - 1,
+          scrollPosition.end.line - 1,
+        );
+      }
+    },
+    [apiSpec, handleScrollToSelection],
+  );
+
+  const navigateToPathByJsonStrId = (key: Key) => navigateToPath(JSON.parse(String(key)));
+
+  useEffect(() => {
+    const targetSpecPath = searchParams.get('specPath');
+    const targetSpecMethod = searchParams.get('specMethod');
+    if (!targetSpecPath || !targetSpecMethod || !apiSpec?.contents) {
       return;
     }
-    const pathSegments = path.split('.');
-    const scrollPosition = {
-      start: { line: 0, col: 0 },
-      end: { line: 0, col: 200 },
-    };
-
-    try {
-      JSON.parse(apiSpec.contents);
-      // Account for JSON (as string) line number shift
-      scrollPosition.start.line = 1;
-    } catch {}
-
-    const lineCounter = new YAML.LineCounter();
-    const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
-    const astNode = doc.getIn(pathSegments, true) as YAML.Node;
-    const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
-    if (nodePosition) {
-      scrollPosition.start.line += nodePosition.line;
+    if (editor.current?.getDoc()) {
+      // Defer a frame so the scroll runs after CodeEditor's own mount-time refresh(); scrolling before it gets clamped to the end.
+      requestAnimationFrame(() => {
+        navigateToPath(['paths', targetSpecPath, targetSpecMethod]);
+      });
+      // Clear the search params to avoid repeatedly navigating
+      setSearchParams(
+        prev => {
+          const next = new URLSearchParams(prev);
+          next.delete('specPath');
+          next.delete('specMethod');
+          return next;
+        },
+        { replace: true },
+      );
+      return;
     }
-    const isServersSection = pathSegments[0] === 'servers';
-    if (!isServersSection) {
-      scrollPosition.start.line -= 1;
-    }
-
-    scrollPosition.end.line = scrollPosition.start.line;
-    // NOTE: We're subtracting 1 from everything because YAML CST uses
-    //   1-based indexing and we use 0-based.
-    handleScrollToSelection(
-      scrollPosition.start.col - 1,
-      scrollPosition.end.col - 1,
-      scrollPosition.start.line - 1,
-      scrollPosition.end.line - 1,
-    );
-  };
+  }, [searchParams, apiSpec?.contents, navigateToPath, setSearchParams]);
 
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const specSidebarRef = useRef<ImperativePanelHandle>(null);
@@ -475,6 +518,25 @@ export const SpecView = ({
     } finally {
       setIsRefreshing(false);
     }
+  };
+
+  const handleOpenLintCLIModal = async () => {
+    let compiledPath: string | undefined;
+    // Git projects use the repo's .spectral.yaml, which the RepoFileWatcher keeps in sync. Otherwise make sure the
+    // compiled ruleset file exists before handing its path to inso.
+    if (rulesetContent && !(isConnectedGitProject && gitSyncRulesetPath)) {
+      try {
+        ({ compiledPath } = await window.main.ensureCompiledRuleset({ projectId, rulesetContent }));
+      } catch (err) {
+        showError({
+          title: 'Lint via CLI Failed',
+          message: `Failed to prepare ruleset: ${err instanceof Error ? err.message : String(err)}`,
+        });
+        return;
+      }
+    }
+    setLintCLIRulesetPath(compiledPath);
+    setIsLintCLIModalOpen(true);
   };
 
   const handleUnselectSpectralFile = async () => {
@@ -904,6 +966,16 @@ export const SpecView = ({
             )}
           </div>
         )}
+        {apiSpec?.contents && (
+          <>
+            <span aria-hidden="true" className="text-(--hl) select-none">
+              |
+            </span>
+            <Button data-testid="lint-via-cli" className="underline" onPress={handleOpenLintCLIModal}>
+              Lint via CLI
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -991,28 +1063,32 @@ export const SpecView = ({
                 </Button>
                 {/* Info */}
                 {expandedKeys.includes('info') && (
-                  <ListBox onAction={key => navigateToPath(key.toString())}>
+                  <ListBox onAction={navigateToPathByJsonStrId}>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.title"
+                      id={toJsonStrItemId('info', 'title')}
+                      data-testid="spec-outline-info-title"
                     >
                       <span className="truncate">Title: {info.title}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.description"
+                      id={toJsonStrItemId('info', 'description')}
+                      data-testid="spec-outline-info-description"
                     >
                       <span className="truncate">Description: {info.description}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.version"
+                      id={toJsonStrItemId('info', 'version')}
+                      data-testid="spec-outline-info-version"
                     >
                       <span className="truncate">Version: {info.version}</span>
                     </ListBoxItem>
                     <ListBoxItem
                       className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                      id="info.license"
+                      id={toJsonStrItemId('info', 'license')}
+                      data-testid="spec-outline-info-license"
                     >
                       <span className="truncate">License: {info.license?.name}</span>
                     </ListBoxItem>
@@ -1042,12 +1118,12 @@ export const SpecView = ({
                       path: index,
                       ...server,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`servers.${item.path}`}
+                        id={toJsonStrItemId('servers', item.path)}
                       >
                         {item.url}
                       </ListBoxItem>
@@ -1079,18 +1155,24 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
-                      <GridListItem className="group outline-hidden select-none" id={`paths.${item.path}`}>
+                      <GridListItem
+                        className="group outline-hidden select-none"
+                        id={toJsonStrItemId('paths', item.path)}
+                        data-testid="spec-outline-path"
+                      >
                         <div className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none group-hover:bg-(--hl-xs) group-focus:bg-(--hl-sm) group-aria-selected:text-(--color-font)">
-                          <span className="truncate">{item.path}</span>
+                          <span data-testid="spec-outline-path-name" className="truncate">
+                            {item.path}
+                          </span>
                           <span className="flex-1" />
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button
                               key={method}
                               data-testid={`spec-outline-method-${method.toUpperCase()}`}
-                              onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
+                              onPress={() => navigateToPath(['paths', item.path, method])}
                               className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >
                               {formatMethodName(method.toUpperCase())}
@@ -1126,12 +1208,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.requestBodies.${item.path}`}
+                        id={toJsonStrItemId('components', 'requestBodies', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1163,12 +1245,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.responses.${item.path}`}
+                        id={toJsonStrItemId('components', 'responses', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1200,12 +1282,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.parameters.${item.path}`}
+                        id={toJsonStrItemId('components', 'parameters', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1237,12 +1319,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.headers.${item.path}`}
+                        id={toJsonStrItemId('components', 'headers', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1274,12 +1356,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.schemas.${item.path}`}
+                        id={toJsonStrItemId('components', 'schemas', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1311,12 +1393,12 @@ export const SpecView = ({
                       id: path,
                       path,
                     }))}
-                    onAction={key => navigateToPath(key.toString())}
+                    onAction={navigateToPathByJsonStrId}
                   >
                     {item => (
                       <ListBoxItem
                         className="relative flex h-(--line-height-xs) w-full items-center gap-2 overflow-hidden px-4 text-(--hl) outline-hidden transition-colors select-none hover:bg-(--hl-xs) focus:bg-(--hl-sm)"
-                        id={`components.securitySchemes.${item.path}`}
+                        id={toJsonStrItemId('components', 'securitySchemes', item.path)}
                       >
                         <span className="truncate">{item.path}</span>
                       </ListBoxItem>
@@ -1335,6 +1417,26 @@ export const SpecView = ({
               sourceApiSpec={apiSpec}
               source="design-view"
               onOpenChange={setNewMockServerModalOpen}
+            />
+          )}
+          {isLintCLIModalOpen && apiSpec && (
+            <LintCLIModal
+              onClose={() => setIsLintCLIModalOpen(false)}
+              apiSpecId={apiSpec._id}
+              // Git projects: the spec's file inside the repo, otherwise inso finds no file. Others: the app data dir holding the NeDB files.
+              workingDir={
+                isConnectedGitProject && gitSyncRulesetPath
+                  ? window.path.join(window.path.dirname(gitSyncRulesetPath), activeWorkspaceMeta?.gitFilePath || '')
+                  : appDataDir
+              }
+              // inso only applies a custom ruleset when passed explicitly. Same file the in-app lint uses.
+              rulesetPath={
+                rulesetContent
+                  ? isConnectedGitProject && gitSyncRulesetPath
+                    ? gitSyncRulesetPath
+                    : lintCLIRulesetPath
+                  : undefined
+              }
             />
           )}
           {isViewRulesetModalOpen && (

@@ -12,6 +12,7 @@ import type {
   RequestParameter,
   Response,
   ResponseTimelineEntry,
+  Workspace,
 } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import { escapeRegex, setDefaultProtocol } from 'insomnia-data/common';
@@ -37,13 +38,14 @@ import {
   fetchMcpRequestData,
   fetchRequestData,
   fetchRequestGroupData,
+  fetchWorkspaceData,
   responseTransform,
   sendCurlAndWriteTimeline,
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../../network/network';
 
-const { isRequestGroup, isRequestGroupId } = models.requestGroup;
+const { isRequestGroup } = models.requestGroup;
 
 export const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
 export const GRANT_TYPE_IMPLICIT = 'implicit';
@@ -413,22 +415,31 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 
   try {
     if (!models.mcpRequest.isMcpRequestId(requestId)) {
-      const activeRequest = await services.request.getById(requestId);
-      const requestGroups = (
-        await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
-      ).filter(isRequestGroup) as RequestGroup[];
+      const activeRequest = (await services.helpers.getRequestById(requestId)) as Request | undefined;
+      const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(activeRequest, [
+        models.requestGroup.type,
+        models.workspace.type,
+      ]);
+      const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
+      const workspace = ancestors.find(models.workspace.isWorkspace);
       // requestGroups is of order leaf to root
       const closestFolderAuth = requestGroups.find(
         ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
       );
       const isRequestAuthEnabled =
         getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
-      closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;
+      const isWorkspaceAuthEnabled =
+        getAuthObjectOrNull(workspace?.authentication) && isAuthEnabled(workspace?.authentication);
+      closestAuthId = isRequestAuthEnabled
+        ? requestId
+        : closestFolderAuth?._id || (isWorkspaceAuthEnabled && workspace?._id) || requestId;
 
       if (isRequestAuthEnabled) {
         refreshTimeline.push(logEntry('Using OAuth2 auth from request'));
       } else if (closestFolderAuth) {
         refreshTimeline.push(logEntry(`Using OAuth2 auth inherited from folder "${closestFolderAuth.name}"`));
+      } else if (isWorkspaceAuthEnabled) {
+        refreshTimeline.push(logEntry('Using OAuth2 auth inherited from collection'));
       }
     }
 
@@ -594,19 +605,30 @@ const transformNewAccessTokenToOauthModel = (
   };
 };
 
+const fetchInitializedData = async (id: string) => {
+  const resolvers = [
+    { matches: models.request.isRequestId, fetch: fetchRequestData },
+    { matches: models.mcpRequest.isMcpRequestId, fetch: fetchMcpRequestData },
+    { matches: models.requestGroup.isRequestGroupId, fetch: fetchRequestGroupData },
+    { matches: models.workspace.isWorkspaceId, fetch: fetchWorkspaceData },
+  ];
+  const resolver = resolvers.find(({ matches }) => matches(id));
+  if (!resolver) {
+    throw new Error(`Unsupported parent type for OAuth2 token request: ${id}`);
+  }
+  return resolver.fetch(id);
+};
+
 const sendAccessTokenRequest = async (
-  requestOrGroupId: string,
+  requestOrGroupOrWorkspaceId: string,
   authentication: AuthTypeOAuth2,
   params: RequestParameter[],
   headers: RequestHeader[],
 ) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  console.log(`[network] Sending with settings req=${requestOrGroupId}`);
-  const initializedData = isRequestGroupId(requestOrGroupId)
-    ? await fetchRequestGroupData(requestOrGroupId)
-    : models.mcpRequest.isMcpRequestId(requestOrGroupId)
-      ? await fetchMcpRequestData(requestOrGroupId)
-      : await fetchRequestData(requestOrGroupId);
+  console.log(`[network] Sending with settings req=${requestOrGroupOrWorkspaceId}`);
+
+  const initializedData = await fetchInitializedData(requestOrGroupOrWorkspaceId);
 
   const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
     initializedData;
@@ -629,14 +651,14 @@ const sendAccessTokenRequest = async (
       mimeType: 'application/x-www-form-urlencoded',
       params,
     },
-    _id: requestOrGroupId + '.other',
-    parentId: requestOrGroupId,
+    _id: requestOrGroupOrWorkspaceId + '.other',
+    parentId: requestOrGroupOrWorkspaceId,
     type: models.request.type,
     modified: Date.now(),
     created: Date.now(),
   };
 
-  const collector = createSensitiveValueCollector(settings.hideSecretValuesInPreviewAndConsole ?? true);
+  const collector = createSensitiveValueCollector(await services.organization.resolveHideSecretValues(newRequest));
   const renderResult = await tryToInterpolateRequest({
     request: newRequest,
     environment: environment._id,

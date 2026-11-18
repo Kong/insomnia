@@ -114,11 +114,27 @@ export interface GitProject extends BaseModel, CommonProject {
   remoteId: null;
 }
 
+export interface KonnectProject extends LocalProject {
+  konnectControlPlaneId: string | null;
+  konnectClusterType: string | null;
+  konnectDeploymentType: KonnectDeploymentType | null;
+  konnectRegion: string | null;
+  // Latest Kong Debugger session id for this project (control plane)
+  konnectDebugSessionId?: string | null;
+}
+
 export type Project = LocalProject | RemoteProject | GitProject;
 
 export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
 export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
+
+export const isKonnectProject = (project: Project): project is KonnectProject =>
+  isProject(project) &&
+  'konnectControlPlaneId' in project &&
+  'konnectRegion' in project &&
+  'konnectClusterType' in project &&
+  'konnectDeploymentType' in project;
 
 export const optionalKeys: (keyof CommonProject)[] = [
   'konnectControlPlaneId',

@@ -54,9 +54,11 @@ export const getOrInheritAuthentication = ({
   request,
   // requestGroups is supposed to be of order leaf to root
   requestGroups,
+  workspace = {},
 }: {
   request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
+  workspace?: Pick<Workspace, 'authentication'>;
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
@@ -72,20 +74,28 @@ export const getOrInheritAuthentication = ({
     // override auth with closest parent folder that has one set
     return closestAuth;
   }
+  // If workspace has authentication, use it as the next fallback
+  const workspaceAuth = getAuthObjectOrNull(workspace?.authentication);
+  const isWorkspaceAuthEnabled = workspaceAuth && isAuthEnabled(workspace?.authentication);
+  if (isWorkspaceAuthEnabled) {
+    return workspaceAuth;
+  }
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
 export function getOrInheritHeaders({
   request,
   requestGroups,
+  workspace = {},
 }: {
   request: Pick<Request, 'headers'>;
   requestGroups: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): RequestHeader[] {
   const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
-  // parent folders, then child folders, then request
-  const headerContexts = [...requestGroups].reverse().concat(request);
+  // workspace headers, then parent folder from furthest to nearest, then request
+  const headerContexts = [workspace].concat([...requestGroups].reverse()).concat(request);
   const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
@@ -115,16 +125,17 @@ export function getOrInheritHeaders({
 export function shouldSuppressUserAgent({
   request,
   requestGroups = [],
+  workspace = {},
 }: {
   request: Pick<Request | WebSocketRequest | SocketIORequest, 'headers' | 'disableUserAgentHeader'>;
   requestGroups?: Pick<RequestGroup, 'headers'>[];
+  workspace?: Pick<Workspace, 'headers'>;
 }): boolean {
-  const userAgentHeaders = [...requestGroups, request]
+  const userAgentHeaders = [workspace, ...requestGroups, request]
     .flatMap(doc => doc.headers || [])
     .filter(h => h.name?.toLowerCase() === 'user-agent');
   return (
-    Boolean(request.disableUserAgentHeader) ||
-    (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
+    Boolean(request.disableUserAgentHeader) || (userAgentHeaders.length > 0 && userAgentHeaders.every(h => h.disabled))
   );
 }
 
@@ -266,6 +277,38 @@ export const fetchMcpRequestData = async (mcpRequestId: string) => {
     settings,
     clientCertificates: [] as ClientCertificate[],
     caCert: undefined,
+    activeEnvironmentId,
+    timelinePath,
+    responseId,
+  };
+};
+
+export const fetchWorkspaceData = async (workspaceId: string) => {
+  const workspace = await services.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace ' + workspaceId);
+
+  const workspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await services.environment.getById(activeEnvironmentId));
+  const baseEnvironment = await services.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
+  const settings = await services.settings.get();
+  invariant(settings, 'failed to create settings');
+
+  const responseId = generateId('res');
+  const timelinePath = await getRuntime().network.getTimelinePath(responseId);
+
+  const clientCertificates = await services.clientCertificate.findByParentId(workspaceId);
+  const caCert = await services.caCertificate.getByParentId(workspaceId);
+
+  return {
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
     activeEnvironmentId,
     timelinePath,
     responseId,
@@ -576,9 +619,9 @@ const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse)
         },
         iterationData: userUploadEnvironment
           ? {
-            name: userUploadEnvironment.name,
-            data: userUploadEnvironment.data || {},
-          }
+              name: userUploadEnvironment.name,
+              data: userUploadEnvironment.data || {},
+            }
           : undefined,
         execution: {
           ...execution, // keep some existing properties in the after-response script from the pre-request script
@@ -909,7 +952,10 @@ export async function sendCurlAndWriteTimeline(
   if (!renderedRequest.settingSendCookies) {
     timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
   }
-  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(renderedRequest, finalUrl);
+  const { header: authHeader, timeline: authTimeline } = await getRuntime().network.getAuthHeader(
+    renderedRequest,
+    finalUrl,
+  );
   if (authTimeline?.length) {
     timeline.push(...authTimeline);
   }
