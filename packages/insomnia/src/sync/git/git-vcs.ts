@@ -1913,6 +1913,14 @@ export class GitVCS {
     // Stage auto-resolved non-YAML files (deferred from conflict collection)
     for (const autoResolved of autoResolvedConflicts ?? []) {
       if (autoResolved.action === 'delete') {
+        // git.remove only updates the index. Delete the file from the working directory as well, otherwise
+        // the `git.add('.')` below stages it again and the merge commit keeps the file the remote deleted.
+        assertIsPromiseFsClient(this._baseOpts.fs);
+        try {
+          await this._baseOpts.fs.promises.unlink(autoResolved.filepath);
+        } catch (error) {
+          console.error('Failed to delete file:', autoResolved.filepath, error);
+        }
         await git.remove({ ...this._baseOpts, filepath: autoResolved.filepath });
       } else {
         await git.checkout({

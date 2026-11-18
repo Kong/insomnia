@@ -854,6 +854,60 @@ collection:
       }
     });
 
+    it('should delete non-Insomnia files that the remote deleted and the local side modified (INS-4331)', async () => {
+      const fsClient = MemClient.createClient();
+      const files = ['README.md', 'main-deployment.yaml'];
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      for (const file of files) {
+        await writeAndAdd(file, 'name: base\n');
+      }
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      for (const file of files) {
+        await writeAndAdd(file, 'name: local\n');
+      }
+      await GitVCS.commit('Local changes');
+
+      // Remote deletes both files
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      for (const file of files) {
+        await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: file });
+        await fsClient.promises.unlink(file);
+      }
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote deletes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      expect(await GitVCS.buildManualResolutionFromTrees()).toMatchObject({ autoResolved: true });
+
+      // The remote deletion is applied: gone from the working directory and from the merge commit
+      const tracked = await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' });
+      for (const file of files) {
+        await expect(fsClient.promises.readFile(file)).rejects.toThrow();
+        expect(tracked).not.toContain(file);
+      }
+    });
+
     it('should auto-complete merge without throwing when all conflicts are non-YAML', async () => {
       const fsClient = MemClient.createClient();
       const gitignoreFile = '.gitignore';
