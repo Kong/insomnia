@@ -78,6 +78,7 @@ export enum AnalyticsEvent {
   copyAsCurl = 'Copied As cURL',
   themeChanged = 'Theme Changed',
   generateCodeClicked = 'Generate Code Clicked',
+  skillCopyPromptClicked = 'Skill Copy Prompt Clicked',
   generateCodeLanguageChanged = 'Generate Code Language Changed',
   filterCreatedHomePage = 'Filter Created From Home Page',
   filterCreatedProjects = 'Filter Created Projects',
