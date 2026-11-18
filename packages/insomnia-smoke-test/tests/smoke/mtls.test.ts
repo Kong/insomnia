@@ -10,7 +10,7 @@ const RESPONSE_TIMEOUT = 10_000;
 // How long to wait for dialogs to open/close and UI transitions to settle
 const UI_TIMEOUT = 10_000;
 
-test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
+test('can use client certificate for mTLS', { tag: '@libcurl' }, async ({ app, page, insomnia }) => {
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),

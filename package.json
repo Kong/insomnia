@@ -90,11 +90,11 @@
     }
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "3.3.0",
+    "@getinsomnia/node-libcurl": "3.3.2",
     "ajv": "^8.20.0"
   },
   "allowScripts": {
-    "@getinsomnia/node-libcurl@3.3.0": true,
+    "@getinsomnia/node-libcurl@3.3.2": true,
     "@scarf/scarf@1.4.0": true,
     "electron-winstaller@5.4.0": true,
     "esbuild@0.25.12": true,

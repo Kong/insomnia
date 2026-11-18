@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-test('can send ipv6 requests', async ({ page, insomnia }) => {
+test('can send ipv6 requests', { tag: '@libcurl' }, async ({ page, insomnia }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
