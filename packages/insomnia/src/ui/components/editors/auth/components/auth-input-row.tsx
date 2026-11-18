@@ -3,18 +3,10 @@ import * as reactUse from 'react-use';
 
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useAuthentication } from '~/ui/hooks/use-request-authentication';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { toKebabCase } from '../../../../../common/misc';
-import {
-  type RequestLoaderData,
-  useRequestLoaderData,
-} from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import {
-  type RequestGroupLoaderData,
-  useRequestGroupLoaderData,
-} from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
 import { AuthRow } from './auth-row';
 
 interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompleteConstants'> {
@@ -39,12 +31,7 @@ export const AuthInputRow: FC<Props> = ({
 }) => {
   const { settings } = useRootLoaderData()!;
   const { showPasswords } = settings;
-  const reqData = useRequestLoaderData() as RequestLoaderData;
-  const groupData = useRequestGroupLoaderData() as RequestGroupLoaderData;
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
-  const { authentication, _id } = reqData?.activeRequest || groupData?.activeRequestGroup || {};
-  const patcher = reqData ? patchRequest : patchRequestGroup;
+  const { authentication, _id, patcher } = useAuthentication();
   const [masked, toggleMask] = reactUse.useToggle(true);
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
@@ -64,9 +51,9 @@ export const AuthInputRow: FC<Props> = ({
         // If the editor is disabled, we don't want to patch the value
         return;
       }
-      patcher(_id, { authentication: { ...authentication, [property]: value } as typeof authentication });
+      patcher({ authentication: { ...authentication, [property]: value } as typeof authentication });
     },
-    [patcher, _id, authentication, property, disabled],
+    [patcher, authentication, property, disabled],
   );
 
   const id = toKebabCase(label);
@@ -118,7 +105,7 @@ export const AuthInputRow: FC<Props> = ({
         <Tooltip message={isMasked ? 'Show Value' : 'Hide Value'} position="top">
           <button
             type="button"
-            className={`btn btn--super-super-compact pointer${disabled ? ' pointer-events-none' : ''}`}
+            className={`btn btn--super-super-compact pointer${disabled ? 'pointer-events-none' : ''}`}
             onClick={toggleMask}
             disabled={disabled}
             aria-label={isMasked ? 'Show Value' : 'Hide Value'}

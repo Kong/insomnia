@@ -12,7 +12,8 @@ import {
   Select,
   SelectValue,
 } from 'react-aria-components';
-import { useParams } from 'react-router';
+
+import { useAuthentication } from '~/ui/hooks/use-request-authentication';
 
 import {
   type AuthTypes,
@@ -21,7 +22,6 @@ import {
   SIGNATURE_METHOD_HMAC_SHA1,
 } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 
 function castOneAuthTypeToAnother(type: AuthTypes, oldAuth: RequestAuthentication | {}): RequestAuthentication {
@@ -138,7 +138,6 @@ const defaultTypes: AuthTypes[] = [
 ];
 
 interface Props {
-  authentication?: RequestAuthentication | {};
   authTypes?: AuthTypes[];
   disabled?: boolean;
   hideOthers?: boolean;
@@ -146,21 +145,13 @@ interface Props {
 }
 
 export const AuthDropdown: FC<Props> = ({
-  authentication,
   authTypes = defaultTypes,
   disabled = false,
   hideOthers = false,
   hideInherit = false,
 }) => {
-  const { requestId, requestGroupId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId?: string;
-    requestGroupId?: string;
-  };
-  const patchRequest = useRequestPatcher();
-  const patchRequestGroup = useRequestGroupPatcher();
+  const { authentication, patcher } = useAuthentication();
+
   const onClick = useCallback(
     async (type: AuthTypes | 'inherit') => {
       const clickedSameSetting = type === getAuthObjectOrNull(authentication)?.type || '';
@@ -169,10 +160,9 @@ export const AuthDropdown: FC<Props> = ({
       }
       const selectedInherit = type === 'inherit';
       const newAuthentication = selectedInherit ? {} : castOneAuthTypeToAnother(type, authentication || {});
-      requestId && patchRequest(requestId, { authentication: newAuthentication });
-      requestGroupId && patchRequestGroup(requestGroupId, { authentication: newAuthentication });
+      await patcher({ authentication: newAuthentication });
     },
-    [authentication, patchRequest, patchRequestGroup, requestGroupId, requestId],
+    [authentication, patcher],
   );
 
   const selectedAuthType = getAuthObjectOrNull(authentication)?.type || 'inherit';
