@@ -1,0 +1,157 @@
+_type: export
+__export_format: 4
+__export_date: 2025-03-07T13:29:00.616Z
+__export_source: insomnia.desktop.app:v11.0.0-beta.3
+resources:
+  - _id: req_52db8f1ca11c4701904f05f141b9f065
+    parentId: wrk_0b93d1e3ca8e43bb8899703d115f19cf
+    modified: 1741144839224
+    created: 1741144782256
+    url: https://www.baidu.com/
+    name: Request in collection 1
+    description: ""
+    method: GET
+    body: {}
+    headers:
+      - name: User-Agent
+        value: insomnia/11.0.0-beta.3
+    authentication: {}
+    metaSortKey: -1741144782256
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_0b93d1e3ca8e43bb8899703d115f19cf
+    parentId: null
+    modified: 1741144769222
+    created: 1741144769222
+    name: Collection 1
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: req_32ecd6d1ab014ef3b1c0d4ca2800dcab
+    parentId: wrk_5ab5ffb21d9f4ae2aef2ef2c83a48c66
+    modified: 1741144878822
+    created: 1741144865045
+    url: https://www.baidu.com/2
+    name: Request in collection 2
+    description: ""
+    method: GET
+    body: {}
+    headers:
+      - name: User-Agent
+        value: insomnia/11.0.0-beta.3
+    authentication: {}
+    metaSortKey: -1741144865045
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_5ab5ffb21d9f4ae2aef2ef2c83a48c66
+    parentId: null
+    modified: 1741144855762
+    created: 1741144855762
+    name: Collection 2
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_173a33b29d93cd45b653ad229c63d5ca6cd2cb7c
+    parentId: wrk_0b93d1e3ca8e43bb8899703d115f19cf
+    modified: 1741353589066
+    created: 1741144769227
+    name: Base Environment 1
+    data:
+      base1: "1"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1741144769227
+    environmentType: kv
+    kvPairData:
+      - id: envPair_6f0ec15c26264d8abd8548b31076d7cc
+        name: base1
+        value: "1"
+        type: str
+        enabled: true
+    _type: environment
+  - _id: jar_173a33b29d93cd45b653ad229c63d5ca6cd2cb7c
+    parentId: wrk_0b93d1e3ca8e43bb8899703d115f19cf
+    modified: 1741144830546
+    created: 1741144769237
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: env_f80f54bda1804acca46fb0297c95e71b
+    parentId: env_173a33b29d93cd45b653ad229c63d5ca6cd2cb7c
+    modified: 1741353559820
+    created: 1741353535145
+    name: Sub Environment 1
+    data:
+      sub1: "1"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1741353535145
+    environmentType: kv
+    kvPairData:
+      - id: envPair_fc16421974214993979092b48f7017e3
+        name: sub1
+        value: "1"
+        type: str
+        enabled: true
+    _type: environment
+  - _id: env_19b834dede8b1b4378461f5aae3cc48d37660429
+    parentId: wrk_5ab5ffb21d9f4ae2aef2ef2c83a48c66
+    modified: 1741353619783
+    created: 1741144855765
+    name: Base Environment 2
+    data:
+      base2: "2"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1741144855765
+    environmentType: kv
+    kvPairData:
+      - id: envPair_a7e289c61baa41a69fe920dcd5c43cd2
+        name: base2
+        value: "2"
+        type: str
+        enabled: true
+    _type: environment
+  - _id: jar_19b834dede8b1b4378461f5aae3cc48d37660429
+    parentId: wrk_5ab5ffb21d9f4ae2aef2ef2c83a48c66
+    modified: 1741144855769
+    created: 1741144855769
+    name: Default Jar
+    cookies: []
+    _type: cookie_jar
+  - _id: env_00c60759733b413ebf8c00a7750d2adc
+    parentId: env_19b834dede8b1b4378461f5aae3cc48d37660429
+    modified: 1741353634174
+    created: 1741353623015
+    name: Sub Environment 2
+    data:
+      sub2: "2"
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1741353623015
+    environmentType: kv
+    kvPairData:
+      - id: envPair_8d15427c838a467bb74e477f633743ee
+        name: sub2
+        value: "2"
+        type: str
+        enabled: true
+    _type: environment
