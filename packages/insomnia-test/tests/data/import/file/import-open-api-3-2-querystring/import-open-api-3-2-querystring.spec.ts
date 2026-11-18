@@ -9,8 +9,6 @@ import { expect } from "@playwright/test";
 test("Verify A querystring Parameter Is Expanded When Its Form-Urlencoded Media Type Has Parameters Or Different Casing", async ({
   user,
 }) => {
-  test.fail(true, 'INS-4294');
-
   const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(
