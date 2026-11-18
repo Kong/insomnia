@@ -1,14 +1,8 @@
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
 import { ProjectType } from '@package/enums/project-types';
-import { commitLocalFiles, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
+import { buildWorkflowFile, commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test, WORKFLOW_PATH } from '@package/misc/git-fixtures';
 import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
-
-const workflow = (step: string) => `name: deploy\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: ${step}\n`;
-const WORKFLOW = '.github/workflows/main-deployment.yaml';
 
 test('Verify a conflict where the remote deleted a non-Insomnia YAML file is auto-resolved by deleting it locally', async ({ user }) => {
   test.fail(true, 'INS-4331');
@@ -22,18 +16,14 @@ test('Verify a conflict where the remote deleted a non-Insomnia YAML file is aut
   );
   const repoPath = await workspaceFlow.getGitRepositoryPath(project);
 
-  await pushServerFile({ path: WORKFLOW, content: workflow('echo base') });
+  await pushServerFile({ path: WORKFLOW_PATH, content: buildWorkflowFile('echo base') });
   await gitSyncFlow.pull();
-  await expect
-    .poll(() => fs.existsSync(path.join(repoPath, WORKFLOW)), { timeout: DEFAULT_TIMEOUT })
-    .toBe(true);
+  await gitSyncFlow.waitForRepoFile(repoPath, WORKFLOW_PATH);
 
-  commitLocalFiles(repoPath, [{ path: WORKFLOW, content: workflow('echo local') }], 'Local modify');
-  await pushServerFile({ path: WORKFLOW, delete: true, message: 'Remote delete' });
+  commitLocalFiles(repoPath, [{ path: WORKFLOW_PATH, content: buildWorkflowFile('echo local') }], 'Local modify');
+  await pushServerFile({ path: WORKFLOW_PATH, delete: true, message: 'Remote delete' });
   await gitSyncFlow.pull();
-  await expect
-    .poll(() => fs.existsSync(path.join(repoPath, WORKFLOW)), { timeout: DEFAULT_TIMEOUT })
-    .toBe(false);
+  await gitSyncFlow.waitForRepoFileDeleted(repoPath, WORKFLOW_PATH);
   const pullIssues = await gitSyncFlow.getPullIssues();
 
   expect(pullIssues).toEqual({ conflictModalOpen: false, validationErrorShown: false });

@@ -1,4 +1,5 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
+import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
 import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TreeComponent } from "@package/components/tree.component";
@@ -731,5 +732,18 @@ export class WorkspacePage extends BasePage {
       await new Promise<void>((resolve) => setTimeout(resolve, interval));
     }
     return undefined;
+  }
+
+  /**
+   * Closes the currently open dialog via Escape — works across both
+   * dialog implementations the app uses (the legacy Modal/ModalHeader
+   * pair's labeled "Modal Close Button", and newer react-aria-components
+   * Dialogs like Collection/Workspace Settings whose "x" button carries
+   * no accessible name at all).
+   */
+  async closeModal(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await this.page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 }

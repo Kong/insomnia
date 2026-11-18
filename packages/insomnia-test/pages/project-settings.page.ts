@@ -34,13 +34,6 @@ export class ProjectSettingsPage extends BasePage {
   }
 
   /**
-   * Closes the create/update dialog without saving (Escape).
-   */
-  async closeDialog(): Promise<void> {
-    await this.modal.closeWithEscape();
-  }
-
-  /**
    * Selects a previously-added credential in the "Authorized as" dropdown
    * of the "Clone from Remote" sub-form, by the credential's display name
    * (e.g. "Custom Git Credential" for a custom/PAT credential).

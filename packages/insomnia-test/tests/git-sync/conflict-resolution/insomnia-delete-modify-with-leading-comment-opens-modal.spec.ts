@@ -1,9 +1,6 @@
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
+import { ConflictResolution } from '@package/enums/conflict-resolution';
 import { ProjectType } from '@package/enums/project-types';
-import { DEFAULT_TIMEOUT } from '@package/misc/constants';
 import { commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
@@ -28,17 +25,17 @@ test('Verify a delete/modify conflict on an Insomnia file with a hand-written co
   );
   await gitSyncFlow.commitAndPush(faker.string.alphanumeric(10));
 
-  const original = fs.readFileSync(path.join(repoPath, filePath), 'utf8');
-  commitLocalFiles(repoPath, [{ path: filePath, content: `# ${faker.string.alpha(10)}\n${original}` }], faker.string.alphanumeric(10));
+  const original = gitSyncFlow.readRepoFile(repoPath, filePath)!;
+  const localContent = `# ${faker.string.alpha(10)}\n${original}`;
+  commitLocalFiles(repoPath, [{ path: filePath, content: localContent }], faker.string.alphanumeric(10));
   await pushServerFile({ path: filePath, delete: true, message: faker.string.alphanumeric(10) });
 
   const conflicted = await gitSyncFlow.pullExpectingConflicts();
-  await gitSyncFlow.resolvePullConflicts('Current');
+  await gitSyncFlow.resolvePullConflicts(ConflictResolution.Current);
+  await gitSyncFlow.waitForRepoFileContaining(repoPath, filePath, collection.name);
   const pullIssues = await gitSyncFlow.getPullIssues();
 
   expect(conflicted).toEqual([collection.name]);
   expect(pullIssues.conflictModalOpen).toBe(false);
-  await expect
-    .poll(() => (fs.existsSync(path.join(repoPath, filePath)) ? fs.readFileSync(path.join(repoPath, filePath), 'utf8') : undefined), { timeout: DEFAULT_TIMEOUT })
-    .toContain(collection.name);
+  expect(gitSyncFlow.readRepoFile(repoPath, filePath)).toContain(collection.name);
 });

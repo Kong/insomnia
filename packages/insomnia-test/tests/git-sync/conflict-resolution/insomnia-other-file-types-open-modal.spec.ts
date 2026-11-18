@@ -1,18 +1,10 @@
-import { execFileSync } from 'node:child_process';
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
+import { ConflictResolution } from '@package/enums/conflict-resolution';
 import { ProjectType } from '@package/enums/project-types';
-import { commitLocalFiles, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
+import { commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
 
-// Insomnia file types the app has no UI to author a Git Sync file for. The
-// collection is covered by the mixed-conflicts specs, the global environment by
-// insomnia-environment-opens-modal.spec.ts and the mock server by
-// insomnia-mock-server-opens-modal.spec.ts (the app rewrites an externally
-// edited mock server file on pull, so it has to be authored through the UI).
 const FILE_TYPES = [
   { label: 'API spec', type: 'spec.insomnia.rest/5.0', extra: ['spec:', '  contents: {}'] },
   { label: 'MCP client', type: 'mcpClient.insomnia/5.0', extra: [] },
@@ -48,23 +40,19 @@ for (const { label, type, extra } of FILE_TYPES) {
 
     await pushServerFile({ path: file, content: buildFile(type, extra, baseName) });
     await gitSyncFlow.pull();
-    await expect.poll(() => fs.existsSync(path.join(repoPath, file)), { timeout: DEFAULT_TIMEOUT }).toBe(true);
-
-    // The app rewrites the file in its canonical format after the first pull, so
-    // derive the local and remote versions from what it wrote instead of the raw seed.
-    const worktreeStatus = () => execFileSync('git', ['status', '--porcelain'], { cwd: repoPath }).toString().trim();
-    await expect.poll(worktreeStatus, { timeout: DEFAULT_TIMEOUT }).toBe('');
-    const canonical = fs.readFileSync(path.join(repoPath, file), 'utf8');
-    expect(canonical.split('\n')[0]).toBe(`type: ${type}`);
+    await gitSyncFlow.waitForRepoFile(repoPath, file);
+    await gitSyncFlow.waitForCleanWorktree(repoPath);
+    const canonical = gitSyncFlow.readRepoFile(repoPath, file)!;
     const withName = (name: string) => canonical.replace(`name: ${baseName}`, `name: ${name}`);
 
     commitLocalFiles(repoPath, [{ path: file, content: withName(localName) }], `Local ${label}`);
     await pushServerFile({ path: file, content: withName(remoteName) });
 
     const conflicted = await gitSyncFlow.pullExpectingConflicts();
-    await gitSyncFlow.resolvePullConflicts('Current');
+    await gitSyncFlow.resolvePullConflicts(ConflictResolution.Current);
     const pullIssues = await gitSyncFlow.getPullIssues();
 
+    expect(canonical.split('\n')[0]).toBe(`type: ${type}`);
     expect(conflicted).toHaveLength(1);
     expect(pullIssues.conflictModalOpen).toBe(false);
   });

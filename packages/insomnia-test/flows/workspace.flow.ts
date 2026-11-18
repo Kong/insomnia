@@ -159,10 +159,10 @@ export class WorkspaceFlow extends BaseFlow {
    */
   @step()
   async getGitRepositoryPath(project: Project): Promise<string> {
-    const { projectSettingsPage } = this.pageManager;
+    const { projectSettingsPage, workspacePage } = this.pageManager;
     await this.openSettings(project);
     const repositoryPath = await projectSettingsPage.getRepositoryPath();
-    await projectSettingsPage.closeDialog();
+    await workspacePage.closeModal();
     return repositoryPath;
   }
 

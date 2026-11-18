@@ -1,14 +1,8 @@
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
 import { ProjectType } from '@package/enums/project-types';
-import { commitLocalFiles, DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
+import { buildWorkflowFile, commitLocalFiles, GIT_CREDENTIAL, pushServerFile, test, WORKFLOW_PATH } from '@package/misc/git-fixtures';
 import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
-
-const workflow = (step: string) => `name: deploy\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: ${step}\n`;
-const WORKFLOW = '.github/workflows/main-deployment.yaml';
 
 test('Verify a conflict where the remote modified a non-Insomnia YAML file deleted locally is auto-resolved to the remote version', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
@@ -20,18 +14,14 @@ test('Verify a conflict where the remote modified a non-Insomnia YAML file delet
   );
   const repoPath = await workspaceFlow.getGitRepositoryPath(project);
 
-  await pushServerFile({ path: WORKFLOW, content: workflow('echo base') });
+  await pushServerFile({ path: WORKFLOW_PATH, content: buildWorkflowFile('echo base') });
   await gitSyncFlow.pull();
-  await expect
-    .poll(() => fs.existsSync(path.join(repoPath, WORKFLOW)), { timeout: DEFAULT_TIMEOUT })
-    .toBe(true);
+  await gitSyncFlow.waitForRepoFile(repoPath, WORKFLOW_PATH);
 
-  commitLocalFiles(repoPath, [{ path: WORKFLOW, delete: true }], 'Local delete');
-  await pushServerFile({ path: WORKFLOW, content: workflow('echo remote'), message: 'Remote modify' });
+  commitLocalFiles(repoPath, [{ path: WORKFLOW_PATH, delete: true }], 'Local delete');
+  await pushServerFile({ path: WORKFLOW_PATH, content: buildWorkflowFile('echo remote'), message: 'Remote modify' });
   await gitSyncFlow.pull();
-  await expect
-    .poll(() => (fs.existsSync(path.join(repoPath, WORKFLOW)) ? fs.readFileSync(path.join(repoPath, WORKFLOW), 'utf8') : undefined), { timeout: DEFAULT_TIMEOUT })
-    .toBe(workflow('echo remote'));
+  await gitSyncFlow.waitForRepoFile(repoPath, WORKFLOW_PATH, buildWorkflowFile('echo remote'));
   const pullIssues = await gitSyncFlow.getPullIssues();
 
   expect(pullIssues).toEqual({ conflictModalOpen: false, validationErrorShown: false });

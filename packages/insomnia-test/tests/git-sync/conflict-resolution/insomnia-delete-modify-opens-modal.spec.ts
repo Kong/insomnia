@@ -1,13 +1,10 @@
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
+import { ConflictResolution } from '@package/enums/conflict-resolution';
 import { ProjectType } from '@package/enums/project-types';
 import { GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
-
 
 test('Verify a delete/modify conflict on an Insomnia file still opens the Resolve conflicts modal', async ({ user }) => {
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
@@ -31,7 +28,7 @@ test('Verify a delete/modify conflict on an Insomnia file still opens the Resolv
   await pushServerFile({ path: `${fileName}.yaml`, delete: true, message: 'Remote delete' });
 
   const conflicted = await gitSyncFlow.pullExpectingConflicts();
-  await gitSyncFlow.resolvePullConflicts('Current');
+  await gitSyncFlow.resolvePullConflicts(ConflictResolution.Current);
   const pullIssues = await gitSyncFlow.getPullIssues();
 
   expect(conflicted).toHaveLength(1);

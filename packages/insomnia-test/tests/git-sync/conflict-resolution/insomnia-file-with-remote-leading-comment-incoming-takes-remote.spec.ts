@@ -1,9 +1,6 @@
-import * as fs from 'node:fs';
-import path from 'node:path';
-
 import { faker } from '@faker-js/faker';
+import { ConflictResolution } from '@package/enums/conflict-resolution';
 import { ProjectType } from '@package/enums/project-types';
-import { DEFAULT_TIMEOUT } from '@package/misc/constants';
 import { buildCollectionFile, GIT_CREDENTIAL, pushServerFile, test } from '@package/misc/git-fixtures';
 import { Collection } from '@package/models/collection';
 import { Project } from '@package/models/project';
@@ -37,13 +34,12 @@ test('Verify a conflict on an Insomnia file with a hand-written comment on its f
   await pushServerFile({ path: filePath, content: `${handWrittenComment}\n${buildCollectionFile(remoteCollection.name)}` });
 
   const conflicted = await gitSyncFlow.pullExpectingConflicts();
-  await gitSyncFlow.resolvePullConflicts('Incoming');
+  await gitSyncFlow.resolvePullConflicts(ConflictResolution.Incoming);
+  await gitSyncFlow.waitForRepoFileContaining(repoPath, filePath, remoteCollection.name);
   const pullIssues = await gitSyncFlow.getPullIssues();
 
   expect(conflicted).toHaveLength(1);
   expect(pullIssues.conflictModalOpen).toBe(false);
-  await expect
-    .poll(() => fs.readFileSync(path.join(repoPath, filePath), 'utf8'), { timeout: DEFAULT_TIMEOUT })
-    .toContain(remoteCollection.name);
-  expect(fs.readFileSync(path.join(repoPath, filePath), 'utf8')).not.toContain(localCollection.name);
+  expect(gitSyncFlow.readRepoFile(repoPath, filePath)).toContain(remoteCollection.name);
+  expect(gitSyncFlow.readRepoFile(repoPath, filePath)).not.toContain(localCollection.name);
 });
