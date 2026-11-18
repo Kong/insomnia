@@ -34,15 +34,6 @@ export interface RunCollectionResult extends InsoResult {
 }
 
 export class InsoFlow extends BaseFlow {
-  /**
-   * Runs `inso lint spec <specFile>` and returns its stdout, stderr and exit
-   * code. `specFile` is an absolute path to an OpenAPI spec file; a spec with
-   * lint errors resolves with a non-zero `exitCode` rather than rejecting.
-   */
-  @step()
-  async lintSpec(specFile: string): Promise<InsoResult> {
-    return runInso(["lint", "spec", specFile]);
-  }
 
   /**
    * Runs `inso run collection <workspaceId> --ci` against `workingDir` and

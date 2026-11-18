@@ -57,22 +57,4 @@ export class LocalEncryptionKeyComponent extends PreferencesTabComponent {
   async areButtonsEnabled(): Promise<boolean> {
     return (await this.copyButton.isEnabled()) && (await this.exportButton.isEnabled());
   }
-
-  /** Clicks Copy Key, then answers the confirmation: "I understand, continue" or "Cancel". */
-  async clickCopyKey(answer: "continue" | "cancel"): Promise<void> {
-    await this.copyButton.click();
-    await this.answerConfirmation(answer);
-  }
-
-  /** Clicks Export Key, then answers the confirmation: "I understand, continue" or "Cancel". */
-  async clickExportKey(answer: "continue" | "cancel"): Promise<void> {
-    await this.exportButton.click();
-    await this.answerConfirmation(answer);
-  }
-
-  private async answerConfirmation(answer: "continue" | "cancel"): Promise<void> {
-    await this.confirmation.expectOpen();
-    await this.confirmation.clickButton(answer === "continue" ? "I understand, continue" : "Cancel", false);
-    await this.confirmation.waitForHidden();
-  }
 }
