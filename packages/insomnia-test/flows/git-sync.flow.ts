@@ -1,16 +1,15 @@
 import { step } from "@package/misc/step";
-import { Commit } from "@package/models/commit";
 
 import { BaseFlow } from "./base.flow";
 
 export class GitSyncFlow extends BaseFlow {
 
   /**
-   * Stages all changes, commits with `message` (no push), and reads back
-   * the resulting commit's id from History.
+   * Stages all changes, commits with `message` (no push), and confirms the
+   * commit shows up in History.
    */
   @step()
-  async commit(message: string): Promise<Commit> {
+  async commit(message: string): Promise<void> {
     const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     await gitCommitDialogPage.commit(message);
@@ -19,20 +18,15 @@ export class GitSyncFlow extends BaseFlow {
     const latest = await gitHistoryDialogPage.getLatestCommit();
     await gitHistoryDialogPage.closeHistory();
 
-    return this.assertCreated(
-      latest
-        ? Object.assign(new Commit(latest.message), { id: latest.id })
-        : undefined,
-      message,
-    );
+    this.assertCreated(latest, message);
   }
 
   /**
-   * Stages all changes, commits with `message`, then pushes, and reads
-   * back the resulting commit's id from History.
+   * Stages all changes, commits with `message`, then pushes, and confirms
+   * the commit shows up in History.
    */
   @step()
-  async commitAndPush(message: string): Promise<Commit> {
+  async commitAndPush(message: string): Promise<void> {
     const { gitSyncPage, gitCommitDialogPage, gitHistoryDialogPage } = this.pageManager;
     await gitSyncPage.openCommitDialog();
     await gitCommitDialogPage.commitAndPush(message);
@@ -41,12 +35,7 @@ export class GitSyncFlow extends BaseFlow {
     const latest = await gitHistoryDialogPage.getLatestCommit();
     await gitHistoryDialogPage.closeHistory();
 
-    return this.assertCreated(
-      latest
-        ? Object.assign(new Commit(latest.message), { id: latest.id })
-        : undefined,
-      message,
-    );
+    this.assertCreated(latest, message);
   }
 
   /**

@@ -23,7 +23,7 @@ function requireGitRepo(gitRepo: string | undefined): string {
 }
 
 /**
- * Commits a file onto `branch` of the bare repo on misc/git-server.ts, as if
+ * Commits a file onto `branch` of the bare repo on misc/server/git-http.ts, as if
  * a second client had pushed it — so the app under test sees the remote
  * move ahead without doing anything itself. `branch` is created from master
  * if it doesn't exist yet. With `delete`, removes the file instead.
@@ -32,7 +32,7 @@ export async function pushServerFile(
   file: { path: string; content?: string; delete?: boolean; message?: string; branch?: string },
   gitRepo = currentGitRepo,
 ): Promise<void> {
-  await fetch(
+  const res = await fetch(
     `${GIT_SERVER_URL}/_admin/repos/${requireGitRepo(gitRepo)}/files`,
     {
       method: "POST",
@@ -40,6 +40,9 @@ export async function pushServerFile(
       body: JSON.stringify(file),
     },
   );
+  if (!res.ok) {
+    throw new Error(`pushServerFile(${file.path}) failed: ${res.status} ${await res.text()}`);
+  }
 }
 
 /**
@@ -85,7 +88,7 @@ export function buildCollectionFile(name: string): string {
   ].join("\n");
 }
 
-// Shared custom credential used to authenticate against misc/git-server.ts,
+// Shared custom credential used to authenticate against misc/server/git-http.ts,
 // whose default Basic auth is testuser/testpass. `name` is the app's own
 // hardcoded display name for any custom (username/PAT) credential (see
 // git-custom-credential-form.tsx) — it isn't something we choose, so unlike
@@ -99,7 +102,7 @@ export const GIT_CREDENTIAL: GitCredential = {
 };
 
 interface GitFixtures {
-  /** The name of a repo freshly created (and seeded) on misc/git-server.ts — always local, never a full URL. */
+  /** The name of a repo freshly created (and seeded) on misc/server/git-http.ts — always local, never a full URL. */
   gitRepo: string;
 }
 

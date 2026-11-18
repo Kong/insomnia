@@ -60,9 +60,10 @@ test('Verify non-Insomnia files take the remote version when an Insomnia file co
   await gitSyncFlow.pullExpectingConflicts();
   await gitSyncFlow.resolvePullConflicts('Current');
 
-  await expect
-    .poll(() => (fs.existsSync(path.join(repoPath, WORKFLOW)) ? fs.readFileSync(path.join(repoPath, WORKFLOW), 'utf8') : undefined), { timeout: DEFAULT_TIMEOUT })
-    .toBe(workflow('echo remote'));
-  expect(fs.readFileSync(path.join(repoPath, HELM), 'utf8')).toBe(helm('remote'));
-  expect(fs.readFileSync(path.join(repoPath, GITIGNORE), 'utf8')).toBe('remote-ignore\n');
+  await expect(() => {
+    const read = (file: string) => (fs.existsSync(path.join(repoPath, file)) ? fs.readFileSync(path.join(repoPath, file), 'utf8') : undefined);
+    expect(read(WORKFLOW)).toBe(workflow('echo remote'));
+    expect(read(HELM)).toBe(helm('remote'));
+    expect(read(GITIGNORE)).toBe('remote-ignore\n');
+  }).toPass({ timeout: DEFAULT_TIMEOUT });
 });
