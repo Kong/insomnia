@@ -10,8 +10,6 @@ import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
 
 test('Verify a delete/modify conflict on an Insomnia file with a hand-written comment on its first line still opens the Resolve conflicts modal', async ({ user }) => {
-  test.fail(true, 'INS-4332');
-
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
