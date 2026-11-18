@@ -77,6 +77,21 @@ describe('RepoFileWatcher orphan reconciliation', () => {
     expect(removed).toBeFalsy();
   });
 
+  it.each(['.git/hooks/pre-commit.yaml', '.git./x.yaml'])(
+    'never writes a workspace whose gitFilePath points into .git (%s)',
+    async gitFilePath => {
+      await createWorkspaceWithMeta(gitFilePath, null);
+
+      await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+      const written = await fs.promises
+        .access(path.join(repoDir, gitFilePath))
+        .then(() => true)
+        .catch(() => false);
+      expect(written).toBe(false);
+    },
+  );
+
   it('keeps a workspace whose YAML is present on disk', async () => {
     const workspace = await createWorkspaceWithMeta('insomnia.wrk_present.yaml', Date.now());
     await fs.promises.writeFile(path.join(repoDir, 'insomnia.wrk_present.yaml'), 'name: Present\n', 'utf8');

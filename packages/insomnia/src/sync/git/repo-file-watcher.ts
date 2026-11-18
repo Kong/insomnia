@@ -51,6 +51,7 @@ import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, tryImportV5Data } from '../../common/insomnia-v5';
 import { validateSpectralRuleset } from '../../common/spectral-ruleset-validator';
 import { writeFileWithinDir } from '../../main/safe-fs-write';
+import { isSafeRepoFolderPath } from './repo-folder-path';
 import { SyncQueue } from './sync-queue';
 
 const POLL_INTERVAL_MS = 10_000;
@@ -280,8 +281,7 @@ class RepoFileWatcher {
           const gitFilePath = meta?.gitFilePath ?? `insomnia.${workspace._id}.yaml`;
           absPath = path.resolve(this.repoDir, gitFilePath);
 
-          // Path-traversal guard
-          if (isPathOutsideRepo(this.repoDir, absPath)) return;
+          if (this.isUnsafeWorkspaceFilePath(absPath)) return;
 
           // Get the most recently modified DB document in this workspace\u2019s tree
           const allDocs = await db.getWithDescendants(workspace);
@@ -524,7 +524,7 @@ class RepoFileWatcher {
       const gitFilePath: string = meta?.gitFilePath || `insomnia.${workspace._id}.yaml`;
       const absPath = path.normalize(path.join(this.repoDir, gitFilePath));
 
-      if (isPathOutsideRepo(this.repoDir, absPath)) {
+      if (this.isUnsafeWorkspaceFilePath(absPath)) {
         continue;
       }
 
@@ -1059,6 +1059,11 @@ class RepoFileWatcher {
     return workspaces.map(workspace => ({ workspace, meta: metaByParent.get(workspace._id) }));
   }
 
+  /** Workspace files must stay inside the repository and never be written into (or removed from) `.git`. */
+  private isUnsafeWorkspaceFilePath(absPath: string): boolean {
+    return isPathOutsideRepo(this.repoDir, absPath) || !isSafeRepoFolderPath(path.relative(this.repoDir, absPath));
+  }
+
   private isInGitDir(absPath: string): boolean {
     const rel = path.relative(this.repoDir, absPath);
     return rel.startsWith(GIT_DIR + path.sep) || rel === GIT_DIR;
@@ -1156,9 +1161,7 @@ class RepoFileWatcher {
    * local-only workspaces (never synced to git) that are not yet on disk.
    */
   private async flushWorkspaceToDisk(workspace: Workspace, absPath: string): Promise<void> {
-    // Path-traversal guard
-    const rel = path.relative(this.repoDir, absPath);
-    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    if (this.isUnsafeWorkspaceFilePath(absPath)) {
       return;
     }
 
@@ -1213,7 +1216,7 @@ class RepoFileWatcher {
     for (const { workspace, meta } of entries) {
       if (meta?.gitFilePath) {
         const absPath = path.normalize(path.join(this.repoDir, meta.gitFilePath));
-        if (isPathOutsideRepo(this.repoDir, absPath)) {
+        if (this.isUnsafeWorkspaceFilePath(absPath)) {
           continue;
         }
         this.lastKnownGitFilePath.set(workspace._id, absPath);
