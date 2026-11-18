@@ -13,6 +13,7 @@ import { GitVCSOperationErrors } from '~/sync/git/git-vcs-operation-errors';
 import type { WriteFileMap } from '~/sync/git/project-routable-fs-client';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 
+import { InsomniaFileTypeValues } from '../../common/import-v5-parser';
 import { hasSignificantChanges } from '../../common/significant-diff-detection';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
@@ -1532,9 +1533,13 @@ export class GitVCS {
         deleteByTheirs: 'they deleted and you modified',
       }[conflictType];
       for (const conflictPath of conflictPaths) {
-        // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+        // Auto-resolve non-Insomnia files to theirs (remote) since Insomnia only manages its own YAML files.
+        // A `.yaml` extension is not enough: the repo may hold unrelated YAML (e.g. GitHub workflows, Helm config).
         // Collect for deferred staging in continueMerge() so cancel has zero side effects.
-        if (!conflictPath.endsWith('.yaml')) {
+        if (
+          !conflictPath.endsWith('.yaml') ||
+          !(await this.isInsomniaFileConflict(conflictPath, conflictType, oursHeadCommitOid, theirsHeadCommitOid))
+        ) {
           autoResolvedConflicts.push({
             filepath: conflictPath,
             action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
@@ -1584,15 +1589,15 @@ export class GitVCS {
       }
     }
 
-    // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
-    if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+    // If no conflict needs the user (only non-Insomnia files, or nothing both sides touched), complete the merge automatically
+    if (mergeConflicts.length === 0) {
       await this.continueMerge({
         handledMergeConflicts: [],
         autoResolvedConflicts,
         commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
         commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
       });
-      return { autoResolved: true };
+      return { autoResolved: true, autoResolvedConflicts };
     }
 
     throw new MergeConflictError('Need to solve merge conflicts first', {
@@ -1611,6 +1616,11 @@ export class GitVCS {
    * Returns an object indicating which files were:
    * - modified by both local and remote
    * - deleted by local or remote side
+   *
+   * Compares the local and remote trees, and uses the merge base to tell which side changed a file.
+   * A change only one side made is not a conflict: a file only the local side added or edited, or that
+   * the local side deleted, keeps the local state. Without a merge base (e.g. a shallow clone) that
+   * cannot be told, so a file only the local side has is kept and every other difference is a conflict.
    */
   async findConflictLikeChanges(oursBranch: string, theirsBranch: string): Promise<ConflictPaths> {
     const result: ConflictPaths = {
@@ -1629,26 +1639,32 @@ export class GitVCS {
       ref: theirsBranch,
     });
 
+    const [baseOid] = await git.findMergeBase({ ...this._baseOpts, oids: [localOid, remoteOid] });
     const localTree = await this.getTreeMap(localOid);
     const remoteTree = await this.getTreeMap(remoteOid);
+    const baseTree = baseOid ? await this.getTreeMap(baseOid) : {};
 
     for (const [file, localBlob] of Object.entries(localTree)) {
       const remoteBlob = remoteTree[file];
+      const baseBlob = baseTree[file];
 
       if (remoteBlob) {
         // Exists in both
-        if (localBlob.oid !== remoteBlob.oid) {
+        // Unchanged on the remote since the merge base means only the local side edited it
+        if (localBlob.oid !== remoteBlob.oid && baseBlob?.oid !== remoteBlob.oid) {
           result.bothModified.push(file);
         }
-      } else {
-        // Deleted by remote
+      } else if (baseBlob) {
+        // Deleted by remote. A file that is not in the merge base was added locally, the remote never had it
         result.deleteByTheirs.push(file);
       }
     }
 
-    for (const [file] of Object.entries(remoteTree)) {
+    for (const [file, remoteBlob] of Object.entries(remoteTree)) {
       const localBlob = localTree[file];
-      if (!localBlob) {
+      // Unchanged on the remote since the merge base means the local side deleted it and the remote did not touch it.
+      // A file that is not in the merge base was added by the remote
+      if (!localBlob && baseTree[file]?.oid !== remoteBlob.oid) {
         // Deleted by us
         result.deleteByUs.push(file);
       }
@@ -1683,6 +1699,50 @@ export class GitVCS {
     // This allows us to easily check for conflicts between local and remote trees
     // and to extract file contents when needed
     return treeMap;
+  }
+
+  /**
+   * Whether a conflicted file is an Insomnia file, judged by its content (a top-level `type` that is an
+   * Insomnia file type) on whichever sides still have the file. Not by the first line, so a hand-written
+   * comment above `type` doesn't make an Insomnia file look foreign.
+   *
+   * Content that isn't valid YAML is only an Insomnia file if it still has a top-level `type:` line with an
+   * Insomnia file type. That keeps a broken Insomnia file in the conflict flow, where reading it fails the pull
+   * instead of silently replacing it with the remote version, while e.g. a Helm template is not an Insomnia file.
+   */
+  async isInsomniaFileConflict(
+    filepath: string,
+    conflictType: 'bothModified' | 'deleteByUs' | 'deleteByTheirs',
+    oursOid: string,
+    theirsOid: string,
+  ) {
+    const insomniaFileTypes: string[] = InsomniaFileTypeValues;
+    const oids = [];
+    if (conflictType !== 'deleteByUs') {
+      oids.push(oursOid);
+    }
+    if (conflictType !== 'deleteByTheirs') {
+      oids.push(theirsOid);
+    }
+    for (const oid of oids) {
+      const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
+      const content = Buffer.from(blob).toString('utf8');
+      try {
+        const type = parse(content)?.type;
+        if (typeof type === 'string' && insomniaFileTypes.includes(type)) {
+          return true;
+        }
+      } catch {
+        const hasInsomniaTypeLine = content.split('\n').some(line => {
+          const type = /^type:\s*["']?([^"'\s#]+)/.exec(line)?.[1];
+          return type !== undefined && insomniaFileTypes.includes(type);
+        });
+        if (hasInsomniaTypeLine) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   extractConflictParts(content: any) {
@@ -1756,9 +1816,13 @@ export class GitVCS {
           deleteByTheirs: 'they deleted and you modified',
         }[conflictType];
         for (const conflictPath of conflictPaths) {
-          // Auto-resolve non-YAML files to theirs (remote) since Insomnia only manages YAML files.
+          // Auto-resolve non-Insomnia files to theirs (remote) since Insomnia only manages its own YAML files.
+          // A `.yaml` extension is not enough: the repo may hold unrelated YAML (e.g. GitHub workflows, Helm config).
           // Collect for deferred staging in continueMerge() so cancel has zero side effects.
-          if (!conflictPath.endsWith('.yaml')) {
+          if (
+            !conflictPath.endsWith('.yaml') ||
+            !(await this.isInsomniaFileConflict(conflictPath, conflictType, oursHeadCommitOid, theirsHeadCommitOid))
+          ) {
             autoResolvedConflicts.push({
               filepath: conflictPath,
               action: conflictType === 'deleteByTheirs' ? 'delete' : 'use-theirs',
@@ -1836,7 +1900,7 @@ export class GitVCS {
           commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
           commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
         });
-        return { autoResolved: true };
+        return { autoResolved: true, autoResolvedConflicts };
       }
 
       throw new MergeConflictError('Need to solve merge conflicts first', {
@@ -1871,6 +1935,14 @@ export class GitVCS {
     // Stage auto-resolved non-YAML files (deferred from conflict collection)
     for (const autoResolved of autoResolvedConflicts ?? []) {
       if (autoResolved.action === 'delete') {
+        // git.remove only updates the index. Delete the file from the working directory as well, otherwise
+        // the `git.add('.')` below stages it again and the merge commit keeps the file the remote deleted.
+        assertIsPromiseFsClient(this._baseOpts.fs);
+        try {
+          await this._baseOpts.fs.promises.unlink(autoResolved.filepath);
+        } catch (error) {
+          console.error('Failed to delete file:', autoResolved.filepath, error);
+        }
         await git.remove({ ...this._baseOpts, filepath: autoResolved.filepath });
       } else {
         await git.checkout({

@@ -661,7 +661,7 @@ collection:
       await fsClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, 'Environment'));
 
       // Create initial files
-      await fsClient.promises.writeFile(yamlFile, 'name: base env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: base env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\n');
 
       await GitVCS.init({
@@ -682,7 +682,7 @@ collection:
       await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
 
       // Make local changes on main
-      await fsClient.promises.writeFile(yamlFile, 'name: local env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: local env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\ndist\n');
       const status2 = await GitVCS.status();
       await GitVCS.stageChanges(status2.unstaged);
@@ -690,7 +690,7 @@ collection:
 
       // Switch to origin/main and make different changes
       await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
-      await fsClient.promises.writeFile(yamlFile, 'name: remote env\n');
+      await fsClient.promises.writeFile(yamlFile, 'type: collection.insomnia.rest/5.0\nname: remote env\n');
       await fsClient.promises.writeFile(gitignoreFile, 'node_modules\nbuild\n');
       await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: yamlFile });
       await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: gitignoreFile });
@@ -723,6 +723,363 @@ collection:
           action: 'use-theirs',
         });
       }
+    });
+
+    it('should still return Insomnia files with a comment above `type` as conflicts (INS-4332)', async () => {
+      const fsClient = MemClient.createClient();
+      const deleteModifyFile = 'abcdefghij.yaml';
+      const bothModifiedFile = 'klmnopqrst.yaml';
+      const insomniaContent = (comment: string, name: string) =>
+        `${comment}\ntype: collection.insomnia.rest/5.0\nname: ${name}\n`;
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd(deleteModifyFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await writeAndAdd(bothModifiedFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Local: a hand-written comment above `type` in both files
+      await writeAndAdd(deleteModifyFile, insomniaContent('# local', 'base'));
+      await writeAndAdd(bothModifiedFile, insomniaContent('# local', 'base'));
+      await GitVCS.commit('Local changes');
+
+      // Remote: deletes one file and puts a different comment above `type` in the other
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: deleteModifyFile });
+      await fsClient.promises.unlink(deleteModifyFile);
+      await writeAndAdd(bothModifiedFile, insomniaContent('# remote', 'base'));
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      try {
+        await GitVCS.buildManualResolutionFromTrees();
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        // Both go to the conflict UI; nothing is silently resolved to the remote version
+        expect(mergeErr.data.conflicts.map(c => c.key).sort()).toEqual([deleteModifyFile, bothModifiedFile].sort());
+        expect(mergeErr.data.autoResolvedConflicts).toEqual([]);
+      }
+    });
+
+    it('should not auto-resolve an Insomnia file that is no longer valid YAML, it fails instead (INS-4332)', async () => {
+      const fsClient = MemClient.createClient();
+      const brokenFile = 'abcdefghij.yaml';
+      // An unclosed flow sequence: not valid YAML, but still declares an Insomnia file type
+      const content = (name: string) => `type: collection.insomnia.rest/5.0\nname: [${name}\n`;
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const writeAndAdd = async (filepath: string, text: string) => {
+        await fsClient.promises.writeFile(filepath, text);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await writeAndAdd(brokenFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+      await writeAndAdd(brokenFile, content('local'));
+      await GitVCS.commit('Local changes');
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd(brokenFile, content('remote'));
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      // Reading the file fails the pull. It must not be resolved to the remote version, which would drop the local edit
+      await expect(GitVCS.buildManualResolutionFromTrees()).rejects.not.toBeInstanceOf(MergeConflictError);
+      expect((await fsClient.promises.readFile(brokenFile)).toString()).toBe(content('local'));
+    });
+
+    it('should auto-resolve unrelated YAML files (not Insomnia files) to theirs instead of returning them as conflicts', async () => {
+      const fsClient = MemClient.createClient();
+      const insomniaFile = '.insomnia/Environment/env_1.yaml';
+      const workflowFile = '.github/workflows/main-deployment.yaml';
+      // Not valid YAML, e.g. a Helm template: must not make the pull throw
+      const helmTemplateFile = 'helm/deployment.yaml';
+
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, 'Environment'));
+      await fsClient.promises.mkdir('.github');
+      await fsClient.promises.mkdir('.github/workflows');
+      await fsClient.promises.mkdir('helm');
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: base env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: base\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.base }}\n');
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: local env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: local\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.local }}\n');
+      await GitVCS.commit('Local changes');
+
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd(insomniaFile, 'type: collection.insomnia.rest/5.0\nname: remote env\n');
+      await writeAndAdd(workflowFile, 'name: Main Deployment\non: remote\n');
+      await writeAndAdd(helmTemplateFile, 'replicas: {{ .Values.remote }}\n');
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      try {
+        await GitVCS.buildManualResolutionFromTrees();
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        // Only the Insomnia file goes to the conflict UI
+        expect(mergeErr.data.conflicts.map(c => c.key)).toEqual([insomniaFile]);
+        // The unrelated YAML files are resolved to theirs, like any other non-Insomnia file
+        expect(mergeErr.data.autoResolvedConflicts).toHaveLength(2);
+        expect(mergeErr.data.autoResolvedConflicts).toEqual(
+          expect.arrayContaining([
+            { filepath: workflowFile, action: 'use-theirs' },
+            { filepath: helmTemplateFile, action: 'use-theirs' },
+          ]),
+        );
+      }
+    });
+
+    it('should delete non-Insomnia files that the remote deleted and the local side modified (INS-4331)', async () => {
+      const fsClient = MemClient.createClient();
+      const files = ['README.md', 'main-deployment.yaml'];
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      for (const file of files) {
+        await writeAndAdd(file, 'name: base\n');
+      }
+      await GitVCS.commit('Initial commit');
+
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      for (const file of files) {
+        await writeAndAdd(file, 'name: local\n');
+      }
+      await GitVCS.commit('Local changes');
+
+      // Remote deletes both files
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      for (const file of files) {
+        await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: file });
+        await fsClient.promises.unlink(file);
+      }
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote deletes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      expect(await GitVCS.buildManualResolutionFromTrees()).toMatchObject({ autoResolved: true });
+
+      // The remote deletion is applied: gone from the working directory and from the merge commit
+      const tracked = await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' });
+      for (const file of files) {
+        await expect(fsClient.promises.readFile(file)).rejects.toThrow();
+        expect(tracked).not.toContain(file);
+      }
+    });
+
+    // Only the files both sides changed are conflicts. A change made by one side only must keep that side's state.
+    it('should only resolve files both sides changed and keep files only the local side added, edited or deleted', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('shared.md', 'base\n');
+      await writeAndAdd('local-edited.md', 'base\n');
+      await writeAndAdd('local-deleted.md', 'base\n');
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Local: edits two files, deletes one and adds one the remote never had
+      await writeAndAdd('shared.md', 'local edit\n');
+      await writeAndAdd('local-edited.md', 'my edit\n');
+      await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: 'local-deleted.md' });
+      await fsClient.promises.unlink('local-deleted.md');
+      await writeAndAdd('local-only.md', 'my new notes\n');
+      await GitVCS.commit('Local changes');
+
+      // Remote: only edits the shared file
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd('shared.md', 'remote edit\n');
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      const result = await GitVCS.buildManualResolutionFromTrees();
+
+      // Only the file both sides edited is resolved (to the remote version) and reported
+      expect(result).toEqual({
+        autoResolved: true,
+        autoResolvedConflicts: [{ filepath: 'shared.md', action: 'use-theirs' }],
+      });
+      const read = async (file: string) => (await fsClient.promises.readFile(file)).toString();
+      expect(await read('shared.md')).toBe('remote edit\n');
+      expect(await read('local-edited.md')).toBe('my edit\n');
+      expect(await read('local-only.md')).toBe('my new notes\n');
+      await expect(fsClient.promises.readFile('local-deleted.md')).rejects.toThrow();
+
+      const tracked = await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' });
+      expect(tracked).toEqual(expect.arrayContaining(['shared.md', 'local-edited.md', 'local-only.md']));
+      expect(tracked).not.toContain('local-deleted.md');
+    });
+
+    it('should complete the merge when nothing was changed by both sides', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('notes.md', 'base\n');
+      await GitVCS.commit('Initial commit');
+      // The remote has not moved since
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+      await writeAndAdd('notes.md', 'my edit\n');
+      await GitVCS.commit('Local changes');
+
+      // Nothing to resolve, so no empty conflict dialog
+      expect(await GitVCS.buildManualResolutionFromTrees()).toEqual({ autoResolved: true, autoResolvedConflicts: [] });
+      expect((await fsClient.promises.readFile('notes.md')).toString()).toBe('my edit\n');
+    });
+
+    // E.g. a shallow clone where the remote moved several commits ahead: the merge base cannot be found
+    it('should still keep files only the local side has when there is no merge base', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('shared.md', 'local edit\n');
+      await writeAndAdd('local-only.md', 'my new notes\n');
+      await GitVCS.commit('Local changes');
+
+      // A remote branch that shares no history with the local one
+      const person = { name: 'Remote User', email: 'remote@example.com', timestamp: 1_700_000_000, timezoneOffset: 0 };
+      const blob = await git.writeBlob({ fs: fsClient, dir: GIT_CLONE_DIR, blob: Buffer.from('remote edit\n') });
+      const tree = await git.writeTree({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        tree: [{ mode: '100644', path: 'shared.md', oid: blob, type: 'blob' }],
+      });
+      const remoteCommit = await git.writeCommit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        commit: { message: 'Remote root', tree, parent: [], author: person, committer: person },
+      });
+      await git.writeRef({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'refs/heads/origin/main', value: remoteCommit });
+
+      const result = await GitVCS.buildManualResolutionFromTrees();
+
+      expect(result).toEqual({
+        autoResolved: true,
+        autoResolvedConflicts: [{ filepath: 'shared.md', action: 'use-theirs' }],
+      });
+      expect((await fsClient.promises.readFile('shared.md')).toString()).toBe('remote edit\n');
+      expect((await fsClient.promises.readFile('local-only.md')).toString()).toBe('my new notes\n');
     });
 
     it('should auto-complete merge without throwing when all conflicts are non-YAML', async () => {
@@ -776,7 +1133,15 @@ collection:
 
       // buildManualResolutionFromTrees should NOT throw — all conflicts are non-YAML
       const result = await GitVCS.buildManualResolutionFromTrees();
-      expect(result).toEqual({ autoResolved: true });
+      expect(result).toMatchObject({ autoResolved: true });
+      // The caller gets the list, so it can tell the user which files were resolved without asking
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toHaveLength(2);
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toEqual(
+        expect.arrayContaining([
+          { filepath: gitignoreFile, action: 'use-theirs' },
+          { filepath: readmeFile, action: 'use-theirs' },
+        ]),
+      );
 
       // Non-YAML files should be resolved to the remote (theirs) version
       const gitignoreContent = (await fsClient.promises.readFile(gitignoreFile)).toString();
@@ -784,6 +1149,131 @@ collection:
 
       const readmeContent = (await fsClient.promises.readFile(readmeFile)).toString();
       expect(readmeContent).toBe('# Project\nRemote changes\n');
+    });
+  });
+
+  // The path a real pull takes for text conflicts: isomorphic-git throws a MergeConflictError, which
+  // collectMergeConflicts turns into the conflicts for the merge dialog (buildManualResolutionFromTrees is only
+  // the fallback for merges isomorphic-git does not support).
+  describe('merge() with conflicts (collectMergeConflicts)', () => {
+    const insomniaFile = 'rocket-api.yaml';
+    const workflowFile = '.github/workflows/main-deployment.yaml';
+    const helmFile = 'helm/values.yaml';
+
+    // Commits `base` on main, then diverges: local edits on main, remote edits on origin/main
+    // (a null remote content is a deletion), and ends on main.
+    async function setupDivergedRepo(files: { path: string; base: string; local: string; remote: string | null }[]) {
+      const fsClient = MemClient.createClient();
+      for (const dir of ['.github', '.github/workflows', 'helm']) {
+        await fsClient.promises.mkdir(dir);
+      }
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      for (const file of files) {
+        await writeAndAdd(file.path, file.base);
+      }
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      for (const file of files) {
+        await writeAndAdd(file.path, file.local);
+      }
+      await GitVCS.commit('Local changes');
+
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      for (const file of files) {
+        if (file.remote === null) {
+          await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: file.path });
+          await fsClient.promises.unlink(file.path);
+        } else {
+          await writeAndAdd(file.path, file.remote);
+        }
+      }
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      return fsClient;
+    }
+
+    const insomniaContent = (name: string) => `type: collection.insomnia.rest/5.0\nname: ${name}\n`;
+
+    it('should only return Insomnia files as conflicts and report the rest as auto-resolved', async () => {
+      await setupDivergedRepo([
+        {
+          path: insomniaFile,
+          base: insomniaContent('base'),
+          local: insomniaContent('local'),
+          remote: insomniaContent('remote'),
+        },
+        {
+          path: workflowFile,
+          base: 'name: Main\nruns-on: base\n',
+          local: 'name: Main\nruns-on: self-hosted\n',
+          remote: 'name: Main\nruns-on: ubuntu-22.04\n',
+        },
+        { path: helmFile, base: 'replicas: 1\n', local: 'replicas: 5\n', remote: null },
+      ]);
+
+      try {
+        await GitVCS.merge({ theirsBranch: 'origin/main', allowUncommittedChangesBeforeMerge: true });
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        expect(mergeErr.data.conflicts.map(c => c.key)).toEqual([insomniaFile]);
+        expect(mergeErr.data.autoResolvedConflicts).toHaveLength(2);
+        expect(mergeErr.data.autoResolvedConflicts).toEqual(
+          expect.arrayContaining([
+            { filepath: workflowFile, action: 'use-theirs' },
+            { filepath: helmFile, action: 'delete' },
+          ]),
+        );
+      }
+    });
+
+    it('should resolve and report non-Insomnia conflicts without opening the merge dialog', async () => {
+      const fsClient = await setupDivergedRepo([
+        {
+          path: workflowFile,
+          base: 'name: Main\nruns-on: base\n',
+          local: 'name: Main\nruns-on: self-hosted\n',
+          remote: 'name: Main\nruns-on: ubuntu-22.04\n',
+        },
+        { path: helmFile, base: 'replicas: 1\n', local: 'replicas: 5\n', remote: null },
+      ]);
+
+      const result = await GitVCS.merge({ theirsBranch: 'origin/main', allowUncommittedChangesBeforeMerge: true });
+
+      expect(result).toMatchObject({ autoResolved: true });
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toEqual(
+        expect.arrayContaining([
+          { filepath: workflowFile, action: 'use-theirs' },
+          { filepath: helmFile, action: 'delete' },
+        ]),
+      );
+      // The remote version won: replaced workflow, deleted Helm file, none left in the merge commit
+      expect((await fsClient.promises.readFile(workflowFile)).toString()).toBe('name: Main\nruns-on: ubuntu-22.04\n');
+      await expect(fsClient.promises.readFile(helmFile)).rejects.toThrow();
+      expect(await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' })).not.toContain(helmFile);
     });
   });
 
