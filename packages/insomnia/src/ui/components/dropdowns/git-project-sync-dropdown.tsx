@@ -456,7 +456,19 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                 commitMessage: pullResult.commitMessage,
                 commitParent: pullResult.commitParent,
               })
-              .then(() => {
+              .then(result => {
+                // continueMerge reports a failure by returning `errors` rather than rejecting
+                if ('errors' in result && result.errors) {
+                  showToast({
+                    icon,
+                    title: 'Failed to resolve merge conflicts',
+                    description: result.errors.join('\n'),
+                    status: 'error',
+                  });
+
+                  return { success: false };
+                }
+
                 if (pullResult.autoResolvedConflicts?.length) {
                   showAutoResolvedConflictsToast(pullResult.autoResolvedConflicts, {
                     icon,
