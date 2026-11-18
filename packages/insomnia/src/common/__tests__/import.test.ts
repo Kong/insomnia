@@ -286,6 +286,104 @@ describe('importRaw()', () => {
     });
   });
 
+  describe('collection-level properties when importing to an existing workspace', () => {
+    const existingProperties = {
+      headers: [{ name: 'X-Existing', value: 'keep' }],
+      preRequestScript: 'console.log("existing before");',
+      afterResponseScript: 'console.log("existing after");',
+      authentication: { type: 'basic', username: 'existing', password: 'existing' } as const,
+    };
+
+    const scanCollectionPropertiesFixture = async (fixtureName = 'collection.yaml') => {
+      const fixturePath = path.join(__dirname, '..', '__fixtures__', 'insomnia-v5-collection-properties', fixtureName);
+      const content = fs.readFileSync(fixturePath, 'utf8').toString();
+      const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+      expect(scanResult[0].errors.length).toBe(0);
+      return scanResult;
+    };
+
+    it('discards the imported properties by default', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      await scanCollectionPropertiesFixture();
+
+      await importUtil.importResourcesToWorkspace({ workspaceId: existingWorkspace._id });
+
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject(existingProperties);
+    });
+
+    it('replaces headers, scripts and authentication when overrideCollectionProperties is true', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      await scanCollectionPropertiesFixture();
+
+      const [returned] = await importUtil.importResourcesToWorkspace({
+        workspaceId: existingWorkspace._id,
+        overrideCollectionProperties: true,
+      });
+
+      const expected = {
+        headers: [{ name: 'X-Collection', value: 'shared' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+        authentication: { type: 'basic', username: 'user', password: 'pass' },
+      };
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject(expected);
+      expect(returned).toMatchObject(expected);
+    });
+
+    it('keeps existing properties that the import does not define', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      const content = [
+        'type: collection.insomnia.rest/5.0',
+        'name: Headers Only',
+        'meta:',
+        '  id: wrk_headers_only',
+        'schema_version: "5.1"',
+        'collection: []',
+        'headers:',
+        '  - name: X-Imported',
+        '    value: imported',
+        '',
+      ].join('\n');
+      const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+      expect(scanResult[0].errors.length).toBe(0);
+
+      await importUtil.importResourcesToWorkspace({
+        workspaceId: existingWorkspace._id,
+        overrideCollectionProperties: true,
+      });
+
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject({
+        ...existingProperties,
+        headers: [{ name: 'X-Imported', value: 'imported' }],
+      });
+    });
+  });
+
+  describe('hasCollectionLevelProperties()', () => {
+    it('detects headers, scripts and authentication on collection workspaces only', async () => {
+      const [withProps] = await importUtil.scanResources([
+        {
+          contentStr: fs
+            .readFileSync(
+              path.join(__dirname, '..', '__fixtures__', 'insomnia-v5-collection-properties', 'collection.yaml'),
+              'utf8',
+            )
+            .toString(),
+        },
+      ]);
+      expect(withProps.workspaces?.some(importUtil.hasCollectionLevelProperties)).toBe(true);
+
+      const base = models.workspace.init();
+      expect(importUtil.hasCollectionLevelProperties({ ...base, scope: 'collection' } as any)).toBe(false);
+      expect(
+        importUtil.hasCollectionLevelProperties({ ...base, scope: 'collection', authentication: {}, headers: [] } as any),
+      ).toBe(false);
+      expect(importUtil.hasCollectionLevelProperties({ ...base, scope: 'mcp', preRequestScript: 'x' } as any)).toBe(
+        false,
+      );
+    });
+  });
+
   it('should import a postman collection to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();

@@ -18,6 +18,7 @@ import {
   clearResourceCache,
   findExistingImportedWorkspace,
   findRequestInExistingWorkspace,
+  hasCollectionLevelProperties,
   type ImportSourceType,
   isApiSpecScanResult,
   requiresNewWorkspace,
@@ -340,11 +341,12 @@ export const ImportModal: FC<ImportModalProps> = ({
       data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
     );
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace && workspaceName
-    ? `Import to "${workspaceName}" Workspace`
-    : projectName
-      ? `Import to "${projectName}" Project`
-      : 'Import';
+  const header =
+    shouldImportToWorkspace && workspaceName
+      ? `Import to "${workspaceName}" Workspace`
+      : projectName
+        ? `Import to "${projectName}" Project`
+        : 'Import';
   const isScratchPad =
     defaultProjectId &&
     models.project.isScratchpadProject({
@@ -383,6 +385,7 @@ export const ImportModal: FC<ImportModalProps> = ({
             isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
+              overrideCollectionProperties: boolean,
               selectedProjectId?: string,
               selectedWorkspaceId?: string,
               newProjectName?: string,
@@ -411,6 +414,7 @@ export const ImportModal: FC<ImportModalProps> = ({
                 skipImportIfDuplicate: autoScan,
                 options: {
                   overrideBaseEnvironmentData,
+                  overrideCollectionProperties,
                 },
               });
               scanResourcesFetcherData
@@ -649,6 +653,7 @@ const ImportResourcesForm = ({
   errors?: string[];
   onImport: (
     overrideBaseEnvironmentData: boolean,
+    overrideCollectionProperties: boolean,
     selectedProjectId?: string,
     selectedWorkspaceId?: string,
     newProjectName?: string,
@@ -664,6 +669,7 @@ const ImportResourcesForm = ({
   };
   const formId = useId();
   const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
+  const [overrideCollectionProperties, setOverrideCollectionProperties] = useState(false);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId);
@@ -697,8 +703,7 @@ const ImportResourcesForm = ({
       return;
     }
     const isOffered = workspacesFetcher.data.files.some(
-      file =>
-        file.workspace?._id === defaultWorkspaceId && (file.scope === 'collection' || file.scope === 'design'),
+      file => file.workspace?._id === defaultWorkspaceId && (file.scope === 'collection' || file.scope === 'design'),
     );
     if (isOffered) {
       didPreselectRef.current = true;
@@ -717,9 +722,15 @@ const ImportResourcesForm = ({
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const shouldShowWorkspaceSelect = !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
 
+  const isImportingCollectionPropertiesToWorkspace =
+    shouldShowWorkspaceSelect &&
+    !!selectedWorkspaceId &&
+    scanResults.some(result => result.workspaces?.some(hasCollectionLevelProperties));
+
   const handleImport = () =>
     onImport(
       overrideBaseEnvironmentData,
+      isImportingCollectionPropertiesToWorkspace && overrideCollectionProperties,
       selectedProjectId,
       selectedWorkspaceId,
       selectedNewProject ? newProjectName || 'New Project' : undefined,
@@ -816,6 +827,20 @@ const ImportResourcesForm = ({
               Override Base Environment On Name Conflict
               <HelpTooltip className="space-left">
                 Override existing variables in the base environment if the same variable names are found during import.
+              </HelpTooltip>
+            </Checkbox>
+          )}
+          {isImportingCollectionPropertiesToWorkspace && (
+            <Checkbox
+              isSelected={overrideCollectionProperties}
+              onChange={checked => setOverrideCollectionProperties(checked)}
+              className="mt-1"
+            >
+              Override Workspace Level Headers, Scripts And Authentication
+              <HelpTooltip className="space-left">
+                The imported file defines workspace-level headers, scripts or authentication. Check to replace those of
+                the selected workspace with the imported one. Otherwise, imported workspace-level properties will be
+                discarded.
               </HelpTooltip>
             </Checkbox>
           )}

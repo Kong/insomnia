@@ -137,6 +137,19 @@ export interface ScanResult {
   errors: string[];
 }
 
+// Whether a workspace parsed from an import file carries collection-level headers, scripts or authentication.
+export function hasCollectionLevelProperties(workspace: Workspace) {
+  return (
+    ['collection', 'design'].includes(workspace.scope) &&
+    !!(
+      workspace.headers?.length ||
+      workspace.preRequestScript ||
+      workspace.afterResponseScript ||
+      Object.keys(workspace.authentication ?? {}).length
+    )
+  );
+}
+
 export function isApiSpecScanResult(scanResult: ScanResult) {
   return (
     (scanResult.apiSpecs?.length ?? 0) > 0 || scanResult.type?.id === 'openapi3' || scanResult.type?.id === 'swagger2'
@@ -455,12 +468,15 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
 export const importResourcesToWorkspace = async ({
   workspaceId,
   overrideBaseEnvironmentData = true,
+  overrideCollectionProperties = false,
 }: {
   workspaceId: string;
   overrideBaseEnvironmentData?: boolean;
+  // Replace the existing workspace's collection-level headers, scripts and authentication with the imported ones. Defaults to discarding them.
+  overrideCollectionProperties?: boolean;
 }) => {
   invariant(resourceCacheList.length > 0, 'No resources to import');
-  const existingWorkspace = await services.workspace.getById(workspaceId);
+  let existingWorkspace = await services.workspace.getById(workspaceId);
 
   for (const resourceCacheItem of resourceCacheList) {
     const resources = resourceCacheItem.resources;
@@ -473,6 +489,16 @@ export const importResourcesToWorkspace = async ({
     ResourceIdMap.set('__WORKSPACE_ID__', existingWorkspace._id);
     const toImport = resources.find(models.workspace.isWorkspace);
     toImport && ResourceIdMap.set(toImport._id, existingWorkspace._id);
+
+    if (overrideCollectionProperties && toImport && hasCollectionLevelProperties(toImport)) {
+      // Only replace the properties the import actually defines, so an import without e.g. authentication keeps the existing one.
+      existingWorkspace = await services.workspace.update(existingWorkspace, {
+        ...(toImport.headers?.length ? { headers: toImport.headers } : {}),
+        ...(toImport.preRequestScript ? { preRequestScript: toImport.preRequestScript } : {}),
+        ...(toImport.afterResponseScript ? { afterResponseScript: toImport.afterResponseScript } : {}),
+        ...(Object.keys(toImport.authentication ?? {}).length ? { authentication: toImport.authentication } : {}),
+      });
+    }
 
     const optionalResources = resources.filter(
       resource =>
