@@ -7,25 +7,23 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ExportPage extends BasePage {
-  // Getters, not fields: see CookiePage.
   private get exportRequestsModal(): ModalComponent {
     return new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
-    );
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Export requests" }),
+  );
   }
 
   private get selectExportTypeModal(): ModalComponent {
     return new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
-    );
+    this.page,
+    this.page.getByRole("dialog").filter({ hasText: "Select Export Type" }),
+  );
   }
 
   private get exportRequestsDialog(): Locator {
     return this.exportRequestsModal.root;
   }
-
   private get selectExportTypeDialog(): Locator {
     return this.selectExportTypeModal.root;
   }

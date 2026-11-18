@@ -6,6 +6,7 @@ import type { Project } from "@package/models/project";
 import { BaseFlow } from "./base.flow";
 
 export class ImportFlow extends BaseFlow {
+
   /**
    * Opens the Import dialog from `project`'s context menu, scans a local
    * file, then imports it into the project.

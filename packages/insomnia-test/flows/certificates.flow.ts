@@ -8,6 +8,7 @@ import { BaseFlow } from "./base.flow";
 export type CertificateTarget = Collection | HttpRequest;
 
 export class CertificatesFlow extends BaseFlow {
+
   /**
    * Adds a client certificate to `item`'s workspace, opening the "Manage
    * Certificates" dialog from `item`'s location.

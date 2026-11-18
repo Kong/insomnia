@@ -19,16 +19,14 @@ export class CertificatesPage extends BasePage {
    */
   private get modal(): ModalComponent {
     return new ModalComponent(
-      this.page,
-      this.page
-        .getByRole("dialog")
-        .filter({ hasText: "Manage Certificates" })
-        .first(),
-    );
+    this.page,
+    this.page
+      .getByRole("dialog")
+      .filter({ hasText: "Manage Certificates" })
+      .first(),
+  );
   }
-  private get dialog(): Locator {
-    return this.modal.root;
-  }
+  private readonly dialog = this.modal.root;
 
   /**
    * Waits for the "Manage Certificates" dialog to become visible,
@@ -89,8 +87,8 @@ export class CertificatesPage extends BasePage {
   /**
    * A client certificate's row, identified by its configured `host` text.
    * `role="row"` scoping alone is enough to exclude the CA Certificate's
-   * own (plain, non-`role="row"`) container — host values are unique per
-   * test, so no further disambiguation is needed.
+   * own (plain, non-`role="row"`) container above — host values are
+   * unique per test, so no further disambiguation is needed.
    */
   private clientCertificateRow(host: string): Locator {
     return new TableComponent(this.page, this.dialog).rowByText(host);

@@ -570,10 +570,6 @@ export class WorkspacePage extends BasePage {
     return node;
   }
 
-  /**
-   * Scrolls a tree node's row into view and right-clicks it to open its
-   * context menu.
-   */
   async rightClick(node: TreeNode): Promise<void> {
     const row = this.treeNav.containerRow(node._id);
     await row.scrollIntoViewIfNeeded();

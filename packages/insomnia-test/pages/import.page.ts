@@ -6,11 +6,11 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 export class ImportPage extends BasePage {
-  // A getter, not a field: see CookiePage.
   private get modal(): ModalComponent {
     return new ModalComponent(this.page);
   }
 
+  // Formerly "Select Collection".
   private readonly DIALOG = '[role="dialog"]';
   private readonly FILE_INPUT =
     '[role="dialog"] input[data-test-id="import-file-input"]';
@@ -19,6 +19,7 @@ export class ImportPage extends BasePage {
     '[role="dialog"] select[aria-label="Select Project"]';
   private readonly SOURCE_RADIO = (source: ImportSource) =>
     `[role="dialog"] label[data-test-id="import-from-${source}"]`;
+  private readonly URL_INPUT = '[role="dialog"] input[name="uri"]';
 
   async clickImport(): Promise<void> {
     await this.modal.clickButton("Import", false);
@@ -50,5 +51,9 @@ export class ImportPage extends BasePage {
 
   async setFile(filePath: string): Promise<void> {
     await this.page.locator(this.FILE_INPUT).setInputFiles(filePath);
+  }
+
+  async setUrl(url: string): Promise<void> {
+    await this.page.locator(this.URL_INPUT).fill(url);
   }
 }

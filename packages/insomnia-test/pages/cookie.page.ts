@@ -31,19 +31,17 @@ function parseCookieLine(line: string): Cookie {
 const RETRY_CHECK_TIMEOUT = 2000;
 
 export class CookiePage extends BasePage {
-  // Getters, not fields: `PageManager.setWindow()` rewires a page onto the relaunched window in place, so
-  // anything built from `this.page` at construction time would keep pointing at the closed one.
   private get editModal(): ModalComponent {
     return new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", { name: "Manage Cookies" }),
-    );
+    this.page,
+    this.page.getByRole("dialog", { name: "Manage Cookies" }),
+  );
   }
   private get listModal(): ModalComponent {
     return new ModalComponent(
-      this.page,
-      this.page.getByRole("dialog", { name: "Cookies Modal" }),
-    );
+    this.page,
+    this.page.getByRole("dialog", { name: "Cookies Modal" }),
+  );
   }
   private get editDialog(): Locator {
     return this.editModal.root;
