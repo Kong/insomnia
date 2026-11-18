@@ -27,6 +27,7 @@ import { startHttpEchoServers } from './http-echo.ts';
 import insomniaApi from './insomnia-api.ts';
 import { startMcpServers } from './mcp.ts';
 import { mockApi } from './mock-api.ts';
+import { startMockBinServer } from './mock-bin.ts';
 import { mtlsRouter } from './mtls.ts';
 import { oauthRoutes } from './oauth.ts';
 import { startOAuth2Server } from './oauth2.ts';
@@ -308,6 +309,8 @@ startEventStreamServers();
 startWsEchoServers();
 
 startMcpServers();
+
+startMockBinServer();
 
 startHelloGrpcServers();
 

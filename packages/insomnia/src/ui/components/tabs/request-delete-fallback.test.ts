@@ -1,8 +1,8 @@
 import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
+import type { BaseTab } from '../../context/app/insomnia-tab-context';
 import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
-import type { BaseTab } from './tab';
 
 const makeTab = (overrides: Partial<BaseTab> = {}): BaseTab => ({
   type: 'request',

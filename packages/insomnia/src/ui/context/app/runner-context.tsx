@@ -1,7 +1,7 @@
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 import type { Selection } from 'react-aria-components';
 
-import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import type { RequestRow } from '~/common/runner-feedback';
 
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
 import uiEventBus from '../../event-bus';
