@@ -678,6 +678,37 @@ describe('openapi-3', () => {
       expect(get.parameters).toEqual([{ name: 'a', value: 'string', disabled: true }]);
       expect(post.parameters).toEqual([]);
     });
+
+    it('should match the form-urlencoded media type ignoring media type parameters and casing', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            get: {
+              parameters: [
+                {
+                  name: 'filter',
+                  in: 'querystring',
+                  content: {
+                    'Application/X-WWW-Form-Urlencoded; charset=utf-8': {
+                      schema: { type: 'object', properties: { name: { type: 'string' } } },
+                    },
+                  },
+                },
+              ],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result!.find(item => item._type === 'request');
+
+      expect(request.parameters).toEqual([{ name: 'name', value: 'string', disabled: true }]);
+    });
   });
 
   describe('path level parameters', () => {
@@ -715,6 +746,28 @@ describe('openapi-3', () => {
         { name: 'sort', value: 'asc', disabled: true },
       ]);
     });
+
+    it('should let an operation header override a Path Item header whose name differs only in casing', async () => {
+      const openApiDoc = {
+        openapi: '3.2.0',
+        info: { title: 'Pets', version: '1.0.0' },
+        servers: [{ url: 'https://api.example.com' }],
+        paths: {
+          '/pets': {
+            parameters: [{ name: 'X-Trace', in: 'header', schema: { type: 'string', default: 'path-level' } }],
+            get: {
+              parameters: [{ name: 'x-trace', in: 'header', schema: { type: 'string', default: 'operation-level' } }],
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      };
+
+      const result = await convert(JSON.stringify(openApiDoc));
+      const request = result!.find(item => item._type === 'request');
+
+      expect(request.headers).toEqual([{ name: 'x-trace', value: 'operation-level', disabled: true }]);
+    });
   });
 
   describe('text/event-stream responses', () => {
@@ -739,7 +792,7 @@ describe('openapi-3', () => {
       expect(request.headers.map(h => h.name)).toEqual(['Accept']);
     });
 
-    it('should not add Accept for non-2xx, other streaming types or an explicit Accept parameter', async () => {
+    it('should not add Accept for non-2xx or other streaming types, and ignore a declared Accept parameter', async () => {
       const nonSuccess = buildDoc({ 400: { description: 'bad', content: { 'text/event-stream': {} } } });
       const ndjson = buildDoc({ 200: { description: 'ok', content: { 'application/x-ndjson': {} } } });
       const explicit = buildDoc({ 200: { description: 'ok', content: { 'text/event-stream': {} } } }, [
@@ -751,7 +804,7 @@ describe('openapi-3', () => {
         expect(request.headers).toEqual([]);
       }
       const request = (await convert(JSON.stringify(explicit)))!.find(item => item._type === 'request');
-      expect(request.headers).toEqual([{ name: 'Accept', value: 'application/json', disabled: true }]);
+      expect(request.headers).toEqual([{ name: 'Accept', value: 'text/event-stream', disabled: false }]);
     });
   });
 
