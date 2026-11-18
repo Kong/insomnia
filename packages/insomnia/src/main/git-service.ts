@@ -3192,6 +3192,8 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     return {
       success: true,
+      // Non-Insomnia files whose conflicts were resolved without asking the user, so the UI can tell them
+      autoResolvedConflicts: 'autoResolvedConflicts' in pullResult ? pullResult.autoResolvedConflicts : undefined,
     };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {

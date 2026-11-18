@@ -959,7 +959,15 @@ collection:
 
       // buildManualResolutionFromTrees should NOT throw — all conflicts are non-YAML
       const result = await GitVCS.buildManualResolutionFromTrees();
-      expect(result).toEqual({ autoResolved: true });
+      expect(result).toMatchObject({ autoResolved: true });
+      // The caller gets the list, so it can tell the user which files were resolved without asking
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toHaveLength(2);
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toEqual(
+        expect.arrayContaining([
+          { filepath: gitignoreFile, action: 'use-theirs' },
+          { filepath: readmeFile, action: 'use-theirs' },
+        ]),
+      );
 
       // Non-YAML files should be resolved to the remote (theirs) version
       const gitignoreContent = (await fsClient.promises.readFile(gitignoreFile)).toString();

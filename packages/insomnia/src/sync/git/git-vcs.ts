@@ -1597,7 +1597,7 @@ export class GitVCS {
         commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
         commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
       });
-      return { autoResolved: true };
+      return { autoResolved: true, autoResolvedConflicts };
     }
 
     throw new MergeConflictError('Need to solve merge conflicts first', {
@@ -1878,7 +1878,7 @@ export class GitVCS {
           commitMessage: `Merge branch '${theirsBranch}' into ${oursBranch}`,
           commitParent: [oursHeadCommitOid, theirsHeadCommitOid],
         });
-        return { autoResolved: true };
+        return { autoResolved: true, autoResolvedConflicts };
       }
 
       throw new MergeConflictError('Need to solve merge conflicts first', {

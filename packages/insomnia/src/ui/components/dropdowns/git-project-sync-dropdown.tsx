@@ -44,7 +44,7 @@ import {
 } from '../modals/git-project-staging-modal';
 import { GitPullRequiredModal } from '../modals/git-pull-required-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
-import { queue, showToast } from '../toast-notification';
+import { queue, showAutoResolvedConflictsToast, showToast } from '../toast-notification';
 interface Props {
   gitRepository?: GitRepository;
   activeProject: GitProject;
@@ -457,11 +457,18 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
                 commitParent: pullResult.commitParent,
               })
               .then(() => {
-                showToast({
-                  icon,
-                  title: 'Resolved merge conflicts, pull completed',
-                  status: 'success',
-                });
+                if (pullResult.autoResolvedConflicts?.length) {
+                  showAutoResolvedConflictsToast(pullResult.autoResolvedConflicts, {
+                    icon,
+                    title: 'Resolved merge conflicts, pull completed',
+                  });
+                } else {
+                  showToast({
+                    icon,
+                    title: 'Resolved merge conflicts, pull completed',
+                    status: 'success',
+                  });
+                }
 
                 return { success: true };
               })
@@ -499,11 +506,17 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
         };
       } else {
         setIsPulling(false);
-        showToast({
-          icon,
-          title: `Pull completed`,
-          status: 'success',
-        });
+        const autoResolvedConflicts =
+          'autoResolvedConflicts' in pullResult ? pullResult.autoResolvedConflicts : undefined;
+        if (autoResolvedConflicts?.length) {
+          showAutoResolvedConflictsToast(autoResolvedConflicts, { icon });
+        } else {
+          showToast({
+            icon,
+            title: `Pull completed`,
+            status: 'success',
+          });
+        }
         revalidate();
 
         return {

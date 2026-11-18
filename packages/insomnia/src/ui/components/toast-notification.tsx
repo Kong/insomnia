@@ -1,6 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { format } from 'date-fns';
+import type { AutoResolvedConflict } from 'insomnia-vcs';
 import React from 'react';
 import {
   Button,
@@ -120,6 +121,47 @@ export const showResourceNotFoundToast = (title: string) => {
     {
       timeout: 5000,
     },
+  );
+};
+
+const MAX_AUTO_RESOLVED_FILES_SHOWN = 5;
+
+// Tells the user which non-Insomnia files were resolved to the remote version without asking them.
+// Persistent (until dismissed) because the local version of these files is no longer in the working directory.
+export const showAutoResolvedConflictsToast = (
+  autoResolvedConflicts: AutoResolvedConflict[],
+  { icon, title = 'Pull completed' }: { icon?: IconProp; title?: string } = {},
+) => {
+  const shown = autoResolvedConflicts.slice(0, MAX_AUTO_RESOLVED_FILES_SHOWN);
+  const hiddenCount = autoResolvedConflicts.length - shown.length;
+  const fileCount = autoResolvedConflicts.length;
+
+  return showToast(
+    {
+      icon,
+      title,
+      status: 'warning',
+      description: (
+        <>
+          <span className="block">
+            {fileCount === 1
+              ? '1 file that Insomnia does not manage had'
+              : `${fileCount} files that Insomnia does not manage had`}{' '}
+            conflicts and {fileCount === 1 ? 'was' : 'were'} resolved automatically. Your local version is kept in your
+            previous commit.
+          </span>
+          <span className="mt-1 block">
+            {shown.map(({ filepath, action }) => (
+              <span key={filepath} className="block break-all">
+                {filepath} ({action === 'delete' ? 'deleted, as on the remote' : 'replaced with the remote version'})
+              </span>
+            ))}
+            {hiddenCount > 0 && <span className="block">and {hiddenCount} more</span>}
+          </span>
+        </>
+      ),
+    },
+    { timeout: null },
   );
 };
 

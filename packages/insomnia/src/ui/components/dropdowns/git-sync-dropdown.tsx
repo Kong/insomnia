@@ -33,6 +33,7 @@ import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
+import { showAutoResolvedConflictsToast } from '../toast-notification';
 
 interface Props {
   gitRepository: GitRepository;
@@ -206,6 +207,9 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                       bodyClassName: 'whitespace-break-spaces',
                     });
                   }
+                  if ('autoResolvedConflicts' in result && result.autoResolvedConflicts?.length) {
+                    showAutoResolvedConflictsToast(result.autoResolvedConflicts);
+                  }
                   if ('conflicts' in result) {
                     showModal(SyncMergeModal, {
                       conflicts: result.conflicts,
@@ -220,6 +224,13 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                             autoResolvedConflicts: result.autoResolvedConflicts,
                             commitMessage: result.commitMessage,
                             commitParent: result.commitParent,
+                          })
+                          .then(() => {
+                            if (result.autoResolvedConflicts?.length) {
+                              showAutoResolvedConflictsToast(result.autoResolvedConflicts, {
+                                title: 'Resolved merge conflicts, pull completed',
+                              });
+                            }
                           })
                           .finally(() => {
                             setIsPulling(false);
