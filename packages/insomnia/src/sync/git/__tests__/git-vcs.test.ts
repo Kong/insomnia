@@ -948,6 +948,140 @@ collection:
       }
     });
 
+    // Only the files both sides changed are conflicts. A change made by one side only must keep that side's state.
+    it('should only resolve files both sides changed and keep files only the local side added, edited or deleted', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('shared.md', 'base\n');
+      await writeAndAdd('local-edited.md', 'base\n');
+      await writeAndAdd('local-deleted.md', 'base\n');
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      // Local: edits two files, deletes one and adds one the remote never had
+      await writeAndAdd('shared.md', 'local edit\n');
+      await writeAndAdd('local-edited.md', 'my edit\n');
+      await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: 'local-deleted.md' });
+      await fsClient.promises.unlink('local-deleted.md');
+      await writeAndAdd('local-only.md', 'my new notes\n');
+      await GitVCS.commit('Local changes');
+
+      // Remote: only edits the shared file
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd('shared.md', 'remote edit\n');
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      const result = await GitVCS.buildManualResolutionFromTrees();
+
+      // Only the file both sides edited is resolved (to the remote version) and reported
+      expect(result).toEqual({
+        autoResolved: true,
+        autoResolvedConflicts: [{ filepath: 'shared.md', action: 'use-theirs' }],
+      });
+      const read = async (file: string) => (await fsClient.promises.readFile(file)).toString();
+      expect(await read('shared.md')).toBe('remote edit\n');
+      expect(await read('local-edited.md')).toBe('my edit\n');
+      expect(await read('local-only.md')).toBe('my new notes\n');
+      await expect(fsClient.promises.readFile('local-deleted.md')).rejects.toThrow();
+
+      const tracked = await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' });
+      expect(tracked).toEqual(expect.arrayContaining(['shared.md', 'local-edited.md', 'local-only.md']));
+      expect(tracked).not.toContain('local-deleted.md');
+    });
+
+    it('should complete the merge when nothing was changed by both sides', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('notes.md', 'base\n');
+      await GitVCS.commit('Initial commit');
+      // The remote has not moved since
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+      await writeAndAdd('notes.md', 'my edit\n');
+      await GitVCS.commit('Local changes');
+
+      // Nothing to resolve, so no empty conflict dialog
+      expect(await GitVCS.buildManualResolutionFromTrees()).toEqual({ autoResolved: true, autoResolvedConflicts: [] });
+      expect((await fsClient.promises.readFile('notes.md')).toString()).toBe('my edit\n');
+    });
+
+    // E.g. a shallow clone where the remote moved several commits ahead: the merge base cannot be found
+    it('should still keep files only the local side has when there is no merge base', async () => {
+      const fsClient = MemClient.createClient();
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      await writeAndAdd('shared.md', 'local edit\n');
+      await writeAndAdd('local-only.md', 'my new notes\n');
+      await GitVCS.commit('Local changes');
+
+      // A remote branch that shares no history with the local one
+      const person = { name: 'Remote User', email: 'remote@example.com', timestamp: 1_700_000_000, timezoneOffset: 0 };
+      const blob = await git.writeBlob({ fs: fsClient, dir: GIT_CLONE_DIR, blob: Buffer.from('remote edit\n') });
+      const tree = await git.writeTree({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        tree: [{ mode: '100644', path: 'shared.md', oid: blob, type: 'blob' }],
+      });
+      const remoteCommit = await git.writeCommit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        commit: { message: 'Remote root', tree, parent: [], author: person, committer: person },
+      });
+      await git.writeRef({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'refs/heads/origin/main', value: remoteCommit });
+
+      const result = await GitVCS.buildManualResolutionFromTrees();
+
+      expect(result).toEqual({
+        autoResolved: true,
+        autoResolvedConflicts: [{ filepath: 'shared.md', action: 'use-theirs' }],
+      });
+      expect((await fsClient.promises.readFile('shared.md')).toString()).toBe('remote edit\n');
+      expect((await fsClient.promises.readFile('local-only.md')).toString()).toBe('my new notes\n');
+    });
+
     it('should auto-complete merge without throwing when all conflicts are non-YAML', async () => {
       const fsClient = MemClient.createClient();
       const gitignoreFile = '.gitignore';

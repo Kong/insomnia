@@ -1589,8 +1589,8 @@ export class GitVCS {
       }
     }
 
-    // If all conflicts were auto-resolved (no YAML conflicts), complete the merge automatically
-    if (mergeConflicts.length === 0 && autoResolvedConflicts.length > 0) {
+    // If no conflict needs the user (only non-Insomnia files, or nothing both sides touched), complete the merge automatically
+    if (mergeConflicts.length === 0) {
       await this.continueMerge({
         handledMergeConflicts: [],
         autoResolvedConflicts,
@@ -1616,6 +1616,11 @@ export class GitVCS {
    * Returns an object indicating which files were:
    * - modified by both local and remote
    * - deleted by local or remote side
+   *
+   * Compares the local and remote trees, and uses the merge base to tell which side changed a file.
+   * A change only one side made is not a conflict: a file only the local side added or edited, or that
+   * the local side deleted, keeps the local state. Without a merge base (e.g. a shallow clone) that
+   * cannot be told, so a file only the local side has is kept and every other difference is a conflict.
    */
   async findConflictLikeChanges(oursBranch: string, theirsBranch: string): Promise<ConflictPaths> {
     const result: ConflictPaths = {
@@ -1634,26 +1639,32 @@ export class GitVCS {
       ref: theirsBranch,
     });
 
+    const [baseOid] = await git.findMergeBase({ ...this._baseOpts, oids: [localOid, remoteOid] });
     const localTree = await this.getTreeMap(localOid);
     const remoteTree = await this.getTreeMap(remoteOid);
+    const baseTree = baseOid ? await this.getTreeMap(baseOid) : {};
 
     for (const [file, localBlob] of Object.entries(localTree)) {
       const remoteBlob = remoteTree[file];
+      const baseBlob = baseTree[file];
 
       if (remoteBlob) {
         // Exists in both
-        if (localBlob.oid !== remoteBlob.oid) {
+        // Unchanged on the remote since the merge base means only the local side edited it
+        if (localBlob.oid !== remoteBlob.oid && baseBlob?.oid !== remoteBlob.oid) {
           result.bothModified.push(file);
         }
-      } else {
-        // Deleted by remote
+      } else if (baseBlob) {
+        // Deleted by remote. A file that is not in the merge base was added locally, the remote never had it
         result.deleteByTheirs.push(file);
       }
     }
 
-    for (const [file] of Object.entries(remoteTree)) {
+    for (const [file, remoteBlob] of Object.entries(remoteTree)) {
       const localBlob = localTree[file];
-      if (!localBlob) {
+      // Unchanged on the remote since the merge base means the local side deleted it and the remote did not touch it.
+      // A file that is not in the merge base was added by the remote
+      if (!localBlob && baseTree[file]?.oid !== remoteBlob.oid) {
         // Deleted by us
         result.deleteByUs.push(file);
       }
