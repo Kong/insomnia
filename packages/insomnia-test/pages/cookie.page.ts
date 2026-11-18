@@ -1,5 +1,5 @@
 import { ModalComponent } from "@package/components/modal.component";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type { Cookie } from "@package/models/cookie";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
@@ -25,10 +25,6 @@ function parseCookieLine(line: string): Cookie {
   }
   return cookie;
 }
-
-// Short enough that a lost write fails the attempt inside the retry loop's
-// own budget, leaving room for another full open-fill-submit cycle.
-const RETRY_CHECK_TIMEOUT = 2000;
 
 export class CookiePage extends BasePage {
   private get editModal(): ModalComponent {
@@ -239,7 +235,7 @@ export class CookiePage extends BasePage {
           ...(cookie.hostOnly && { hostOnly: true }),
           ...(cookie.expires && { expires: new Date(cookie.expires).getTime() }),
         },
-        RETRY_CHECK_TIMEOUT,
+        SHORT_TIMEOUT,
       );
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
