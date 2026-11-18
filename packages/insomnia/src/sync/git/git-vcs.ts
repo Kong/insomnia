@@ -1693,8 +1693,11 @@ export class GitVCS {
   /**
    * Whether a conflicted file is an Insomnia file, judged by its content (a top-level `type` that is an
    * Insomnia file type) on whichever sides still have the file. Not by the first line, so a hand-written
-   * comment above `type` doesn't make an Insomnia file look foreign. Content that isn't valid YAML
-   * (e.g. a Helm template) is not an Insomnia file.
+   * comment above `type` doesn't make an Insomnia file look foreign.
+   *
+   * Content that isn't valid YAML is only an Insomnia file if it still has a top-level `type:` line with an
+   * Insomnia file type. That keeps a broken Insomnia file in the conflict flow, where reading it fails the pull
+   * instead of silently replacing it with the remote version, while e.g. a Helm template is not an Insomnia file.
    */
   async isInsomniaFileConflict(
     filepath: string,
@@ -1702,6 +1705,7 @@ export class GitVCS {
     oursOid: string,
     theirsOid: string,
   ) {
+    const insomniaFileTypes: string[] = InsomniaFileTypeValues;
     const oids = [];
     if (conflictType !== 'deleteByUs') {
       oids.push(oursOid);
@@ -1711,13 +1715,20 @@ export class GitVCS {
     }
     for (const oid of oids) {
       const { blob } = await git.readBlob({ ...this._baseOpts, oid, filepath });
+      const content = Buffer.from(blob).toString('utf8');
       try {
-        const type = parse(Buffer.from(blob).toString('utf8'))?.type;
-        if (typeof type === 'string' && (InsomniaFileTypeValues as string[]).includes(type)) {
+        const type = parse(content)?.type;
+        if (typeof type === 'string' && insomniaFileTypes.includes(type)) {
           return true;
         }
       } catch {
-        // Not valid YAML, so not an Insomnia file
+        const hasInsomniaTypeLine = content.split('\n').some(line => {
+          const type = /^type:\s*["']?([^"'\s#]+)/.exec(line)?.[1];
+          return type !== undefined && insomniaFileTypes.includes(type);
+        });
+        if (hasInsomniaTypeLine) {
+          return true;
+        }
       }
     }
     return false;

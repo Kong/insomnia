@@ -783,6 +783,46 @@ collection:
       }
     });
 
+    it('should not auto-resolve an Insomnia file that is no longer valid YAML, it fails instead (INS-4332)', async () => {
+      const fsClient = MemClient.createClient();
+      const brokenFile = 'abcdefghij.yaml';
+      // An unclosed flow sequence: not valid YAML, but still declares an Insomnia file type
+      const content = (name: string) => `type: collection.insomnia.rest/5.0\nname: [${name}\n`;
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const writeAndAdd = async (filepath: string, text: string) => {
+        await fsClient.promises.writeFile(filepath, text);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      await writeAndAdd(brokenFile, 'type: collection.insomnia.rest/5.0\nname: base\n');
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+      await writeAndAdd(brokenFile, content('local'));
+      await GitVCS.commit('Local changes');
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      await writeAndAdd(brokenFile, content('remote'));
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      // Reading the file fails the pull. It must not be resolved to the remote version, which would drop the local edit
+      await expect(GitVCS.buildManualResolutionFromTrees()).rejects.not.toBeInstanceOf(MergeConflictError);
+      expect((await fsClient.promises.readFile(brokenFile)).toString()).toBe(content('local'));
+    });
+
     it('should auto-resolve unrelated YAML files (not Insomnia files) to theirs instead of returning them as conflicts', async () => {
       const fsClient = MemClient.createClient();
       const insomniaFile = '.insomnia/Environment/env_1.yaml';
