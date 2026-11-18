@@ -84,7 +84,7 @@ export const runScriptInQuickJs = async ({
     evalOrThrow(vm, BOOTSTRAP, '<quickjs-script-bootstrap>');
     evalOrThrow(vm, wrapUserScript(script), '<user-script>');
 
-    await driveTaskToCompletion(vm, deadline, timeoutMs);
+    await driveTaskToCompletion(vm, deadline, timeoutMs, pendingDeferreds);
   } finally {
     // Ordering matters: free the resolve/reject functions of anything still in flight (a script
     // that never awaited its sendRequest, or a run that hit the deadline mid-request) *before*
@@ -423,8 +423,22 @@ const evalOrThrow = (vm: QuickJSContext, code: string, filename: string): void =
   }
 };
 
-/** Drives `globalThis.__task` (a VM promise wrapping the user script) to completion. */
-const driveTaskToCompletion = async (vm: QuickJSContext, deadline: number, timeoutMs: number): Promise<void> => {
+/**
+ * Drives `globalThis.__task` (a VM promise wrapping the user script) to completion, then drains any
+ * bridge work the script left in flight.
+ *
+ * `__task` settling only means the script's top-level body finished. A script that calls an async
+ * function without awaiting it (`testBridge();`) settles `__task` at that function's first `await`,
+ * while its `insomnia.sendRequest()` is still outstanding. Tearing the VM down then would silently
+ * kill the continuation — no code after the `await`, no `catch`. The hidden-window path avoids this
+ * with `__bridgeSettle__`; the drain below is the equivalent, bounded by the same deadline.
+ */
+const driveTaskToCompletion = async (
+  vm: QuickJSContext,
+  deadline: number,
+  timeoutMs: number,
+  pendingDeferreds: Set<QuickJSDeferredPromise>,
+): Promise<void> => {
   const taskHandle = vm.getProp(vm.global, '__task');
   const resultPromise = vm.resolvePromise(taskHandle);
   taskHandle.dispose();
@@ -454,6 +468,19 @@ const driveTaskToCompletion = async (vm: QuickJSContext, deadline: number, timeo
   }
   if ('value' in settled) {
     settled.value.dispose();
+  }
+
+  // Only reached on success: a script error above wins and skips the drain. A continuation that
+  // issues another sendRequest re-populates `pendingDeferreds`, so chains are followed to the end.
+  while (pendingDeferreds.size > 0 || vm.runtime.hasPendingJob()) {
+    vm.runtime.executePendingJobs().dispose();
+    if (pendingDeferreds.size === 0 && !vm.runtime.hasPendingJob()) {
+      break;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`Executing script timeout: ${timeoutMs}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 };
 
