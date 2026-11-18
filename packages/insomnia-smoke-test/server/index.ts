@@ -1,6 +1,7 @@
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createSecureServer } from 'node:http2';
 import { createServer } from 'node:https';
 import { tmpdir } from 'node:os';
 import nodePath from 'node:path';
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 });
 const port = 4010;
 const httpsPort = 4011;
+const http2Port = 4012;
 const grpcPort = 50_051;
 const rawParser = bodyParser.raw({
   inflate: true,
@@ -212,6 +214,25 @@ app.delete('/v1/test-utils/git/setup', (_req, res) => {
   res.json({ success: true });
 });
 
+// `git-http-backend` hands back bare command names (`git-receive-pack`), which
+// on Windows are not on PATH — they live in the directory `git --exec-path`
+// reports. Resolve them to absolute paths so the suite also runs there.
+const gitExecPath = (() => {
+  try {
+    return execFileSync('git', ['--exec-path'], { encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
+})();
+
+const resolveGitService = (cmd: string) => {
+  if (!gitExecPath) {
+    return cmd;
+  }
+  const candidate = nodePath.join(gitExecPath, process.platform === 'win32' ? `${cmd}.exe` : cmd);
+  return existsSync(candidate) ? candidate : cmd;
+};
+
 // Git smart HTTP server backed by git-http-backend — accepts real pushes.
 // Falls back to the fixture root if no per-test dir is set up.
 app.use('/git', (req, res) => {
@@ -226,7 +247,7 @@ app.use('/git', (req, res) => {
         return;
       }
       res.setHeader('content-type', service.type);
-      const ps = spawn(service.cmd, service.args.concat(repoPath), {
+      const ps = spawn(resolveGitService(service.cmd), service.args.concat(repoPath), {
         env: { ...process.env, GIT_HTTP_EXPORT_ALL: '1' },
       });
       ps.stderr.on('data', d => console.error('[git]', String(d)));
@@ -261,6 +282,25 @@ startWebSocketServer(
     console.log(`Listening at wss://localhost:${httpsPort}`);
   }),
 );
+
+// HTTP/2 only: ALPN advertises h2 alone, so a client built without HTTP/2
+// support fails the handshake instead of falling back to HTTP/1.1. A plain
+// handler is used on purpose: the Express app relies on the HTTP/1 compat
+// layer, which throws on request bodies under node:http2. No client certificate
+// is requested here; the mTLS server on 4011 owns that.
+createSecureServer(
+  {
+    cert: readFileSync(nodePath.join(__dirname, '../fixtures/certificates/localhost.pem')),
+    key: readFileSync(nodePath.join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+    allowHTTP1: false,
+  },
+  (req, res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ id: '1', httpVersion: req.httpVersion }));
+  },
+).listen(http2Port, '::', () => {
+  console.log(`Listening at https://localhost:${http2Port} (HTTP/2 only)`);
+});
 
 startSocketIOServer();
 
