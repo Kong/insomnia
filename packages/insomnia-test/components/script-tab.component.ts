@@ -54,10 +54,10 @@ export class ScriptTabComponent extends TabPanelComponent {
    * are provided are written.
    */
   async setScripts(scripts: RequestScripts): Promise<void> {
-    if (scripts.preRequest) {
+    if (scripts.preRequest !== undefined) {
       await this.writeScript(this.PRE_REQUEST_EDITOR, scripts.preRequest);
     }
-    if (scripts.afterResponse) {
+    if (scripts.afterResponse !== undefined) {
       await this.writeScript(this.AFTER_RESPONSE_EDITOR, scripts.afterResponse);
     }
   }

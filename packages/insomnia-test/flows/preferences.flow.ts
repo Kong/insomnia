@@ -1,6 +1,7 @@
 import type { LlmUrlBackendFormFields } from "@package/components/preferences-ai.component";
 import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { step } from "@package/misc/step";
+import type { GitCredential } from "@package/models/git-credential";
 import type { AiUrlBackendSettings} from "@package/models/settings";
 import { Settings } from "@package/models/settings";
 import { expect } from "@playwright/test";
@@ -157,5 +158,18 @@ export class PreferencesFlow extends BaseFlow {
       maxTokens: Number(fields.maxTokens),
       isActive,
     };
+  }
+
+  /**
+   * Adds a custom (username/PAT) Git credential via Preferences ->
+   * Credentials, so it's available to select when cloning a Git Sync project.
+   */
+  @step()
+  async addGitCredential(credential: GitCredential): Promise<void> {
+    const { preferences, preferencesCredentials } = this.pageManager;
+    await preferences.open();
+    await preferencesCredentials.openCredentialsTab();
+    await preferencesCredentials.addCustomCredential(credential);
+    await preferences.close();
   }
 }

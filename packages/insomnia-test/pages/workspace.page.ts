@@ -1,4 +1,5 @@
 import { DropdownComponent } from "@package/components/dropdown.component";
+import { ModalComponent } from "@package/components/modal.component";
 import { SearchFieldComponent } from "@package/components/search-field.component";
 import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TreeComponent } from "@package/components/tree.component";
@@ -269,6 +270,48 @@ export class WorkspacePage extends BasePage {
       .getByRole("button", { name: "Create", exact: true })
       .click();
     await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Clicks the "Duplicate" button and waits for the dialog to close.
+   */
+  async clickDuplicate(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await this.page
+      .getByRole("button", { name: "Duplicate", exact: true })
+      .click();
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
+  }
+
+  /**
+   * Selects the target project in the duplicate dialog's project
+   * dropdown. If no project name is given, selects the option marked
+   * "(current)".
+   */
+  async selectDuplicateProject(projectName?: string): Promise<void> {
+    const select = new ModalComponent(this.page).root.locator(
+      'select[name="projectId"]',
+    );
+    const options = await select.locator("option").allTextContents();
+    const label = projectName
+      ? options.find((o) => o.startsWith(projectName))
+      : options.find((o) => o.includes("(current)"));
+    if (!label) {
+      throw new Error(
+        `Project "${projectName ?? "(current)"}" not found in duplicate dialog`,
+      );
+    }
+    await select.selectOption({ label });
+  }
+
+  /**
+   * Fills the name field in the duplicate dialog and verifies the value
+   * stuck.
+   */
+  async setDuplicateName(name: string): Promise<void> {
+    const input = new ModalComponent(this.page).root.locator('input[name="name"]');
+    await input.fill(name);
+    await expect(input).toHaveValue(name);
   }
 
   /**
