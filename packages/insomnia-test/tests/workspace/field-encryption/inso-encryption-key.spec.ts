@@ -14,15 +14,15 @@ import { createBasicAuthCollection } from "@package/tests/workspace/field-encryp
 import { expect } from "@playwright/test";
 
 async function takeKeys(user: Parameters<typeof createBasicAuthCollection>[0]) {
-  const { fieldEncryptionFlow } = user.flowManager;
+  const { preferencesFlow } = user.flowManager;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-inso-key-"));
   const file = path.join(dir, "insomnia-encryption-key.json");
-  await fieldEncryptionFlow.openKeyPanel();
-  await fieldEncryptionFlow.copyKey("continue");
-  const base64 = await fieldEncryptionFlow.readClipboard();
-  await fieldEncryptionFlow.exportKey("continue", file);
+  await preferencesFlow.openKeyPanel();
+  await preferencesFlow.copyKey("continue");
+  const base64 = await preferencesFlow.readClipboard();
+  await preferencesFlow.exportKey("continue", file);
   const jwk = await waitForExportedFile(file);
-  await fieldEncryptionFlow.closeKeyPanel();
+  await preferencesFlow.closeKeyPanel();
   fs.rmSync(dir, { recursive: true, force: true });
   return { base64, jwk };
 }

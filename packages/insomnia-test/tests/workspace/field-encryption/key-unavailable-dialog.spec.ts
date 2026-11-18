@@ -20,7 +20,7 @@ base("Dialog A: the missing key is reported once per run, deletes nothing, and t
   user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow, appFlow, httpRequestFlow } = user.flowManager;
+  const { appFlow, httpRequestFlow } = user.flowManager;
 
   const { collection, request: first, token: firstToken } = await createBearerRequest(user);
   await expect.poll(() => rawToken(dataPath, first.name)).toMatch(ENCRYPTED_VALUE);
@@ -28,13 +28,13 @@ base("Dialog A: the missing key is reported once per run, deletes nothing, and t
   const workingKeyFile = breakKeyFile(dataPath);
 
   await appFlow.restart();
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("degraded");
-  expect(await fieldEncryptionFlow.issueSurvivesEscapeAndOutsideClick()).toBe(true);
-  await fieldEncryptionFlow.continueAnyway();
+  expect(await appFlow.waitForIssue()).toBe("degraded");
+  expect(await appFlow.issueSurvivesEscapeAndOutsideClick()).toBe(true);
+  await appFlow.continueAnyway();
 
   await user.pageManager.window.reload();
   await user.pageManager.window.waitForLoadState();
-  await fieldEncryptionFlow.expectNoIssue();
+  await appFlow.expectNoIssue();
 
   const [stored] = await user.pageManager.findDocs("insomnia.Request.db", { name: first.name });
   expect(stored.authentication.token).not.toBe(firstToken);
@@ -50,7 +50,7 @@ base("Dialog A: the missing key is reported once per run, deletes nothing, and t
 
   fs.writeFileSync(keyFilePath(dataPath), workingKeyFile);
   await appFlow.restart();
-  await fieldEncryptionFlow.expectNoIssue();
+  await appFlow.expectNoIssue();
   await expect.poll(() => rawToken(dataPath, second.name)).toMatch(ENCRYPTED_VALUE);
   expect(readRawDbText(dataPath)).not.toContain("token-entered-while-degraded");
   const [reopened] = await user.pageManager.findDocs("insomnia.Request.db", { name: first.name });
@@ -63,7 +63,7 @@ base("Dialog A: Reset local encryption key sets the old key aside and restarts w
   user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow, appFlow } = user.flowManager;
+  const { appFlow } = user.flowManager;
   const { request } = await createBearerRequest(user);
   await expect.poll(() => rawToken(dataPath, request.name)).toMatch(ENCRYPTED_VALUE);
   breakKeyFile(dataPath);
@@ -71,17 +71,17 @@ base("Dialog A: Reset local encryption key sets the old key aside and restarts w
   const keyFiles = () => fs.readdirSync(path.dirname(keyFilePath(dataPath)));
 
   await appFlow.restart();
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("degraded");
-  expect(await fieldEncryptionFlow.canResetLocalKey()).toBe(true);
+  expect(await appFlow.waitForIssue()).toBe("degraded");
+  expect(await appFlow.canResetLocalKey()).toBe(true);
 
-  const confirmation = await fieldEncryptionFlow.resetLocalKey(false);
+  const confirmation = await appFlow.resetLocalKey(false);
   expect(confirmation.buttons).toEqual(["Cancel", "Reset Key and Restart"]);
   expect(confirmation.message).toContain("Reset the local encryption key");
   expect(fs.readFileSync(keyFilePath(dataPath), "utf8")).toBe(unusableKey);
   expect(keyFiles().filter((name) => name.includes(".bak"))).toEqual([]);
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("degraded");
+  expect(await appFlow.waitForIssue()).toBe("degraded");
 
-  await fieldEncryptionFlow.resetLocalKey(true);
+  await appFlow.resetLocalKey(true);
   expect(fs.existsSync(keyFilePath(dataPath))).toBe(false);
   const backup = keyFiles().find((name) => name.startsWith("fieldEncryptionKey.bak-"));
   expect(backup, "the old key file is kept under a .bak name").toBeTruthy();
@@ -90,8 +90,8 @@ base("Dialog A: Reset local encryption key sets the old key aside and restarts w
   await appFlow.relaunch();
   expect(fs.existsSync(keyFilePath(dataPath))).toBe(true);
   expect(fs.readFileSync(keyFilePath(dataPath), "utf8")).not.toBe(unusableKey);
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("decryptionFailed");
-  expect(await fieldEncryptionFlow.getAffectedFields()).toEqual([
+  expect(await appFlow.waitForIssue()).toBe("decryptionFailed");
+  expect(await appFlow.getAffectedFields()).toEqual([
     { label: request.name, paths: ["authentication.token"] },
   ]);
 });
@@ -110,11 +110,11 @@ withoutKeyFile("Dialog A: no Reset button when there is no key file to set aside
   userAtStartup: user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow } = user.flowManager;
+  const { appFlow } = user.flowManager;
 
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("degraded");
+  expect(await appFlow.waitForIssue()).toBe("degraded");
   expect(fs.existsSync(keyFilePath(dataPath))).toBe(false);
-  expect(await fieldEncryptionFlow.canResetLocalKey()).toBe(false);
+  expect(await appFlow.canResetLocalKey()).toBe(false);
 });
 
 const withUnusableKey = base.extend({
@@ -127,14 +127,14 @@ const withUnusableKey = base.extend({
 withUnusableKey("Local Encryption Key buttons are disabled when no key is loaded", async ({
   userAtStartup: user,
 }) => {
-  const { fieldEncryptionFlow } = user.flowManager;
+  const { preferencesFlow, appFlow } = user.flowManager;
 
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("degraded");
-  await fieldEncryptionFlow.continueAnyway();
-  await fieldEncryptionFlow.openKeyPanel();
+  expect(await appFlow.waitForIssue()).toBe("degraded");
+  await appFlow.continueAnyway();
+  await preferencesFlow.openKeyPanel();
 
-  expect(await fieldEncryptionFlow.areKeyButtonsEnabled()).toBe(false);
-  expect(await fieldEncryptionFlow.getKeyUnavailableNotice()).toContain(
+  expect(await preferencesFlow.areKeyButtonsEnabled()).toBe(false);
+  expect(await preferencesFlow.getKeyUnavailableNotice()).toContain(
     "could not be loaded in this session",
   );
 });

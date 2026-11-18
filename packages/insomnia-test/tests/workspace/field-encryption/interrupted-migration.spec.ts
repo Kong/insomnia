@@ -51,7 +51,7 @@ test("A file with both encrypted and plaintext values reads correctly and ends u
       clientSecret: token,
       password: plainPassword,
     });
-    await user.flowManager.fieldEncryptionFlow.expectNoIssueDialog(`${when}`);
+    await user.flowManager.appFlow.expectNoIssueDialog(`${when}`);
   };
 
   await appFlow.restart();

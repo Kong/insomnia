@@ -91,7 +91,7 @@ export async function expectScenariosEncrypted(
     await user.flowManager.appFlow.restart();
     await expectOnDisk();
     await expectInApp();
-    await user.flowManager.fieldEncryptionFlow.expectNoIssueDialog(`after restart #${restart}`);
+    await user.flowManager.appFlow.expectNoIssueDialog(`after restart #${restart}`);
   }
 }
 

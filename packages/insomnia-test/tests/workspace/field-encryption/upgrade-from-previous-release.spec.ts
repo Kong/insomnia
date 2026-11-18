@@ -79,10 +79,10 @@ test(
   "Data of the previous release is encrypted when the current release first opens it, and the user loses nothing",
   upgradePhase(UpgradePhase.After),
   async ({ user, dataPath }) => {
-    const { appFlow, fieldEncryptionFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
+    const { appFlow, httpRequestFlow, workspaceFlow } = user.flowManager;
 
     expect(fs.existsSync(keyFilePath(dataPath))).toBe(true);
-    await fieldEncryptionFlow.expectNoEncryptionUi();
+    await appFlow.expectNoEncryptionUi();
 
     const expectMigrated = async () => {
       await expect
@@ -127,6 +127,6 @@ test(
 
     await appFlow.restart();
     await expectMigrated();
-    await fieldEncryptionFlow.expectNoIssueDialog("after a restart");
+    await appFlow.expectNoIssueDialog("after a restart");
   },
 );

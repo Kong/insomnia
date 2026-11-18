@@ -16,24 +16,24 @@ test("Copy Key puts the key on the clipboard as one line of base64 after a confi
   user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow } = user.flowManager;
+  const { preferencesFlow } = user.flowManager;
   const { request, token } = await createBearerRequest(user);
   await expect.poll(() => storedToken(dataPath, request.name)).toMatch(/^enc:insomnia:v1:/);
 
-  await fieldEncryptionFlow.openKeyPanel();
-  expect(await fieldEncryptionFlow.areKeyButtonsEnabled()).toBe(true);
+  await preferencesFlow.openKeyPanel();
+  expect(await preferencesFlow.areKeyButtonsEnabled()).toBe(true);
 
-  await fieldEncryptionFlow.writeClipboard("clipboard before");
-  await fieldEncryptionFlow.copyKey("cancel");
-  expect(await fieldEncryptionFlow.readClipboard()).toBe("clipboard before");
+  await preferencesFlow.writeClipboard("clipboard before");
+  await preferencesFlow.copyKey("cancel");
+  expect(await preferencesFlow.readClipboard()).toBe("clipboard before");
 
-  const { warning, buttonText } = await fieldEncryptionFlow.copyKey("continue");
+  const { warning, buttonText } = await preferencesFlow.copyKey("continue");
   expect(warning).toContain("Keep this key private");
   expect(warning).toContain("use it only on this machine");
   expect(warning).toContain("Never use it on another machine");
   expect(buttonText).toContain("Copied");
 
-  const clipboard = await fieldEncryptionFlow.readClipboard();
+  const clipboard = await preferencesFlow.readClipboard();
   expect(clipboard).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
   const keyBytes = keyBytesFromJwk(Buffer.from(clipboard, "base64").toString("utf8"));
   expect(keyBytes).toHaveLength(32);
@@ -44,22 +44,22 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
   user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow } = user.flowManager;
+  const { preferencesFlow } = user.flowManager;
   const { request, token } = await createBearerRequest(user);
   await expect.poll(() => storedToken(dataPath, request.name)).toMatch(/^enc:insomnia:v1:/);
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-key-export-"));
   const file = path.join(dir, "insomnia-encryption-key.json");
 
   try {
-    await fieldEncryptionFlow.openKeyPanel();
+    await preferencesFlow.openKeyPanel();
 
-    await fieldEncryptionFlow.exportKey("cancel", file);
+    await preferencesFlow.exportKey("cancel", file);
     expect(fs.existsSync(file)).toBe(false);
-    await fieldEncryptionFlow.exportKey("continue");
+    await preferencesFlow.exportKey("continue");
     expect(fs.existsSync(file)).toBe(false);
-    expect(await fieldEncryptionFlow.hasErrorDialog()).toBe(false);
+    expect(await preferencesFlow.hasErrorDialog()).toBe(false);
 
-    const { warning, suggestedPath } = await fieldEncryptionFlow.exportKey("continue", file);
+    const { warning, suggestedPath } = await preferencesFlow.exportKey("continue", file);
     expect(warning).toContain("Never use it on another machine");
     expect(path.basename(suggestedPath ?? "")).toBe("insomnia-encryption-key.json");
 
@@ -72,7 +72,7 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
     expect(
       decryptStoredValue(keyBytesFromJwk(JSON.stringify(jwk)), storedToken(dataPath, request.name)),
     ).toBe(token);
-    expect(await fieldEncryptionFlow.hasErrorDialog()).toBe(false);
+    expect(await preferencesFlow.hasErrorDialog()).toBe(false);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

@@ -6,7 +6,6 @@ import { CertificatesFlow } from "./certificates.flow";
 import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { ExportFlow } from "./export.flow";
-import { FieldEncryptionFlow } from "./field-encryption.flow";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
@@ -31,7 +30,6 @@ const flowRegistry = {
   cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
-  fieldEncryptionFlow: (m: FlowDeps): FieldEncryptionFlow => new FieldEncryptionFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),

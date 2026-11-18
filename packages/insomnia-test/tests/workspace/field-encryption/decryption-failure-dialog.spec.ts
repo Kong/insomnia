@@ -34,23 +34,23 @@ test("Dialog B: Reset affected fields clears only the fields that cannot be decr
   userAtStartup: user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow, appFlow } = user.flowManager;
+  const { appFlow } = user.flowManager;
 
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("decryptionFailed");
-  expect(await fieldEncryptionFlow.getAffectedFields()).toEqual(
+  expect(await appFlow.waitForIssue()).toBe("decryptionFailed");
+  expect(await appFlow.getAffectedFields()).toEqual(
     expect.arrayContaining([
       { label: "Undecryptable A", paths: ["authentication.password"] },
       { label: "Undecryptable B", paths: ["authentication.token"] },
     ]),
   );
-  expect(await fieldEncryptionFlow.getAffectedFields()).toHaveLength(2);
-  expect(await fieldEncryptionFlow.issueSurvivesEscapeAndOutsideClick()).toBe(true);
+  expect(await appFlow.getAffectedFields()).toHaveLength(2);
+  expect(await appFlow.issueSurvivesEscapeAndOutsideClick()).toBe(true);
 
   await updateDoc(user.pageManager.window, "Request", "req_e2e_undecryptable_b", {
     authentication: { type: "bearer", token: "typed-by-the-user-meanwhile" },
   });
 
-  await fieldEncryptionFlow.resetAffectedFields();
+  await appFlow.resetAffectedFields();
 
   const [a] = await user.pageManager.findDocs("insomnia.Request.db", { _id: "req_e2e_undecryptable_a" });
   expect(a.authentication.password ?? "").toBe("");
@@ -64,28 +64,28 @@ test("Dialog B: Reset affected fields clears only the fields that cannot be decr
   expect(healthy.authentication.token).toBe("plaintext-of-the-healthy-request");
 
   await appFlow.restart();
-  await fieldEncryptionFlow.expectNoIssue();
+  await appFlow.expectNoIssue();
 });
 
 test("Dialog B: Continue without decryption keeps the data and asks again on the next start", async ({
   userAtStartup: user,
   dataPath,
 }) => {
-  const { fieldEncryptionFlow, appFlow } = user.flowManager;
+  const { appFlow } = user.flowManager;
 
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("decryptionFailed");
-  await fieldEncryptionFlow.continueAnyway();
+  expect(await appFlow.waitForIssue()).toBe("decryptionFailed");
+  await appFlow.continueAnyway();
 
   expect(rawRequest(dataPath, "req_e2e_undecryptable_a").authentication.password).toBe(UNDECRYPTABLE_A);
   expect(rawRequest(dataPath, "req_e2e_undecryptable_b").authentication.token).toBe(UNDECRYPTABLE_B);
 
   await user.pageManager.window.reload();
   await user.pageManager.window.waitForLoadState();
-  await fieldEncryptionFlow.expectNoIssue();
+  await appFlow.expectNoIssue();
 
   await appFlow.restart();
-  expect(await fieldEncryptionFlow.waitForIssue()).toBe("decryptionFailed");
-  expect((await fieldEncryptionFlow.getAffectedFields()).map((f) => f.label).sort()).toEqual([
+  expect(await appFlow.waitForIssue()).toBe("decryptionFailed");
+  expect((await appFlow.getAffectedFields()).map((f) => f.label).sort()).toEqual([
     "Undecryptable A",
     "Undecryptable B",
   ]);
