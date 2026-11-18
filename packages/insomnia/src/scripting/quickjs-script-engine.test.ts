@@ -469,27 +469,116 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
     return fetchMock;
   };
 
-  it('tears down cleanly when the script never awaits its sendRequest', async () => {
+  it('waits for a sendRequest the script never awaits, and runs its callback', async () => {
     stubSlowFetch(120);
     const context = baseContext();
 
-    // Postman-style fire-and-forget: the script returns while the request is still in flight.
+    // Postman-style fire-and-forget: the script body returns while the request is in flight, but
+    // the run must still wait for it (matching the hidden-window path's `__bridgeSettle__`).
     const result = await runScriptInQuickJs({
       script: `
-        insomnia.sendRequest('https://example.com', () => {});
+        insomnia.sendRequest('https://example.com', () => { insomnia.environment.set('callbackRan', true); });
         insomnia.environment.set('finished', true);
       `,
       context,
     });
 
-    expect((result.environment.data as Record<string, unknown>).finished).toBe(true);
+    expect(result.environment.data).toMatchObject({ finished: true, callbackRan: true });
 
-    // The response lands after teardown; it must be a silent no-op rather than an abort or an
-    // unhandled QuickJSUseAfterFree rejection out of the settle callback.
-    await new Promise(resolve => setTimeout(resolve, 250));
+    // A later run still works on the same module.
+    const laterResult = await runScriptInQuickJs({
+      script: 'insomnia.environment.set("ranCleanly", true);',
+      context: baseContext(),
+    });
+    expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
+  });
 
-    // A later run still works. Note this is NOT what detects the abort — a fresh context on the same
-    // WASM module succeeds even after one, so only the assertions above are load-bearing here.
+  // INS-3869: an un-awaited async function that awaits sendRequest used to stall forever — the VM
+  // was torn down at the first `await`, so neither the continuation nor the `catch` ever ran.
+  it('runs the continuation of an un-awaited async function that awaits sendRequest', async () => {
+    stubSlowFetch(60);
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        async function testBridge() {
+          try {
+            insomnia.environment.set('before', true);
+            const res = await insomnia.sendRequest('https://example.com');
+            insomnia.environment.set('body', res.body);
+            insomnia.environment.set('end', true);
+          } catch (e) {
+            insomnia.environment.set('caught', e.message);
+          }
+        }
+        testBridge();
+      `,
+      context,
+    });
+
+    expect(result.environment.data).toMatchObject({ before: true, body: 'late', end: true });
+  });
+
+  it('runs the catch block of an un-awaited async function when the request fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(
+        () =>
+          new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('DNS resolution failed')), 40);
+          }),
+      ),
+    );
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        (async () => {
+          try {
+            await insomnia.sendRequest('https://unreachable.invalid');
+            insomnia.environment.set('end', true);
+          } catch (e) {
+            insomnia.environment.set('caught', e.message);
+          }
+        })();
+      `,
+      context,
+    });
+
+    expect(result.environment.data).toMatchObject({ caught: 'DNS resolution failed' });
+    expect((result.environment.data as Record<string, unknown>).end).toBeUndefined();
+  });
+
+  it('follows a chain of sendRequests issued from an un-awaited continuation', async () => {
+    stubSlowFetch(30);
+    const context = baseContext();
+
+    const result = await runScriptInQuickJs({
+      script: `
+        (async () => {
+          await insomnia.sendRequest('https://example.com/one');
+          await insomnia.sendRequest('https://example.com/two');
+          insomnia.environment.set('chainDone', true);
+        })();
+      `,
+      context,
+    });
+
+    expect(result.environment.data).toMatchObject({ chainDone: true });
+  });
+
+  it('times out while draining an un-awaited sendRequest that never lands in time', async () => {
+    stubSlowFetch(2000);
+    const context = baseContext();
+    context.settings = { timeout: 100 } as any;
+
+    await expect(
+      runScriptInQuickJs({
+        script: `(async () => { await insomnia.sendRequest('https://example.com'); })();`,
+        context,
+      }),
+    ).rejects.toThrow(/Executing script timeout: 100/);
+
     const laterResult = await runScriptInQuickJs({
       script: 'insomnia.environment.set("ranCleanly", true);',
       context: baseContext(),
@@ -513,14 +602,14 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
     expect((laterResult.environment.data as Record<string, unknown>).ranCleanly).toBe(true);
   });
 
-  it('tears down cleanly when only some of several sendRequests have settled', async () => {
+  it('tears down cleanly when the deadline fires with only some of several sendRequests settled', async () => {
     let call = 0;
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation(
         () =>
           new Promise(resolve =>
-            // First call answers immediately, second is still outstanding at teardown.
+            // First call answers immediately, second is still outstanding at the deadline.
             setTimeout(
               () =>
                 resolve({
@@ -537,17 +626,18 @@ describe('runScriptInQuickJs sendRequest bridge teardown', () => {
       ),
     );
     const context = baseContext();
+    context.settings = { timeout: 100 } as any;
 
-    const result = await runScriptInQuickJs({
-      script: `
-        const first = await insomnia.sendRequest('https://example.com/one');
-        insomnia.sendRequest('https://example.com/two', () => {});
-        insomnia.environment.set('firstBody', first.body);
-      `,
-      context,
-    });
-
-    expect((result.environment.data as Record<string, unknown>).firstBody).toBe('x');
+    await expect(
+      runScriptInQuickJs({
+        script: `
+          const first = await insomnia.sendRequest('https://example.com/one');
+          insomnia.sendRequest('https://example.com/two', () => {});
+          insomnia.environment.set('firstBody', first.body);
+        `,
+        context,
+      }),
+    ).rejects.toThrow(/Executing script timeout: 100/);
 
     const laterResult = await runScriptInQuickJs({
       script: 'insomnia.environment.set("ranCleanly", true);',
