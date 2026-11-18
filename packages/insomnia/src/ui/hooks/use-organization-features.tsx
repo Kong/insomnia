@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
 import { useServerQuery } from '~/ui/hooks/use-query';
+import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
   bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -12,6 +13,7 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
+  hideSecretValuesInPreviewAndConsole: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
 // If network unreachable assume user has paid for the current period
@@ -41,7 +43,8 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
     queryKey: ['organization-features', organizationId],
     queryFn: async () => {
       const { id: sessionId } = await services.userSession.get();
-      return getOrganizationFeatures({ organizationId, sessionId });
+      const result = await getOrganizationFeatures({ organizationId, sessionId });
+      return result;
     },
     enabled: isEnabled,
   });
@@ -109,6 +112,30 @@ export function useAIFeatureStatus(): AIFeatureStatus {
     isGenerateCommitMessagesWithAIEnabled:
       generateCommitMessagesWithAIAllowedByOrg && generateCommitMessagesWithAIEnabledByUser && hasActiveLLM,
     isMCPWithAIEnabled: mcpClientWithAIAllowedByOrg && mcpIntegrationWithAIEnabledByUser && hasActiveLLM,
+  };
+}
+
+/**
+ * Effective "hide confidential values in Preview/Console" for the current organization:
+ * the user's setting OR the organization's enforcement. Mirrors services.organization.resolveHideSecretValues,
+ * which the render/send code path uses.
+ */
+export function useHideSecretValues(organizationIdParam?: string) {
+  const params = useParams() as { organizationId?: string };
+  const organizationId = organizationIdParam ?? params.organizationId ?? '';
+  const { settings } = useRootLoaderData()!;
+
+  // Only the organization's enforcement comes from the main process. The user's preference is read
+  // from the root loader so toggling it takes effect immediately; this query would not refetch on its own.
+  const { data: isEnforcedByOrganization = false } = useServerQuery({
+    queryKey: ['organization-hide-secret-values', organizationId],
+    queryFn: async () =>
+      (await services.organization.resolveHideSecretValuesAndOrgEnforced(organizationId)).orgEnforced,
+  });
+
+  return {
+    hideSecretValues: (settings.hideSecretValuesInPreviewAndConsole ?? true) || isEnforcedByOrganization,
+    isEnforcedByOrganization,
   };
 }
 

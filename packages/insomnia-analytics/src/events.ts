@@ -93,6 +93,8 @@ export enum AnalyticsEvent {
   konnectPluginEditInKonnectClicked = 'Konnect Plugin Edit in Konnect Clicked',
   konnectPluginDeckCommandClicked = 'Konnect Plugin decK Command Clicked',
   konnectPluginViewAllPluginsClicked = 'Konnect Plugin View All Plugins Clicked',
+  konnectDebugSessionStarted = 'Konnect Debugger Session Started',
+  konnectDebugSessionFinished = 'Konnect Debugger Session Finished',
 
   homepageFiltered = 'homepage-filtered',
   quickSearchOpenedByKeyboard = 'quick-search-opened-by-keyboard',
