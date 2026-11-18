@@ -1,0 +1,42 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import { faker } from '@faker-js/faker';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
+import { buildCollectionFileWithUnknownField } from './helpers';
+
+test('Verify a deleted file that had unknown fields shows neither the unknown fields UI nor the undiscardable warning', async ({
+  user,
+}) => {
+  const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
+  const { gitSyncPage, gitCommitDialogPage } = user.pageManager;
+
+  const fileName = `${faker.string.alpha(10).toLowerCase()}.yaml`;
+  await pushServerFile({ path: fileName, content: buildCollectionFileWithUnknownField(faker.string.alpha(10)).content });
+  await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
+  const cloneParentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-unknown-fields-'));
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name, {
+    cloneParentDir,
+  });
+  const cloneDir = path.join(cloneParentDir, fs.readdirSync(cloneParentDir)[0]);
+  await expect
+    .poll(async () => (await gitSyncFlow.getChanges()).unstaged, { timeout: DEFAULT_TIMEOUT })
+    .toContain(fileName);
+  fs.rmSync(path.join(cloneDir, fileName));
+
+  await gitSyncPage.openCommitDialog();
+  await gitCommitDialogPage.openChangeDiff(GitChangeList.Unstaged, fileName);
+  const diffState = {
+    hasBanner: await gitCommitDialogPage.isUnknownFieldsDiffWarningVisible(),
+    highlightCount: await gitCommitDialogPage.getUnknownFieldHighlightCount(),
+    hasUndiscardableWarning: await gitCommitDialogPage.isUndiscardableWarningVisible(),
+  };
+
+  expect(diffState).toEqual({ hasBanner: false, highlightCount: 0, hasUndiscardableWarning: false });
+});
