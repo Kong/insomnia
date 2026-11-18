@@ -92,6 +92,19 @@ describe('RepoFileWatcher orphan reconciliation', () => {
     },
   );
 
+  // Folders created from the new workspace modal only exist in the UI; the watcher must create them on write.
+  it('creates missing parent folders when writing a workspace into a new folder', async () => {
+    await createWorkspaceWithMeta('specs/v1/my-collection.yaml', null);
+
+    await registry.startWatcher(REPO_ID, repoDir, PROJECT_ID);
+
+    const written = await fs.promises
+      .access(path.join(repoDir, 'specs', 'v1', 'my-collection.yaml'))
+      .then(() => true)
+      .catch(() => false);
+    expect(written).toBe(true);
+  });
+
   it('keeps a workspace whose YAML is present on disk', async () => {
     const workspace = await createWorkspaceWithMeta('insomnia.wrk_present.yaml', Date.now());
     await fs.promises.writeFile(path.join(repoDir, 'insomnia.wrk_present.yaml'), 'name: Present\n', 'utf8');
