@@ -1,8 +1,6 @@
 import type { MockServer as AppMockServer } from "insomnia-data";
 
 export class MockServer implements Pick<AppMockServer, "name" | "url"> {
-  id?: string;
-
   constructor(
     readonly name: string,
     /** The self-hosted server's base URL — what the create dialog's "What is your self-hosted mock server URL?" field is filled with. */
