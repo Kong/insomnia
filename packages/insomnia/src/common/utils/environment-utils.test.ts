@@ -1,4 +1,4 @@
-import { EnvironmentKvPairDataType, models } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
@@ -10,6 +10,7 @@ import {
   getKVPairFromData,
   hasProtectedKvPairs,
   maskVaultEnvironmentData,
+  removeVaultEnvironmentData,
 } from './environment-utils';
 
 describe('ensureKeyIsValid()', () => {
@@ -339,5 +340,42 @@ describe('maskVaultEnvironmentData()', () => {
     });
     const result = maskVaultEnvironmentData(env);
     expect(result.kvPairData![1].value).toBe('visible');
+  });
+});
+
+describe('removeVaultEnvironmentData()', () => {
+  const vaultPath = models.environment.vaultEnvironmentPath;
+
+  it('returns the environment unchanged when it has no vault data', () => {
+    const environment = { data: { foo: 'bar' }, environmentType: undefined, kvPairData: undefined };
+    expect(removeVaultEnvironmentData(environment)).toBe(environment);
+  });
+
+  it('removes vault data and rebuilds a KV environment without secrets', () => {
+    const result = removeVaultEnvironmentData({
+      data: { foo: 'bar', [vaultPath]: { secret: 'encrypted' } },
+      environmentType: undefined,
+      kvPairData: undefined,
+    });
+
+    expect(result.data).toEqual({ foo: 'bar' });
+    expect(result.environmentType).toBe(EnvironmentType.KVPAIR);
+    expect(result.kvPairData).toEqual([expect.objectContaining({ name: 'foo', value: 'bar', type: 'str' })]);
+  });
+
+  it('drops secret rows from existing kvPairData and keeps the rest', () => {
+    const result = removeVaultEnvironmentData({
+      data: { foo: 'bar', [vaultPath]: { secret: 'encrypted' } },
+      environmentType: EnvironmentType.KVPAIR,
+      kvPairData: [
+        { id: '1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true, isConfidential: true },
+        { id: '2', name: 'secret', value: 'encrypted', type: EnvironmentKvPairDataType.SECRET, enabled: true },
+      ],
+    });
+
+    expect(result.data).toEqual({ foo: 'bar' });
+    expect(result.kvPairData).toEqual([
+      { id: '1', name: 'foo', value: 'bar', type: EnvironmentKvPairDataType.STRING, enabled: true, isConfidential: true },
+    ]);
   });
 });

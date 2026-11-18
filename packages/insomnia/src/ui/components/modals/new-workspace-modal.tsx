@@ -1,7 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
 import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -10,6 +10,7 @@ import {
   Form,
   Heading,
   Input,
+  type Key,
   Label,
   Link,
   Modal,
@@ -32,6 +33,13 @@ import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
+import { NewRepoFolderPopover } from './new-repo-folder-popover';
+import {
+  getSiblingNames,
+  mergePendingFolders,
+  type PendingFolder,
+  removePendingFolder,
+} from './new-workspace-modal-folders';
 
 const titleByScope: Record<WorkspaceScope, string> = {
   [models.workspace.WorkspaceScopeKeys.collection]: 'API Collection',
@@ -107,6 +115,10 @@ export const NewWorkspaceModal = ({
 
   // Once the user manually edits the file name we stop deriving it from the name.
   const [hasEditedFileName, setHasEditedFileName] = useState(false);
+
+  // Folders created from this modal only exist in the UI until the workspace file is written into them.
+  const [pendingFolders, setPendingFolders] = useState<PendingFolder[]>([]);
+  const [expandedFolderKeys, setExpandedFolderKeys] = useState<Set<Key>>(() => new Set(['']));
 
   const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const prevCreateNewWorkspaceFetcherState = useRef(createNewWorkspaceFetcher.state);
@@ -186,6 +198,37 @@ export const NewWorkspaceModal = ({
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
   const selectedFolder = workspaceData.folderPath || gitRepoTreeFetcher.data?.repositoryTree.id || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
+
+  const repositoryTree = gitRepoTreeFetcher.data?.repositoryTree;
+  const repositoryTreeWithPendingFolders = useMemo(
+    () => (repositoryTree ? mergePendingFolders(repositoryTree, pendingFolders) : null),
+    [repositoryTree, pendingFolders],
+  );
+
+  const selectedFolderLabel = [
+    repositoryTree?.name || 'Repository',
+    ...selectedFolder.split(/[\\/]/).filter(Boolean),
+  ].join(' / ');
+
+  const createPendingFolder = (name: string) => {
+    const id = window.path.join(selectedFolder, name);
+    setPendingFolders([...pendingFolders, { id, parentId: selectedFolder, name }]);
+    setExpandedFolderKeys(new Set([...expandedFolderKeys, selectedFolder]));
+    setWorkspaceData({ ...workspaceData, folderPath: id });
+  };
+
+  const deletePendingFolder = (folderId: string) => {
+    const remainingFolders = removePendingFolder(folderId, pendingFolders);
+    setPendingFolders(remainingFolders);
+
+    const isSelectedFolderRemoved =
+      pendingFolders.some(folder => folder.id === selectedFolder) &&
+      !remainingFolders.some(folder => folder.id === selectedFolder);
+    if (isSelectedFolderRemoved) {
+      const parentId = pendingFolders.find(folder => folder.id === folderId)?.parentId || '';
+      setWorkspaceData({ ...workspaceData, folderPath: parentId });
+    }
+  };
 
   const defaultMockServerType = isCloudMockDisabled ? 'self-hosted' : 'cloud';
   const defaultMockServerCreationType = sourceApiSpec?.contents ? 'ai' : 'manual';
@@ -317,26 +360,42 @@ export const NewWorkspaceModal = ({
                         </Label>
                         <FieldError className="text-xs text-red-500" />
                       </TextField>
-                      <Label className="text-sm text-(--hl)">
-                        Folder where the file will be saved in the repository:
-                      </Label>
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm text-(--hl)">
+                          Folder where the file will be saved in the repository:
+                        </Label>
+                        <NewRepoFolderPopover
+                          isDisabled={!gitRepoTreeFetcher.data}
+                          parentLabel={selectedFolderLabel}
+                          siblingNames={getSiblingNames(
+                            selectedFolder,
+                            gitRepoTreeFetcher.data?.folderList || {},
+                            pendingFolders,
+                          )}
+                          onCreate={createPendingFolder}
+                        />
+                      </div>
 
                       <Tree
                         className="grid max-h-52 min-h-24 gap-0 overflow-auto rounded-xs border border-solid border-(--hl-sm)"
-                        defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
+                        selectedKeys={[selectedFolder]}
                         disallowEmptySelection
-                        defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
+                        expandedKeys={expandedFolderKeys}
+                        onExpandedChange={setExpandedFolderKeys}
                         onSelectionChange={selection => {
                           if (selection !== 'all') {
+                            const folderPath = selection.values().next().value as string;
                             setWorkspaceData({
                               ...workspaceData,
-                              folderPath: selection.values().next().value as string,
+                              folderPath,
                             });
+                            // Selecting a folder also expands it, so users don't have to hit the small folder icon.
+                            setExpandedFolderKeys(new Set([...expandedFolderKeys, folderPath]));
                           }
                         }}
                         aria-label="Files"
                         selectionMode="single"
-                        items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
+                        items={repositoryTreeWithPendingFolders ? [repositoryTreeWithPendingFolders] : []}
                         renderEmptyState={() => (
                           <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-(--hl)">
                             <Icon icon="spinner" className="size-5 animate-spin" />
@@ -350,7 +409,7 @@ export const NewWorkspaceModal = ({
                               className="group flex flex-col rounded-xs border border-solid border-transparent px-2 py-1 pl-(--tree-item-level) outline-hidden transition-colors duration-300 odd:bg-(--hl-xxs) aria-disabled:text-(--hl) aria-selected:border-(--color-surprise) aria-selected:bg-(--hl-lg)"
                               style={{
                                 // @ts-expect-error --tree-item-level is a custom property
-                                '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split('/').length * 1) + 0.5}rem`,
+                                '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split(/[\\/]/).length * 1) + 0.5}rem`,
                                 'color': item.type === 'file' ? 'var(--hl)' : 'var(--color-font)',
                               }}
                               isDisabled={item.type === 'file'}
@@ -359,22 +418,37 @@ export const NewWorkspaceModal = ({
                               <TreeItemContent>
                                 {({ isExpanded }) => (
                                   <div className="flex items-center gap-2 data-[disabled=true]:text-(--hl)">
-                                    {'children' in item ? (
-                                      item.children.length ? (
+                                    {item.type !== 'file' ? (
+                                      item.children?.length ? (
                                         <Button slot="chevron">
                                           <Icon className="size-4" icon={isExpanded ? 'folder-open' : 'folder'} />
                                         </Button>
                                       ) : (
-                                        <Icon icon={'folder-blank'} />
+                                        <Icon icon={item.isPending ? 'folder-plus' : 'folder-blank'} />
                                       )
                                     ) : (
                                       <Icon icon={'file'} />
                                     )}
-                                    {item.name}
+                                    <span className="truncate">{item.name}</span>
+                                    {item.isPending && (
+                                      <>
+                                        <span className="rounded-xs bg-(--hl-sm) px-1 text-xs text-(--hl)">new</span>
+                                        <Button
+                                          type="button"
+                                          aria-label={`Remove new folder ${item.name}`}
+                                          onPress={() => deletePendingFolder(item.id)}
+                                          className="ml-auto flex aspect-square h-5 items-center justify-center rounded-xs text-xs text-(--hl) hover:bg-(--hl-xs) hover:text-(--color-font)"
+                                        >
+                                          <Icon icon="x" />
+                                        </Button>
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               </TreeItemContent>
-                              {item.type !== 'file' && <Collection items={item.children}>{renderItem}</Collection>}
+                              {item.type !== 'file' && (
+                                <Collection items={item.children || []}>{renderItem}</Collection>
+                              )}
                             </TreeItem>
                           );
                         }}
