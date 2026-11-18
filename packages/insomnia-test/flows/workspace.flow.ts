@@ -41,6 +41,19 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * From the login screen of a logged-out app, opens the local Scratch Pad
+   * and returns its collection, with the sidebar showing the full tree.
+   */
+  @step()
+  async openScratchPad(): Promise<Collection> {
+    await this.pageManager.projectPage.clickUseScratchPad();
+    await this.preferencesFlow.set({ sidebarFocusForCollections: false });
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.requireItemNode({ name: 'Scratch Pad' }, TreeNodeType.Workspace);
+    return Object.assign(new Collection('Scratch Pad'), { id: node._id });
+  }
+
+  /**
    * Creates a new top-level Project through the create-project dialog.
    */
   @step()

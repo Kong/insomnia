@@ -36,6 +36,19 @@ export class ProjectPage extends BasePage {
   }
 
   /**
+   * Clicks "Use local Scratch Pad" on the login screen and waits for the
+   * Scratch Pad workspace to open.
+   */
+  async clickUseScratchPad(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Use local Scratch Pad" })
+      .click();
+    await this.page.waitForURL(/\/organization\/org_scratchpad\//, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
+
+  /**
    * Selects a project type in the create-project dialog. For Local and
    * Cloud projects, waits for the Create button to become enabled. For Git
    * projects, the Create button is replaced by a multi-step repo-detail
