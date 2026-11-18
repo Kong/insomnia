@@ -37,6 +37,7 @@ import {
   type RunnerItemStatus,
   type RunnerLiveItem,
 } from '~/common/runner-feedback';
+import { findNextRequestIndex } from '~/common/runner-next-request';
 import { invariant } from '~/common/utils/invariant';
 import { defaultSendActionRuntime } from '~/network/network';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
@@ -1008,10 +1009,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     const runtime = keepLog ? defaultSendActionRuntime : noLogRuntime;
 
     for (let i = 0; i < iterationCount; i++) {
-      // nextRequestIdOrName is used to manual set next request in iteration from pre-request script
-      let nextRequestIdOrName = '';
+      // index of the request picked by insomnia.execution.setNextRequest(), -1 ends the iteration
+      let nextRequestIndex: number | null = null;
 
       let testResultsForOneIteration: RunnerResultPerRequest[] = [];
+
+      // requests passed over by a forward setNextRequest jump are reported as skipped
+      const markSkipped = (index: number) => {
+        const skippedRequest = requests[index];
+        upsertLiveItem(runnerId, buildRunnerItemKey(i + 1, index, skippedRequest.id), { status: 'skipped' });
+        testResultsForOneIteration = [
+          ...testResultsForOneIteration,
+          {
+            requestName: skippedRequest.name,
+            requestUrl: skippedRequest.url,
+            responseCode: 0,
+            results: [],
+            skipped: true,
+          },
+        ];
+      };
 
       let j = 0;
       while (j < requests.length) {
@@ -1070,27 +1087,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           results: resultCollector.results,
         });
 
-        const isNextRequest = (targetRequest: RequestRow, nextRequestIdOrName: string) => {
-          const matchId = targetRequest.id === nextRequestIdOrName;
-          const matchName = targetRequest.name.trim() === nextRequestIdOrName.trim();
-          // find the last request with matched name in case multiple requests with same name in collection runner
-          const matchLastIndex = j === requests.findLastIndex(req => req.name.trim() === nextRequestIdOrName.trim());
-
-          return matchId || (matchName && matchLastIndex);
-        };
-
         try {
-          if (nextRequestIdOrName !== '') {
-            if (isNextRequest(targetRequest, nextRequestIdOrName)) {
-              // reset nextRequestIdOrName when request name or id meets;
-              nextRequestIdOrName = '';
-            } else {
-              upsertLiveItem(runnerId, liveItemKey, buildLivePatch('skipped'));
-              testResultsForOneIteration = [...testResultsForOneIteration, { ...buildResult(), skipped: true }];
-              continue;
-            }
-          }
-
           updateExecution(runnerId, {
             activeRequestId: targetRequest.id,
             activeRequestKey: liveItemKey,
@@ -1126,7 +1123,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             transientVariables: testCtx.transientVariables,
           });
           if (execution?.nextRequestIdOrName) {
-            nextRequestIdOrName = execution.nextRequestIdOrName || '';
+            nextRequestIndex = findNextRequestIndex(requests, execution.nextRequestIdOrName);
           }
 
           if (execution?.skipped) {
@@ -1186,12 +1183,18 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
             throw e;
           }
           // or continue execution if needed
-          nextRequestIdOrName = ''; // ignore it if there's an exception to avoid infinite loop
+          nextRequestIndex = null; // ignore it if there's an exception to avoid infinite loop
         } finally {
-          if (isNextRequest(targetRequest, nextRequestIdOrName)) {
-            // it points the next request to itself so keep the current j
-          } else {
+          if (nextRequestIndex === null) {
             j++;
+          } else {
+            // jump to the chosen request, backwards or forwards; -1 (not found) ends the iteration
+            const targetIndex = nextRequestIndex === -1 ? requests.length : nextRequestIndex;
+            for (let skippedIndex = j + 1; skippedIndex < targetIndex; skippedIndex++) {
+              markSkipped(skippedIndex);
+            }
+            j = targetIndex;
+            nextRequestIndex = null;
           }
         }
       }
