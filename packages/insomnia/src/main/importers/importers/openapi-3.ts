@@ -192,6 +192,13 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   );
 };
 
+// Header names are case-insensitive, so `X-Trace` and `x-trace` identify the same header parameter
+const getParameterKey = (parameter: { in?: unknown; name?: unknown } | undefined) => {
+  const name =
+    parameter?.in === 'header' && typeof parameter.name === 'string' ? parameter.name.toLowerCase() : parameter?.name;
+  return `${parameter?.in}:${name}`;
+};
+
 /**
  * Merge Path Item level parameters into an operation. Operation level parameters override path level ones with the same `name` + `in`.
  */
@@ -200,8 +207,8 @@ const mergeParameters = (pathParameters: unknown, operationParameters: unknown) 
     return operationParameters;
   }
   const operationList = Array.isArray(operationParameters) ? operationParameters : [];
-  const overridden = new Set(operationList.map(p => `${p?.in}:${p?.name}`));
-  return [...pathParameters.filter(p => !overridden.has(`${p?.in}:${p?.name}`)), ...operationList];
+  const overridden = new Set(operationList.map(getParameterKey));
+  return [...pathParameters.filter(p => !overridden.has(getParameterKey(p))), ...operationList];
 };
 
 /**
@@ -400,7 +407,11 @@ const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
  */
 const convertQueryStringParameters = (parameters: QueryStringParameterObject[] = []) => {
   return parameters.flatMap(({ required, content }) => {
-    const mediaType = content?.['application/x-www-form-urlencoded'];
+    // media type keys may carry parameters (`; charset=utf-8`) and any casing
+    const mediaTypeKey = Object.keys(content ?? {}).find(
+      key => normalizeMediaType(key) === 'application/x-www-form-urlencoded',
+    );
+    const mediaType = mediaTypeKey ? content?.[mediaTypeKey] : undefined;
     const schema = mediaType?.schema as OpenAPIV3.SchemaObject | undefined;
     const { properties, required: requiredProperties } = collectObjectSchema(schema);
     if (!schema || Object.keys(properties).length === 0) {
@@ -474,6 +485,8 @@ const flattenQueryStringProperty = (
   return flattenParameter(name, value.join(ARRAY_DELIMITERS[style] ?? ','), disabled);
 };
 
+const normalizeMediaType = (mediaType: string) => mediaType.split(';')[0]!.trim().toLowerCase();
+
 const hasEventStreamResponse = (endpointSchema: OpenAPIV3.PathItemObject) => {
   const { responses } = endpointSchema as OpenAPIV3.OperationObject;
   if (!isPlainObject(responses)) {
@@ -484,7 +497,7 @@ const hasEventStreamResponse = (endpointSchema: OpenAPIV3.PathItemObject) => {
       /^2(\d\d|XX)$/i.test(statusCode) &&
       isPlainObject((response as OpenAPIV3.ResponseObject)?.content) &&
       Object.keys((response as OpenAPIV3.ResponseObject).content!).some(
-        mimeType => mimeType.split(';')[0]!.trim().toLowerCase() === 'text/event-stream',
+        mimeType => normalizeMediaType(mimeType) === 'text/event-stream',
       ),
   );
 };
@@ -499,12 +512,14 @@ const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => 
     ) as OpenAPIV3.ParameterObject[],
   );
 
-  // A 2xx `text/event-stream` response makes the request an Insomnia Event Stream request, which is detected by this Accept header
-  // Header names are case-insensitive, but the detection is case-sensitive, so a declared `accept` is renamed to `Accept`
+  // A 2xx `text/event-stream` response makes the request an Insomnia Event Stream request, which is detected by this Accept header.
+  // The spec says an `Accept` header parameter SHALL be ignored (`responses` content describes it), so a declared one is dropped
+  // instead of overriding `text/event-stream`. Elsewhere a declared `Accept` is kept, as specs commonly use it for vendor media types.
   if (hasEventStreamResponse(endpointSchema)) {
-    paramHeaders = paramHeaders.some(header => header.name.toLowerCase() === 'accept')
-      ? paramHeaders.map(header => (header.name.toLowerCase() === 'accept' ? { ...header, name: 'Accept' } : header))
-      : [{ name: 'Accept', disabled: false, value: 'text/event-stream' }, ...paramHeaders];
+    paramHeaders = [
+      { name: 'Accept', disabled: false, value: 'text/event-stream' },
+      ...paramHeaders.filter(header => header.name.toLowerCase() !== 'accept'),
+    ];
   }
 
   const noContentTypeHeader = !paramHeaders?.find(header => header.name === 'Content-Type');
