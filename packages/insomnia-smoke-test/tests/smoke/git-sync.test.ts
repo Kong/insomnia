@@ -54,7 +54,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
     await page.getByRole('heading', { name: 'Commit Changes' }).waitFor({ state: 'hidden' });
     await page.getByTestId('git-dropdown').click();
-    await page.getByText('History').click();
+    await page.getByText('History', { exact: true }).click();
     await expect.soft(page.getByLabel('1', { exact: true }).getByRole('rowheader')).toContainText('1');
   });
 
