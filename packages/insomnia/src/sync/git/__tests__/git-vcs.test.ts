@@ -1018,6 +1018,131 @@ collection:
     });
   });
 
+  // The path a real pull takes for text conflicts: isomorphic-git throws a MergeConflictError, which
+  // collectMergeConflicts turns into the conflicts for the merge dialog (buildManualResolutionFromTrees is only
+  // the fallback for merges isomorphic-git does not support).
+  describe('merge() with conflicts (collectMergeConflicts)', () => {
+    const insomniaFile = 'rocket-api.yaml';
+    const workflowFile = '.github/workflows/main-deployment.yaml';
+    const helmFile = 'helm/values.yaml';
+
+    // Commits `base` on main, then diverges: local edits on main, remote edits on origin/main
+    // (a null remote content is a deletion), and ends on main.
+    async function setupDivergedRepo(files: { path: string; base: string; local: string; remote: string | null }[]) {
+      const fsClient = MemClient.createClient();
+      for (const dir of ['.github', '.github/workflows', 'helm']) {
+        await fsClient.promises.mkdir(dir);
+      }
+
+      await GitVCS.init({
+        uri: '',
+        repoId: '',
+        directory: GIT_CLONE_DIR,
+        fs: fsClient,
+        legacyDiff: true,
+      });
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
+
+      const writeAndAdd = async (filepath: string, content: string) => {
+        await fsClient.promises.writeFile(filepath, content);
+        await git.add({ fs: fsClient, dir: GIT_CLONE_DIR, filepath });
+      };
+
+      for (const file of files) {
+        await writeAndAdd(file.path, file.base);
+      }
+      await GitVCS.commit('Initial commit');
+      await git.branch({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main', checkout: false });
+
+      for (const file of files) {
+        await writeAndAdd(file.path, file.local);
+      }
+      await GitVCS.commit('Local changes');
+
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'origin/main' });
+      for (const file of files) {
+        if (file.remote === null) {
+          await git.remove({ fs: fsClient, dir: GIT_CLONE_DIR, filepath: file.path });
+          await fsClient.promises.unlink(file.path);
+        } else {
+          await writeAndAdd(file.path, file.remote);
+        }
+      }
+      await git.commit({
+        fs: fsClient,
+        dir: GIT_CLONE_DIR,
+        message: 'Remote changes',
+        author: { name: 'Remote User', email: 'remote@example.com' },
+      });
+      await git.checkout({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'main' });
+
+      return fsClient;
+    }
+
+    const insomniaContent = (name: string) => `type: collection.insomnia.rest/5.0\nname: ${name}\n`;
+
+    it('should only return Insomnia files as conflicts and report the rest as auto-resolved', async () => {
+      await setupDivergedRepo([
+        {
+          path: insomniaFile,
+          base: insomniaContent('base'),
+          local: insomniaContent('local'),
+          remote: insomniaContent('remote'),
+        },
+        {
+          path: workflowFile,
+          base: 'name: Main\nruns-on: base\n',
+          local: 'name: Main\nruns-on: self-hosted\n',
+          remote: 'name: Main\nruns-on: ubuntu-22.04\n',
+        },
+        { path: helmFile, base: 'replicas: 1\n', local: 'replicas: 5\n', remote: null },
+      ]);
+
+      try {
+        await GitVCS.merge({ theirsBranch: 'origin/main', allowUncommittedChangesBeforeMerge: true });
+        expect.unreachable('Should have thrown MergeConflictError');
+      } catch (err) {
+        expect(err).toBeInstanceOf(MergeConflictError);
+
+        const mergeErr = err as MergeConflictError;
+        expect(mergeErr.data.conflicts.map(c => c.key)).toEqual([insomniaFile]);
+        expect(mergeErr.data.autoResolvedConflicts).toHaveLength(2);
+        expect(mergeErr.data.autoResolvedConflicts).toEqual(
+          expect.arrayContaining([
+            { filepath: workflowFile, action: 'use-theirs' },
+            { filepath: helmFile, action: 'delete' },
+          ]),
+        );
+      }
+    });
+
+    it('should resolve and report non-Insomnia conflicts without opening the merge dialog', async () => {
+      const fsClient = await setupDivergedRepo([
+        {
+          path: workflowFile,
+          base: 'name: Main\nruns-on: base\n',
+          local: 'name: Main\nruns-on: self-hosted\n',
+          remote: 'name: Main\nruns-on: ubuntu-22.04\n',
+        },
+        { path: helmFile, base: 'replicas: 1\n', local: 'replicas: 5\n', remote: null },
+      ]);
+
+      const result = await GitVCS.merge({ theirsBranch: 'origin/main', allowUncommittedChangesBeforeMerge: true });
+
+      expect(result).toMatchObject({ autoResolved: true });
+      expect((result as { autoResolvedConflicts: unknown[] }).autoResolvedConflicts).toEqual(
+        expect.arrayContaining([
+          { filepath: workflowFile, action: 'use-theirs' },
+          { filepath: helmFile, action: 'delete' },
+        ]),
+      );
+      // The remote version won: replaced workflow, deleted Helm file, none left in the merge commit
+      expect((await fsClient.promises.readFile(workflowFile)).toString()).toBe('name: Main\nruns-on: ubuntu-22.04\n');
+      await expect(fsClient.promises.readFile(helmFile)).rejects.toThrow();
+      expect(await git.listFiles({ fs: fsClient, dir: GIT_CLONE_DIR, ref: 'HEAD' })).not.toContain(helmFile);
+    });
+  });
+
   describe('getBranchTrackingRemote', () => {
     it('returns null when no tracking remote is set', async () => {
       const fsClient = MemClient.createClient();
