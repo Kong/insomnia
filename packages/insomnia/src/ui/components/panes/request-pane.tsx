@@ -380,7 +380,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 )}
               </Tab>
             </TabList>
-            {activeProject && models.project.isGitProject(activeProject) && <ScriptsAIPluginTip source="Request Scripts" />}
+            {activeProject && models.project.isConnectedGitProject(activeProject) && <ScriptsAIPluginTip source="Request Scripts" />}
             <TabPanel className="w-full flex-1" id="pre-request">
               <ErrorBoundary
                 // Stable per-script key: a volatile key remounts the editor on every

@@ -11,14 +11,15 @@ const AI_PLUGINS_URL = `https://github.com/${AI_PLUGINS_REPO}/tree/develop/plugi
 const MARKETPLACE_NAME = 'insomnia-ai-plugins';
 const PLUGIN_NAME = 'insomnia-scripts';
 
+// Commands are newline-separated instead of chained with `&&`, which Windows PowerShell 5.1 can't parse.
 const AGENTS = {
   claude: {
     label: 'Claude Code',
-    command: `claude plugin marketplace add ${AI_PLUGINS_REPO} && claude plugin install ${PLUGIN_NAME}@${MARKETPLACE_NAME}`,
+    command: `claude plugin marketplace add ${AI_PLUGINS_REPO}\nclaude plugin install ${PLUGIN_NAME}@${MARKETPLACE_NAME}`,
   },
   codex: {
     label: 'Codex',
-    command: `codex plugin marketplace add ${AI_PLUGINS_REPO} && codex plugin add ${PLUGIN_NAME}@${MARKETPLACE_NAME}`,
+    command: `codex plugin marketplace add ${AI_PLUGINS_REPO}\ncodex plugin add ${PLUGIN_NAME}@${MARKETPLACE_NAME}`,
   },
 } as const;
 
@@ -79,7 +80,7 @@ export const ScriptsAIPluginTip: FC<{ source: TipSource }> = ({ source }) => {
           ))}
         </div>
         <code
-          className="min-w-0 flex-1 rounded-xs border border-solid border-(--hl-md) bg-(--color-bg) px-2 py-1 font-mono text-xs break-all select-text"
+          className="min-w-0 flex-1 rounded-xs border border-solid border-(--hl-md) bg-(--color-bg) px-2 py-1 font-mono text-xs break-all whitespace-pre-wrap select-text"
           data-testid="scripts-ai-plugin-command"
         >
           {AGENTS[agent].command}
