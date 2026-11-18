@@ -5,8 +5,6 @@ import { Project } from '@package/models/project';
 import { expect } from '@playwright/test';
 
 test('Verify a conflict where the remote deleted a non-Insomnia YAML file is auto-resolved by deleting it locally', async ({ user }) => {
-  test.fail(true, 'INS-4331');
-
   const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
 
   await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
