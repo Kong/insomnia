@@ -6,11 +6,9 @@ import { readRawDocs } from "@package/misc/db";
 import { waitForExportedFile } from "@package/misc/export-file";
 import { decryptStoredValue, keyBytesFromJwk } from "@package/misc/field-encryption-fixtures";
 import { test } from "@package/misc/fixtures";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
 
-import { createBearerRequest } from "./helpers";
-
-// The key the buttons hand out must be the one that opens the database: decrypt the token a request stored on disk.
 const storedToken = (dataPath: string, requestName: string): string =>
   readRawDocs(dataPath, "Request").find((doc) => doc.name === requestName).authentication.token;
 
@@ -25,7 +23,6 @@ test("Copy Key puts the key on the clipboard as one line of base64 after a confi
   await fieldEncryptionFlow.openKeyPanel();
   expect(await fieldEncryptionFlow.areKeyButtonsEnabled()).toBe(true);
 
-  // Cancel hands out nothing
   await fieldEncryptionFlow.writeClipboard("clipboard before");
   await fieldEncryptionFlow.copyKey("cancel");
   expect(await fieldEncryptionFlow.readClipboard()).toBe("clipboard before");
@@ -36,7 +33,6 @@ test("Copy Key puts the key on the clipboard as one line of base64 after a confi
   expect(warning).toContain("Never use it on another machine");
   expect(buttonText).toContain("Copied");
 
-  // One token, pasteable into a shell as it is: no quotes, no braces, no line breaks
   const clipboard = await fieldEncryptionFlow.readClipboard();
   expect(clipboard).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
   const keyBytes = keyBytesFromJwk(Buffer.from(clipboard, "base64").toString("utf8"));
@@ -57,7 +53,6 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
   try {
     await fieldEncryptionFlow.openKeyPanel();
 
-    // Cancelling the confirmation, or the save dialog, writes nothing and reports no error
     await fieldEncryptionFlow.exportKey("cancel", file);
     expect(fs.existsSync(file)).toBe(false);
     await fieldEncryptionFlow.exportKey("continue");
@@ -71,8 +66,6 @@ test("Export Key saves insomnia-encryption-key.json with the key as a JWK, and c
     const jwk = JSON.parse(await waitForExportedFile(file));
     expect(jwk).toMatchObject({ kty: "oct" });
     expect(typeof jwk.k).toBe("string");
-    // The file holds the key that decrypts the whole database: only its owner may read or write it (POSIX only, Windows has no mode bits)
-    // Windows maps to a 0 mask so both sides become 0 there, without a conditional in the test
     const modeMask: Record<string, number> = { win32: 0, darwin: 0o777, linux: 0o777 };
     const mode = fs.statSync(file).mode & 0o777 & modeMask[process.platform];
     expect(mode.toString(8), "exported key file permissions").toBe((0o600 & modeMask[process.platform]).toString(8));

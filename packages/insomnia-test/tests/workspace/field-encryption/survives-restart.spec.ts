@@ -1,9 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { test } from "@package/misc/fixtures";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBearerRequest } from "./helpers";
 
 test("Encrypted Bearer token and cookie survive two restarts without a decryption dialog", async ({
   user,
@@ -23,7 +22,6 @@ test("Encrypted Bearer token and cookie survive two restarts without a decryptio
       expect.arrayContaining([expect.objectContaining({ key: "session", value: cookieValue })]),
     );
 
-    // Still ciphertext on disk
     const jarCookies = readRawDocs(dataPath, "CookieJar").flatMap((jar) => jar.cookies ?? []);
     const stored = jarCookies.find((cookie: any) => cookie.key === "session");
     expect(stored?.value, `cookie on disk ${when}`).toMatch(ENCRYPTED_VALUE);

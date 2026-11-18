@@ -8,9 +8,8 @@ import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { waitForExportedFile } from "@package/misc/export-file";
 import { test } from "@package/misc/fixtures";
 import { Project } from "@package/models/project";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBearerRequest } from "./helpers";
 
 test("Exported collection holds the plaintext token and cookie, and imports into a new project", async ({
   user,
@@ -29,7 +28,6 @@ test("Exported collection holds the plaintext token and cookie, and imports into
   expect(exported).toContain(cookieValue);
   expect(exported).not.toContain("enc:insomnia:v1:");
 
-  // Import the file into a project of its own: the copy has a working Bearer token and the same cookie
   const target = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));
   await importFlow.importFile(target, file);
 
@@ -48,7 +46,6 @@ test("Exported collection holds the plaintext token and cookie, and imports into
   );
   expect(jars, "the original and the imported cookie jar").toHaveLength(2);
 
-  // Importing did not leave anything in plaintext on disk
   await expect
     .poll(() => readRawDocs(dataPath, "Request").filter((doc) => doc.name === request.name).length)
     .toBe(2);

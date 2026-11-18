@@ -10,11 +10,9 @@ import {
   snapshotDataDir,
 } from "@package/misc/field-encryption-fixtures";
 import { test } from "@package/misc/fixtures";
+import { createBasicAuthCollection } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
 
-import { createBasicAuthCollection } from "./helpers";
-
-/** Copy Key and Export Key, the two forms the user can hand to inso. */
 async function takeKeys(user: Parameters<typeof createBasicAuthCollection>[0]) {
   const { fieldEncryptionFlow } = user.flowManager;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-inso-key-"));
@@ -47,7 +45,6 @@ test("inso decrypts the app's data with the key: option, environment variable, b
     printOptions?: boolean;
     ci?: boolean;
   }) => {
-    // inso encrypts what it loads, so every run gets its own copy of the data
     const workingDir = copyDataDir(dataPath);
     copies.push(workingDir);
     return insoFlow.runCollection({ workingDir, workspaceId, environmentId: environment._id, ...options });
@@ -62,7 +59,6 @@ test("inso decrypts the app's data with the key: option, environment variable, b
     ];
     for (const [label, options] of attempts) {
       const result = await run(options);
-      // The request authenticates with the real password: that is the 200 the mock server only gives for it
       expect(result.statusCodes, `${label}: ${result.stdout}${result.stderr}`).toEqual([200]);
       expect(result.exitCode, label).toBe(0);
       expect(result.stdout + result.stderr, `${label}: no decryption problem is reported`).not.toMatch(
@@ -70,7 +66,6 @@ test("inso decrypts the app's data with the key: option, environment variable, b
       );
     }
 
-    // The key is masked when inso prints its options, whichever way it was given
     for (const options of [{ encryptionKeyOption: base64 }, { encryptionKeyEnv: base64 }]) {
       const printed = await run({ ...options, printOptions: true, ci: false });
       expect(printed.stdout + printed.stderr).toContain("encryptionKey: '***'");
@@ -91,7 +86,6 @@ test("inso reports a missing, wrong or malformed key clearly, and changes no dat
   const copies = [original];
   const ciphertext = readRawDocs(dataPath, "Request").find((doc) => doc.name === request.name).authentication.password;
 
-  /** Runs inso on a fresh copy and also returns whether it left the copy's data as it found it. */
   const run = async (options: { encryptionKeyOption?: string; encryptionKeyEnv?: string }) => {
     const workingDir = copyDataDir(original);
     copies.push(workingDir);
@@ -101,7 +95,6 @@ test("inso reports a missing, wrong or malformed key clearly, and changes no dat
   };
 
   try {
-    // No key: a warning, the run goes on, and the request that needs the secret fails with a 401
     const missing = await run({});
     expect(missing.output).toMatch(/encrypted value\(s\).*no encryption key/s);
     expect(missing.output).toContain("INSOMNIA_ENCRYPTION_KEY");
@@ -109,7 +102,6 @@ test("inso reports a missing, wrong or malformed key clearly, and changes no dat
     expect(missing.statusCodes).toEqual([401]);
     expect(missing.dataUnchanged, "no key: data untouched").toBe(true);
 
-    // Another installation's key: an error naming the affected fields, never their values, and a non-zero exit code
     const wrongKey = randomJwkKey();
     const wrong = await run({ encryptionKeyOption: wrongKey });
     expect(wrong.exitCode).not.toBe(0);
@@ -120,7 +112,6 @@ test("inso reports a missing, wrong or malformed key clearly, and changes no dat
     expect(wrong.statusCodes, "nothing is sent with undecryptable values").toEqual([]);
     expect(wrong.dataUnchanged, "wrong key: data untouched").toBe(true);
 
-    // A key in no known format: an error that does not repeat the key, and a non-zero exit code
     const garbage = "this-is-not-a-key-ABC123xyz";
     for (const options of [{ encryptionKeyOption: garbage }, { encryptionKeyEnv: garbage }]) {
       const malformed = await run(options);

@@ -7,13 +7,9 @@ import { HttpMethod } from "@package/enums/http-method";
 import { CERT_DIR } from "@package/misc/certs";
 import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { test } from "@package/misc/fixtures";
-import { HttpRequest } from "@package/models/http-request";
-import { Settings } from "@package/models/settings";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
 
-import { createBearerRequest } from "./helpers";
-
-// The mock server's mTLS endpoint (misc/server/mtls.ts): 401 without a client certificate, 200 with one.
 const MTLS_HOST = "localhost:4011";
 const MTLS_URL = `https://${MTLS_HOST}/protected/pets/1`;
 
@@ -23,7 +19,6 @@ test("Client certificate passphrase is encrypted on disk and mTLS still works, a
 }) => {
   const { certificatesFlow, httpRequestFlow, preferencesFlow, appFlow } = user.flowManager;
   const { collection } = await createBearerRequest(user);
-  // A client key that needs a passphrase: the mock server's client key, protected
   const passphrase = `client-key-passphrase-${Date.now()}`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-mtls-"));
   const certFile = path.join(dir, "client-cert.pem");
@@ -41,16 +36,13 @@ test("Client certificate passphrase is encrypted on disk and mTLS still works, a
   expect(fs.readFileSync(keyFile, "utf8")).toContain("ENCRYPTED PRIVATE KEY");
 
   try {
-    // The mock server's certificate is signed by a CA of its own, which the app does not trust; and the app only
-    // reads certificate files from folders it was told it may access
-    await preferencesFlow.set(new Settings({ validateSSL: false, dataFolders: [dir] }));
+    await preferencesFlow.set({ validateSSL: false, dataFolders: [dir] });
 
     const request = await httpRequestFlow.create(
       collection,
-      new HttpRequest({ name: "mtls", method: HttpMethod.Get, url: MTLS_URL }),
+      { name: "mtls", method: HttpMethod.Get, url: MTLS_URL },
     );
 
-    // Control: without the certificate the server turns the request down
     const rejected = await httpRequestFlow.send(request);
     expect(rejected.statusBar.code).toBe(401);
 
@@ -61,7 +53,6 @@ test("Client certificate passphrase is encrypted on disk and mTLS still works, a
       passphrase,
     });
 
-    // The passphrase and the files' paths are ciphertext in insomnia.ClientCertificate.db, readable nowhere else
     await expect
       .poll(() => readRawDocs(dataPath, "ClientCertificate").find((c) => c.host === MTLS_HOST))
       .toBeTruthy();
@@ -74,12 +65,10 @@ test("Client certificate passphrase is encrypted on disk and mTLS still works, a
     expect(text).not.toContain(passphrase);
     expect(text).not.toContain(keyFile);
 
-    // The handshake works: the passphrase was decrypted to open the key
     const accepted = await httpRequestFlow.send(request);
     expect(accepted.statusBar.code).toBe(200);
     expect(accepted.preview).toMatchObject({ id: "1" });
 
-    // ... also after a restart
     await appFlow.restart();
     const [doc] = await user.pageManager.findDocs("insomnia.ClientCertificate.db", { host: MTLS_HOST });
     expect(doc.passphrase).toBe(passphrase);

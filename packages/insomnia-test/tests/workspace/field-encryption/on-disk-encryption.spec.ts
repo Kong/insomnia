@@ -1,8 +1,7 @@
 import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { test } from "@package/misc/fixtures";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBearerRequest } from "./helpers";
 
 test("Bearer token is encrypted in insomnia.Request.db but shown as plaintext in the app", async ({
   user,

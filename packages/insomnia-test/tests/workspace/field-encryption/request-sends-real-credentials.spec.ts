@@ -1,7 +1,6 @@
 import { test } from "@package/misc/fixtures";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBearerRequest } from "./helpers";
 
 test("Request with Bearer auth sends the original token, not the stored ciphertext", async ({
   user,

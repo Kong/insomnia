@@ -7,24 +7,14 @@ import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
-/**
- * One document to seed through the app's database layer, plus what the field
- * encryption must (and must not) do to it. Paths are the dotted form of the
- * design doc's field table; `cookies[].value` addresses every array element.
- */
 export interface Scenario {
-  /** The model type, e.g. `Request`. */
   type: string;
   doc: Record<string, any>;
-  /** Paths that must be `enc:insomnia:v1:` on disk and the original value in the app. */
   encrypted: string[];
-  /** Paths that must stay readable on disk (identifiers, short-lived values, names). */
   plain?: string[];
-  /** Update the existing document `doc._id` instead of creating one. */
   update?: boolean;
 }
 
-/** Every value at `path`; `[]` fans out over array elements. */
 export function valuesAt(doc: any, path: string): unknown[] {
   let current: unknown[] = [doc];
   for (const segment of path.split(".")) {
@@ -40,17 +30,10 @@ export function valuesAt(doc: any, path: string): unknown[] {
 const nonEmpty = (values: unknown[]): string[] =>
   values.filter((v): v is string => typeof v === "string" && v !== "");
 
-/** The plaintext of every encrypted field the scenarios seed. */
 export function secretsOf(scenarios: Scenario[]): string[] {
   return scenarios.flatMap((s) => s.encrypted.flatMap((path) => nonEmpty(valuesAt(s.doc, path))));
 }
 
-/**
- * Creates `scenarios`, then proves — before and after two app restarts — that
- * the sensitive paths are ciphertext on disk, nothing secret is left in any
- * `.db` file, the non-sensitive paths are untouched, and the app still reads
- * every original value.
- */
 export async function expectScenariosEncrypted(
   user: UserSession,
   dataPath: string,
@@ -112,7 +95,6 @@ export async function expectScenariosEncrypted(
   }
 }
 
-/** A distinctive, greppable secret: unique per document and field. */
 const secret = (scope: string, field: string): string => `secret-${scope}-${field}-${faker.string.alphanumeric(10)}`;
 
 async function createWorkspace(user: UserSession): Promise<string> {
@@ -130,9 +112,6 @@ async function seed(user: UserSession, scenarios: Scenario[]): Promise<void> {
   }
 }
 
-// The union of every authentication type's fields (design doc: "Authentication field list").
-// Identifier-like and short-lived values (clientId, tokenKey, Hawk id, ASAP keyId, OAuth2 code/state,
-// OAuth1 verifier) must stay plaintext. API Key's `key` is encrypted too: names are merged across the union.
 function authenticationScenarios(parentId: string): Scenario[] {
   const request = (id: string, authentication: Record<string, any>, encrypted: string[], plain: string[]): Scenario => ({
     type: "Request",
@@ -332,7 +311,6 @@ test("ClientCertificate: passphrase, cert, key and pfx are encrypted", async ({ 
 test("GitCredentials: legacy top-level and provider credentials are encrypted", async ({ user, dataPath }) => {
   const scenarios: Scenario[] = [
     {
-      // Legacy shape: token / refreshToken live at the top level
       type: "GitCredentials",
       doc: {
         _id: "git_creds_e2e_legacy",
@@ -362,7 +340,6 @@ test("GitCredentials: legacy top-level and provider credentials are encrypted", 
       plain: ["name", "provider", "credentials.scopes", "author.email"],
     },
     {
-      // Custom (username + access token) credential keeps its secret in `credentials.password`
       type: "GitCredentials",
       doc: {
         _id: "git_creds_e2e_custom",
@@ -471,7 +448,6 @@ test("OAuth2Token: access, refresh and identity tokens are encrypted", async ({ 
 
 test("CookieJar: every cookie's value is encrypted, its key and domain stay plaintext", async ({ user, dataPath }) => {
   const workspaceId = await createWorkspace(user);
-  // A workspace owns exactly one Cookie Jar (auto-created), so fill the existing one instead of adding a second
   const [jar] = await user.pageManager.findDocs("insomnia.CookieJar.db", { parentId: workspaceId });
   const scenarios: Scenario[] = [
     {

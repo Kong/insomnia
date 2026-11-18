@@ -5,7 +5,7 @@ import { HTTP_SERVER } from "@package/misc/constants";
 import { ENCRYPTED_VALUE, readRawDocs } from "@package/misc/db";
 import type { UserSession } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
-import { HttpRequest } from "@package/models/http-request";
+import type { HttpRequest } from "@package/models/http-request";
 import { Project } from "@package/models/project";
 import { expect } from "@playwright/test";
 
@@ -26,12 +26,12 @@ export async function createBearerRequest(
   const token = `${BEARER_TOKEN}${faker.string.alphanumeric(16)}`;
   const request = await httpRequestFlow.create(
     collection,
-    new HttpRequest({
+    {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Post,
       url: `${HTTP_SERVER}/post`,
       authentication: { type: "bearer", token },
-    }),
+    },
   );
   return { collection, request, token };
 }
@@ -55,12 +55,12 @@ export async function createBasicAuthCollection(
   );
   const request = await httpRequestFlow.create(
     collection,
-    new HttpRequest({
+    {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Get,
       url: `${HTTP_SERVER}/auth/basic`,
       authentication: { type: "basic", username: "user", password: "pass" },
-    }),
+    },
   );
   const [workspace] = await user.pageManager.findDocs("insomnia.Workspace.db", { name: collection.name });
   await expect

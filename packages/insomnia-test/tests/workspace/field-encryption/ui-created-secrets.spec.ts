@@ -4,9 +4,8 @@ import { gunzipSync } from "node:zlib";
 import { CERT_DIR } from "@package/misc/certs";
 import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { test } from "@package/misc/fixtures";
+import { createBearerRequest } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBearerRequest } from "./helpers";
 
 test("RequestVersion: the history snapshot of a sent request is encrypted but still contains the request", async ({
   user,
@@ -23,7 +22,6 @@ test("RequestVersion: the history snapshot of a sent request is encrypted but st
   }
   expect(readRawDbText(dataPath)).not.toContain(token);
 
-  // The snapshot is gzip + base64 of the whole request: the app still restores the token from it
   const versions = await user.pageManager.findDocs("insomnia.RequestVersion.db");
   const restored = versions.map((v) => gunzipSync(Buffer.from(v.compressedRequest, "base64")).toString("utf8"));
   expect(restored.some((json) => json.includes(token))).toBe(true);
@@ -55,13 +53,11 @@ test("ClientCertificate added in Manage Certificates: passphrase, cert and key a
     expect(stored[field], `${field} is encrypted`).toMatch(ENCRYPTED_VALUE);
   }
 
-  // The UI stores the picked files' paths in `cert` / `key`; those are encrypted too, so no .db file names them
   const text = readRawDbText(dataPath);
   expect(text).not.toContain(passphrase);
   expect(text).not.toContain(certFile);
   expect(text).not.toContain(keyFile);
 
-  // The app still holds the plaintext, also after a restart
   await user.flowManager.appFlow.restart();
   const [doc] = await user.pageManager.findDocs("insomnia.ClientCertificate.db", { host });
   expect(doc.passphrase).toBe(passphrase);

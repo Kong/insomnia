@@ -8,9 +8,8 @@ import {
   snapshotDataDir,
 } from "@package/misc/field-encryption-fixtures";
 import { test } from "@package/misc/fixtures";
+import { createBasicAuthCollection } from "@package/tests/workspace/field-encryption/helpers";
 import { expect } from "@playwright/test";
-
-import { createBasicAuthCollection } from "./helpers";
 
 test("inso with a key that is not the app's fails without encrypting the plaintext values left in the data", async ({
   user,
