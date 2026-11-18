@@ -1,0 +1,53 @@
+openapi: 3.2.0
+info: { title: Petstore, version: 1.0.0 }
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      summary: List pets
+      responses:
+        "200": { description: OK }
+    post:
+      operationId: createPet
+      summary: Create a pet
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "201": { description: Created }
+    query:
+      operationId: searchPets
+      summary: Search pets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        "200": { description: OK }
+    additionalOperations:
+      PURGE:
+        operationId: purgePets
+        summary: Purge pet cache
+        responses:
+          "204": { description: No Content }
+  /pets/{id}:
+    get:
+      operationId: getPet
+      summary: Get a pet
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [available, sold] }

@@ -1,10 +1,16 @@
 import type { FlowContext } from "@package/misc/flow-context";
 import type { PageManager } from "@package/pages/page-manager";
 
+import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
+import { EventStreamRequestFlow } from "./event-stream-request.flow";
+import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
 import { HttpRequestFlow } from "./http-request.flow";
+import { ImportFlow } from "./import.flow";
+import { InsoFlow } from "./inso.flow";
 import { PreferencesFlow } from "./preferences.flow";
+import { SpecFlow } from "./spec.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
 
@@ -19,10 +25,16 @@ type FlowDeps = RequestFlows & {
 };
 
 const flowRegistry = {
+  cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
+  eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
+  exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
+  importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
+  insoFlow: (m: FlowDeps): InsoFlow => new InsoFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
+  specFlow: (m: FlowDeps): SpecFlow => new SpecFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),
 } satisfies Record<string, (m: FlowDeps) => unknown>;

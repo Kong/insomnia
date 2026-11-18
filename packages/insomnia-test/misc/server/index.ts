@@ -46,6 +46,24 @@ const rawParser = bodyParser.raw({
   type: '*/*',
 });
 
+// Petstore used by the "Import OpenAPI Spec by Url" spec: serves the swagger document and a pet
+// whose basePath (/http-echo/v2) matches misc/fixtures/petstore-swagger.json.
+const petstoreSwagger = readFileSync(nodePath.join(import.meta.dirname, '../fixtures/petstore-swagger.json'), 'utf8');
+app.get('/http-echo/v2/swagger.json', (_req, res) => {
+  res.status(200).type('application/json').send(petstoreSwagger);
+});
+app.get(/^\/http-echo\/v2\/pet\/\d+$/, (req, res) => {
+  res.status(200).json({
+    id: Number(req.path.split('/').pop()),
+    category: { id: 1, name: 'dogs' },
+    name: 'doggie',
+    photoUrls: ['https://example.com/doggie.jpg'],
+    tags: [{ id: 1, name: 'friendly' }],
+    status: 'available',
+    cookies: req.cookies,
+  });
+});
+
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });

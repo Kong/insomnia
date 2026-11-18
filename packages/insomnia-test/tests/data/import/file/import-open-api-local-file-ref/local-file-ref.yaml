@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info: { title: Local file ref, version: 1.0.0 }
+servers:
+  - url: https://api.example.com
+paths:
+  /pets:
+    get:
+      summary: List pets
+      responses:
+        "200": { description: OK }
+    post:
+      summary: Create a pet
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Pet" }
+      responses:
+        "201": { description: Created }
+  /owners:
+    post:
+      summary: Create an owner
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "./owner-from-file.yaml" }
+      responses:
+        "201": { description: Created }
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string }

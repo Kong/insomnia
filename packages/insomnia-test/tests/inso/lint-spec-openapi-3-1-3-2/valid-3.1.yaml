@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: Valid 3.1
+  version: 1.0.0
+  description: Valid OpenAPI 3.1 fixture
+  contact:
+    name: API Support
+servers:
+  - url: https://api.example.com
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      summary: List pets
+      description: Lists all pets
+      tags:
+        - pets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
