@@ -29,9 +29,25 @@ interface Req {
   method: string;
   body: { mimeType?: string | null };
   authentication: {} | RequestAuthentication;
+  settingSendCookies?: boolean;
 }
+
+export const getCookieHeaderValue = (headers: any[], authHeader?: { name: string; value: string }) => {
+  return [...headers, ...(authHeader ? [authHeader] : [])]
+    .filter(header => String(header?.name ?? '').toLowerCase() === 'cookie')
+    .map(header => String(header?.value ?? '').trim())
+    .filter(Boolean)
+    .join('; ');
+};
+
 export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath, authHeader }: Input) => {
-  const headers = clone(req.headers);
+  // libcurl builds the Cookie header from its cookie engine and appends any cookie string it
+  // is given to that same header. A user-authored Cookie header kept here would be sent as a
+  // second Cookie header, and servers only read the first one.
+  const sendCookies = req.settingSendCookies === true;
+  const isCookieHeader = (header: any) => String(header?.name ?? '').toLowerCase() === 'cookie';
+  const headers = clone(req.headers).filter((header: any) => !sendCookies || !isCookieHeader(header));
+  const authHeaderToSend = sendCookies && isCookieHeader(authHeader) ? undefined : authHeader;
 
   // Disable Expect and Transfer-Encoding headers when we have POST body/file
   const hasRequestBodyOrFilePath = requestBody !== undefined || requestBodyPath;
@@ -49,8 +65,8 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     const isAWSIAM = authentication.type === 'iam';
     const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest =
       !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
-    if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
-      headers.push(authHeader);
+    if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeaderToSend) {
+      headers.push(authHeaderToSend);
     }
     if (isAWSIAM) {
       const hostHeader = getHostHeader(headers)?.value;

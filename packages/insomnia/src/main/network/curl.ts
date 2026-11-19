@@ -16,7 +16,7 @@ import { insecureReadFile } from '~/main/secure-read-file';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
-import { parseHeaderStrings } from '../../network/parse-header-strings';
+import { getCookieHeaderValue, parseHeaderStrings } from '../../network/parse-header-strings';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import { getAuthHeader } from './get-auth-header';
@@ -201,6 +201,7 @@ const openCurlConnection = async (
       settings,
       caCert: caCertificate,
       certificates: filteredClientCertificates,
+      cookieHeaderValue: req.settingSendCookies ? getCookieHeaderValue(req.headers, authHeader) : undefined,
     });
     // set method
     curl.setOpt(Curl.option.CUSTOMREQUEST, req.method);

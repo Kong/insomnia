@@ -6,6 +6,7 @@ import path from 'node:path';
 import { Curl } from '@getinsomnia/node-libcurl';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { getCookieHeaderValue, parseHeaderStrings } from '../../network/parse-header-strings';
 import { createConfiguredCurlInstance, parseRequestBodyPath } from './libcurl-promise';
 
 const baseReq = (overrides: Record<string, unknown> = {}) => ({
@@ -39,7 +40,7 @@ const baseSettings = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('createConfiguredCurlInstance', () => {
-  it('picks the manual proxy matching req.url\'s protocol', async () => {
+  it("picks the manual proxy matching req.url's protocol", async () => {
     const { curl } = await createConfiguredCurlInstance({
       req: baseReq(),
       settings: baseSettings(),
@@ -50,7 +51,7 @@ describe('createConfiguredCurlInstance', () => {
     expect(curl._options[Curl.option.PROXY]).toBe('http://https-proxy.local:2222');
   });
 
-  it('bypasses the manual proxy when req.url\'s host matches noProxy', async () => {
+  it("bypasses the manual proxy when req.url's host matches noProxy", async () => {
     const { curl } = await createConfiguredCurlInstance({
       req: baseReq(),
       settings: baseSettings({ noProxy: 'api.example.com' }),
@@ -59,6 +60,54 @@ describe('createConfiguredCurlInstance', () => {
     });
 
     expect(curl._options[Curl.option.PROXY]).toBe('');
+  });
+});
+
+describe('managed cookie headers', () => {
+  const jarCookie = {
+    domain: 'api.example.com',
+    hostOnly: true,
+    path: '/',
+    secure: false,
+    expires: null,
+    key: 'stored',
+    value: 'from-jar',
+  };
+
+  it('hands a user Cookie header to the cookie engine instead of sending a second Cookie header', async () => {
+    const headers = [{ name: 'Cookie', value: 'session_id=abc123' }];
+    const req = baseReq({ headers, settingSendCookies: true, cookieJar: { cookies: [jarCookie] } });
+
+    const { curl } = await createConfiguredCurlInstance({
+      req,
+      settings: baseSettings(),
+      caCert: null,
+      certificates: [],
+      cookieHeaderValue: getCookieHeaderValue(headers),
+    });
+
+    // libcurl appends COOKIE to the header it builds from the engine, so both values travel in one header.
+    expect(curl._options[Curl.option.COOKIE]).toBe('session_id=abc123');
+    expect(curl._options[Curl.option.COOKIEFILE]).toBe('');
+    expect(curl._options[Curl.option.COOKIELIST]).toHaveLength(1);
+    expect(curl._options[Curl.option.COOKIELIST][0]).toContain('\tstored\tfrom-jar');
+    expect(parseHeaderStrings({ req, finalUrl: req.url })).not.toContain('Cookie: session_id=abc123');
+  });
+
+  it('leaves the Cookie header alone when cookie sending is disabled', async () => {
+    const headers = [{ name: 'Cookie', value: 'session_id=abc123' }];
+    const req = baseReq({ headers, settingSendCookies: false });
+
+    const { curl } = await createConfiguredCurlInstance({
+      req,
+      settings: baseSettings(),
+      caCert: null,
+      certificates: [],
+    });
+
+    expect(curl._options[Curl.option.COOKIE]).toBeUndefined();
+    expect(curl._options[Curl.option.COOKIEFILE]).toBeUndefined();
+    expect(parseHeaderStrings({ req, finalUrl: req.url })).toContain('Cookie: session_id=abc123');
   });
 });
 
