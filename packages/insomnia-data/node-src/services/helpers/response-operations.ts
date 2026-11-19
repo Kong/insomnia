@@ -166,15 +166,21 @@ export async function getResponseTimeline(response: Response, showBody?: boolean
     const timelineString = rawBuffer.toString();
     const timeline = deserializeNDJSON(timelineString);
 
-    const body: ResponseTimelineEntry[] = showBody
-      ? [
+    let body: ResponseTimelineEntry[] = [];
+    if (showBody && bodyPath) {
+      try {
+        body = [
           {
             name: 'DataOut',
             timestamp: Date.now(),
             value: (await fs.promises.readFile(bodyPath)).toString(),
           },
-        ]
-      : [];
+        ];
+      } catch (err) {
+        // A missing body must not discard the timeline that was already read.
+        console.warn('Failed to read response body', err.message);
+      }
+    }
     const output = [...timeline, ...body, ...errorEntry];
     return output;
   } catch (err) {
