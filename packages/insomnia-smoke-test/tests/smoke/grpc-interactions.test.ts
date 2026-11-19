@@ -1,10 +1,52 @@
 import { expect } from '@playwright/test';
+import YAML from 'yaml';
 
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('gRPC interactions', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
+
+  test('variable tooltips follow environments with the same modification time', async ({ page, app, insomnia }) => {
+    const collection = YAML.parse(await loadFixture('grpc.yaml'));
+    collection.collection[0].children[0].url = '{{ _.grpcUrl }}';
+    collection.environments.subEnvironments = [
+      {
+        name: 'Dev',
+        meta: { id: 'env_grpc_dev', created: 1_700_000_000_000, modified: 1_700_000_000_000 },
+        data: { grpcUrl: 'localhost:50051' },
+      },
+      {
+        name: 'Test',
+        meta: { id: 'env_grpc_test', created: 1_700_000_000_000, modified: 1_700_000_000_000 },
+        data: { grpcUrl: 'localhost:50052' },
+      },
+    ];
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), YAML.stringify(collection));
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await page.getByLabel('Select an API Collection Environment').click();
+    await page.getByRole('option', { name: 'Dev', exact: true }).press('Enter');
+    await page.getByRole('option', { name: 'Dev', exact: true }).press('Escape');
+    await insomnia.navigationSidebar.clickRequestOrFolder('Unary');
+
+    const variable = page.locator('#grpc-url').locator('..').locator('[data-nunjucks-tag="true"]');
+    await variable.hover();
+    await expect.soft(variable).toHaveAttribute('title', /localhost:50051/);
+    for (const [environment, value] of [
+      ['Test', 'localhost:50052'],
+      ['Dev', 'localhost:50051'],
+    ]) {
+      await page.getByLabel('Select an API Collection Environment').click();
+      await page.getByRole('option', { name: environment, exact: true }).press('Enter');
+      await page.getByRole('option', { name: environment, exact: true }).press('Escape');
+      await variable.hover();
+      await expect.soft(variable).toHaveAttribute('title', new RegExp(value));
+    }
+  });
 
   test('can send all types of requests', async ({ page, app, insomnia }) => {
     const text = await loadFixture('grpc.yaml');
