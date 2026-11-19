@@ -1,6 +1,6 @@
 // Compatibility tests confirming LiquidJS renders templates that previously
 // worked under Nunjucks. Run with: npm test -w insomnia
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { render } from '../index';
 
@@ -614,6 +614,44 @@ describe('DoS resistance', () => {
   // (1..11_000_000) exceeds the 10 MB memoryLimit tracked during range expansion
   it('memoryLimit aborts enormous range expansions', async () => {
     await expect(render('{% for i in (1..11000000) %}{{ i }}{% endfor %}', { context: {} })).rejects.toBeDefined();
+  });
+
+  describe('render time limit', () => {
+    // LiquidJS reads performance.now() to enforce renderLimit, so a fake clock lets us exercise the
+    // real 10 s default through render() without waiting for it.
+    const fakeClock = (stepMs: number) => {
+      let now = 0;
+      vi.spyOn(performance, 'now').mockImplementation(() => {
+        now += stepMs;
+        return now;
+      });
+    };
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('cancels a render that runs past 10 s with a render error', async () => {
+      fakeClock(6000); // every clock read advances 6 s, so the second check is already past 10 s
+      await expect(render('{{ a }}{{ b }}{{ c }}', { context: { a: 1, b: 2, c: 3 } })).rejects.toMatchObject({
+        type: 'render',
+        reason: 'error',
+        message: expect.stringMatching(/render limit exceeded/),
+      });
+    });
+
+    it('cancels in the middle of a long loop instead of finishing it', async () => {
+      fakeClock(1000);
+      await expect(render('{% for i in (1..100000) %}{{ i }}{% endfor %}', { context: {} })).rejects.toMatchObject({
+        message: expect.stringMatching(/render limit exceeded/),
+      });
+      // The limit is checked once per rendered template node: stopping after a handful of reads
+      // (not ~100000) shows the loop was cut short rather than run to completion.
+      expect(vi.mocked(performance.now).mock.calls.length).toBeLessThan(100);
+    });
+
+    it('renders normally while under the limit', async () => {
+      fakeClock(1); // 1 ms per read stays far below 10 s
+      expect(await render('{{ a }}{{ b }}', { context: { a: 1, b: 2 } })).toBe('12');
+    });
   });
 
   // 200 levels of nested if must parse and render without a stack overflow
