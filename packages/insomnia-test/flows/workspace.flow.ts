@@ -6,6 +6,7 @@ import type { FlowContext } from '@package/misc/flow-context';
 import { step } from "@package/misc/step";
 import { Collection } from '@package/models/collection';
 import { Environment } from '@package/models/environment';
+import type { GitRepository } from '@package/models/git-repository';
 import type { HttpRequest } from '@package/models/http-request';
 import { Project } from '@package/models/project';
 import type { PageManager } from '@package/pages/page-manager';
@@ -59,6 +60,44 @@ export class WorkspaceFlow extends BaseFlow {
   }
 
   /**
+   * Creates a new Git Sync Project by cloning a remote repo, explicitly
+   * selecting `credentialName` (a credential already configured in
+   * Preferences -> Credentials) rather than relying on whichever
+   * credential the form defaults to.
+   */
+  @step()
+  async cloneGitProject(
+    item: Project,
+    credentialName: string,
+    repo?: Partial<GitRepository>,
+  ): Promise<Project> {
+    const uri = repo?.uri ?? this.gitRepoUrl;
+    if (!uri) {
+      throw new Error(
+        'cloneGitProject(): no repo URI given for a Git Sync project — either pass repo.uri, or use the `user` fixture from misc/git-fixtures.ts, which injects one',
+      );
+    }
+    const branch = repo?.branch ?? 'master';
+
+    const { workspacePage, projectSettingsPage, projectPage } = this.pageManager;
+    await projectPage.clickNewProject();
+    await workspacePage.setNewItemName(item.name);
+    await projectPage.setNewProjectType(item.type);
+
+    await projectSettingsPage.selectCredential(credentialName);
+    await projectSettingsPage.setRepositoryUrl(uri);
+    await projectSettingsPage.selectBranch(branch);
+    if (repo?.cloneParentDir) {
+      await this.context.stubFileChooser(repo.cloneParentDir);
+      await projectSettingsPage.chooseCloneLocation();
+    }
+    await projectSettingsPage.submitScanForFiles();
+    await projectSettingsPage.confirmClone();
+
+    return this.assertCreated(await this.getProject(item.name), item.name);
+  }
+
+  /**
    * Creates a Collection under `parent`. If it carries a `spec`, authors
    * it into the spec editor right after creation and returns the fuller
    * `getCollectionSpec()` read instead of the plain `getCollection()` one.
@@ -97,6 +136,34 @@ export class WorkspaceFlow extends BaseFlow {
     await workspace.setNewItemName(item.name);
     await workspace.clickCreate();
     return this.assertCreated(await this.getEnvironment(item.name), item.name);
+  }
+
+  /**
+   * Opens `project`'s Settings dialog via its context menu's "Settings"
+   * action and waits for it to load, leaving it open for further
+   * interaction via `pageManager.projectSettingsPage` (e.g. reading the
+   * current git repo path, relocating it).
+   */
+  @step()
+  async openSettings(project: Project): Promise<void> {
+    const { workspacePage, projectSettingsPage } = this.pageManager;
+    const node = await workspacePage.resolveNode(project);
+    await workspacePage.rightClick(node);
+    await workspacePage.clickContextMenu(ContextMenuItem.Settings);
+    await projectSettingsPage.navigate();
+  }
+
+  /**
+   * Reads the local folder a Git Sync `project`'s repository is cloned into,
+   * from its Settings dialog, then closes the dialog.
+   */
+  @step()
+  async getGitRepositoryPath(project: Project): Promise<string> {
+    const { projectSettingsPage, workspacePage } = this.pageManager;
+    await this.openSettings(project);
+    const repositoryPath = await projectSettingsPage.getRepositoryPath();
+    await workspacePage.closeModal();
+    return repositoryPath;
   }
 
   /**
@@ -149,8 +216,39 @@ export class WorkspaceFlow extends BaseFlow {
     await workspacePage.clickContextMenu(action);
   }
 
+  /**
+   * Renames a Collection via its context menu's "Rename" action, then
+   * re-fetches it as its full model under the new name.
+   */
+  @step()
+  async renameCollection(item: Collection, newName: string): Promise<Collection> {
+    await this.renameViaContextMenu(item, newName);
+    return this.assertCreated(await this.getCollection(newName), newName);
+  }
+
+  /**
+   * Renames an Environment via its context menu's "Rename" action, then
+   * re-fetches it as its full model under the new name.
+   */
+  @step()
+  async renameEnvironment(item: Environment, newName: string): Promise<Environment> {
+    await this.renameViaContextMenu(item, newName);
+    return this.assertCreated(await this.getEnvironment(newName), newName);
+  }
+
   // Project is deliberately not accepted, since its context menu has no
   // "Rename" entry — use `renameProject()` for that.
+  private async renameViaContextMenu(
+    item: Collection | Environment | RequestItem,
+    newName: string,
+  ): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(item);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(ContextMenuItem.Rename);
+    await workspace.setItemName(newName);
+    await workspace.clickRename();
+  }
 
   /**
    * Finds the tree node matching `item` and returns it as a Collection

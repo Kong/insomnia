@@ -1,3 +1,4 @@
+import { LONG_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 
 import { TabPanelComponent } from "./tab-panel.component";
@@ -74,13 +75,13 @@ export class ScriptTabComponent extends TabPanelComponent {
       await this.switchTab("scripts");
       const panel = this.page.locator(this.TABPANEL);
       const pane = panel.locator(paneSelector);
-      if ((await pane.getAttribute("aria-selected", { timeout: 2000 })) !== "true") {
-        await pane.click({ timeout: 2000 });
+      if ((await pane.getAttribute("aria-selected", { timeout: SHORT_TIMEOUT })) !== "true") {
+        await pane.click({ timeout: SHORT_TIMEOUT });
       }
       const editor = panel.locator(".CodeMirror").first();
       // Fails fast if the panel was reset to another tab, so the retry re-switches.
-      await expect(editor).toBeVisible({ timeout: 2000 });
+      await expect(editor).toBeVisible({ timeout: SHORT_TIMEOUT });
       await this.setCodeMirrorValue(editor, value);
-    }).toPass({ timeout: 45_000 });
+    }).toPass({ timeout: LONG_TIMEOUT });
   }
 }

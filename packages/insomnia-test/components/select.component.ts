@@ -1,4 +1,4 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 
@@ -28,7 +28,7 @@ export class SelectComponent extends BaseComponent {
   async open(): Promise<void> {
     await expect(async () => {
       if (!(await this.listbox.isVisible())) await this.root.click();
-      await expect(this.listbox).toBeVisible({ timeout: 2000 });
+      await expect(this.listbox).toBeVisible({ timeout: SHORT_TIMEOUT });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 

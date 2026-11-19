@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import { HTTP_SERVER, test } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
 import { Project } from "@package/models/project";
@@ -41,14 +42,14 @@ test("Verify sidebar filtering hides non-matching requests and pinning toggles f
   await workspaceFlow.pin(requestA);
   await expect
     .poll(async () => workspacePage.isPinned(requestA.name), {
-      timeout: 10_000,
+      timeout: DEFAULT_TIMEOUT,
     })
     .toBe(true);
 
   await workspaceFlow.unpin(requestA);
   await expect
     .poll(async () => workspacePage.isPinned(requestA.name), {
-      timeout: 10_000,
+      timeout: DEFAULT_TIMEOUT,
     })
     .toBe(false);
 
