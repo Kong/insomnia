@@ -59,7 +59,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^3.0.2",
-    "@getinsomnia/node-libcurl": "3.3.0",
+    "@getinsomnia/node-libcurl": "3.3.2",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.7.13",
@@ -152,7 +152,7 @@
     "shell-path": "^3.1.0",
     "shell-quote": "^1.8.2",
     "socket.io-client": "^4.8.1",
-    "swagger-ui-dist": "^5.21.0",
+    "swagger-ui-dist": "^5.33.0",
     "tinykeys": "^3.0.0",
     "tough-cookie": "^4.1.4",
     "tweetnacl": "^1.0.3",
@@ -219,8 +219,8 @@
     "vite": "^7.1.3"
   },
   "optionalDependencies": {
-    "@kong/insomnia-plugin-ai": "^1.0.12",
-    "@kong/insomnia-plugin-external-vault": "0.1.5"
+    "@kong/insomnia-plugin-ai": "^1.0.14",
+    "@kong/insomnia-plugin-external-vault": "0.1.6"
   },
   "dev": {
     "dev-server-port": 3334

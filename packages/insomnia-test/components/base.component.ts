@@ -18,6 +18,10 @@ export abstract class BaseComponent {
     readonly root: Locator,
   ) {}
 
+  async waitForVisible(timeout = DEFAULT_TIMEOUT): Promise<void> {
+    await expect(this.root).toBeVisible({ timeout });
+  }
+
   async waitForHidden(timeout = DEFAULT_TIMEOUT): Promise<void> {
     await expect(this.root).toBeHidden({ timeout });
   }

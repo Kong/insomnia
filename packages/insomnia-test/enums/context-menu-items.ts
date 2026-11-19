@@ -10,6 +10,7 @@ export enum ContextMenuItem {
   McpClient = "MCP Client",
   Environment = "Environment",
   Import = "Import",
+  MockServer = "Mock Server",
   Settings = "Settings",
   Delete = "Delete",
   Rename = "Rename",

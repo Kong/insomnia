@@ -22,6 +22,28 @@ describe('parseApiSpec()', () => {
     expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
   });
 
+  it('parses OpenAPI 3.2 specs and keeps 3.2-only fields untouched', () => {
+    const objSpec = {
+      openapi: '3.2.0',
+      $self: 'https://example.com/openapi.yaml',
+      info: { title: 'My API', version: '1.0.0' },
+      paths: {
+        '/pets': {
+          query: { responses: { 200: { description: 'ok' } } },
+          additionalOperations: { PURGE: { responses: { 204: { description: 'purged' } } } },
+        },
+      },
+    };
+    const yamlSpec = YAML.stringify(objSpec);
+
+    expect(parseApiSpec(yamlSpec)).toEqual({
+      format: 'openapi',
+      formatVersion: '3.2.0',
+      contents: objSpec,
+      rawContents: yamlSpec,
+    });
+  });
+
   it('parses YAML and JSON Swagger specs', () => {
     const objSpec = {
       swagger: '2.0.0',

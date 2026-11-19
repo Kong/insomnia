@@ -25,6 +25,8 @@ export interface DropdownProps extends AriaMenuProps<any>, MenuTriggerProps {
   isDisabled?: boolean;
   onOpen?: () => void;
   closeOnSelect?: boolean;
+  /** Non-interactive text rendered above the menu items. */
+  header?: ReactNode;
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps, ref: any) => {
@@ -72,6 +74,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
         <Popover state={state} triggerRef={triggerRef} placement={placement || 'bottom end'}>
           <Menu
             {...mergeProps(props, menuProps)}
+            header={props.header}
             selectionMode={selectionMode}
             closeOnSelect={props.closeOnSelect}
             autoFocus={state.focusStrategy || true}

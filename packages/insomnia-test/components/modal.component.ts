@@ -1,6 +1,4 @@
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
 import type { Locator, Page } from "@playwright/test";
-import { expect } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
 
@@ -44,7 +42,19 @@ export class ModalComponent extends BaseComponent {
     await this.waitForHidden();
   }
 
-  async expectOpen(timeout = DEFAULT_TIMEOUT): Promise<void> {
-    await expect(this.root).toBeVisible({ timeout });
+
+  /** Modal whose heading matches `title`. */
+  static byTitle(page: Page, title: string | RegExp): ModalComponent {
+    return new ModalComponent(
+      page,
+      page
+        .getByRole("dialog")
+        .filter({ has: page.getByRole("heading", { name: title }) }),
+    );
+  }
+
+  async closeWithEscape(): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await this.waitForHidden();
   }
 }

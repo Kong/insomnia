@@ -1,0 +1,18 @@
+{
+  "name": "insomnia-ai-plugins",
+  "owner": {
+    "name": "Kong",
+    "email": "office@konghq.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins and skills for working with Insomnia"
+  },
+  "plugins": [
+    {
+      "name": "insomnia-scripts",
+      "source": "./plugins/insomnia-scripts",
+      "description": "Skills for working with Insomnia pre-request and after-response scripts in git projects",
+      "version": "0.1.0"
+    }
+  ]
+}

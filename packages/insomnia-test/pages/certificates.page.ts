@@ -69,7 +69,7 @@ export class CertificatesPage extends BasePage {
       this.page.getByRole("dialog", { name: "Add Client Certificate" }),
     );
     const form = formModal.root;
-    await formModal.expectOpen();
+    await formModal.waitForVisible();
 
     await form.locator('input[name="host"]').fill(certificate.host);
     const fileInputs = form.locator('input[type="file"]');

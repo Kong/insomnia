@@ -7,6 +7,7 @@ describe('events', () => {
     expect(AnalyticsEvent.appStarted).toBe('App Started');
     expect(AnalyticsEvent.unitTestRun).toBe('Ran Individual Unit Test');
     expect(AnalyticsEvent.installPlugin).toBe('Plugin Installed');
+    expect(AnalyticsEvent.skillCopyPromptClicked).toBe('Skill Copy Prompt Clicked');
   });
 
   it('InsoEvent prefixes with inso_', () => {

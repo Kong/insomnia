@@ -13,9 +13,15 @@ import { CertificatesPage } from "./certificates.page";
 import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { ExportPage } from "./export.page";
+import { GitBranchesDialogPage } from "./git-branches-dialog.page";
+import { GitCommitDialogPage } from "./git-commit-dialog.page";
+import { GitHistoryDialogPage } from "./git-history-dialog.page";
+import { GitSyncPage } from "./git-sync.page";
 import { HttpRequestPage } from "./http-request.page";
 import { ImportPage } from "./import.page";
+import { MockServerPage } from "./mock-server.page";
 import { ProjectPage } from "./project.page";
+import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
 import { WorkspacePage } from "./workspace.page";
@@ -31,8 +37,18 @@ const pageRegistry = {
     new ExportPage(page),
   fieldEncryptionIssue: (page: Page): FieldEncryptionIssueComponent =>
     new FieldEncryptionIssueComponent(page),
+  gitSyncPage: (page: Page): GitSyncPage =>
+    new GitSyncPage(page),
+  gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
+    new GitCommitDialogPage(page),
+  gitBranchesDialogPage: (page: Page): GitBranchesDialogPage =>
+    new GitBranchesDialogPage(page),
+  gitHistoryDialogPage: (page: Page): GitHistoryDialogPage =>
+    new GitHistoryDialogPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
+  mockServerPage: (page: Page): MockServerPage =>
+    new MockServerPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
   importPage: (page: Page): ImportPage =>
     new ImportPage(page),
@@ -48,6 +64,8 @@ const pageRegistry = {
     new PreferencesPluginsComponent(page),
   preferencesAi: (page: Page): PreferencesAiComponent =>
     new PreferencesAiComponent(page),
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
   specPage: (page: Page): SpecPage =>

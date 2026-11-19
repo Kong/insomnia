@@ -21,6 +21,10 @@ import { useRequestUpdatePayloadActionFetcher } from '~/routes/organization.$org
 import { useRequestGroupUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update';
 import { useRequestGroupUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId.update-meta';
 import { useWorkspaceUpdateMetaActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-meta';
+import {
+  useWorkspaceUpdateActionFetcher,
+  type WorkspacePatch,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
 
 export const useRequestPatcher = (requestWorkspaceId = '') => {
@@ -123,6 +127,21 @@ export const useWorkspaceMetaPatcher = () => {
       projectId,
       workspaceId,
       patch,
+    });
+  };
+};
+
+export const useWorkspacePatcher = () => {
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
+  const fetcher = useWorkspaceUpdateActionFetcher();
+  return (workspaceId: string, patch: Omit<WorkspacePatch, 'workspaceId'>) => {
+    fetcher.submit({
+      organizationId,
+      projectId,
+      patch: {
+        workspaceId,
+        ...patch,
+      },
     });
   };
 };

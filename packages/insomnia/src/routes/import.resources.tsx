@@ -23,6 +23,7 @@ interface ImportScannedResourcesParams {
   skipImportIfDuplicate?: boolean;
   options?: {
     overrideBaseEnvironmentData?: boolean;
+    overrideCollectionProperties?: boolean;
   };
 }
 
@@ -42,6 +43,7 @@ export const importScannedResources = async ({
     ? importResourcesToWorkspace({
         workspaceId: workspaceId,
         overrideBaseEnvironmentData: options?.overrideBaseEnvironmentData ?? true,
+        overrideCollectionProperties: options?.overrideCollectionProperties ?? false,
       })
     : importResourcesToProject({
         projectId: project._id,

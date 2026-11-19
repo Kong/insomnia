@@ -16,6 +16,7 @@ export const SINGLE_VALUE_HEADERS = [
   'upgrade',
   'range',
   'trailer',
+  'authorization',
 ];
 
 export const getCommonHeaderValues = (pair: RequestHeader): any[] => {

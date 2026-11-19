@@ -5,11 +5,16 @@ import { href } from 'react-router';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { updateMimeType } from '~/ui/components/dropdowns/content-type-dropdown';
+import { REQUEST_CONTENT_EDITED_EVENT } from '~/ui/components/dropdowns/response-history-hint';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.update';
 
 const { getPathParametersFromUrl, isRequest } = models.request;
+
+// Fields the user edits in the request pane. A patch touching any of them is an
+// edit worth pointing at Response History; renames, pins and synced writes are not.
+const CONTENT_FIELDS = ['url', 'method', 'headers', 'parameters', 'body', 'authentication', 'pathParameters'];
 
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { requestId } = params;
@@ -17,6 +22,12 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const req = await services.helpers.getRequestById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
+
+  const notifyContentEdit = () => {
+    if (CONTENT_FIELDS.some(field => field in patch)) {
+      window.dispatchEvent(new CustomEvent(REQUEST_CONTENT_EDITED_EVENT, { detail: { requestId } }));
+    }
+  };
 
   const isRequestURLChanged =
     (isRequest(req) || models.webSocketRequest.isWebSocketRequest(req)) && patch.url && patch.url !== req.url;
@@ -39,10 +50,12 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {
     await services.helpers.updateRequest(req, { ...patch, ...updateMimeType(req, patch.body?.mimeType) });
+    notifyContentEdit();
     return null;
   }
 
   await services.helpers.updateRequest(req, patch);
+  notifyContentEdit();
 
   if (req.name !== patch.name) {
     window.main.trackAnalyticsEvent({

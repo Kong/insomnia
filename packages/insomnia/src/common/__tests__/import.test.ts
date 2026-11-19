@@ -8,7 +8,12 @@ import { parse } from 'yaml';
 
 import * as importUtil from '../import';
 import { INSOMNIA_SCHEMA_VERSION } from '../insomnia-schema-migrations/schema-version';
-import { getInsomniaV5DataExport, mcpUrlToInsomniaV5Yaml, tryImportV5Data } from '../insomnia-v5';
+import {
+  getInsomniaV5DataExport,
+  importInsomniaV5Data,
+  mcpUrlToInsomniaV5Yaml,
+  tryImportV5Data,
+} from '../insomnia-v5';
 import { generateId } from '../misc';
 
 describe('pathPatternMatches', () => {
@@ -278,6 +283,104 @@ describe('importRaw()', () => {
       body: {
         text: '{\"email_id\": \"tem_123\"}',
       },
+    });
+  });
+
+  describe('collection-level properties when importing to an existing workspace', () => {
+    const existingProperties = {
+      headers: [{ name: 'X-Existing', value: 'keep' }],
+      preRequestScript: 'console.log("existing before");',
+      afterResponseScript: 'console.log("existing after");',
+      authentication: { type: 'basic', username: 'existing', password: 'existing' } as const,
+    };
+
+    const scanCollectionPropertiesFixture = async (fixtureName = 'collection.yaml') => {
+      const fixturePath = path.join(__dirname, '..', '__fixtures__', 'insomnia-v5-collection-properties', fixtureName);
+      const content = fs.readFileSync(fixturePath, 'utf8').toString();
+      const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+      expect(scanResult[0].errors.length).toBe(0);
+      return scanResult;
+    };
+
+    it('discards the imported properties by default', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      await scanCollectionPropertiesFixture();
+
+      await importUtil.importResourcesToWorkspace({ workspaceId: existingWorkspace._id });
+
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject(existingProperties);
+    });
+
+    it('replaces headers, scripts and authentication when overrideCollectionProperties is true', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      await scanCollectionPropertiesFixture();
+
+      const [returned] = await importUtil.importResourcesToWorkspace({
+        workspaceId: existingWorkspace._id,
+        overrideCollectionProperties: true,
+      });
+
+      const expected = {
+        headers: [{ name: 'X-Collection', value: 'shared' }],
+        preRequestScript: 'console.log("before");',
+        afterResponseScript: 'console.log("after");',
+        authentication: { type: 'basic', username: 'user', password: 'pass' },
+      };
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject(expected);
+      expect(returned).toMatchObject(expected);
+    });
+
+    it('keeps existing properties that the import does not define', async () => {
+      const existingWorkspace = await services.workspace.create(existingProperties);
+      const content = [
+        'type: collection.insomnia.rest/5.0',
+        'name: Headers Only',
+        'meta:',
+        '  id: wrk_headers_only',
+        'schema_version: "5.1"',
+        'collection: []',
+        'headers:',
+        '  - name: X-Imported',
+        '    value: imported',
+        '',
+      ].join('\n');
+      const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+      expect(scanResult[0].errors.length).toBe(0);
+
+      await importUtil.importResourcesToWorkspace({
+        workspaceId: existingWorkspace._id,
+        overrideCollectionProperties: true,
+      });
+
+      expect(await services.workspace.getById(existingWorkspace._id)).toMatchObject({
+        ...existingProperties,
+        headers: [{ name: 'X-Imported', value: 'imported' }],
+      });
+    });
+  });
+
+  describe('hasCollectionLevelProperties()', () => {
+    it('detects headers, scripts and authentication on collection workspaces only', async () => {
+      const [withProps] = await importUtil.scanResources([
+        {
+          contentStr: fs
+            .readFileSync(
+              path.join(__dirname, '..', '__fixtures__', 'insomnia-v5-collection-properties', 'collection.yaml'),
+              'utf8',
+            )
+            .toString(),
+        },
+      ]);
+      expect(withProps.workspaces?.some(importUtil.hasCollectionLevelProperties)).toBe(true);
+
+      const base = models.workspace.init();
+      expect(importUtil.hasCollectionLevelProperties({ ...base, scope: 'collection' } as any)).toBe(false);
+      expect(
+        importUtil.hasCollectionLevelProperties({ ...base, scope: 'collection', authentication: {}, headers: [] } as any),
+      ).toBe(false);
+      expect(importUtil.hasCollectionLevelProperties({ ...base, scope: 'mcp', preRequestScript: 'x' } as any)).toBe(
+        false,
+      );
     });
   });
 
@@ -670,6 +773,48 @@ describe('export/import round-trip is deterministic', () => {
     expect(parsed?.openapi).toBe('3.0.4');
     expect(parsed?.info?.title).toBe('Bookings API');
     expect(parsed?.paths?.['/bookings']).toBeTruthy();
+  });
+
+  it('preserves the collection description', async () => {
+    const sourceWorkspace = await services.workspace.create({
+      name: 'Described',
+      scope: 'collection',
+      description: '# About\nThis collection has a description.',
+    });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+
+    const { workspace } = await roundTrip(sourceWorkspace._id);
+
+    expect(workspace.description).toBe('# About\nThis collection has a description.');
+  });
+
+  it('preserves the description when duplicating a workspace the way the move route does', async () => {
+    const sourceWorkspace = await services.workspace.create({
+      name: 'Described',
+      scope: 'collection',
+      description: 'Move me with my description',
+    });
+    await services.environment.getOrCreateForParentId(sourceWorkspace._id);
+    const targetProject = await services.project.create();
+
+    const exported = await getInsomniaV5DataExport({
+      workspaceId: sourceWorkspace._id,
+      includePrivateEnvironments: true,
+    });
+    const data = importInsomniaV5Data(exported);
+    const newWorkspace = await importUtil.importResourcesToNewWorkspace({
+      projectId: targetProject._id,
+      workspaceToImport: { ...sourceWorkspace, name: 'Described (moved)' },
+      resourceCacheItem: {
+        resources: data,
+        content: JSON.stringify(data, null, 2),
+        importer: { id: 'insomnia-v5', name: 'Insomnia v5 Importer', description: '' },
+      },
+    });
+
+    expect(newWorkspace.name).toBe('Described (moved)');
+    expect(newWorkspace.description).toBe('Move me with my description');
+    expect((await services.workspace.getById(newWorkspace._id))?.description).toBe('Move me with my description');
   });
 
   it('preserves a collection with a folder and request', async () => {

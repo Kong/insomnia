@@ -1,0 +1,20 @@
+{
+  "name": "insomnia-ai-plugins",
+  "interface": {
+    "displayName": "Insomnia AI Plugins"
+  },
+  "plugins": [
+    {
+      "name": "insomnia-scripts",
+      "source": {
+        "source": "local",
+        "path": "./plugins/insomnia-scripts"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
