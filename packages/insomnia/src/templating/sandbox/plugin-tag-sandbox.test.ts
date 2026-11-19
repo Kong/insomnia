@@ -276,6 +276,36 @@ describe('runTagInSandbox — PoC milestone 1', () => {
     expect(Date.now() - start).toBeLessThan(5000);
   });
 
+  // Each `__hostBridge` call allocates a VM deferred that owns three JSValues — the promise plus its
+  // resolve/reject function handles — and only settling frees the two resolvers. When the deadline
+  // fires with a bridge call still outstanding (a slow endpoint, a nested render), those resolvers
+  // are still live, and freeing the runtime under them aborted the whole WASM module
+  // (`Assertion failed: list_empty(&rt->gc_obj_list)`) instead of surfacing the timeout.
+  it('times out cleanly while a host bridge call is still in flight', async () => {
+    const source =
+      'module.exports.templateTags = [{ name: "slow", run: async function (ctx) { return await ctx.util.render("x"); } }];';
+    let settleBridge: (value: string) => void = () => {};
+    const stalling: HostBridge = () =>
+      new Promise<string>(resolve => {
+        settleBridge = resolve;
+      });
+
+    await expect(
+      runTagInSandbox({
+        pluginSource: source,
+        tagName: 'slow',
+        envelope: envelope([]),
+        bridge: stalling,
+        timeoutMs: 150,
+      }),
+    ).rejects.toThrow(/timed out/);
+
+    // The bridge answering after teardown must be a no-op: the context it would resolve into is gone,
+    // so an unguarded late settle is a QuickJSUseAfterFree surfacing as an unhandled rejection.
+    settleBridge('done');
+    await new Promise(resolve => setTimeout(resolve, 10));
+  });
+
   it('rejects unbounded allocation instead of exhausting host memory', async () => {
     const source = `module.exports.templateTags = [{ name: "hog", run: function () {
       var chunks = [];
