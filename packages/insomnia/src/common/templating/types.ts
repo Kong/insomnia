@@ -316,7 +316,7 @@ export interface AppContext {
   alert: (title: string, message?: string) => Promise<void>;
   dialog: (
     title: string,
-    body: HTMLElement,
+    body: HTMLElement | string,
     options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean },
   ) => Promise<void>;
   prompt: (title: string, options?: AppPromptOptions) => Promise<string>;

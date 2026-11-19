@@ -333,7 +333,7 @@ exports[`sandbox surface > matches surface snapshot 1`] = `
   "context.app.clipboard.readText.prototype: object",
   "context.app.clipboard.writeText: function(1)",
   "context.app.clipboard.writeText.prototype: object",
-  "context.app.dialog: function(1)",
+  "context.app.dialog: function(3)",
   "context.app.dialog.prototype: object",
   "context.app.getInfo: function(0)",
   "context.app.getInfo.prototype: object",
