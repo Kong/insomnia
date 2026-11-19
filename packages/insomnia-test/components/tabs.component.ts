@@ -17,4 +17,8 @@ export class TabsComponent extends BaseComponent {
   tabByName(name: string | RegExp): Locator {
     return this.root.getByRole("tab", { name });
   }
+
+  get panel(): Locator {
+    return this.root.locator('[role="tabpanel"]');
+  }
 }

@@ -7,6 +7,7 @@ import { Settings } from "@package/models/settings";
 import { expect } from "@playwright/test";
 
 import { BaseFlow } from "./base.flow";
+type Answer = "continue" | "cancel";
 
 export class PreferencesFlow extends BaseFlow {
   /**
@@ -158,6 +159,108 @@ export class PreferencesFlow extends BaseFlow {
       maxTokens: Number(fields.maxTokens),
       isActive,
     };
+  }
+
+  /** Opens Preferences and waits until the Local Encryption Key section has settled. */
+  @step()
+  async openKeyPanel(): Promise<void> {
+    const { preferences, localEncryptionKey } = this.pageManager;
+    await preferences.open();
+    await localEncryptionKey.waitUntilSettled();
+  }
+
+  @step()
+  async closeKeyPanel(): Promise<void> {
+    await this.pageManager.preferences.close();
+  }
+
+  /** Whether Copy Key and Export Key are enabled in the open panel. */
+  @step()
+  async areKeyButtonsEnabled(): Promise<boolean> {
+    return this.pageManager.localEncryptionKey.areButtonsEnabled();
+  }
+
+  /** The notice shown instead of a usable key, or undefined when the key is available. */
+  @step()
+  async getKeyUnavailableNotice(): Promise<string | undefined> {
+    const notice = this.pageManager.localEncryptionKey.unavailableNotice;
+    return (await notice.isVisible()) ? (await notice.innerText()).trim() : undefined;
+  }
+
+  /**
+   * Copy Key: clicks it, reads the confirmation's text, answers it, and
+   * returns what was on the confirmation and, for "continue", what the
+   * button then shows.
+   */
+  @step()
+  async copyKey(answer: Answer = "continue"): Promise<{ warning: string; buttonText: string }> {
+    const { localEncryptionKey } = this.pageManager;
+    await localEncryptionKey.copyButton.click();
+    const warning = await this.readConfirmationAndAnswer(answer);
+    if (answer === "continue") {
+      await expect(localEncryptionKey.copyButton).toContainText("Copied", { timeout: DEFAULT_TIMEOUT });
+    }
+    return { warning, buttonText: (await localEncryptionKey.copyButton.innerText()).trim() };
+  }
+
+  /**
+   * Export Key: clicks it and answers the confirmation. The native save
+   * dialog that follows is stubbed to resolve `filePath` — or, when
+   * `filePath` is undefined, to a cancelled dialog. Resolves with the
+   * confirmation's text and the file name the save dialog suggested.
+   */
+  @step()
+  async exportKey(
+    answer: Answer = "continue",
+    filePath?: string,
+  ): Promise<{ warning: string; suggestedPath: string | undefined }> {
+    const { localEncryptionKey } = this.pageManager;
+    const app = this.context.electronApp!;
+    await app.evaluate(({ dialog }, target) => {
+      (globalThis as any).__saveDialogOptions = undefined;
+      dialog.showSaveDialog = (async (...args: any[]) => {
+        (globalThis as any).__saveDialogOptions = args.at(-1);
+        return target
+          ? { canceled: false, filePath: target }
+          : { canceled: true, filePath: undefined };
+      }) as unknown as typeof dialog.showSaveDialog;
+    }, filePath);
+    await localEncryptionKey.exportButton.click();
+    const warning = await this.readConfirmationAndAnswer(answer);
+    if (answer === "cancel") return { warning, suggestedPath: undefined };
+    await expect
+      .poll(() => app.evaluate(() => (globalThis as any).__saveDialogOptions), {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      .toBeTruthy();
+    const options = await app.evaluate(() => (globalThis as any).__saveDialogOptions);
+    return { warning, suggestedPath: options?.defaultPath };
+  }
+
+  private async readConfirmationAndAnswer(answer: Answer): Promise<string> {
+    const { confirmation } = this.pageManager.localEncryptionKey;
+    await confirmation.waitForVisible();
+    const warning = (await confirmation.root.innerText()).trim();
+    await confirmation.clickButton(answer === "continue" ? "I understand, continue" : "Cancel", false);
+    await confirmation.waitForHidden();
+    return warning;
+  }
+
+  /** The text currently on the system clipboard of the app. */
+  @step()
+  async readClipboard(): Promise<string> {
+    return this.context.electronApp!.evaluate(({ clipboard }) => clipboard.readText());
+  }
+
+  @step()
+  async writeClipboard(text: string): Promise<void> {
+    await this.context.electronApp!.evaluate(({ clipboard }, t) => clipboard.writeText(t), text);
+  }
+
+  /** Whether an error dialog (e.g. "Could not export the local encryption key") is open. */
+  @step()
+  async hasErrorDialog(): Promise<boolean> {
+    return this.pageManager.localEncryptionKey.errorDialog.root.isVisible();
   }
 
   /**

@@ -11,4 +11,12 @@ export class TableComponent extends BaseComponent {
   get rows(): Locator {
     return this.root.getByRole("row");
   }
+
+  row(name: string | RegExp): Locator {
+    return this.root.getByRole("row", { name });
+  }
+
+  rowByText(text: string | RegExp): Locator {
+    return this.rows.filter({ hasText: text });
+  }
 }

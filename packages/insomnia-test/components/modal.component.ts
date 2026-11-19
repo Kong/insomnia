@@ -1,4 +1,4 @@
-import type { Locator,Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { BaseComponent } from "./base.component";
 
@@ -13,6 +13,35 @@ export class ModalComponent extends BaseComponent {
   constructor(page: Page, root?: Locator) {
     super(page, root ?? page.getByRole("dialog"));
   }
+
+  get heading(): Locator {
+    return this.root.getByRole("heading").first();
+  }
+
+  async title(): Promise<string> {
+    return (await this.heading.innerText()).trim();
+  }
+
+  button(name: string | RegExp, exact = true): Locator {
+    return this.root.getByRole("button", { name, exact });
+  }
+
+  async clickButton(name: string | RegExp, exact = true): Promise<void> {
+    await this.button(name, exact).click();
+  }
+
+  /** Clicks the footer button `name` and waits for the modal to go away. */
+  async confirm(name = "Done"): Promise<void> {
+    await this.clickButton(name);
+    await this.waitForHidden();
+  }
+
+  /** Closes via the header's `x` icon button. */
+  async close(): Promise<void> {
+    await this.root.locator('[data-icon="x"]').first().click();
+    await this.waitForHidden();
+  }
+
 
   /** Modal whose heading matches `title`. */
   static byTitle(page: Page, title: string | RegExp): ModalComponent {
