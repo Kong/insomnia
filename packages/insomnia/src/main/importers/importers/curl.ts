@@ -388,7 +388,7 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
       case 'data':
       case 'data-ascii':
       case 'data-binary': {
-        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true)));
+        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, 'at-start')));
         break;
       }
       case 'data-raw': {
@@ -398,7 +398,7 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
       case 'data-urlencode': {
         dataParameters = dataParameters.concat(
           pairs
-            .flatMap(pair => pairToParameters(pair, true))
+            .flatMap(pair => pairToParameters(pair, 'named'))
             .map(parameter => {
               if (parameter.type === 'file') {
                 return parameter;
@@ -422,13 +422,38 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
 };
 
 /**
+ * Where cURL reads a data value from a file:
+ * - `none`: the value is always literal (`--data-raw`).
+ * - `at-start`: `@filename`, the whole value (`-d` and the other `--data` flags).
+ * - `named`: `@filename` or `name@filename` (`--data-urlencode`).
+ */
+type FileReference = 'none' | 'at-start' | 'named';
+
+/**
+ * Checks whether a data value points at a file. An `@` that follows a `name=`
+ * separator is part of the value (an email address, for example), not a file
+ * reference, so it must stay literal.
+ */
+const isFileReference = (pair: string, fileReference: FileReference) => {
+  if (fileReference === 'none' || !pair.includes('@')) {
+    return false;
+  }
+
+  if (fileReference === 'at-start') {
+    return pair.startsWith('@');
+  }
+
+  return !pair.includes('=');
+};
+
+/**
  * Converts pairs (that could include multiple via `&`) into {@link Parameter}s. This
  * method supports both `@filename` and `name@filename`.
  *
  * @param pair command line value
- * @param allowFiles whether to allow the `@` to support include files
+ * @param fileReference which `@` forms point at a file
  */
-const pairToParameters = (pair: string | boolean, allowFiles = false): Parameter[] => {
+const pairToParameters = (pair: string | boolean, fileReference: FileReference = 'none'): Parameter[] => {
   if (typeof pair === 'boolean') {
     return [{ name: '', value: pair.toString() }];
   }
@@ -438,9 +463,9 @@ const pairToParameters = (pair: string | boolean, allowFiles = false): Parameter
   } catch {}
 
   return pair.split('&').map(pair => {
-    if (pair.includes('@') && allowFiles) {
-      const [name, fileName] = pair.split('@');
-      return { name, fileName, type: 'file' };
+    if (isFileReference(pair, fileReference)) {
+      const at = pair.indexOf('@');
+      return { name: pair.slice(0, at), fileName: pair.slice(at + 1), type: 'file' };
     }
 
     const equalIndex = pair.indexOf('=');
