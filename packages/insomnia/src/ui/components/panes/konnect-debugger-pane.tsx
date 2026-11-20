@@ -128,7 +128,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   const isStartingOrStopping = debugSessionAction !== 'idle';
   const isActive = debugSessionState === 'active';
 
-  const isCompleting = debugSessionState === 'completing' || debugSessionState === 'timed_out';
+  const isCompleting = debugSessionState === 'completing';
   const isCapturing = isActive || isCompleting;
 
   const traces = useMemo(
@@ -462,6 +462,7 @@ const StatusBanners = ({
         <StatusBanner type="warning">Current debug session was deleted in Konnect.</StatusBanner>
       )}
       {debugSessionState === 'completing' && <StatusBanner type="info">Wait for the session to complete.</StatusBanner>}
+      {debugSessionState === 'timed_out' && <StatusBanner type="warning">Timed out</StatusBanner>}
       {debugSessionState === 'cancelled' && (
         <StatusBanner
           type="info"

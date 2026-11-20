@@ -109,17 +109,18 @@ export function useKonnectDebuggerSession({
     }
   }, [isDebugSessionMissingFromServer, projectId]);
 
-  const debugSessionState: DebugSessionState | null = debugSession ? deriveSessionState(debugSession) : null;
+  const debugSessionState: DebugSessionState | null = debugSession ? deriveSessionState(debugSession, now) : null;
   const isDebugSessionActive = debugSessionState === 'active';
-  // Update the current time every second while the debug session is active.
+  const shouldCount = isDebugSessionActive || debugSessionState === 'completing';
+  // Update the current time every second while the debug session is active or completing,
   useEffect(() => {
-    if (!isDebugSessionActive) {
+    if (!shouldCount) {
       return;
     }
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [isDebugSessionActive]);
+  }, [shouldCount]);
   const debugSessionStartedAt = debugSession ? getDebugSessionStartedAt(debugSession) : null;
   const capturedSecs =
     debugSessionState === 'active' && debugSessionStartedAt
