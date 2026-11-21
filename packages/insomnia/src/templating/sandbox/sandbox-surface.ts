@@ -201,11 +201,20 @@ export const findUnaccountedHostNatives = (entries: SurfaceEntry[]): string[] =>
   return [...globalNatives, ...contextAndModuleNatives].map(e => e.path);
 };
 
-/** Flags anything under context or require(...) that's the exact same object as something already reachable bare on globalThis — a "gate" that leaks its reference instead of actually gating. */
-export const findLeakedGatedReferences = (entries: SurfaceEntry[]): string[] =>
+/**
+ * Flags anything under context or require(...) that's the exact same object as something already
+ * reachable bare on globalThis — a "gate" that leaks its reference instead of actually gating.
+ * `allowed` is for the rare case where that's deliberate and already documented elsewhere (e.g.
+ * `require('buffer').Buffer` is *meant* to be `=== globalThis.Buffer`, matching real Node's own
+ * `require('buffer').Buffer === global.Buffer` identity, because `Buffer` is already an ungated
+ * ambient global with or without the module grant) — callers must pass the exact expected message,
+ * so a genuinely new leak on an unrelated path still fails loudly instead of being masked.
+ */
+export const findLeakedGatedReferences = (entries: SurfaceEntry[], allowed: string[] = []): string[] =>
   entries
     .filter(e => !!e.aliasOf && e.aliasOf.startsWith('globalThis.') && (e.root === 'context' || e.root.startsWith('require(')))
-    .map(e => `${e.path} aliases ${e.aliasOf}`);
+    .map(e => `${e.path} aliases ${e.aliasOf}`)
+    .filter(message => !allowed.includes(message));
 
 /**
  * The complete, reviewed set of sandbox-internal globals (`in-sandbox-bootstrap.ts`) exposed bare on
