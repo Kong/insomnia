@@ -5,7 +5,7 @@ import { TabBarComponent } from "@package/components/tab-bar.component";
 import { TreeComponent } from "@package/components/tree.component";
 import type { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
-import { DEFAULT_TIMEOUT, LONG_TIMEOUT, POLL_INTERVAL } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, LONG_TIMEOUT, POLL_INTERVAL, SHORT_TIMEOUT } from "@package/misc/constants";
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "playwright-core";
 
@@ -543,7 +543,7 @@ export class WorkspacePage extends BasePage {
       if (await this.page.getByRole("tooltip").isVisible()) {
         await this.page.keyboard.press("Escape");
       }
-      await row.click({ button: "right", timeout: 3000 });
+      await row.click({ button: "right", timeout: DEFAULT_TIMEOUT });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -722,7 +722,7 @@ export class WorkspacePage extends BasePage {
 
   private async poll<T>(
     fn: () => Promise<T | undefined>,
-    timeout = 2000,
+    timeout = SHORT_TIMEOUT,
     interval = POLL_INTERVAL,
   ): Promise<T | undefined> {
     const deadline = Date.now() + timeout;
@@ -774,5 +774,18 @@ export class WorkspacePage extends BasePage {
     await input.fill(name);
     await input.press("Enter");
     await this.navigate();
+  }
+
+  /**
+   * Closes the currently open dialog via Escape — works across both
+   * dialog implementations the app uses (the legacy Modal/ModalHeader
+   * pair's labeled "Modal Close Button", and newer react-aria-components
+   * Dialogs like Collection/Workspace Settings whose "x" button carries
+   * no accessible name at all).
+   */
+  async closeModal(): Promise<void> {
+    const dialog = new ModalComponent(this.page).root;
+    await this.page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden({ timeout: DEFAULT_TIMEOUT });
   }
 }

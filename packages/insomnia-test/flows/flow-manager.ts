@@ -6,9 +6,11 @@ import { EnvironmentFlow } from "./environment.flow";
 import { EventStreamRequestFlow } from "./event-stream-request.flow";
 import { ExportFlow } from "./export.flow";
 import { FolderFlow } from "./folder.flow";
+import { GitSyncFlow } from "./git-sync.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
 import { InsoFlow } from "./inso.flow";
+import { MockServerFlow } from "./mock-server.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import { SpecFlow } from "./spec.flow";
 import type { RequestFlows } from "./workspace.flow";
@@ -30,9 +32,11 @@ const flowRegistry = {
   eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
   exportFlow: (m: FlowDeps): ExportFlow => new ExportFlow(m.context, m.pageManager),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
+  gitSyncFlow: (m: FlowDeps): GitSyncFlow => new GitSyncFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
   insoFlow: (m: FlowDeps): InsoFlow => new InsoFlow(m.context, m.pageManager),
+  mockServerFlow: (m: FlowDeps): MockServerFlow => new MockServerFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
   specFlow: (m: FlowDeps): SpecFlow => new SpecFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>

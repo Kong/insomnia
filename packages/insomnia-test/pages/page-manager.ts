@@ -11,9 +11,15 @@ import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
 import { EventStreamRequestPage } from "./event-stream-request.page";
 import { ExportPage } from "./export.page";
+import { GitBranchesDialogPage } from "./git-branches-dialog.page";
+import { GitCommitDialogPage } from "./git-commit-dialog.page";
+import { GitHistoryDialogPage } from "./git-history-dialog.page";
+import { GitSyncPage } from "./git-sync.page";
 import { HttpRequestPage } from "./http-request.page";
 import { ImportPage } from "./import.page";
+import { MockServerPage } from "./mock-server.page";
 import { ProjectPage } from "./project.page";
+import { ProjectSettingsPage } from "./project-settings.page";
 import { ResponsePage } from "./response.page";
 import { SpecPage } from "./spec.page";
 import { WorkspacePage } from "./workspace.page";
@@ -27,21 +33,33 @@ const pageRegistry = {
     new EventStreamRequestPage(page),
   exportPage: (page: Page): ExportPage =>
     new ExportPage(page),
+  gitSyncPage: (page: Page): GitSyncPage =>
+    new GitSyncPage(page),
+  gitCommitDialogPage: (page: Page): GitCommitDialogPage =>
+    new GitCommitDialogPage(page),
+  gitBranchesDialogPage: (page: Page): GitBranchesDialogPage =>
+    new GitBranchesDialogPage(page),
+  gitHistoryDialogPage: (page: Page): GitHistoryDialogPage =>
+    new GitHistoryDialogPage(page),
   httpRequestPage: (page: Page): HttpRequestPage =>
     new HttpRequestPage(page),
+  mockServerPage: (page: Page): MockServerPage =>
+    new MockServerPage(page),
   // Global dialogs reachable from any page, so components rather than pages.
   importPage: (page: Page): ImportPage =>
     new ImportPage(page),
   preferences: (page: Page): PreferencesComponent =>
     new PreferencesComponent(page),
-  responsePage: (page: Page): ResponsePage =>
-    new ResponsePage(page),
   preferencesCredentials: (page: Page): PreferencesCredentialsComponent =>
     new PreferencesCredentialsComponent(page),
   preferencesPlugins: (page: Page): PreferencesPluginsComponent =>
     new PreferencesPluginsComponent(page),
   preferencesAi: (page: Page): PreferencesAiComponent =>
     new PreferencesAiComponent(page),
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
+  responsePage: (page: Page): ResponsePage =>
+    new ResponsePage(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
   specPage: (page: Page): SpecPage =>

@@ -6,6 +6,8 @@ import { extractFile } from "@electron/asar";
 import type { ElectronApplication, Page } from "@playwright/test";
 import { CoverageReport } from "monocart-coverage-reports";
 
+import { DEFAULT_TIMEOUT } from "./constants";
+
 /**
  * Off by default — instrumenting/collecting V8 coverage on every window and
  * Electron main process adds real per-test overhead, so it's opt-in via
@@ -260,7 +262,7 @@ export async function collectHiddenWindowCoverage(
       // and asking a blocked renderer for coverage never answers — give up after a while.
       await Promise.race([
         collectWindowCoverage(win),
-        new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+        new Promise<void>((resolve) => setTimeout(resolve, DEFAULT_TIMEOUT)),
       ]);
     }
   }

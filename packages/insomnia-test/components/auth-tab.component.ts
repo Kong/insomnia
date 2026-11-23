@@ -1,6 +1,6 @@
 import { ToggleButtonComponent } from "@package/components/toggle.component";
 import { AuthType } from "@package/enums/auth-type";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
 import type {
@@ -87,16 +87,6 @@ const AUTH_DB_FILES = [
   "insomnia.McpRequest.db",
 ];
 
-// How long an edit gets to land on its own before it's re-applied: the
-// Auth editors save through a debounce, so a just-made edit legitimately
-// isn't on disk yet.
-const AUTH_REAPPLY_AFTER_MS = 2000;
-
-// How long the full set of edits must keep holding on disk before the
-// form counts as done — long enough for any still-pending debounced save
-// built from a stale auth config to have fired and landed.
-const AUTH_SETTLE_MS = 2000;
-
 /** One edited `authentication` field, plus how to repeat the edit if it gets lost. */
 interface AuthFieldEdit {
   field: string;
@@ -158,7 +148,7 @@ export class AuthTabComponent extends TabPanelComponent {
       await this.page.keyboard.press("Escape");
       await button.click();
       await this.page.locator(`[role="option"][aria-label="${type}"]`).click();
-      await expect(button).toContainText(type, { timeout: 2000 });
+      await expect(button).toContainText(type, { timeout: SHORT_TIMEOUT });
     }).toPass({ timeout: DEFAULT_TIMEOUT });
   }
 
@@ -238,7 +228,7 @@ export class AuthTabComponent extends TabPanelComponent {
     await this.setAuthType(AuthType.None);
     await this.waitForAuthFieldsPersisted(
       [{ field: "type", value: "none" }],
-      AUTH_SETTLE_MS,
+      SHORT_TIMEOUT,
     );
   }
 
@@ -289,7 +279,7 @@ export class AuthTabComponent extends TabPanelComponent {
       await this.waitForAuthFieldsPersisted([...edits, edit]);
       edits.push(edit);
     }
-    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
+    await this.waitForAuthFieldsPersisted(edits, SHORT_TIMEOUT);
   }
 
   /**
@@ -334,7 +324,7 @@ export class AuthTabComponent extends TabPanelComponent {
     }
     // A later field's debounced save can overwrite an earlier one from a
     // stale copy of the auth config, so confirm they all hold together.
-    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
+    await this.waitForAuthFieldsPersisted(edits, SHORT_TIMEOUT);
   }
 
   /**
@@ -379,7 +369,7 @@ export class AuthTabComponent extends TabPanelComponent {
       // Changing the grant type re-renders the form's rows and refreshes
       // loader data; let any stale debounced save land and the editors
       // settle first, or the text fields written next get reverted by it.
-      await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
+      await this.waitForAuthFieldsPersisted(edits, SHORT_TIMEOUT);
       await this.waitForRendererIdle();
     }
 
@@ -431,7 +421,7 @@ export class AuthTabComponent extends TabPanelComponent {
     // A later edit's debounced save can be built from a stale copy of the
     // auth config and silently drop an earlier field — each per-field wait
     // above passed at the time — so confirm every field holds together.
-    await this.waitForAuthFieldsPersisted(edits, AUTH_SETTLE_MS);
+    await this.waitForAuthFieldsPersisted(edits, SHORT_TIMEOUT);
   }
 
   private toggle(id: string): ToggleButtonComponent {
@@ -447,7 +437,7 @@ export class AuthTabComponent extends TabPanelComponent {
    * every edit in `edits` at once. The app's debounced editors can save
    * from a stale copy of the auth config, so a write may never land, or
    * may drop a field persisted earlier; once an edit has had
-   * `AUTH_REAPPLY_AFTER_MS` to land on its own, the edits still missing
+   * `SHORT_TIMEOUT` to land on its own, the edits still missing
    * from the closest-matching document are re-applied.
    */
   private async waitForAuthFieldsPersisted(
@@ -474,7 +464,7 @@ export class AuthTabComponent extends TabPanelComponent {
         return;
       }
       heldSince = 0;
-      if (Date.now() - lastReapply >= AUTH_REAPPLY_AFTER_MS) {
+      if (Date.now() - lastReapply >= SHORT_TIMEOUT) {
         lastReapply = Date.now();
         for (const edit of missing) await edit.reapply?.();
       }
