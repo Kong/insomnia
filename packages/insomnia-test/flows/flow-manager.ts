@@ -3,7 +3,9 @@ import type { PageManager } from "@package/pages/page-manager";
 
 import { EnvironmentFlow } from "./environment.flow";
 import { FolderFlow } from "./folder.flow";
+import { GitSyncFlow } from "./git-sync.flow";
 import { HttpRequestFlow } from "./http-request.flow";
+import { MockServerFlow } from "./mock-server.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import type { RequestFlows } from "./workspace.flow";
 import { WorkspaceFlow } from "./workspace.flow";
@@ -21,7 +23,9 @@ type FlowDeps = RequestFlows & {
 const flowRegistry = {
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   folderFlow: (m: FlowDeps): FolderFlow => new FolderFlow(m.context, m.pageManager),
+  gitSyncFlow: (m: FlowDeps): GitSyncFlow => new GitSyncFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
+  mockServerFlow: (m: FlowDeps): MockServerFlow => new MockServerFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
   workspaceFlow: (m: FlowDeps): WorkspaceFlow =>
     new WorkspaceFlow(m.context, m.pageManager, m.preferencesFlow, m, m.gitRepoUrl),

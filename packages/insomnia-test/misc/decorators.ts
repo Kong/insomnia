@@ -1,3 +1,4 @@
+import { SHORT_TIMEOUT } from "@package/misc/constants";
 import type { Page } from "playwright-core";
 
 /**
@@ -11,7 +12,7 @@ export function throwOnDialog<
   This extends object,
   Args extends unknown[],
   Return,
->(timeout = 1000) {
+>(timeout = SHORT_TIMEOUT) {
   return function (
     target: (this: This, ...args: Args) => Promise<Return>,
     _context: ClassMethodDecoratorContext<
