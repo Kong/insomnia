@@ -33,6 +33,9 @@ test('Verify conflicting non-Insomnia files (workflow YAML, Helm template, .giti
   await pushServerFile({ path: HELM_PATH, content: buildHelmFile('remote') });
   await pushServerFile({ path: GITIGNORE_PATH, content: 'remote-ignore\n' });
   await gitSyncFlow.pull();
+  // The pull rewrites the files one after another, so wait for each of them.
+  await gitSyncFlow.waitForRepoFile(repoPath, WORKFLOW_PATH, buildWorkflowFile('echo remote'));
+  await gitSyncFlow.waitForRepoFile(repoPath, HELM_PATH, buildHelmFile('remote'));
   await gitSyncFlow.waitForRepoFile(repoPath, GITIGNORE_PATH, 'remote-ignore\n');
   const pullIssues = await gitSyncFlow.getPullIssues();
 

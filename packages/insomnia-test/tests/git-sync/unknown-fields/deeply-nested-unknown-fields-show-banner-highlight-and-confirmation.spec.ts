@@ -39,7 +39,7 @@ test('Verify unknown fields nested deep in request settings, folder request meta
   await gitSyncPage.openCommitDialog();
   await gitCommitDialogPage.openChangeDiff(GitChangeList.Staged, fileName);
   const hasBanner = await gitCommitDialogPage.isUnknownFieldsDiffWarningVisible();
-  const highlightCount = await gitCommitDialogPage.getUnknownFieldHighlightCount();
+  const highlightCount = await gitCommitDialogPage.getUnknownFieldHighlightCountAcrossDiff();
   await gitCommitDialogPage.commitStaged(faker.lorem.sentence());
   const confirmationText = await gitCommitDialogPage.getUnknownFieldsConfirmationText();
 

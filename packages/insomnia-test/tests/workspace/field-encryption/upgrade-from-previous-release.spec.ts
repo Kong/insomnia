@@ -22,7 +22,10 @@ const BASIC_PASSWORD = "pass";
 const COOKIE_VALUE = "cookie-value-written-by-the-previous-release";
 const COOKIE_DOMAIN = "example.com";
 
-const PREVIOUS_RELEASE = "core@13.4.0";
+// The e2e framework drives the sidebar through attributes (data-node-type, data-parent-id, ...) that no release has
+// without also having field encryption: core@13.4.0 predates them, core@13.5.0-beta.0 already encrypts. So the "previous
+// release" is the commit that added the framework (insomnia-test #10594), the last one that stores secrets as plaintext.
+const PREVIOUS_RELEASE = "54e46851ff4a4ca8a357e351ef8bed713ceda42a";
 
 const STRUCTURE_MODELS = ["Project", "Workspace", "Request"];
 

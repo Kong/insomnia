@@ -27,7 +27,7 @@ export function upgradePhase(phase: UpgradePhase): { tag: string } {
 }
 
 export interface UpgradeFixtures {
-  /** The old Insomnia to create data with: a git tag or commit, e.g. `core@13.3.0`. Set with `test.use()`. */
+  /** The old Insomnia to create data with: a git tag or commit, e.g. `core@13.3.0` or a full commit SHA. Set with `test.use()`. */
   appVersion: string | undefined;
   /** Optional framework commit/branch whose Page/Flow code the first phase uses; defaults to the working copy. */
   frameworkRef: string | undefined;
@@ -42,16 +42,17 @@ function revParse(ref: string): string {
     .trim();
 }
 
-// CI checks out a shallow clone without tags, so a missing tag is fetched on demand.
+// CI checks out a shallow clone without tags or history, so a missing tag or commit is fetched on demand.
 function resolveRef(ref: string): string {
   try {
     return revParse(ref);
   } catch {
     try {
-      execFileSync('git', ['fetch', '--depth=1', 'origin', 'tag', ref], { cwd: REPO_ROOT, stdio: 'inherit' });
+      const fetchArgs = /^[0-9a-f]{40}$/i.test(ref) ? [ref] : ['tag', ref];
+      execFileSync('git', ['fetch', '--depth=1', 'origin', ...fetchArgs], { cwd: REPO_ROOT, stdio: 'inherit' });
       return revParse(ref);
     } catch {
-      throw new Error(`"${ref}" is not in the local clone and could not be fetched from origin as a tag`);
+      throw new Error(`"${ref}" is not in the local clone and could not be fetched from origin as a tag or commit`);
     }
   }
 }
@@ -181,11 +182,6 @@ function runPlaywright(packageDir: string, spec: string, env: NodeJS.ProcessEnv)
   });
 }
 
-function appVersionAt(sha: string): string {
-  const packageJson = execFileSync('git', ['show', `${sha}:packages/insomnia/package.json`], { cwd: REPO_ROOT });
-  return JSON.parse(packageJson.toString()).version;
-}
-
 async function runFirstPhase(
   { appVersion, frameworkRef }: Pick<UpgradeFixtures, 'appVersion' | 'frameworkRef'>,
   workDir: string,
@@ -194,13 +190,8 @@ async function runFirstPhase(
   if (!appVersion) {
     throw new Error("Set the old Insomnia with `test.use({ appVersion: 'core@x.y.z' })`");
   }
-  const currentVersion = JSON.parse(
-    fs.readFileSync(path.join(REPO_ROOT, 'packages', 'insomnia', 'package.json'), 'utf8'),
-  ).version;
-  if (appVersionAt(resolveRef(appVersion)) === currentVersion) {
-    throw new Error(
-      `"${appVersion}" and the current checkout are both Insomnia ${currentVersion} — nothing would be upgraded; use an older appVersion`,
-    );
+  if (resolveRef(appVersion) === revParse('HEAD')) {
+    throw new Error(`"${appVersion}" is the current checkout — nothing would be upgraded; use an older appVersion`);
   }
 
   const specFile = path.relative(TEST_PACKAGE, testInfo.file).split(path.sep).join('/');

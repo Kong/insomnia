@@ -67,26 +67,38 @@ export class CloudSyncPage extends BasePage {
     const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
     await expect(workspaceRow).toBeVisible({ timeout: DEFAULT_TIMEOUT });
     // Fetching navigates into the workspace, and the sidebar then auto-expands
-    // it asynchronously. Wait for that first; do NOT click the row here: once
-    // the route is on this workspace a click is a collapse/expand toggle, so it
-    // can land after the auto-expand and fold the row back to collapsed.
+    // it asynchronously. Wait for both first; do NOT click the row up front:
+    // once the route is on this workspace a click is a collapse/expand toggle,
+    // so it can land after the auto-expand and fold the row back to collapsed.
     // Non-collection rows have no `data-expanded` attribute, so they pass
     // immediately.
-    const notCollapsed = () =>
+    const notCollapsed = (timeout: number) =>
       expect(workspaceRow).not.toHaveAttribute("data-expanded", "false", {
+        timeout,
+      });
+    const onWorkspaceRoute = () =>
+      expect(this.page).toHaveURL(/\/workspace\//, {
         timeout: DEFAULT_TIMEOUT / 2,
       });
     try {
-      await notCollapsed();
+      await onWorkspaceRoute();
     } catch {
-      // The auto-expand never landed (the sidebar sometimes misses the route
-      // change right after the fetch), so expand it with the toggle button.
+      // The redirect into the fetched workspace was lost (the page is still
+      // on the project dashboard), so open it from its own sidebar row, which
+      // also expands it.
+      await workspaceRow.click();
+      await onWorkspaceRoute();
+    }
+    try {
+      await notCollapsed(DEFAULT_TIMEOUT / 2);
+    } catch {
+      // The auto-expand never landed, so expand it with the toggle button.
       if ((await workspaceRow.getAttribute("data-expanded")) === "false") {
         await this.page
           .getByRole("button", { name: `Expand ${name}`, exact: true })
           .click();
       }
-      await notCollapsed();
+      await notCollapsed(DEFAULT_TIMEOUT);
     }
   }
 
