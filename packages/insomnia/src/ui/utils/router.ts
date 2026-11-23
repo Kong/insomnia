@@ -3,8 +3,9 @@ import type { GitProject, GitRepository } from 'insomnia-data';
 import { database, models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
+import semver from 'semver';
 
-import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
+import { getAppVersion, HAS_SEEN_ONBOARDING_KEY, ONBOARDING_VERSION } from '~/common/constants';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
@@ -31,6 +32,29 @@ const getMatchParams = (location: string) => {
   );
 
   return (workspaceMatch || projectMatch) as PathMatch<'organizationId' | 'projectId' | 'workspaceId'> | null;
+};
+
+const shouldShowOnboarding = () => {
+  const appVersion = getAppVersion();
+  const onboardingVersion = ONBOARDING_VERSION;
+  // Check if the onboarding version matches the app major and minor version
+  let isMajorAndMinorVersionMatch = false;
+  const appVersionParsed = semver.valid(appVersion) ? semver.parse(appVersion) : semver.coerce(appVersion);
+  const onboardingVersionParsed = semver.valid(onboardingVersion)
+    ? semver.parse(onboardingVersion)
+    : semver.coerce(onboardingVersion);
+  if (appVersionParsed && onboardingVersionParsed) {
+    isMajorAndMinorVersionMatch =
+      appVersionParsed.major === onboardingVersionParsed.major &&
+      appVersionParsed.minor === onboardingVersionParsed.minor;
+    if (!isMajorAndMinorVersionMatch) {
+      console.log(`Onboarding version ${onboardingVersion} does not match app version ${appVersion}`);
+    }
+  }
+
+  const hasSeenOnboarding = Boolean(window.localStorage.getItem(HAS_SEEN_ONBOARDING_KEY));
+  // Show onboarding if the user hasn't seen it and the major and minor version matches
+  return !hasSeenOnboarding && isMajorAndMinorVersionMatch;
 };
 
 export const getInitialRouteForOrganization = async ({
@@ -109,9 +133,9 @@ export const getInitialEntry = async () => {
       }
     }
 
-    const hasSeenOnboarding = Boolean(window.localStorage.getItem(HAS_SEEN_ONBOARDING_KEY));
+    const showOnBoarding = shouldShowOnboarding();
 
-    if (!hasSeenOnboarding) {
+    if (showOnBoarding) {
       return href('/onboarding/*', {
         '*': '',
       });
