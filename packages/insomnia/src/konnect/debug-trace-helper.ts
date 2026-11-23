@@ -1,5 +1,5 @@
 import type { DebugSession, DebugSpan, DebugTraceDetail, DebugTraceSummary } from './debug-session-api';
-export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out';
+export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out' | 'polling_timed_out';
 
 // Attribute names used in debug traces
 export const TRACE_ATTRIBUTE_NAMES = {
@@ -14,7 +14,8 @@ export const TRACE_ATTRIBUTE_NAMES = {
   URL_SCHEME: 'url.scheme',
 };
 
-// How long a session may stay in 'completing' before a server-reported timeout is surfaced as 'timed_out'.
+// How long a session may stay in 'completing' before it is surfaced as 'timed_out' (server reported a timeout)
+// or 'polling_timed_out' (server never confirmed the end, so the client stopped waiting).
 export const COMPLETING_TIMEOUT_MS = 60 * 1000;
 
 // Derive the state of a debug session from its response
@@ -28,9 +29,9 @@ export function deriveSessionState(session: DebugSession, now: number = Date.now
   if (session.startedAt) {
     const endsAt = new Date(session.startedAt).getTime() + session.durationSecs * 1000;
     if (Number.isFinite(endsAt) && now >= endsAt) {
-      // Stuck completing for too long and the server reports a timeout;
-      if (session.timedOut && now - endsAt >= COMPLETING_TIMEOUT_MS) {
-        return 'timed_out';
+      if (now - endsAt >= COMPLETING_TIMEOUT_MS) {
+        // Stuck completing for too long: the server reported a timeout, or it never did and we stop polling.
+        return session.timedOut ? 'timed_out' : 'polling_timed_out';
       }
       // The session has reached its expected end time but last status fetch has not been reached yet.
       return 'completing';

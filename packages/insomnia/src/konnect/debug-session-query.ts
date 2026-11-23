@@ -79,8 +79,8 @@ export function isSessionEnded(session: DebugSession | undefined): boolean {
     return true;
   }
   const sessionState = deriveSessionState(session);
-  // Only consider the session ended if it is cancelled, completed or timed out.
-  return ['cancelled', 'completed', 'timed_out'].includes(sessionState);
+  // Only consider the session ended if it is cancelled, completed or timed out (by the server or by polling).
+  return ['cancelled', 'completed', 'timed_out', 'polling_timed_out'].includes(sessionState);
 }
 
 export function getSessionRefetchInterval(args: { session: DebugSession | undefined; error: unknown }): number | false {

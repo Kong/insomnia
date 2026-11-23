@@ -88,12 +88,16 @@ describe('deriveSessionState', () => {
   });
 
   it('is completing after the end time within the completing timeout', () => {
-    expect(deriveSessionState(session(), endsAt + COMPLETING_TIMEOUT_MS * 10)).toBe('completing');
+    expect(deriveSessionState(session(), endsAt + COMPLETING_TIMEOUT_MS - 1)).toBe('completing');
     expect(deriveSessionState(session({ timedOut: true }), endsAt + COMPLETING_TIMEOUT_MS - 1)).toBe('completing');
   });
 
   it('is timed_out when completing exceeds the timeout and the server reports timedOut', () => {
     expect(deriveSessionState(session({ timedOut: true }), endsAt + COMPLETING_TIMEOUT_MS)).toBe('timed_out');
+  });
+
+  it('is polling_timed_out when completing exceeds the timeout and the server never reports timedOut', () => {
+    expect(deriveSessionState(session(), endsAt + COMPLETING_TIMEOUT_MS)).toBe('polling_timed_out');
   });
 
   it('prefers cancelled and completed over timed_out', () => {

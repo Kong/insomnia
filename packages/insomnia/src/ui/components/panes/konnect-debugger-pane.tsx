@@ -463,6 +463,22 @@ const StatusBanners = ({
       )}
       {debugSessionState === 'completing' && <StatusBanner type="info">Wait for the session to complete.</StatusBanner>}
       {debugSessionState === 'timed_out' && <StatusBanner type="warning">Timed out</StatusBanner>}
+      {debugSessionState === 'polling_timed_out' && (
+        <StatusBanner
+          type="warning"
+          action={
+            <Button
+              onPress={debug.refreshTraces}
+              isDisabled={debug.isRefreshingTraces}
+              className="rounded-xs border border-solid border-current px-2 py-0.5 ring-1 ring-transparent focus:ring-(--hl-md) disabled:opacity-50"
+            >
+              {debug.isRefreshingTraces ? 'Refreshing…' : 'Refresh traces'}
+            </Button>
+          }
+        >
+          Polling timed out. Traces shown may be incomplete.
+        </StatusBanner>
+      )}
       {debugSessionState === 'cancelled' && (
         <StatusBanner
           type="info"
