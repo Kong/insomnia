@@ -1,0 +1,23 @@
+openapi: 3.2.0
+info: { title: Path params, version: 1.0.0 }
+paths:
+  /pets/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: verbose, in: query, schema: { type: boolean, default: false } }
+      - {
+          name: shared,
+          in: query,
+          schema: { type: string, default: inherited },
+        }
+    get:
+      summary: Get a pet
+      parameters:
+        - { name: verbose, in: query, schema: { type: boolean, default: true } }
+      responses:
+        "200": { description: OK }
+    additionalOperations:
+      PURGE:
+        summary: Purge a pet
+        responses:
+          "204": { description: No Content }

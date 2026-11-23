@@ -1,0 +1,12 @@
+openapi: 3.1.0
+info: { title: Events only, version: 1.0.0 }
+webhooks:
+  pet.created:
+    post:
+      summary: Pet created
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { name: { type: string } } }
+      responses:
+        "200": { description: OK }

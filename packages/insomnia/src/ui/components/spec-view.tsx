@@ -1217,6 +1217,7 @@ export const SpecView = ({
                             ({ method, jumpTo }) => (
                               <Button
                                 key={toJsonStrItemId(...jumpTo)}
+                                data-testid={`spec-outline-webhook-method-${method.toUpperCase()}`}
                                 onPress={() => navigateToPath(jumpTo)}
                                 className={`flex w-10 shrink-0 items-center justify-center rounded-xs border border-solid border-(--hl-sm) text-[0.65rem] http-method-${method.toUpperCase()}`}
                               >

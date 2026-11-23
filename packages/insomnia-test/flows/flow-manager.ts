@@ -21,6 +21,7 @@ import { MockServerFlow } from "./mock-server.flow";
 import { OrganizationFlow } from "./organization.flow";
 import { PreferencesFlow } from "./preferences.flow";
 import { SocketIORequestFlow } from "./socket-io-request.flow";
+import { SpecFlow } from "./spec.flow";
 import { TemplateTagFlow } from "./template-tag.flow";
 import { VariableSourceFlow } from "./variable-source.flow";
 import { WebSocketRequestFlow } from "./web-socket-request.flow";
@@ -58,6 +59,7 @@ const flowRegistry = {
   organizationFlow: (m: FlowDeps): OrganizationFlow => new OrganizationFlow(m.context, m.pageManager),
   preferencesFlow: (m: FlowDeps): PreferencesFlow => new PreferencesFlow(m.context, m.pageManager),
   socketIoRequestFlow: (m: FlowDeps): SocketIORequestFlow => new SocketIORequestFlow(m.context, m.pageManager),
+  specFlow: (m: FlowDeps): SpecFlow => new SpecFlow(m.context, m.pageManager),
   templateTagFlow: (m: FlowDeps): TemplateTagFlow => new TemplateTagFlow(m.context, m.pageManager),
   variableSourceFlow: (m: FlowDeps): VariableSourceFlow => new VariableSourceFlow(m.context, m.pageManager),
   webSocketRequestFlow: (m: FlowDeps): WebSocketRequestFlow => new WebSocketRequestFlow(m.context, m.pageManager),
