@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
-import { HTTP_SERVER } from "@package/misc/constants";
+import { HTTP_SERVER, MOCK_API_SERVER } from "@package/misc/constants";
 import { ENCRYPTED_VALUE, readRawDocs } from "@package/misc/db";
 import type { UserSession } from "@package/misc/fixtures";
 import { Collection } from "@package/models/collection";
@@ -58,7 +58,7 @@ export async function createBasicAuthCollection(
     {
       name: faker.string.alphanumeric(10),
       method: HttpMethod.Get,
-      url: `${HTTP_SERVER}/auth/basic`,
+      url: `${MOCK_API_SERVER}/auth/basic`,
       authentication: { type: "basic", username: "user", password: "pass" },
     },
   );

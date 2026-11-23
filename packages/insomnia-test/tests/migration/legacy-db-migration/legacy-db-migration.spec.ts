@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
+import { HTTP_SERVER } from "@package/misc/constants";
 import { test } from "@package/misc/fixtures";
 import { expect } from "@playwright/test";
 
@@ -10,10 +11,19 @@ const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
     await fs.promises.mkdir(dataPath, { recursive: true });
     for (const file of await fs.promises.readdir(LEGACY_DB_DIR)) {
-      await fs.promises.copyFile(
-        path.join(LEGACY_DB_DIR, file),
-        path.join(dataPath, file),
-      );
+      const source = path.join(LEGACY_DB_DIR, file);
+      const target = path.join(dataPath, file);
+      if (file === "insomnia.Request.db") {
+        // The legacy requests point at the old dev echo server (localhost:4060);
+        // the mock server serves the echo at HTTP_SERVER instead.
+        const requests = await fs.promises.readFile(source, "utf8");
+        await fs.promises.writeFile(
+          target,
+          requests.replaceAll("http://localhost:4060", HTTP_SERVER),
+        );
+        continue;
+      }
+      await fs.promises.copyFile(source, target);
     }
     await use(dataPath);
   },

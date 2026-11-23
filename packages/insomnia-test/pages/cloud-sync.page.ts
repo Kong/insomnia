@@ -66,15 +66,28 @@ export class CloudSyncPage extends BasePage {
     await expect(unsyncedRow).toBeHidden({ timeout: DEFAULT_TIMEOUT });
     const workspaceRow = this.page.getByTestId(`workspace-node-${name}`);
     await expect(workspaceRow).toBeVisible({ timeout: DEFAULT_TIMEOUT });
-    // Fetching already navigates into the workspace, and the sidebar then
-    // auto-expands it asynchronously. Do NOT click the row here: once the
-    // route is on this workspace a click is a collapse/expand toggle, so it
+    // Fetching navigates into the workspace, and the sidebar then auto-expands
+    // it asynchronously. Wait for that first; do NOT click the row here: once
+    // the route is on this workspace a click is a collapse/expand toggle, so it
     // can land after the auto-expand and fold the row back to collapsed.
-    // Just wait for the auto-expand to settle (non-collection rows have no
-    // `data-expanded` attribute, so they pass immediately).
-    await expect(workspaceRow).not.toHaveAttribute("data-expanded", "false", {
-      timeout: DEFAULT_TIMEOUT,
-    });
+    // Non-collection rows have no `data-expanded` attribute, so they pass
+    // immediately.
+    const notCollapsed = () =>
+      expect(workspaceRow).not.toHaveAttribute("data-expanded", "false", {
+        timeout: DEFAULT_TIMEOUT / 2,
+      });
+    try {
+      await notCollapsed();
+    } catch {
+      // The auto-expand never landed (the sidebar sometimes misses the route
+      // change right after the fetch), so expand it with the toggle button.
+      if ((await workspaceRow.getAttribute("data-expanded")) === "false") {
+        await this.page
+          .getByRole("button", { name: `Expand ${name}`, exact: true })
+          .click();
+      }
+      await notCollapsed();
+    }
   }
 
   /**

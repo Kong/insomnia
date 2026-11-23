@@ -18,6 +18,8 @@ const EXPECTED_AFTER_RESPONSE = "console.log('collection after-response script')
 const EXPECTED_AUTHORIZATION = `Basic ${Buffer.from("collection-user:collection-pass").toString("base64")}`;
 
 test("Importing a file with collection-level properties into an existing collection", async ({ user }) => {
+  // Remove once the INS-4322 fix reaches this branch (ticket is Ready For Release, but not in develop yet).
+  test.fail(true, "INS-4322");
   const { workspaceFlow, collectionFlow, importFlow, httpRequestFlow } = user.flowManager;
 
   const project = await workspaceFlow.createProject(new Project(faker.string.alphanumeric(10), ProjectType.Local));

@@ -71,6 +71,9 @@ export class HeadersTabComponent extends TabPanelComponent {
         .toBe(false);
     }
     for (const [index, header] of headers.entries()) {
+      // The editor renders its rows a beat after the tab opens; counting before
+      // that gives rowIndex -1 and types into the wrong row.
+      await expect(rows.first()).toBeVisible({ timeout: DEFAULT_TIMEOUT });
       const rowIndex = (await rows.count()) - 1;
       const row = rows.nth(rowIndex);
       if (header.name) {

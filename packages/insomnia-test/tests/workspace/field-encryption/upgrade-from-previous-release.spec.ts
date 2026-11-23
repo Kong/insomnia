@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { HttpMethod } from "@package/enums/http-method";
 import { ProjectType } from "@package/enums/project-types";
 import { UpgradePhase } from "@package/enums/upgrade-phase";
-import { HTTP_SERVER } from "@package/misc/constants";
+import { HTTP_SERVER, MOCK_API_SERVER } from "@package/misc/constants";
 import { ENCRYPTED_VALUE, readRawDbText, readRawDocs } from "@package/misc/db";
 import { keyFilePath } from "@package/misc/field-encryption-fixtures";
 import { test as base } from "@package/misc/fixtures";
@@ -64,7 +64,7 @@ test(
       {
         name: BASIC_REQUEST,
         method: HttpMethod.Get,
-        url: `${HTTP_SERVER}/auth/basic`,
+        url: `${MOCK_API_SERVER}/auth/basic`,
         authentication: { type: "basic", username: "user", password: BASIC_PASSWORD },
       },
     );
@@ -121,7 +121,7 @@ test(
 
     await workspaceFlow.expandCollection(PROJECT_NAME, COLLECTION_NAME);
     const response = await httpRequestFlow.send(
-      { name: BASIC_REQUEST, method: HttpMethod.Get, url: `${HTTP_SERVER}/auth/basic` },
+      { name: BASIC_REQUEST, method: HttpMethod.Get, url: `${MOCK_API_SERVER}/auth/basic` },
     );
     expect(response.statusBar.code).toBe(200);
 

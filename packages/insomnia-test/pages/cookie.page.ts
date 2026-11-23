@@ -32,16 +32,26 @@ function parseCookieLine(line: string): Cookie {
 const RETRY_CHECK_TIMEOUT = 2000;
 
 export class CookiePage extends BasePage {
-  private readonly editModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Manage Cookies" }),
-  );
-  private readonly listModal = new ModalComponent(
-    this.page,
-    this.page.getByRole("dialog", { name: "Cookies Modal" }),
-  );
-  private readonly editDialog = this.editModal.root;
-  private readonly listDialog = this.listModal.root;
+  // Getters, not fields: the page is rewired onto a new window after
+  // `AppFlow.restart()`, and locators built once would stay on the closed one.
+  private get editModal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", { name: "Manage Cookies" }),
+    );
+  }
+  private get listModal(): ModalComponent {
+    return new ModalComponent(
+      this.page,
+      this.page.getByRole("dialog", { name: "Cookies Modal" }),
+    );
+  }
+  private get editDialog() {
+    return this.editModal.root;
+  }
+  private get listDialog() {
+    return this.listModal.root;
+  }
 
   /**
    * Closes the cookie list dialog via its "Done" button and waits for it

@@ -1,5 +1,6 @@
 import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -169,7 +170,7 @@ function prepareTree(app: string, tests: string | undefined, specFile: string) {
 }
 
 function runPlaywright(packageDir: string, spec: string, env: NodeJS.ProcessEnv) {
-  const cli = require.resolve('@playwright/test/cli', { paths: [packageDir] });
+  const cli = createRequire(import.meta.url).resolve('@playwright/test/cli', { paths: [packageDir] });
   return new Promise<{ status: number | null; output: string }>((resolve, reject) => {
     const child = spawn(process.execPath, [cli, 'test', spec, '--reporter=line'], { cwd: packageDir, env });
     let output = '';
