@@ -653,7 +653,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       <Tooltip
         message={tooltipValue}
         delay={1000}
-        className="h-full w-full"
+        className="block! h-full w-full"
         followCursor
         shouldShow={() =>
           Boolean(tooltipValue) && !isPasswordEditor && !isPointerOverNunjucksTag.current && isContentTruncated()
