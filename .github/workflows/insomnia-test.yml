@@ -122,6 +122,18 @@ jobs:
           path: packages/insomnia/dist/linux-unpacked
           retention-days: 1
 
+      # The inso CLI e2e tests (tests/inso) run the built bundle through the
+      # Electron binary, so build it once here and share it with the shards.
+      - name: Build inso CLI
+        run: npm run build -w insomnia-inso
+
+      - name: Upload inso bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: insomnia-inso-dist
+          path: packages/insomnia-inso/dist
+          retention-days: 1
+
   # ---------------------------------------------------------------------------
   # Counts the test cases with `playwright test --list` and derives the shard
   # count as ceil(total / TESTS_PER_SHARD), capped at MAX_SHARDS, then generates
@@ -228,6 +240,12 @@ jobs:
         with:
           name: insomnia-linux-unpacked
           path: packages/insomnia/dist/linux-unpacked
+
+      - name: Download inso bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: insomnia-inso-dist
+          path: packages/insomnia-inso/dist
 
       # upload/download-artifact go through zip and drop Unix file modes, so
       # the binary and its helper executables (e.g. chrome_crashpad_handler)

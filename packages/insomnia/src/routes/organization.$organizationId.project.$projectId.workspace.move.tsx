@@ -1,9 +1,10 @@
 import type { Project } from 'insomnia-data';
-import { services } from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import { href } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '~/common/insomnia-v5';
+import { removeVaultEnvironmentData } from '~/common/utils/environment-utils';
 import { invariant } from '~/common/utils/invariant';
 import { syncNewWorkspaceIfNeeded } from '~/routes/import.resources';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
@@ -32,7 +33,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
       includePrivateEnvironments: true,
     });
 
-    const data = importInsomniaV5Data(workspaceExport);
+    // Vault secrets are bound to the owner's vault key (and masked on export), so they are meaningless in a copy
+    const data = importInsomniaV5Data(workspaceExport).map(resource =>
+      models.environment.isEnvironment(resource) ? removeVaultEnvironmentData(resource) : resource,
+    );
 
     const newWorkspace = await importResourcesToNewWorkspace({
       projectId: newProject._id,

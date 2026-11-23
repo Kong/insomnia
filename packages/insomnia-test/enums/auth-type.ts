@@ -1,6 +1,6 @@
 export enum AuthType {
-  None = "None",
   Inherit = "Inherit from parent",
+  None = "None",
   ApiKey = "API Key",
   Basic = "Basic",
   Digest = "Digest",

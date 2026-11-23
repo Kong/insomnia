@@ -1,10 +1,17 @@
 import type { ExecException } from 'node:child_process';
 import { exec } from 'node:child_process';
+import { generateKeySync } from 'node:crypto';
 import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { models } from 'insomnia-data';
+import {
+  createFieldDecryptionFailureReport,
+  createFieldEncryptionHooks,
+  exportFieldEncryptionKey,
+} from 'insomnia-data/node';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
@@ -76,11 +83,104 @@ const shouldReturnErrorCode = [
   // with timeout failure
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/timeout-test.yml -i req_two_seconds --requestTimeout 1000 wrk_timeout_test',
 ];
+// Data that holds one encrypted value, as the Insomnia app writes it, and the key for it in both forms the app hands out
+const secretToken = 'e2e-secret-token';
+const createEncryptedDataDir = () => {
+  const dataDir = fs.mkdtempSync(path.join(tmpdir(), 'inso-encrypted-data-'));
+  fs.cpSync(path.join(__dirname, 'db/fixtures/nedb'), dataDir, { recursive: true });
+  const key = generateKeySync('aes', { length: 256 });
+  const { afterSerialization } = createFieldEncryptionHooks(key, {
+    getEncryptedFieldPaths: models.getEncryptedFieldPathsForType,
+    failureReport: createFieldDecryptionFailureReport(),
+  });
+  const request = {
+    _id: 'req_encrypted',
+    type: 'Request',
+    parentId: 'wrk_none',
+    name: 'Has a secret',
+    authentication: { type: 'bearer', token: secretToken },
+  };
+  fs.appendFileSync(path.join(dataDir, 'insomnia.Request.db'), `${afterSerialization(JSON.stringify(request))}\n`);
+  const wrongKey = exportFieldEncryptionKey(generateKeySync('aes', { length: 256 }));
+  return { dataDir, ...exportFieldEncryptionKey(key), wrongBase64: wrongKey.base64 };
+};
+
+const describeEncryptionKey = (bin: string) =>
+  describe('encryption key', () => {
+    let data: ReturnType<typeof createEncryptedDataDir>;
+    beforeAll(() => {
+      data = createEncryptedDataDir();
+    });
+    afterAll(() => {
+      fs.rmSync(data.dataDir, { recursive: true, force: true });
+    });
+
+    // `run test` loads every datastore, so it reads the encrypted value
+    const runTest = (args = '', env = '') =>
+      runCliFromRoot(`${env} ${bin} run test -w "${data.dataDir}" -e env_env_ca046a uts_fe901c ${args}`);
+    const output = (result: { stdout: string; stderr: string }) => result.stdout + result.stderr;
+
+    it('warns, and carries on, when there is encrypted data and no key', async () => {
+      const result = await runTest();
+      expect(result.code).toBe(0);
+      expect(output(result)).toContain('no encryption key');
+    });
+
+    it('decrypts with the base64 text, given as an option', async () => {
+      const result = await runTest(`--encryption-key '${data.base64}'`);
+      expect(result.code).toBe(0);
+      expect(output(result)).not.toMatch(/encryption key|Could not decrypt/);
+    });
+
+    it('decrypts with the JWK JSON, given in the environment', async () => {
+      const result = await runTest('', `INSOMNIA_ENCRYPTION_KEY='${data.jwk}'`);
+      expect(result.code).toBe(0);
+      expect(output(result)).not.toMatch(/encryption key|Could not decrypt/);
+    });
+
+    it('prefers the option to the environment', async () => {
+      const result = await runTest(
+        `--encryption-key '${data.base64}'`,
+        `INSOMNIA_ENCRYPTION_KEY='${data.wrongBase64}'`,
+      );
+      expect(result.code).toBe(0);
+    });
+
+    it('fails, without showing the values, when the key does not decrypt the data', async () => {
+      const result = await runTest(`--encryption-key '${data.wrongBase64}'`);
+      expect(result.code).toBe(1);
+      expect(output(result)).toContain('Could not decrypt');
+      expect(output(result)).not.toContain(secretToken);
+      expect(output(result)).not.toContain(data.wrongBase64);
+    });
+
+    it('fails, without repeating it, when the key is not valid', async () => {
+      const result = await runTest('', 'INSOMNIA_ENCRYPTION_KEY=not-a-key-at-all');
+      expect(result.code).toBe(1);
+      expect(output(result)).toContain('Invalid encryption key');
+      expect(output(result)).not.toContain('not-a-key-at-all');
+    });
+
+    it('does not print the key with --printOptions', async () => {
+      const result = await runTest(`--printOptions --encryption-key '${data.base64}'`);
+      expect(output(result)).toContain("encryptionKey: '***'");
+      expect(output(result)).not.toContain(data.base64);
+    });
+
+    it('does not take the key from a config file', async () => {
+      const configFile = path.join(data.dataDir, '.insorc');
+      fs.writeFileSync(configFile, `options:\n  encryptionKey: ${data.base64}\n`);
+      const result = await runTest(`--config "${configFile}"`);
+      expect(output(result)).toContain('no encryption key');
+    });
+  });
+
 beforeAll(async () => {
   // ensure the test server is running
   await fetch('http://localhost:4010');
 });
 describe('inso dev bundle', () => {
+  describeEncryptionKey('$PWD/packages/insomnia-inso/bin/inso');
   describe('exit codes are consistent', () => {
     it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
       const result = await runCliFromRoot(input);
@@ -269,6 +369,7 @@ const packagedErrorCodes = shouldReturnErrorCode.map(x =>
 );
 
 describe('inso packaged binary', () => {
+  describeEncryptionKey('$PWD/packages/insomnia-inso/binaries/inso');
   describe('exit codes are consistent', () => {
     it.each(packagedSuccessCodes)('exit code should be 0: %p', async input => {
       const result = await runCliFromRoot(input);

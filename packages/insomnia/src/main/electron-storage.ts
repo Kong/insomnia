@@ -169,6 +169,21 @@ class ElectronStorage {
     }
   }
 
+  /**
+   * Renames the file of an item, so its content is kept under another key (used to set the local encryption key aside).
+   * A pending buffered `setItem` of `key` is dropped, so it cannot recreate the old name. Rejects when the item does not
+   * exist or the rename fails.
+   */
+  async renameItem(key: string, newKey: string): Promise<void> {
+    const storageKey = this._validateKey(key);
+    const newStorageKey = this._validateKey(newKey);
+    clearTimeout(this._timeouts[storageKey]);
+    delete this._buffer[storageKey];
+
+    await this._renameWithRetry(this._getKeyPath(storageKey), this._getKeyPath(newStorageKey));
+    await this._syncDirectory(path.dirname(this._getKeyPath(newStorageKey)));
+  }
+
   _validateKey(key: string) {
     if (!key || key === '.' || key === '..' || key.includes('/') || key.includes('\\') || key.includes('\0')) {
       throw new Error('Invalid electron storage key');

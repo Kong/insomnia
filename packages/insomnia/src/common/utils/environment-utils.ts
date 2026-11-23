@@ -1,5 +1,5 @@
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
-import { EnvironmentKvPairDataType, models } from 'insomnia-data';
+import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
 import orderedJSON from 'json-order';
 
 import { JSON_ORDER_SEPARATOR } from '~/common/constants';
@@ -150,3 +150,28 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
   }
   return environment;
 };
+
+type VaultStrippableEnvironment = Pick<Environment, 'data' | 'environmentType' | 'kvPairData'>;
+
+/**
+ * Remove all vault secrets from an environment.
+ * Vault secrets are encrypted with the owner's vault key and are masked on export, so a copied secret is meaningless.
+ * Secrets only exist in table (KV) environments, so the environment is kept as KVPAIR with the remaining non-secret rows.
+ */
+export function removeVaultEnvironmentData<T extends VaultStrippableEnvironment>(environment: T): T {
+  const { vaultEnvironmentPath } = models.environment;
+  const { data } = environment;
+  if (!data || !(vaultEnvironmentPath in data)) {
+    return environment;
+  }
+
+  const { [vaultEnvironmentPath]: _vault, ...restData } = data;
+  const kvPairData = environment.kvPairData?.length ? environment.kvPairData : getKVPairFromData(restData, null);
+
+  return {
+    ...environment,
+    data: restData,
+    environmentType: EnvironmentType.KVPAIR,
+    kvPairData: kvPairData.filter(pair => pair.type !== EnvironmentKvPairDataType.SECRET),
+  };
+}

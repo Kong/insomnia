@@ -13,6 +13,10 @@ export async function clientCertificateAuth(req: any, res: Response, next: NextF
   next();
 }
 
+mtlsRouter.post('/oauth/token', (_req, res) => {
+  res.status(200).send({ access_token: 'mtls-access-token', token_type: 'Bearer', expires_in: 3600 });
+});
+
 mtlsRouter.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });

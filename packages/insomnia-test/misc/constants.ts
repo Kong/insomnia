@@ -81,5 +81,20 @@ export const MOCK_BIN_SOURCE_RESPONSE = {
 export const OAUTH2_SERVER = "http://localhost:4010/oauth2";
 export const OAUTH2_CLIENT_ID = "test-client-id";
 export const OAUTH2_CLIENT_SECRET = "test-client-secret";
+/**
+ * The same mock server over HTTPS: it requests a client certificate signed by
+ * `mtls-ca.pem` (see `misc/certs.ts`); the routes under `/protected` answer 401 without one.
+ */
+export const MTLS_SERVER = "https://localhost:4011/protected";
+
+/**
+ * Servers that answer a connection with the handshake headers (and, for
+ * Socket.IO, the handshake auth) they received — `misc/server/handshake-echo.ts`.
+ */
+export const WS_HANDSHAKE_SERVER = "ws://localhost:4140";
+export const SOCKET_IO_HANDSHAKE_SERVER = "ws://localhost:4141";
+/** `GET` this for the latest Socket.IO handshake the server received, as `{ headers, auth }`. */
+export const SOCKET_IO_LAST_HANDSHAKE = "http://localhost:4141/last-handshake";
+
 export const OAUTH2_USERNAME = "testuser";
 export const OAUTH2_PASSWORD = "testpass";

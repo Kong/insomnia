@@ -95,6 +95,7 @@ const OAUTH2_FETCH_TIMEOUT = ACTION_TIMEOUT;
 // A request's auth lives on the Request document; a folder's own auth
 // (inherited by its children) on the RequestGroup document.
 const AUTH_DB_FILES = [
+  "insomnia.Workspace.db",
   "insomnia.Request.db",
   "insomnia.RequestGroup.db",
   "insomnia.WebSocketRequest.db",
@@ -251,6 +252,26 @@ export class AuthTabComponent extends TabPanelComponent {
   ): Promise<void> {
     await this.setAuthType(AuthType.Token);
     await this.setTokenField(fields.token);
+  }
+
+  /**
+   * Flips the auth's "Enabled" toggle (shown for every auth type that has
+   * one, e.g. Basic/Bearer/API Key) and waits for the change to be saved.
+   * A disabled auth is skipped when the request resolves which auth to use.
+   */
+  async setEnabled(enabled: boolean): Promise<void> {
+    await this.switchTab("auth");
+    await this.toggle("Enabled").set(enabled);
+    await this.waitForAuthFieldsPersisted([{ field: "disabled", value: !enabled }], AUTH_SETTLE_MS);
+  }
+
+  /**
+   * Picks "Inherit from parent", which resets the auth to unset (`{}`) —
+   * unlike "None", which stores an explicit `{ type: "none" }`.
+   */
+  async setInheritAuthentication(): Promise<void> {
+    await this.setAuthType(AuthType.Inherit);
+    await this.waitForRendererIdle();
   }
 
   /**

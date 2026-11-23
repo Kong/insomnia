@@ -252,6 +252,7 @@ const main: Window['main'] = {
   writeFile: options => invokeWithNormalizedError('writeFile', options),
   deleteCompiledRuleset: options => invokeWithNormalizedError('deleteCompiledRuleset', options),
   refreshCompiledRuleset: options => invokeWithNormalizedError('refreshCompiledRuleset', options),
+  ensureCompiledRuleset: options => invokeWithNormalizedError('ensureCompiledRuleset', options),
   writeResponseBodyToFile: options => invokeWithNormalizedError('writeResponseBodyToFile', options),
   getAuthHeader: (
     renderedRequest: RenderedRequest,
@@ -474,6 +475,8 @@ const env: Window['env'] = {
   INSOMNIA_VAULT_SRP_SECRET: process.env.INSOMNIA_VAULT_SRP_SECRET,
   // App environment: gates dev features and selects analytics keys
   INSOMNIA_ENV: process.env.INSOMNIA_ENV,
+  // Overrides the app data directory (main process falls back to Electron's userData when unset)
+  INSOMNIA_DATA_PATH: process.env.INSOMNIA_DATA_PATH,
   // Injected at build time; shown in the About screen
   BUILD_DATE: process.env.BUILD_DATE,
   // Windows portable binary sentinel: presence disables auto-updates

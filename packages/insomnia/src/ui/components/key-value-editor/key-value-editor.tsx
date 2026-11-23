@@ -280,6 +280,7 @@ export const KeyValueEditor: FC<Props> = ({
           <Icon icon="plus" /> Add
         </Button>
         <PromptButton
+          testId="key-value-delete-all"
           disabled={persistedItems.length === 0}
           onClick={() => {
             onChange([]);

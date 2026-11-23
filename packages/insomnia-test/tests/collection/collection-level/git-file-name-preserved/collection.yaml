@@ -1,0 +1,8 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Git collection file
+meta:
+  id: wrk_0123456789abcdef0123456789abcdef
+  created: 1700000000000
+  modified: 1700000000000
+collection: []

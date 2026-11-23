@@ -14,6 +14,7 @@ import { CloudSyncBranchesDialogPage } from "./cloud-sync-branches-dialog.page";
 import { CloudSyncCommitDialogPage } from "./cloud-sync-commit-dialog.page";
 import { CloudSyncFileDeletePage } from "./cloud-sync-file-delete.page";
 import { CloudSyncHistoryDialogPage } from "./cloud-sync-history-dialog.page";
+import { CollectionPage } from "./collection.page";
 import { CommandPalettePage } from "./command-palette.page";
 import { CookiePage } from "./cookie.page";
 import { EnvironmentPage } from "./environment.page";
@@ -58,6 +59,8 @@ const pageRegistry = {
     new EventStreamRequestPage(page),
   exportPage: (page: Page): ExportPage =>
     new ExportPage(page),
+  collectionPage: (page: Page): CollectionPage =>
+    new CollectionPage(page),
   folderPage: (page: Page): FolderPage =>
     new FolderPage(page),
   gitSyncPage: (page: Page): GitSyncPage =>
@@ -95,20 +98,14 @@ const pageRegistry = {
     new McpClientPage(page),
   mockServerPage: (page: Page): MockServerPage =>
     new MockServerPage(page),
-  projectSettingsPage: (page: Page): ProjectSettingsPage =>
-    new ProjectSettingsPage(page),
   responsePage: (page: Page): ResponsePage =>
     new ResponsePage(page),
   runnerPage: (page: Page): RunnerPage =>
     new RunnerPage(page),
-  socketIoRequestPage: (page: Page): SocketIORequestPage =>
-    new SocketIORequestPage(page),
   templateTagPage: (page: Page): TemplateTagPage =>
     new TemplateTagPage(page),
   variableSourcePage: (page: Page): VariableSourcePage =>
     new VariableSourcePage(page),
-  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
-    new WebSocketRequestPage(page),
   cloudSyncCommitDialogPage: (page: Page): CloudSyncCommitDialogPage =>
     new CloudSyncCommitDialogPage(page),
   cloudSyncHistoryDialogPage: (page: Page): CloudSyncHistoryDialogPage =>
@@ -119,8 +116,14 @@ const pageRegistry = {
     new CloudSyncFileDeletePage(page),
   projectPage: (page: Page): ProjectPage =>
     new ProjectPage(page),
+  projectSettingsPage: (page: Page): ProjectSettingsPage =>
+    new ProjectSettingsPage(page),
+  socketIoRequestPage: (page: Page): SocketIORequestPage =>
+    new SocketIORequestPage(page),
   specPage: (page: Page): SpecPage =>
     new SpecPage(page),
+  webSocketRequestPage: (page: Page): WebSocketRequestPage =>
+    new WebSocketRequestPage(page),
   workspacePage: (page: Page): WorkspacePage =>
     new WorkspacePage(page),
 } satisfies Record<string, (page: Page) => BasePage | BaseComponent>;

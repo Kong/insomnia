@@ -1,4 +1,5 @@
 import type { OAuth2Tokens } from "@package/components/auth-tab.component";
+import type { KeyValueRow } from "@package/components/key-value-editor.component";
 import type { RequestScripts } from "@package/components/script-tab.component";
 import { ContextMenuItem } from "@package/enums/context-menu-items";
 import { TreeNodeType } from "@package/enums/tree-node-types";
@@ -61,6 +62,13 @@ export class FolderFlow extends BaseFlow {
     const folderPage = this.pageManager.folderPage;
     await folderPage.navigate();
     return folderPage;
+  }
+
+  /** Opens `folder` and sets its headers (see `HeadersTabComponent.setHeaders()`). */
+  @step()
+  async setHeaders(folder: Folder, headers: KeyValueRow[]): Promise<void> {
+    const folderPage = await this.open(folder);
+    await folderPage.headers.setHeaders(headers);
   }
 
   /**

@@ -24,6 +24,7 @@ import { schema } from './graphql.ts';
 import { startGRPCServer } from './grpc.ts';
 import { startHelloGrpcServers } from './grpc-hello.ts';
 import grpcReflectionApi from './grpc-reflection-api.ts';
+import { startHandshakeEchoServers } from './handshake-echo.ts';
 import { httpEchoRouter, startHttpEchoSelfSignedServer } from './http-echo.ts';
 import insomniaApi from './insomnia-api.ts';
 import { startMcpServers } from './mcp.ts';
@@ -323,5 +324,6 @@ startGitServer();
 startHelloGrpcServers();
 
 startSocketIOServer();
+startHandshakeEchoServers();
 
 startGRPCServer(grpcPort);

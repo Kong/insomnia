@@ -15,9 +15,20 @@ export const BooleanSetting: FC<{
   confirmBeforeToggle?: boolean;
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
+  /** Overrides the displayed value, e.g. when the setting is enforced elsewhere. */
+  checked?: boolean;
   /** Called with the new value when the toggle is accepted. The patch may still be in flight. */
   onAfterToggle?: (isChecked: boolean) => void;
-}> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false, onAfterToggle }) => {
+}> = ({
+  help,
+  label,
+  setting,
+  confirmBeforeToggle = false,
+  confirmMessage,
+  disabled = false,
+  checked,
+  onAfterToggle,
+}) => {
   const { settings } = useRootLoaderData()!;
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
@@ -29,7 +40,7 @@ export const BooleanSetting: FC<{
       <div className="">
         <label className="flex items-center gap-2" data-testid={`setting-${setting}`}>
           <input
-            checked={Boolean(settings[setting])}
+            checked={checked ?? Boolean(settings[setting])}
             name={setting}
             onChange={event => {
               const isChecked = event.currentTarget.checked;

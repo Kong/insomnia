@@ -92,6 +92,7 @@ import {
 import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { registerPluginIpcHandlers } from '../plugin-window';
+import { writeFileForRenderer, type WriteFileForRendererOptions } from '../write-file-for-renderer';
 import type { CookiesBridgeAPI } from './cookies';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import type { electronStorageBridgeAPI } from './electron-storage';
@@ -242,9 +243,10 @@ export interface RendererToMainBridgeAPI {
   initializeWorkspaceBackendProject: typeof initializeWorkspaceBackendProject;
   parseImport: typeof convert;
   multipartBufferToArray: (options: { bodyBuffer: Uint8Array | null; contentType: string }) => Promise<Part[]>;
-  writeFile: (options: { path: string; content: string | Uint8Array }) => Promise<string>;
+  writeFile: (options: WriteFileForRendererOptions) => Promise<string>;
   deleteCompiledRuleset: (options: { projectId: string }) => Promise<void>;
   refreshCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
+  ensureCompiledRuleset: (options: { projectId: string; rulesetContent: string }) => Promise<{ compiledPath: string }>;
   writeResponseBodyToFile: (options: {
     sourcePath: string;
     destinationPath: string;
@@ -465,12 +467,9 @@ export function registerMainHandlers() {
       return initializeWorkspaceBackendProject(options);
     },
   );
-  ipcMainHandle('writeFile', async (_, options: { path: string; content: string | Uint8Array }) => {
+  ipcMainHandle('writeFile', async (_, options: WriteFileForRendererOptions) => {
     try {
-      const dir = path.dirname(options.path);
-      await fs.promises.mkdir(dir, { recursive: true });
-      await fs.promises.writeFile(options.path, options.content);
-      return options.path;
+      return await writeFileForRenderer(options);
     } catch (err) {
       throw new Error(err);
     }
@@ -482,6 +481,10 @@ export function registerMainHandlers() {
     invalidateCompiledRulesetCache(options.projectId);
     return writeCompiledRuleset(options.projectId, options.rulesetContent);
   });
+  // Unlike refreshCompiledRuleset, keeps the content-hash cache so an unchanged ruleset isn't recompiled or re-fetched.
+  ipcMainHandle('ensureCompiledRuleset', (_, options: { projectId: string; rulesetContent: string }) =>
+    writeCompiledRuleset(options.projectId, options.rulesetContent),
+  );
   ipcMainHandle('writeResponseBodyToFile', writeResponseBodyToFile);
   ipcMainHandle('getAuthHeader', (_, renderedRequest: RenderedRequest, url: string) => {
     return getAuthHeaderInMain(renderedRequest, url);

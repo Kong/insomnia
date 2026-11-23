@@ -287,13 +287,13 @@
         "headers": {
           "x-powered-by": "Express",
           "content-type": "application/json; charset=utf-8",
-          "content-length": "374",
-          "etag": "W/\"176-ClmA6T1gDdzcuP6WqSd1aojgjx8\"",
+          "content-length": "361",
+          "etag": "W/\"169-66/ONSI9VmpbxyFPzXawc2df2fg\"",
           "date": "Mon, 10 Nov 2025 06:22:52 GMT",
           "connection": "keep-alive",
           "keep-alive": "timeout=5"
         },
-        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>, <sensitive>\",\"authorization\":\"<sensitive>, <sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
+        "data": "{\"method\":\"POST\",\"headers\":{\"host\":\"localhost:4010\",\"auth\":\"<sensitive>, <sensitive>\",\"authorization\":\"<sensitive>\",\"content-type\":\"application/json\",\"cookie\":\"<sensitive>\",\"user-agent\":\"insomnia/11.4.0\",\"x-api-key\":\"<sensitive>\",\"x-auth-token\":\"<sensitive>\",\"x-header\":\"foo\",\"accept\":\"*/*\",\"content-length\":\"17\"},\"data\":\"{\\n\\t\\\"foo\\\": \\\"bar\\\"\\n}\",\"cookies\":{}}",
         "responseTime": 0.575
       },
       "tests": [

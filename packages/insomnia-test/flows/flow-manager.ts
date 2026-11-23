@@ -4,6 +4,7 @@ import type { PageManager } from "@package/pages/page-manager";
 import { AppFlow } from "./app.flow";
 import { CertificatesFlow } from "./certificates.flow";
 import { CloudSyncFlow } from "./cloud-sync.flow";
+import { CollectionFlow } from "./collection.flow";
 import { CookieFlow } from "./cookie.flow";
 import { EnvironmentFlow } from "./environment.flow";
 import { EventStreamRequestFlow } from "./event-stream-request.flow";
@@ -14,6 +15,7 @@ import { GraphQLRequestFlow } from "./graphql-request.flow";
 import { GrpcRequestFlow } from "./grpc-request.flow";
 import { HttpRequestFlow } from "./http-request.flow";
 import { ImportFlow } from "./import.flow";
+import { InsoFlow } from "./inso.flow";
 import { McpClientFlow } from "./mcp-client.flow";
 import { MockServerFlow } from "./mock-server.flow";
 import { OrganizationFlow } from "./organization.flow";
@@ -39,6 +41,7 @@ const flowRegistry = {
   appFlow: (m: FlowDeps): AppFlow => new AppFlow(m.context, m.pageManager),
   certificatesFlow: (m: FlowDeps): CertificatesFlow => new CertificatesFlow(m.context, m.pageManager),
   cloudSyncFlow: (m: FlowDeps): CloudSyncFlow => new CloudSyncFlow(m.context, m.pageManager),
+  collectionFlow: (m: FlowDeps): CollectionFlow => new CollectionFlow(m.context, m.pageManager),
   cookieFlow: (m: FlowDeps): CookieFlow => new CookieFlow(m.context, m.pageManager),
   environmentFlow: (m: FlowDeps): EnvironmentFlow => new EnvironmentFlow(m.context, m.pageManager, m.workspaceFlow),
   eventStreamRequestFlow: (m: FlowDeps): EventStreamRequestFlow => new EventStreamRequestFlow(m.context, m.pageManager),
@@ -49,6 +52,7 @@ const flowRegistry = {
   grpcRequestFlow: (m: FlowDeps): GrpcRequestFlow => new GrpcRequestFlow(m.context, m.pageManager),
   httpRequestFlow: (m: FlowDeps): HttpRequestFlow => new HttpRequestFlow(m.context, m.pageManager),
   importFlow: (m: FlowDeps): ImportFlow => new ImportFlow(m.context, m.pageManager),
+  insoFlow: (m: FlowDeps): InsoFlow => new InsoFlow(m.context, m.pageManager),
   mcpClientFlow: (m: FlowDeps): McpClientFlow => new McpClientFlow(m.context, m.pageManager, m.workspaceFlow),
   mockServerFlow: (m: FlowDeps): MockServerFlow => new MockServerFlow(m.context, m.pageManager),
   organizationFlow: (m: FlowDeps): OrganizationFlow => new OrganizationFlow(m.context, m.pageManager),

@@ -1,4 +1,5 @@
 import { AuthTabComponent } from "@package/components/auth-tab.component";
+import { HeadersTabComponent } from "@package/components/headers-tab.component";
 import { ScriptTabComponent } from "@package/components/script-tab.component";
 import { TabPanelComponent } from "@package/components/tab-panel.component";
 
@@ -29,6 +30,11 @@ export class FolderPage extends BasePage {
   /** The Auth tab component for this folder's own pane. */
   get auth(): AuthTabComponent {
     return new AuthTabComponent(this.page, this.PANE);
+  }
+
+  /** The Headers tab component for this folder's own pane. */
+  get headers(): HeadersTabComponent {
+    return new HeadersTabComponent(this.page, this.PANE, "insomnia.RequestGroup.db");
   }
 
   /** The Scripts tab component for this folder's own pane. */

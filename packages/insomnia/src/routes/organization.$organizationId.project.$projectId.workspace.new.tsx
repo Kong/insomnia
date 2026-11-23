@@ -8,6 +8,7 @@ import { database } from '~/common/database';
 import type { MockRouteData } from '~/common/plugins/types';
 import { invariant } from '~/common/utils/invariant';
 import { safeToUseInsomniaFileNameWithExt } from '~/sync/git/insomnia-filename';
+import { isSafeRepoFolderPath } from '~/sync/git/repo-folder-path';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showToast } from '~/ui/components/toast-notification';
 import { trackCioEvent } from '~/ui/hooks/use-cio';
@@ -93,6 +94,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           'Mock Server URL is required',
         );
       }
+    }
+
+    if (models.project.isGitProject(project) && !isSafeRepoFolderPath(workspaceData.folderPath)) {
+      return { error: 'Invalid folder path. Files cannot be created outside the repository or in the .git folder.' };
     }
 
     const flushId = await database.bufferChanges();
