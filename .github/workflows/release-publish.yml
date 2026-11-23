@@ -141,6 +141,7 @@ jobs:
           echo "PREVIOUS_TAG=${PREVIOUS_TAG}" >> "$GITHUB_ENV"
 
       - name: Create Tag and Release
+        if: false # TEMP retry
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         id: core_tag_and_release
         with:
@@ -155,6 +156,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts to release
+        if: false # TEMP retry
         uses: xresloader/upload-to-github-release@7c5757a90c0bcf0c0e1741da8f2abd7b85e675d0 # v1.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -167,6 +169,7 @@ jobs:
           overwrite: true
 
       - name: Upload sourcemaps to Sentry
+        if: false # TEMP retry
         env:
           SENTRY_AUTH_TOKEN: '${{ secrets.SENTRY_AUTH_TOKEN }}'
           SENTRY_ORG: '${{ secrets.SENTRY_ORG }}'
@@ -180,6 +183,7 @@ jobs:
 
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
+        if: false # TEMP retry
         run: |
           docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
           docker image ls
@@ -203,6 +207,7 @@ jobs:
           sep-tags: ','
 
       - name: Push Inso CLI docker image tags to Docker Hub
+        if: false # TEMP retry
         run: |
           for tag in ${IMAGE_TAGS//,/ }; do \
             docker tag insomnia-inso:temp $tag
@@ -226,7 +231,7 @@ jobs:
       # Signing images requires image manifest digest
       - name: Sign images
         id: sign_images
-        if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
+        if: false # TEMP retry
         uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
         with:
           image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
@@ -239,7 +244,7 @@ jobs:
           signature_registry: ${{ env.NOTARY_REPOSITORY }}
 
       - name: Publish beta/stable of Insomnia to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+        if: false # TEMP retry
         run: |
           curl \
             --fail \
@@ -256,7 +261,7 @@ jobs:
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Publish beta/stable of inso to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+        if: false # TEMP retry
         run: |
           curl \
             --fail \
