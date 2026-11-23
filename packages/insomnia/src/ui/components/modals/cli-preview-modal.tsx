@@ -42,10 +42,10 @@ export const CLICommandModal = ({
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="fixed top-0 left-0 z-10 flex h-(--visual-viewport-height) w-full items-start justify-center bg-black/30"
+      className="fixed top-[50%] left-0 z-10 flex h-(--visual-viewport-height) w-full translate-y-[-50%] items-center justify-center bg-black/30"
     >
       <Modal
-        className="m-24 flex max-h-[75%] w-full max-w-[75%] flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
+        className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-(--padding-lg) text-(--color-font)"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
@@ -86,7 +86,7 @@ export const CLICommandModal = ({
                   Learn more about Inso CLI
                 </Link>
                 <Button
-                  className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--hl) transition-colors hover:no-underline"
+                  className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
                   onPress={close}
                 >
                   Close
