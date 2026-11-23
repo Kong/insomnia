@@ -74,8 +74,9 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
   for (const arg of tagData.args) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
-      const re = new RegExp(`([^\\\\])${q}`, 'g');
-      const str = arg.value?.toString().replace(re, `$1\\${q}`);
+      // Lookbehind (not a capture group) so a leading quote and consecutive quotes are escaped too
+      const re = new RegExp(`(?<!\\\\)${q}`, 'g');
+      const str = arg.value?.toString().replace(re, `\\${q}`);
       args.push(`${q}${str}${q}`);
     } else if (arg.type === 'boolean') {
       args.push(arg.value ? 'true' : 'false');
