@@ -67,14 +67,14 @@ export const CLICommandModal = ({
               <div className="h-full w-full flex-row p-2">
                 <div className="pb-4">{description}</div>
                 <div className="flex max-h-32 min-h-[2em] flex-col overflow-y-auto border border-solid border-(--hl-sm) bg-(--hl-xs) px-2 py-1">
-                  <div className="relative flex h-full w-full justify-between gap-(--padding-sm) overflow-auto font-mono">
+                  <div className="relative flex h-full w-full items-center justify-between gap-(--padding-sm) overflow-auto font-mono">
                     <span className="min-w-0 break-all">{command}</span>
                     <CopyButton
                       size="small"
                       content={command}
                       title="Copy Command"
                       confirmMessage=""
-                      className="sticky top-0 self-start"
+                      className="sticky top-0"
                     >
                       <i className="fa fa-copy" />
                     </CopyButton>
