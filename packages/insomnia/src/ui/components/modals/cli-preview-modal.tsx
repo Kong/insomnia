@@ -74,7 +74,7 @@ export const CLICommandModal = ({
                       content={command}
                       title="Copy Command"
                       confirmMessage=""
-                      className="sticky top-0"
+                      className="sticky top-0 self-start"
                     >
                       <i className="fa fa-copy" />
                     </CopyButton>
