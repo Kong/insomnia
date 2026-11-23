@@ -476,7 +476,7 @@ const StatusBanners = ({
             </Button>
           }
         >
-          Polling timed out. Traces shown may be incomplete.
+          Stopped waiting for traces. Traces shown may be incomplete.
         </StatusBanner>
       )}
       {debugSessionState === 'cancelled' && (
