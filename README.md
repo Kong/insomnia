@@ -5,7 +5,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Kong/insomnia?style=flat-square)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](LICENSE)
-![Twitter Follow](https://img.shields.io/twitter/follow/GetInsomnia?style=social)
+[![Twitter Follow](https://img.shields.io/twitter/follow/GetInsomnia?style=social)](https://x.com/getinsomnia)
 
 Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and any other HTTP compatible protocol.
 
