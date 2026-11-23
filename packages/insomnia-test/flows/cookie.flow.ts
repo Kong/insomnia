@@ -24,7 +24,7 @@ export class CookieFlow extends BaseFlow {
   /**
    * Reads the current cookie jar, opening it from `item`'s location.
    */
-  private async get(item: CookieTarget): Promise<Cookie[]> {
+  async get(item: CookieTarget): Promise<Cookie[]> {
     await this.openTarget(item);
 
     await this.pageManager.cookiePage.open();

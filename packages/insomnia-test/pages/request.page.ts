@@ -7,7 +7,7 @@ import { TabPanelComponent } from "@package/components/tab-panel.component";
 import { TabsComponent } from "@package/components/tabs.component";
 import { PressedToggleComponent } from "@package/components/toggle.component";
 import type { HttpMethod } from "@package/enums/http-method";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import { throwOnDialog } from "@package/misc/decorators";
 import type { Locator } from "@playwright/test";
 import { expect } from "@playwright/test";
@@ -493,7 +493,7 @@ export abstract class RequestPage extends BasePage {
         return;
       }
       heldSince = 0;
-      if (Date.now() - lastReapply >= 2000) {
+      if (Date.now() - lastReapply >= SHORT_TIMEOUT) {
         lastReapply = Date.now();
         // One row at a time, waiting for each save to land: re-typing every
         // missing row back-to-back would recreate the stale-row-list race.

@@ -1,4 +1,7 @@
+import { execFileSync } from "node:child_process";
 import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import path from "node:path";
 
 import type { GitCredential } from "@package/models/git-credential";
 
@@ -75,16 +78,16 @@ export async function getServerCommits(
 }
 
 /**
- * Commits a file onto `branch` of the bare repo on misc/git-server.ts, as if
+ * Commits a file onto `branch` of the bare repo on misc/server/git-http.ts, as if
  * a second client had pushed it — so the app under test sees the remote
  * move ahead without doing anything itself. `branch` is created from master
- * if it doesn't exist yet.
+ * if it doesn't exist yet. With `delete`, removes the file instead.
  */
 export async function pushServerFile(
-  file: { path: string; content: string; message?: string; branch?: string },
+  file: { path: string; content?: string; delete?: boolean; message?: string; branch?: string },
   gitRepo = currentGitRepo,
 ): Promise<void> {
-  await fetch(
+  const res = await fetch(
     `${GIT_SERVER_URL}/_admin/repos/${requireGitRepo(gitRepo)}/files`,
     {
       method: "POST",
@@ -92,6 +95,33 @@ export async function pushServerFile(
       body: JSON.stringify(file),
     },
   );
+  if (!res.ok) {
+    throw new Error(`pushServerFile(${file.path}) failed: ${res.status} ${await res.text()}`);
+  }
+}
+
+/**
+ * Applies file writes and/or deletions to a local Git Sync clone on disk
+ * and commits them with the git CLI (nothing is pushed) — for files the
+ * app has no UI to edit, e.g. a GitHub workflow.
+ */
+export function commitLocalFiles(
+  repoPath: string,
+  files: { path: string; content?: string; delete?: boolean }[],
+  message: string,
+): void {
+  for (const file of files) {
+    const target = path.join(repoPath, file.path);
+    if (file.delete) {
+      fs.rmSync(target, { force: true });
+    } else {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, file.content ?? "");
+    }
+  }
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: repoPath });
+  git("add", "--all");
+  git("-c", "user.name=Local Author", "-c", "user.email=local@example.com", "commit", "-m", message);
 }
 
 /**
@@ -111,6 +141,20 @@ export function buildCollectionFile(name: string): string {
     "collection: []",
     "",
   ].join("\n");
+}
+
+export const WORKFLOW_PATH = ".github/workflows/main-deployment.yaml";
+export const HELM_PATH = "helm/deployment.yaml";
+export const GITIGNORE_PATH = ".gitignore";
+
+/** A minimal GitHub workflow YAML whose only step runs `step`. */
+export function buildWorkflowFile(step: string): string {
+  return `name: deploy\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: ${step}\n`;
+}
+
+/** A Helm template (not valid YAML) that references `.Values.<value>`. */
+export function buildHelmFile(value: string): string {
+  return `apiVersion: apps/v1\nspec:\n  replicas: {{ .Values.${value} }}\n`;
 }
 
 // Shared custom credential used to authenticate against misc/git-server.ts,

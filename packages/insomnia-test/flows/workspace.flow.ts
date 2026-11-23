@@ -1088,4 +1088,42 @@ export class WorkspaceFlow extends BaseFlow {
     const project = this.assertCreated(await this.getProject(item.name), item.name);
     return { project, unknownFieldFiles, unknownFieldsWarningText };
   }
+
+  /**
+   * From the login screen of a logged-out app, opens the local Scratch Pad
+   * and returns its collection, with the sidebar showing the full tree.
+   */
+  @step()
+  async openScratchPad(): Promise<Collection> {
+    await this.pageManager.projectPage.clickUseScratchPad();
+    await this.preferencesFlow.set({ sidebarFocusForCollections: false });
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.requireItemNode({ name: 'Scratch Pad' }, TreeNodeType.Workspace);
+    return Object.assign(new Collection('Scratch Pad'), { id: node._id });
+  }
+
+  /**
+   * Expands an existing project and, inside it, an existing collection, so the collection's requests are listed in the
+   * sidebar. The expanded state of the tree is not kept across versions of the app, so a launch on data that an older
+   * release wrote starts with everything collapsed.
+   */
+  @step()
+  async expandCollection(project: string, collection: string): Promise<void> {
+    const workspace = this.pageManager.workspacePage;
+    await workspace.expand(await workspace.requireItemNode({ name: project }, TreeNodeType.Project));
+    await workspace.expand(await workspace.requireItemNode({ name: collection }, TreeNodeType.Workspace));
+  }
+
+  /**
+   * Reads the local folder a Git Sync `project`'s repository is cloned into,
+   * from its Settings dialog, then closes the dialog.
+   */
+  @step()
+  async getGitRepositoryPath(project: Project): Promise<string> {
+    const { projectSettingsPage, workspacePage } = this.pageManager;
+    await this.openSettings(project);
+    const repositoryPath = await projectSettingsPage.getRepositoryPath();
+    await workspacePage.closeModal();
+    return repositoryPath;
+  }
 }

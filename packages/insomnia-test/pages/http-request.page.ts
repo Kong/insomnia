@@ -3,7 +3,7 @@ import { SelectComponent } from "@package/components/select.component";
 import { PressedToggleComponent } from "@package/components/toggle.component";
 import { ContentType } from "@package/enums/content-type";
 import type { HttpMethod } from "@package/enums/http-method";
-import { DEFAULT_TIMEOUT } from "@package/misc/constants";
+import { DEFAULT_TIMEOUT, SHORT_TIMEOUT } from "@package/misc/constants";
 import type {
   HttpRequest,
   HttpRequestBody,
@@ -168,7 +168,7 @@ export class HttpRequestPage extends RequestPage {
         await expect(async () => {
           const before = await rows.count();
           await addBtn.click();
-          await expect(rows).toHaveCount(before + 1, { timeout: 1000 });
+          await expect(rows).toHaveCount(before + 1, { timeout: SHORT_TIMEOUT });
         }).toPass({ timeout: DEFAULT_TIMEOUT });
       }
       const row = rows.last();

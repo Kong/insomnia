@@ -110,7 +110,7 @@ function seedRepo(name: string) {
  */
 function pushFile(
   name: string,
-  { branch, filePath, content, message }: { branch: string; filePath: string; content: string; message: string },
+  { branch, filePath, content, message, remove }: { branch: string; filePath: string; content: string; message: string; remove?: boolean },
 ) {
   const dir = repoDir(name);
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "insomnia-git-push-"));
@@ -122,8 +122,13 @@ function pushFile(
     } else {
       git("checkout", "-b", branch);
     }
-    fs.writeFileSync(path.join(workDir, filePath), content);
-    git("add", filePath);
+    if (remove) {
+      git("rm", filePath);
+    } else {
+      fs.mkdirSync(path.dirname(path.join(workDir, filePath)), { recursive: true });
+      fs.writeFileSync(path.join(workDir, filePath), content);
+      git("add", filePath);
+    }
     git(
       "-c",
       "user.name=Mock Remote",
@@ -273,6 +278,7 @@ async function handleAdmin(req: IncomingMessage, res: ServerResponse, url: URL) 
       branch: body.branch || "master",
       filePath: body.path,
       content: body.content,
+      remove: body.delete,
       message: body.message || "Remote commit",
     });
     return sendJson(res, 201, { ok: true });

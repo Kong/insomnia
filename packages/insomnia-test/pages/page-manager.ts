@@ -1,4 +1,6 @@
 import type { BaseComponent } from "@package/components/base.component";
+import { FieldEncryptionIssueComponent } from "@package/components/field-encryption-issue.component";
+import { LocalEncryptionKeyComponent } from "@package/components/local-encryption-key.component";
 import { PreferencesComponent } from "@package/components/preferences.component";
 import { PreferencesAiComponent } from "@package/components/preferences-ai.component";
 import { PreferencesCredentialsComponent } from "@package/components/preferences-credentials.component";
@@ -61,6 +63,10 @@ const pageRegistry = {
     new ExportPage(page),
   collectionPage: (page: Page): CollectionPage =>
     new CollectionPage(page),
+  fieldEncryptionIssue: (page: Page): FieldEncryptionIssueComponent =>
+    new FieldEncryptionIssueComponent(page),
+  localEncryptionKey: (page: Page): LocalEncryptionKeyComponent =>
+    new LocalEncryptionKeyComponent(page),
   folderPage: (page: Page): FolderPage =>
     new FolderPage(page),
   gitSyncPage: (page: Page): GitSyncPage =>
@@ -139,6 +145,11 @@ export class PageManager {
   private readonly instances = new Map<string, unknown>();
 
   constructor(private page: Page) {}
+
+  /** The current window — changes after `AppFlow.restart()`, unlike a `Page` a spec captured earlier. */
+  get window(): Page {
+    return this.page;
+  }
 
   /** Queries the app's database through the current window. See `findDocs`. */
   findDocs(dbFile: string, query: Record<string, unknown> = {}): Promise<any[]> {

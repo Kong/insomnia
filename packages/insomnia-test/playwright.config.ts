@@ -3,6 +3,7 @@ import path from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 import { ensureCerts } from "./misc/certs.ts";
+import { ACTION_TIMEOUT, LONG_TIMEOUT } from "./misc/constants.ts";
 
 // By default, misc/fixtures.ts launches the app straight out of the
 // sibling ../insomnia source checkout (its local `electron` binary against
@@ -62,7 +63,7 @@ export default defineConfig({
   use: {
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    actionTimeout: 30 * 1000,
+    actionTimeout: ACTION_TIMEOUT,
   },
 
   webServer: [
@@ -70,7 +71,7 @@ export default defineConfig({
       command: "node misc/server/index.ts",
       url: "http://localhost:4010/",
       reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
+      timeout: ACTION_TIMEOUT,
     },
     ...(isDevMode
       ? [
@@ -81,7 +82,7 @@ export default defineConfig({
             // Always reuse — INSOMNIA_DEV_MODE is a local workflow, and
             // restarting Vite's cold start on every run wastes minutes.
             reuseExistingServer: true,
-            timeout: 60 * 1000,
+            timeout: LONG_TIMEOUT,
           },
         ]
       : []),

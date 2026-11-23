@@ -264,4 +264,19 @@ export class MockServerFlow extends BaseFlow {
     }).toPass({ timeout: DEFAULT_TIMEOUT });
     return history;
   }
+
+  /**
+   * Renames `server` through its context menu's "Rename" action, then
+   * re-reads it from the tree under the new name.
+   */
+  @step()
+  async rename(server: MockServer, newName: string): Promise<MockServer> {
+    const workspace = this.pageManager.workspacePage;
+    const node = await workspace.resolveNode(server);
+    await workspace.rightClick(node);
+    await workspace.clickContextMenu(ContextMenuItem.Rename);
+    await workspace.setItemName(newName);
+    await workspace.clickRename();
+    return this.get(newName);
+  }
 }

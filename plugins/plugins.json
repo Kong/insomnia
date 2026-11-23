@@ -1,0 +1,30 @@
+{
+  "marketplace": {
+    "name": "insomnia-ai-plugins",
+    "displayName": "Insomnia AI Plugins",
+    "description": "Claude Code plugins and skills for working with Insomnia",
+    "category": "Developer Tools"
+  },
+  "plugins": [
+    {
+      "name": "insomnia-scripts",
+      "version": "0.1.0",
+      "description": "Skills for working with Insomnia pre-request and after-response scripts in git projects",
+      "keywords": ["insomnia", "scripts", "pre-request", "after-response", "skills"],
+      "codex": {
+        "displayName": "Insomnia Scripts",
+        "shortDescription": "Edit Insomnia scripts in git projects",
+        "longDescription": "Create or update pre-request and after-response scripts for requests and folders in an Insomnia git project. The skill edits the project's YAML files in your working tree and does not commit or push.",
+        "capabilities": [
+          "Update pre-request scripts",
+          "Update after-response scripts",
+          "Add response tests and assertions"
+        ],
+        "defaultPrompt": [
+          "Add an after-response test to the Get orders request.",
+          "Set an auth token variable in a pre-request script."
+        ]
+      }
+    }
+  ]
+}

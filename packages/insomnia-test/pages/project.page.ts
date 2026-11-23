@@ -136,4 +136,17 @@ export class ProjectPage extends BasePage {
       .locator(`div[aria-label="Project Type Item: ${type}"]`)
       .click();
   }
+
+  /**
+   * Clicks "Use local Scratch Pad" on the login screen and waits for the
+   * Scratch Pad workspace to open.
+   */
+  async clickUseScratchPad(): Promise<void> {
+    await this.page
+      .getByRole("button", { name: "Use local Scratch Pad" })
+      .click();
+    await this.page.waitForURL(/\/organization\/org_scratchpad\//, {
+      timeout: DEFAULT_TIMEOUT,
+    });
+  }
 }

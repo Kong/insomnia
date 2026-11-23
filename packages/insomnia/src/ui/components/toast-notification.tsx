@@ -1,6 +1,8 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classNames from 'classnames';
 import { format } from 'date-fns';
+import type { AutoResolvedConflict } from 'insomnia-vcs';
 import React from 'react';
 import {
   Button,
@@ -120,6 +122,64 @@ export const showResourceNotFoundToast = (title: string) => {
     {
       timeout: 5000,
     },
+  );
+};
+
+// Tells the user which non-Insomnia files were resolved to the remote version without asking them.
+// Persistent (until dismissed) because the local version of these files is no longer in the working directory.
+export const showAutoResolvedConflictsToast = (
+  autoResolvedConflicts: AutoResolvedConflict[],
+  { icon, title = 'Pull completed' }: { icon?: IconProp; title?: string } = {},
+) => {
+  const fileCount = autoResolvedConflicts.length;
+  const isSingle = fileCount === 1;
+
+  return showToast(
+    {
+      icon,
+      title,
+      status: 'warning',
+      description: (
+        <>
+          <span className="block">
+            {isSingle ? '1 file' : `${fileCount} files`} Insomnia does not manage had conflicts and{' '}
+            {isSingle ? 'was' : 'were'} resolved to the remote version. Your local{' '}
+            {isSingle ? 'version is' : 'versions are'} kept in your previous commit.
+          </span>
+          <ul
+            aria-label="Auto-resolved files"
+            className="mt-2 flex max-h-48 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto rounded-xs bg-(--hl-xs) px-2"
+          >
+            {autoResolvedConflicts.map(({ filepath, action }) => {
+              const separatorIndex = filepath.lastIndexOf('/');
+              const directory = filepath.slice(0, separatorIndex + 1);
+              const fileName = filepath.slice(separatorIndex + 1);
+              const isDeleted = action === 'delete';
+
+              return (
+                <li key={filepath} className="flex items-start gap-2 py-1.5">
+                  <span
+                    className={classNames(
+                      'mt-0.5 w-16 shrink-0 rounded-xs py-px text-center text-[10px] font-semibold uppercase',
+                      isDeleted
+                        ? 'bg-[rgba(var(--color-danger-rgb),0.2)] text-(--color-danger)'
+                        : 'bg-[rgba(var(--color-warning-rgb),0.2)] text-(--color-warning)',
+                    )}
+                  >
+                    {isDeleted ? 'Deleted' : 'Replaced'}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold break-all">{fileName}</span>
+                    {directory && <span className="block break-all text-(--hl)">{directory}</span>}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ),
+    },
+    { timeout: null },
   );
 };
 

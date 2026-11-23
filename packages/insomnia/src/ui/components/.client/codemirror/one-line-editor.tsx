@@ -128,6 +128,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
+    // The blur flush re-sends the editor's current value even when nothing changed.
+    // Emitting it would make focus/blur look like an edit to every onChange consumer
+    // (and, for requests, force a redundant write that bumps `modified`).
+    const lastEmittedValue = useRef(defaultValue || '');
     // We need to track editor version in order to re-apply some effects when the editor is re-initialized.
     const [editorVersion, setEditorVersion] = useState(0);
     const [tooltipValue, setTooltipValue] = useState<string>(
@@ -498,9 +502,21 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         cm.setCursor(cursor);
         // value baseline changed externally, so the old history no longer applies
         cm.clearHistory();
+        lastEmittedValue.current = defaultValue || '';
         updateTooltipValue(defaultValue || '');
       }
     }, [defaultValue, historyKey, type, updateTooltipValue]);
+
+    const emitChange = useCallback(
+      (value: string) => {
+        if (value === lastEmittedValue.current) {
+          return;
+        }
+        lastEmittedValue.current = value;
+        onChange?.(value);
+      },
+      [onChange],
+    );
 
     useEffect(() => {
       // Type password will apply the `-webkit-text-security` CSS on .CodeMirror-line, which changes glyph widths.
@@ -531,24 +547,22 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
     useEffect(() => {
       const fn = misc.debounce((doc: CodeMirror.Editor) => {
-        if (onChange) {
-          onChange(doc.getValue() || '');
-        }
+        emitChange(doc.getValue() || '');
         updateTooltipValue(doc.getValue() || '');
       }, DEBOUNCE_MILLIS);
       codeMirror.current?.on('changes', fn);
       return () => codeMirror.current?.off('changes', fn);
-    }, [editorVersion, onChange, type, updateTooltipValue]);
+    }, [editorVersion, emitChange, type, updateTooltipValue]);
 
     useEffect(() => {
       const flushOnBlur = (doc: CodeMirror.Editor) => {
-        if (onChange && !readOnly) {
-          onChange(doc.getValue() || '');
+        if (!readOnly) {
+          emitChange(doc.getValue() || '');
         }
       };
       codeMirror.current?.on('blur', flushOnBlur);
       return () => codeMirror.current?.off('blur', flushOnBlur);
-    }, [editorVersion, onChange, readOnly]);
+    }, [editorVersion, emitChange, readOnly]);
 
     useEffect(() => {
       const unsubscribe = window.main.on(

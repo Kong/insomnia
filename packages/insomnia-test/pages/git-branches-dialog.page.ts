@@ -197,4 +197,33 @@ export class GitBranchesDialogPage extends BasePage {
     const texts = await rows.allInnerTexts();
     return texts.map((text) => text.split("\n")[0].replace(/\s*\*$/, "").trim());
   }
+
+  /**
+   * Waits for the "Resolve conflicts" modal and reads the file names listed
+   * in its "Conflicted changes" grid, without resolving anything.
+   */
+  async getConflictedFiles(): Promise<string[]> {
+    await this.mergeConflictsModal.waitForVisible();
+    const rows = new TableComponent(
+      this.page,
+      this.mergeConflictsModal.root.getByRole("grid", { name: "Conflicted changes" }),
+    ).rows;
+    return (await rows.allInnerTexts()).map((text) => text.trim());
+  }
+
+  /**
+   * Whether the "Resolve conflicts" modal is currently open.
+   */
+  async isMergeConflictsDialogOpen(): Promise<boolean> {
+    return this.mergeConflictsModal.root.isVisible();
+  }
+
+  /**
+   * Whether an Insomnia schema-validation error ("Invalid input") is
+   * currently shown on screen, e.g. after a pull tried to parse a file that
+   * isn't an Insomnia file.
+   */
+  async isValidationErrorShown(): Promise<boolean> {
+    return this.page.getByText("Invalid input").isVisible();
+  }
 }

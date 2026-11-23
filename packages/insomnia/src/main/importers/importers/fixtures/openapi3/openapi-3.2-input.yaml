@@ -1,0 +1,251 @@
+openapi: 3.2.0
+$self: https://example.com/specs/pet-store-3.2.yaml
+info:
+  title: Pet Store (OpenAPI 3.2 sample)
+  version: 1.0.0
+  summary: Sample document exercising OpenAPI 3.2 features
+  description: Used to test Insomnia's support for OpenAPI 3.2.
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
+servers:
+  - name: production
+    url: https://{env}.example.com/v1
+    description: Main API server
+    variables:
+      env:
+        default: api
+        enum: [api, staging]
+tags:
+  - name: pets
+    summary: Pets
+    description: Everything about pets
+    kind: nav
+  - name: pet-events
+    summary: Pet events
+    parent: pets
+    kind: nav
+paths:
+  /pets:
+    get:
+      tags: [pets]
+      operationId: listPets
+      summary: List pets
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            maximum: 100
+      responses:
+        '200':
+          description: A list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+              examples:
+                sample:
+                  summary: Two pets
+                  dataValue:
+                    - id: 1
+                      name: Rex
+                      type: dog
+                    - id: 2
+                      name: Tom
+                      type: cat
+    post:
+      tags: [pets]
+      operationId: createPet
+      summary: Create a pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+    # New in 3.2: the QUERY method
+    query:
+      tags: [pets]
+      operationId: searchPets
+      summary: Search pets with a request body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/PetType'
+      responses:
+        '200':
+          description: Matching pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+    # New in 3.2: custom / non-standard HTTP methods
+    additionalOperations:
+      PURGE:
+        tags: [pets]
+        operationId: purgePetCache
+        summary: Purge the pets cache
+        responses:
+          '204':
+            description: Cache purged
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [pets]
+      operationId: getPet
+      summary: Get a pet
+      responses:
+        '200':
+          description: The pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Not found
+  /pets/{petId}/events:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [pet-events]
+      operationId: streamPetEvents
+      summary: Stream pet events (Server-Sent Events)
+      security:
+        - oauth: [read:pets]
+      responses:
+        '200':
+          description: Event stream
+          content:
+            # New in 3.2: sequential media types described with itemSchema
+            text/event-stream:
+              itemSchema:
+                type: object
+                required: [data]
+                properties:
+                  event:
+                    type: string
+                  data:
+                    type: string
+                  id:
+                    type: string
+  /pets/lookup:
+    get:
+      tags: [pets]
+      operationId: lookupPets
+      summary: Lookup using a whole query string
+      parameters:
+        # New in 3.2: `querystring` location
+        - name: filter
+          in: querystring
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  type:
+                    $ref: '#/components/schemas/PetType'
+      responses:
+        '200':
+          description: Matching pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+webhooks:
+  petAdopted:
+    post:
+      operationId: onPetAdopted
+      summary: Fired when a pet is adopted
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '200':
+          description: Acknowledged
+components:
+  schemas:
+    PetType:
+      type: string
+      enum: [dog, cat, bird]
+    Pet:
+      type: object
+      required: [id, name, type]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/PetType'
+      xml:
+        # New in 3.2: xml.nodeType replaces attribute/wrapped
+        nodeType: element
+        name: pet
+    Animal:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+      discriminator:
+        propertyName: kind
+        mapping:
+          dog: '#/components/schemas/Pet'
+        # New in 3.2: fallback schema when no mapping matches
+        defaultMapping: '#/components/schemas/Pet'
+  securitySchemes:
+    oauth:
+      type: oauth2
+      description: OAuth 2.0 with device flow
+      # New in 3.2: authorization server metadata
+      oauth2MetadataUrl: https://auth.example.com/.well-known/oauth-authorization-server
+      flows:
+        deviceAuthorization:
+          deviceAuthorizationUrl: https://auth.example.com/device
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            read:pets: Read pets
+    legacyKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      # New in 3.2: mark a scheme as deprecated
+      deprecated: true
+security:
+  - oauth: [read:pets]
