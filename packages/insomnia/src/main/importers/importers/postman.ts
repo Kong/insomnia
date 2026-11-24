@@ -600,6 +600,14 @@ export class ImportPostman {
         };
       }
 
+      case 'noauth': {
+        // "No Auth" in Postman stops inheritance; {} would inherit the parent's auth
+        return {
+          authentication: { type: 'none' },
+          headers,
+        };
+      }
+
       default: {
         return {
           authentication: {},
