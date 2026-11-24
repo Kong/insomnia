@@ -1,18 +1,23 @@
 import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
-import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
-import { models } from 'insomnia-data';
+import type {
+  CollectionWorkspaceChildren,
+  GrpcRequest,
+  Request,
+  RequestGroup,
+  SocketIORequest,
+  WebSocketRequest,
+} from 'insomnia-data';
+import { models, services } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useParams } from 'react-router';
 
-import {
-  type Child,
-  useWorkspaceLoaderFetcher,
-  type WorkspaceLoaderData,
-} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { flattenCollectionChildren } from '~/common/collection';
+
+import type { Child } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
+import { showError } from '.';
 import { InviteBox } from './invite-modal/invite-box';
 
 const { isRequest } = models.request;
@@ -217,25 +222,50 @@ export const ExportRequestsModal = ({
   initialSelectedId?: string;
   onClose: () => void;
 }) => {
-  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
-  const workspaceFetcher = useWorkspaceLoaderFetcher();
+  const [requestTree, setRequestTree] = useState<Child[]>();
   const [state, setState] = useState<{
     treeRoot: Node | null;
   }>();
   const [includeCookies, setIncludeCookies] = useState(true);
   const [includeEnvironments, setIncludeEnvironments] = useState(true);
 
+  // Read the tree from the data service, not by fetcher-loading the workspace route: the modal can
+  // export a workspace from another project (sidebar) or open outside the organization route
+  // (Settings > Data), while the route only loads under the workspace's own project.
   useEffect(() => {
-    const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
-    if (isIdleAndUninitialized) {
-      workspaceFetcher.load({
-        organizationId,
-        projectId,
-        workspaceId: workspaceIdToExport,
-      });
-    }
-  }, [organizationId, projectId, workspaceFetcher, workspaceIdToExport]);
-  const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;
+    let cancelled = false;
+    (async () => {
+      try {
+        const children = (await services.appData.getWorkspaceChildren([workspaceIdToExport])).get(
+          workspaceIdToExport,
+        );
+        if (cancelled) {
+          return;
+        }
+        setRequestTree(
+          children && 'requestsAndGroups' in children.data
+            ? flattenCollectionChildren(workspaceIdToExport, false, children as CollectionWorkspaceChildren).filter(
+                child => child.level === 0,
+              )
+            : [],
+        );
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        // Without this the modal would never open and the click would silently do nothing
+        console.error('[export-requests] Could not load the requests to export', error);
+        showError({
+          title: 'Could not load the requests to export',
+          error: error instanceof Error ? error : new Error(String(error)),
+        });
+        setRequestTree([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceIdToExport]);
 
   useEffect(() => {
     const createTreeNode = (child: Child): Node => {
@@ -254,8 +284,7 @@ export const ExportRequestsModal = ({
         selectedRequests: totalRequests, // Default select all
       };
     };
-    const requestTree = workspaceLoaderData?.requestTree || [];
-    const children: Node[] = requestTree.map(child => createTreeNode(child));
+    const children: Node[] = (requestTree || []).map(child => createTreeNode(child));
     const totalSelected = children.reduce((acc, child) => acc + child.totalRequests, 0);
     const treeRoot: Node = {
       doc: {
@@ -278,9 +307,9 @@ export const ExportRequestsModal = ({
       setItemSelected(treeRoot, true, initialSelectedId);
     }
     setState({ treeRoot });
-  }, [workspaceLoaderData?.requestTree, initialSelectedId]);
+  }, [requestTree, initialSelectedId]);
 
-  if (!workspaceLoaderData) {
+  if (!requestTree) {
     return null;
   }
 
