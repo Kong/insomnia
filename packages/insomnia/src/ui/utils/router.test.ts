@@ -1,6 +1,8 @@
 import type * as InsomniaData from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as CommonConstants from '~/common/constants';
+
 vi.mock('insomnia-data', async importOriginal => {
   const actual = await importOriginal<typeof InsomniaData>();
   return {
@@ -13,13 +15,18 @@ vi.mock('insomnia-data', async importOriginal => {
   };
 });
 
+vi.mock('~/common/constants', async importOriginal => {
+  const actual = await importOriginal<typeof CommonConstants>();
+  return { ...actual, getAppVersion: vi.fn(actual.getAppVersion) };
+});
+
 vi.mock('~/ui/organization-utils', () => ({
   getKonnectOrganizationEscapeRoute: vi.fn(),
 }));
 
 import { models, services } from 'insomnia-data';
 
-import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
+import { getAppVersion, HAS_SEEN_ONBOARDING_KEY, ONBOARDING_VERSION } from '~/common/constants';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
 import { getInitialEntry } from './router';
@@ -91,5 +98,54 @@ describe('getInitialEntry', () => {
 
     expect(getKonnectOrganizationEscapeRoute).not.toHaveBeenCalled();
     expect(entry).toMatchObject({ pathname: `/organization/${REAL_ORGANIZATION_ID}/project` });
+  });
+});
+
+describe('getInitialEntry onboarding', () => {
+  const ONBOARDING_ROUTE = '/onboarding/';
+  const [major, minor] = ONBOARDING_VERSION.split('.').map(Number);
+
+  beforeEach(() => {
+    vi.mocked(services.userSession.get).mockResolvedValue({ id: SESSION_ID, accountId: ACCOUNT_ID } as any);
+    vi.mocked(services.project.list).mockResolvedValue([]);
+    vi.mocked(getKonnectOrganizationEscapeRoute).mockReset();
+    stubLocalStorage();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const entryWith = async (appVersion: string, seen: boolean) => {
+    vi.mocked(getAppVersion).mockReturnValue(appVersion);
+    stubLocalStorage(seen ? { [HAS_SEEN_ONBOARDING_KEY]: 'true' } : {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    return getInitialEntry();
+  };
+
+  it('shows onboarding when unseen and app major.minor matches the onboarding version', async () => {
+    expect(await entryWith(`${major}.${minor}.0`, false)).toBe(ONBOARDING_ROUTE);
+  });
+
+  it('shows onboarding for a patch or prerelease of the matching major.minor', async () => {
+    expect(await entryWith(`${major}.${minor}.7`, false)).toBe(ONBOARDING_ROUTE);
+    expect(await entryWith(`${major}.${minor}.0-beta.1`, false)).toBe(ONBOARDING_ROUTE);
+  });
+
+  it('skips onboarding when it has already been seen', async () => {
+    expect(await entryWith(`${major}.${minor}.0`, true)).not.toBe(ONBOARDING_ROUTE);
+  });
+
+  it('skips onboarding when the minor version does not match', async () => {
+    expect(await entryWith(`${major}.${minor + 1}.0`, false)).not.toBe(ONBOARDING_ROUTE);
+  });
+
+  it('skips onboarding when the major version does not match', async () => {
+    expect(await entryWith(`${major + 1}.${minor}.0`, false)).not.toBe(ONBOARDING_ROUTE);
+  });
+
+  it('skips onboarding when the app version cannot be parsed', async () => {
+    expect(await entryWith('not-a-version', false)).not.toBe(ONBOARDING_ROUTE);
   });
 });
