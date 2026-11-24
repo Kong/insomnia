@@ -148,7 +148,7 @@ export const showAutoResolvedConflictsToast = (
           </span>
           <ul
             aria-label="Auto-resolved files"
-            className="mt-2 flex max-h-48 flex-col divide-y divide-solid divide-(--hl-sm) overflow-y-auto rounded-xs bg-(--hl-xs) px-2"
+            className="mt-2 grid max-h-48 grid-cols-[max-content_minmax(0,1fr)] gap-x-2 divide-y divide-solid divide-(--hl-sm) overflow-y-auto rounded-xs bg-(--hl-xs) px-2"
           >
             {autoResolvedConflicts.map(({ filepath, action }) => {
               const separatorIndex = filepath.lastIndexOf('/');
@@ -157,10 +157,14 @@ export const showAutoResolvedConflictsToast = (
               const isDeleted = action === 'delete';
 
               return (
-                <li key={filepath} className="flex items-start gap-2 py-1.5">
+                // Each row shares the list's columns, so the labels all get the width of the widest one and the
+                // file names line up whatever the font
+                <li key={filepath} className="col-span-2 grid grid-cols-subgrid items-start py-1.5">
                   <span
                     className={classNames(
-                      'mt-0.5 w-16 shrink-0 rounded-xs py-px text-center text-[10px] font-semibold uppercase',
+                      // In rem like the file name and padded, so a wider font or a smaller interface font size
+                      // does not push the text out of the label
+                      'mt-0.5 min-w-[6em] rounded-xs px-1.5 py-px text-center text-[0.6875rem] font-semibold uppercase',
                       isDeleted
                         ? 'bg-[rgba(var(--color-danger-rgb),0.2)] text-(--color-danger)'
                         : 'bg-[rgba(var(--color-warning-rgb),0.2)] text-(--color-warning)',
@@ -168,7 +172,7 @@ export const showAutoResolvedConflictsToast = (
                   >
                     {isDeleted ? 'Deleted' : 'Replaced'}
                   </span>
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0">
                     <span className="block font-semibold break-all">{fileName}</span>
                     {directory && <span className="block break-all text-(--hl)">{directory}</span>}
                   </span>
