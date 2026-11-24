@@ -17,10 +17,11 @@ import { useParams } from 'react-router';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
+import { resolveResourceLocation } from '~/ui/utils/resource-location';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
+import { type BaseTab, useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -28,8 +29,8 @@ import { AddRequestToCollectionModal } from '../modals/add-request-to-collection
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
 import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
 import { InsomniaTab, TAB_CONTEXT_MENU_COMMAND } from './tab';
+import { buildTabLocationUpdates } from './tab-location';
 
-const { isRequest } = models.request;
 const { isRequestGroup } = models.requestGroup;
 
 export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' }) => {
@@ -146,6 +147,37 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId],
   );
 
+  // Open tabs that move along with `doc` when its parent changes: every tab of a moved collection,
+  // or the tab of a moved request, or the tabs (incl. folder runners) of a moved folder's subtree.
+  const getMovedTabs = useCallback(async (doc: BaseModel): Promise<BaseTab[]> => {
+    const tabs = tabListRef.current;
+    if (!tabs.length) {
+      return [];
+    }
+    if (models.workspace.isWorkspace(doc)) {
+      return tabs.filter(tab => tab.workspaceId === doc._id);
+    }
+    if (isRequestLikeDocType(doc.type)) {
+      return tabs.filter(tab => tab.id === doc._id);
+    }
+    if (isRequestGroup(doc)) {
+      const descendants = await database.getWithDescendants(doc, [
+        models.request.type,
+        models.grpcRequest.type,
+        models.webSocketRequest.type,
+        models.socketIORequest.type,
+        models.requestGroup.type,
+      ]);
+      const ids = new Set(
+        [doc, ...descendants].flatMap(entity =>
+          isRequestGroup(entity) ? [entity._id, `runner_${entity._id}`] : [entity._id],
+        ),
+      );
+      return tabs.filter(tab => ids.has(tab.id));
+    }
+    return [];
+  }, []);
+
   const handleUpdate = useCallback(
     async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
@@ -192,47 +224,37 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         }
       }
 
-      // move request or requestGroup to another collection
-      if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
-        const workspace = await services.workspace.getById(patchObj.parentId);
-        if (workspace) {
-          if (
-            isRequest(doc) ||
-            models.grpcRequest.isGrpcRequest(doc) ||
-            models.webSocketRequest.isWebSocketRequest(doc) ||
-            models.socketIORequest.isSocketIORequest(doc)
-          ) {
-            updateTabById?.(doc._id, {
-              workspaceId: workspace._id,
-              workspaceName: workspace.name,
-              url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
-            });
-          } else if (isRequestGroup(doc)) {
-            const folderEntities = await database.getWithDescendants(doc, [
-              models.request.type,
-              models.grpcRequest.type,
-              models.webSocketRequest.type,
-              models.socketIORequest.type,
-              models.requestGroup.type,
-            ]);
-            const batchUpdates = [doc, ...folderEntities].map(entity => {
-              return {
-                id: entity._id,
-                fields: {
-                  workspaceId: workspace._id,
-                  workspaceName: workspace.name,
-                  url: isRequestGroup(entity)
-                    ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
-                    : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
-                },
-              };
-            });
-            batchUpdateTabs?.(batchUpdates);
-          }
+      // A collection moved to another project, or a request/folder moved to another collection, either
+      // by sidebar drag-and-drop (which also patches metaSortKey, and may drop into a folder) or by the
+      // settings modal. Re-point the affected tabs at the resource's real location. Reorders within the
+      // same parent patch parentId too, but resolve to the tabs' current location and produce no updates.
+      if (patchObj.parentId) {
+        const movedTabs = await getMovedTabs(doc);
+        if (!movedTabs.length) {
+          return;
+        }
+        const location = await resolveResourceLocation(doc);
+        if (!location) {
+          return;
+        }
+        const [project, workspace] = await Promise.all([
+          services.project.getById(location.projectId),
+          services.workspace.getById(location.workspaceId),
+        ]);
+        if (!project || !workspace) {
+          return;
+        }
+        const updates = buildTabLocationUpdates(movedTabs, {
+          ...location,
+          projectName: project.name,
+          workspaceName: workspace.name,
+        });
+        if (updates.length) {
+          batchUpdateTabs?.(updates);
         }
       }
     },
-    [organizationId, projectId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
+    [updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs, getMovedTabs],
   );
 
   useEffect(() => {

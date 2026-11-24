@@ -23,6 +23,7 @@ import { href, Outlet, redirect, useRouteLoaderData } from 'react-router';
 import { LARGE_RESPONSE_MB } from '~/common/constants';
 import { database } from '~/common/database';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
+import { redirectIfResourceMoved } from '~/ui/utils/resource-location';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export default Outlet;
@@ -82,7 +83,7 @@ const getResponseOperations = (request: Request | WebSocketRequest | SocketIOReq
   return services.response;
 };
 
-export async function clientLoader({ params }: Route.ClientLoaderArgs) {
+export async function clientLoader({ params, request }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, requestId, workspaceId } = params;
 
   const activeWorkspace = await services.workspace.getById(workspaceId);
@@ -111,6 +112,9 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       }),
     );
   }
+  // Must run before the workspaceMeta write below, which would otherwise record this request as
+  // active in a workspace it no longer belongs to.
+  await redirectIfResourceMoved(activeRequest, { projectId, workspaceId }, request);
   const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
   await services.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: requestId });
