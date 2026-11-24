@@ -306,6 +306,21 @@ describe('postman', () => {
     });
   });
 
+  describe('noauth', () => {
+    it('returns none so the request does not inherit the parent auth', () => {
+      const request: Request1 = {
+        method: 'POST',
+        url: 'https://example.com/login',
+        auth: { type: 'noauth' },
+      };
+      const schema = postmanSchema({ requests: [request], version: 'v2.1.0' });
+      const postman = new ImportPostman(schema);
+      const { authentication } = postman.importRequestItem({ request }, 'n/a');
+
+      expect(authentication).toEqual({ type: 'none' });
+    });
+  });
+
   describe('oauth2', () => {
     const request: Request1 = {
       auth: {
