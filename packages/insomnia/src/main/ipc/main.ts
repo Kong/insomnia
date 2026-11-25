@@ -16,6 +16,7 @@ import {
   utilityProcess,
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
+import type * as Har from 'har-format';
 import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import iconv from 'iconv-lite';
 import type {
@@ -43,6 +44,7 @@ import type { RenderedRequest, RenderPurpose } from '~/common/templating/types';
 import { convertHarRequestKeepingMask } from '~/common/utils/url/confidential-mask';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
+import { toCodeSnippetError } from '~/main/code-snippet';
 import {
   exportHarCurrentRequest,
   exportHarRequest,
@@ -325,14 +327,14 @@ export interface RendererToMainBridgeAPI {
     useDynamicMockResponses: boolean,
     mockServerAdditionalFiles: string[],
   ) => Promise<{ error: string; routes: MockRouteData[] }>;
-  generateCodeSnippet: (options: { har: object; target: string; client: string }) => Promise<string>;
+  generateCodeSnippet: (options: { har: Har.Request; target: string; client: string }) => Promise<string>;
   getCodeSnippetTargets: () => Promise<{ key: string; title: string; clients: { key: string; title: string }[] }[]>;
   exportHarWithRequest: (options: {
     requestId: string;
     environmentId?: string;
     addContentLength?: boolean;
     purpose?: RenderPurpose;
-  }) => Promise<any>;
+  }) => Promise<Har.Request>;
   exportHarRequest: (options: {
     requestId: string;
     environmentOrWorkspaceId: string;
@@ -573,11 +575,15 @@ export function registerMainHandlers() {
     },
   );
 
-  ipcMainHandle('generateCodeSnippet', async (_, options: { har: object; target: string; client: string }) => {
-    return convertHarRequestKeepingMask(
-      options.har as any,
-      har => new HTTPSnippet(har).convert(options.target, options.client) || '',
-    );
+  ipcMainHandle('generateCodeSnippet', async (_, options: { har: Har.Request; target: string; client: string }) => {
+    try {
+      return convertHarRequestKeepingMask(
+        options.har,
+        har => new HTTPSnippet(har).convert(options.target, options.client) || '',
+      );
+    } catch (error) {
+      throw toCodeSnippetError(error);
+    }
   });
 
   ipcMainHandle('getCodeSnippetTargets', async () => {

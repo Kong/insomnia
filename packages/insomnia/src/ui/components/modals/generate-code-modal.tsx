@@ -63,6 +63,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   });
 
   const [snippet, setSnippet] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const generationRef = useRef(0);
 
   useEffect(() => {
     editorRef.current?.setValue(snippet);
@@ -70,45 +72,66 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const generateCode = useCallback(
     async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-      const targets = (await window.main.getCodeSnippetTargets()) as HTTPSnippetTarget[];
-      const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
-      const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
+      // Switching target/client starts a new generation; a slower earlier one must not overwrite it.
+      const generation = ++generationRef.current;
+      const isCurrent = () => generation === generationRef.current;
+      try {
+        setError('');
+        const targets = (await window.main.getCodeSnippetTargets()) as HTTPSnippetTarget[];
+        if (!isCurrent()) {
+          return;
+        }
+        const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
+        const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
-      setState({
-        request,
-        client: clientOrFallback,
-        target: targetOrFallback,
-        targets,
-      });
-      // Save client/target for next time
-      window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
-      window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
-
-      // Some clients need a content-length for the request to succeed
-      const addContentLength = Boolean(
-        (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
-      );
-      const har = await window.main.exportHarWithRequest({
-        requestId: request._id,
-        environmentId: props.environmentId,
-        addContentLength,
-        purpose: 'preview',
-      });
-      if (har) {
-        const cmd = await window.main.generateCodeSnippet({
-          har,
-          target: targetOrFallback.key,
-          client: clientOrFallback.key,
+        setState({
+          request,
+          client: clientOrFallback,
+          target: targetOrFallback,
+          targets,
         });
-        setSnippet(cmd as string);
-      }
+        // Save client/target for next time
+        window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
+        window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
 
-      window.main.trackAnalyticsEvent({
-        event: AnalyticsEvent.generateCodeLanguageChanged,
-        properties: {
-          language: target?.title,
-        },
-      });
+        // Some clients need a content-length for the request to succeed
+        const addContentLength = Boolean(
+          (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
+        );
+        const har = await window.main.exportHarWithRequest({
+          requestId: request._id,
+          environmentId: props.environmentId,
+          addContentLength,
+          purpose: 'preview',
+        });
+        if (!isCurrent()) {
+          return;
+        }
+        if (har) {
+          const cmd = await window.main.generateCodeSnippet({
+            har,
+            target: targetOrFallback.key,
+            client: clientOrFallback.key,
+          });
+          if (!isCurrent()) {
+            return;
+          }
+          setSnippet(cmd as string);
+        }
+
+        window.main.trackAnalyticsEvent({
+          event: AnalyticsEvent.generateCodeLanguageChanged,
+          properties: {
+            language: target?.title,
+          },
+        });
+      } catch (err) {
+        if (!isCurrent()) {
+          return;
+        }
+        setSnippet('');
+        setError(err instanceof Error ? err.message : String(err));
+      }
     },
     [props.environmentId],
   );
@@ -195,15 +218,21 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           &nbsp;&nbsp;
           <CopyButton content={snippet} className="pull-right" />
         </div>
-        {target && (
-          <CodeEditor
-            id="generate-code-modal-content"
-            placeholder="Generating code snippet..."
-            className="border-top"
-            mode={MODE_MAP[target.key] || target.key}
-            ref={editorRef}
-            defaultValue={snippet}
-          />
+        {error ? (
+          <div className="pad text-danger" data-testid="generate-code-error">
+            {error}
+          </div>
+        ) : (
+          target && (
+            <CodeEditor
+              id="generate-code-modal-content"
+              placeholder="Generating code snippet..."
+              className="border-top"
+              mode={MODE_MAP[target.key] || target.key}
+              ref={editorRef}
+              defaultValue={snippet}
+            />
+          )
         )}
       </ModalBody>
       <ModalFooter>
