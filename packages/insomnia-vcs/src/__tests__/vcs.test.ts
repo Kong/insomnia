@@ -985,6 +985,9 @@ describe('VCS', () => {
       'Branch names must not contain consecutive forward slashes (//)',
     );
     expect(VCS.validateBranchName('feature.')).toEqual('Branch names must not end with a period (.)');
+    expect(VCS.validateBranchName('master.hidden')).toEqual(
+      'Branch names must not end with .hidden, it is reserved for temporary branches',
+    );
     expect(VCS.validateBranchName('feature/../A')).toEqual('Branch names must not contain consecutive periods (..)');
     expect(VCS.validateBranchName('feature/.A/B')).toEqual(
       'No slash-separated component in branch name can begin with a period (.)',

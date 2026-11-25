@@ -311,6 +311,9 @@ export class VCS {
     if (branchName.includes('..')) {
       return 'Branch names must not contain consecutive periods (..)';
     }
+    if (branchName.endsWith('.hidden')) {
+      return 'Branch names must not end with .hidden, it is reserved for temporary branches';
+    }
     const parts = branchName.split('/');
     if (parts.length > 1) {
       for (const part of parts) {
