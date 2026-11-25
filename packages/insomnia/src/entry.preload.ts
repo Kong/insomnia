@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent, webUtils as webUtilities } from 'electron';
+import type * as Har from 'har-format';
 import type { AuthTypeOAuth2, OAuth2Token, RequestHeader, ResponseTimelineEntry } from 'insomnia-data';
 
 import type {
@@ -369,7 +370,7 @@ const main: Window['main'] = {
       useDynamicMockResponses,
       mockServerAdditionalFiles,
     ),
-  generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
+  generateCodeSnippet: (options: { har: Har.Request; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
   exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
