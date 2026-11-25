@@ -17,10 +17,10 @@ on:
       - synchronize
 
 env:
-  # Coverage is on-demand: always on for develop pushes (the baseline), and
-  # for manual runs only when the `coverage` input is ticked. PRs and merge
-  # queue runs skip it.
-  COVERAGE: ${{ (github.event_name == 'push' || inputs.coverage) && 'true' || 'false' }}
+  # Coverage is always on for develop pushes (the baseline) and PRs, and for
+  # manual runs only when the `coverage` input is ticked. Merge queue runs
+  # skip it.
+  COVERAGE: ${{ (github.event_name == 'push' || github.event_name == 'pull_request' || inputs.coverage) && 'true' || 'false' }}
 
 concurrency:
   group: insomnia-test-nonblocking-${{ github.ref }}
