@@ -25,9 +25,9 @@ export const NoProjectView: FC<Props> = ({ storageRules }) => {
         <span className="text-xl font-semibold">No control planes synced yet</span>
         <span className="max-w-md text-(--hl)">
           Projects here mirror your Konnect control planes.
-          {settings.hasKonnectPat
+          {settings.hasKonnectPat || settings.hasKonnectOAuth
             ? ' Sync from Konnect to pull them in.'
-            : ' Connect a Konnect personal access token from the sidebar to get started.'}
+            : ' Connect to Konnect from the sidebar to get started.'}
         </span>
       </div>
     );

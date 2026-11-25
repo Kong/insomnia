@@ -7,6 +7,8 @@ export interface FetchConfig {
   origin?: string;
   headers?: Record<string, string>;
   timeout?: number;
+  // flag indicating whether to parse the error body from the response
+  parseErrorBody?: boolean;
 }
 
 export type Fetch = <T = void>(options: FetchConfig) => Promise<T>;

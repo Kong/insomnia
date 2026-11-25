@@ -53,6 +53,12 @@ export const GRANT_TYPE_PASSWORD = 'password';
 export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
 export const GRANT_TYPE_REFRESH = 'refresh_token';
 export const GRANT_TYPE_MCP_AUTH_FLOW = 'mcp_auth_flow';
+// This means the refresh token is invalid, expired, revoked, or otherwise unusable.
+export const INVALID_GRANT_ERROR = 'invalid_grant';
+// This means the client is no longer recognized by the server
+export const INVALID_CLIENT_ERROR = 'invalid_client';
+// This means the access token is no longer valid
+export const INVALID_TOKEN_ERROR = 'invalid_token';
 export type AuthKeys =
   | 'access_token'
   | 'id_token'
@@ -85,13 +91,13 @@ export const PKCE_CHALLENGE_PLAIN = 'plain';
 
 export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';
 
-const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
+export const showOAuthAuthorizationModal = (authCodeUrlStr: string) => {
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('show-oauth-authorization-modal', authCodeUrlStr);
   });
 };
 
-const hideOAuthAuthorizationModal = () => {
+export const hideOAuthAuthorizationModal = () => {
   BrowserWindow.getAllWindows().forEach(window => {
     window.webContents.send('hide-oauth-authorization-modal');
   });
@@ -514,7 +520,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     if (!isSuccessful) {
       if (hasBodyAndIsError) {
         const body = tryToParse(bodyBuffer.toString());
-        if (body?.error === 'invalid_grant') {
+        if (body?.error === INVALID_GRANT_ERROR) {
           console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
           refreshTimeline.push(
             logEntry(`Refresh token rejected: invalid_grant - ${body.error_description || 'no description'}`),
@@ -588,7 +594,7 @@ export const oauthResponseToAccessToken = async (accessTokenUrl: string, respons
   };
 };
 
-const transformNewAccessTokenToOauthModel = (
+export const transformNewAccessTokenToOauthModel = (
   accessToken: Partial<Record<AuthKeys, string | null>>,
 ): Partial<OAuth2Token> => {
   const expiry = accessToken.expires_in ? +accessToken.expires_in : 0;
