@@ -38,6 +38,7 @@ import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/ele
 import { registerElectronStorageHandlers } from './main/ipc/electron-storage';
 import { FieldEncryptionIpcHandler } from './main/ipc/field-encryption';
 import { registergRPCHandlers } from './main/ipc/grpc';
+import { registerKonnectOAuthHandlers } from './main/ipc/konnect-oauth';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import log, { initializeLogging } from './main/log';
@@ -112,6 +113,7 @@ app.on('ready', async () => {
   registerCurlHandlers();
   registerMcpHandlers();
   registerSecretStorageHandlers();
+  registerKonnectOAuthHandlers();
   registerElectronStorageHandlers();
   registerAllIpcHandlers([new SyncIpcHandler(), new GitIpcHandler(), new FieldEncryptionIpcHandler()]);
 

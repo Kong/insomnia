@@ -22,6 +22,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { CookiesBridgeAPI } from './main/ipc/cookies';
 import type { electronStorageBridgeAPI } from './main/ipc/electron-storage';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { konnectOAuthBridgeAPI } from './main/ipc/konnect-oauth';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { AIFeatureNames } from './main/llm-config-service';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -134,6 +135,13 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => invokeWithNormalizedError('grpc.loadMethodsFromReflection', options),
   writeProtoFile: protoFileId => invokeWithNormalizedError('grpc.writeProtoFile', protoFileId),
   validateProtoFile: filePath => invokeWithNormalizedError('grpc.validateProtoFile', filePath),
+};
+
+const konnectOAuth: konnectOAuthBridgeAPI = {
+  login: organizationId => invokeWithNormalizedError('konnectOAuth.login', organizationId),
+  getAccessToken: organizationId => invokeWithNormalizedError('konnectOAuth.getAccessToken', organizationId),
+  getTokenStatus: organizationId => invokeWithNormalizedError('konnectOAuth.getTokenStatus', organizationId),
+  logout: organizationId => invokeWithNormalizedError('konnectOAuth.logout', organizationId),
 };
 
 const secretStorage: secretStorageBridgeAPI = {
@@ -291,6 +299,7 @@ const main: Window['main'] = {
   grpc,
   curl,
   secretStorage,
+  konnectOAuth,
   electronStorage,
   trackAnalyticsEvent: options => ipcRenderer.send('trackAnalyticsEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
@@ -372,10 +381,18 @@ const main: Window['main'] = {
   generateCodeSnippet: (options: { har: object; target: string; client: string }) =>
     invokeWithNormalizedError('generateCodeSnippet', options),
   getCodeSnippetTargets: () => invokeWithNormalizedError('getCodeSnippetTargets'),
-  exportHarWithRequest: (options: { requestId: string; environmentId?: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
-    invokeWithNormalizedError('exportHarWithRequest', options),
-  exportHarRequest: (options: { requestId: string; environmentOrWorkspaceId: string; addContentLength?: boolean; purpose?: RenderPurpose }) =>
-    invokeWithNormalizedError('exportHarRequest', options),
+  exportHarWithRequest: (options: {
+    requestId: string;
+    environmentId?: string;
+    addContentLength?: boolean;
+    purpose?: RenderPurpose;
+  }) => invokeWithNormalizedError('exportHarWithRequest', options),
+  exportHarRequest: (options: {
+    requestId: string;
+    environmentOrWorkspaceId: string;
+    addContentLength?: boolean;
+    purpose?: RenderPurpose;
+  }) => invokeWithNormalizedError('exportHarRequest', options),
   exportHarCurrentRequest: (options: { requestId: string; responseId: string }) =>
     invokeWithNormalizedError('exportHarCurrentRequest', options),
   exportRequestsHAR: (options: { requests: any[]; includePrivateDocs?: boolean }) =>
@@ -493,6 +510,7 @@ const env: Window['env'] = {
   KONNECT_API_URL: process.env.KONNECT_API_URL,
   KONNECT_API_REGIONS: process.env.KONNECT_API_REGIONS,
   KONNECT_CLOUD_ORIGIN: process.env.KONNECT_CLOUD_ORIGIN,
+  KONNECT_GLOBAL_AUTH_SERVER: process.env.KONNECT_GLOBAL_AUTH_SERVER,
   KONG_DOCS_ORIGIN: process.env.KONG_DOCS_ORIGIN,
   INSOMNIA_APP_WEBSITE_URL: process.env.INSOMNIA_APP_WEBSITE_URL,
   // GitHub API URL overrides for GitHub Enterprise targets
