@@ -8,7 +8,7 @@ import type {
   WebSocketRequest,
 } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { type FC, type ReactNode, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 import { flattenCollectionChildren } from '~/common/collection';
@@ -17,7 +17,7 @@ import type { Child } from '../../../routes/organization.$organizationId.project
 import { AnalyticsEvent } from '../../analytics';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
-import { showError } from '.';
+import { showToast } from '../toast-notification';
 import { InviteBox } from './invite-modal/invite-box';
 
 const { isRequest } = models.request;
@@ -228,17 +228,20 @@ export const ExportRequestsModal = ({
   }>();
   const [includeCookies, setIncludeCookies] = useState(true);
   const [includeEnvironments, setIncludeEnvironments] = useState(true);
+  // Callers pass a new onClose on every render; a ref keeps it out of the load effect's deps
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   // Read the tree from the data service, not by fetcher-loading the workspace route: the modal can
   // export a workspace from another project (sidebar) or open outside the organization route
   // (Settings > Data), while the route only loads under the workspace's own project.
   useEffect(() => {
     let cancelled = false;
+    // Drop the previous workspace's tree so it is never listed (and exported) under the new id
+    setRequestTree(undefined);
     (async () => {
       try {
-        const children = (await services.appData.getWorkspaceChildren([workspaceIdToExport])).get(
-          workspaceIdToExport,
-        );
+        const children = (await services.appData.getWorkspaceChildren([workspaceIdToExport])).get(workspaceIdToExport);
         if (cancelled) {
           return;
         }
@@ -253,13 +256,16 @@ export const ExportRequestsModal = ({
         if (cancelled) {
           return;
         }
-        // Without this the modal would never open and the click would silently do nothing
+        // Don't open the modal: an empty tree would export the whole workspace (an empty id list
+        // means "everything"). Close it so the caller's open state resets and the user can retry.
         console.error('[export-requests] Could not load the requests to export', error);
-        showError({
+        showToast({
+          icon: 'circle-exclamation',
           title: 'Could not load the requests to export',
-          error: error instanceof Error ? error : new Error(String(error)),
+          description: error instanceof Error ? error.message : String(error),
+          status: 'error',
         });
-        setRequestTree([]);
+        onCloseRef.current();
       }
     })();
     return () => {
