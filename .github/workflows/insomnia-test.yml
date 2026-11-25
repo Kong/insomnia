@@ -3,11 +3,6 @@ name: Insomnia Test
 on:
   merge_group:
   workflow_dispatch:
-    inputs:
-      coverage:
-        description: Collect and merge V8 coverage (slower)
-        type: boolean
-        default: false
   push:
     branches:
       - develop
@@ -17,10 +12,8 @@ on:
       - synchronize
 
 env:
-  # Coverage is always on for develop pushes (the baseline) and PRs, and for
-  # manual runs only when the `coverage` input is ticked. Merge queue runs
-  # skip it.
-  COVERAGE: ${{ (github.event_name == 'push' || github.event_name == 'pull_request' || inputs.coverage) && 'true' || 'false' }}
+  # Coverage is always collected and merged.
+  COVERAGE: 'true'
 
 concurrency:
   group: insomnia-test-nonblocking-${{ github.ref }}
