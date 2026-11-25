@@ -4,6 +4,7 @@ import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
+import * as reactUse from 'react-use';
 
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -13,6 +14,7 @@ import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
@@ -33,6 +35,7 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
+import { KonnectPluginsPane, useKonnectPluginsPane } from './konnect-plugins-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 import { RequestTestResultPane } from './request-test-result-pane';
@@ -56,6 +59,22 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const openKonnectDebuggerTab = useOpenKonnectDebuggerTab();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const isKonnectRequest = 'konnectRouteKey' in activeRequest && !!activeRequest.konnectRouteKey;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
+  const [pluginsPaneHidden, setPluginsPaneHidden] = reactUse.useLocalStorage('konnect-plugins-pane-hidden', false);
+  const pluginsPaneState = useKonnectPluginsPane({
+    activeRequest,
+    activeResponse,
+    activeWorkspace,
+    activeProject,
+  });
+  const showPluginsPane = pluginsPaneState.visible && !pluginsPaneHidden;
+  const setPluginsPaneVisibility = (hidden: boolean) => {
+    window.main.trackAnalyticsEvent({
+      event: AnalyticsEvent.konnectPluginsPaneToggled,
+      properties: { hidden },
+    });
+    setPluginsPaneHidden(hidden);
+  };
   const handleSetFilter = async (responseFilter: string) => {
     if (!activeResponse) {
       return;
@@ -170,6 +189,15 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
               >
                 <KongLogo width="1em" height="1em" />
                 Debug
+              </Button>
+            )}
+            {pluginsPaneState.visible && (
+              <Button
+                aria-pressed={showPluginsPane}
+                className="inline-flex items-center justify-center gap-2 rounded-xs border border-transparent px-(--padding-sm) py-(--padding-xs) align-middle leading-[1em] text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
+                onPress={() => setPluginsPaneVisibility(!pluginsPaneHidden)}
+              >
+                {showPluginsPane ? 'Hide Plugins' : 'Show Plugins'}
               </Button>
             )}
           </div>
@@ -312,6 +340,13 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           </ErrorBoundary>
         </TabPanel>
       </Tabs>
+      {showPluginsPane && (
+        <KonnectPluginsPane
+          state={pluginsPaneState}
+          statusCode={activeResponse.statusCode}
+          onHide={() => setPluginsPaneVisibility(true)}
+        />
+      )}
       <ErrorBoundary errorClassName="font-error pad text-center">
         {(isExecuting || isRequestSending) && (
           <ResponseTimer

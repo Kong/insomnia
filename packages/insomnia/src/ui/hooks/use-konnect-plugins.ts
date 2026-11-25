@@ -1,3 +1,4 @@
+import { queryOptions } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 import { useServerQuery } from '~/ui/hooks/use-query';
@@ -16,7 +17,7 @@ export interface KonnectPluginsState {
   refresh: () => void;
 }
 
-class MissingKonnectPatError extends Error {
+export class MissingKonnectPatError extends Error {
   constructor() {
     super('No Kong Konnect personal access token is configured.');
     this.name = 'MissingKonnectPatError';
@@ -29,15 +30,12 @@ const AVAILABLE_PLUGINS_STALE_TIME_MS = 30 * 60 * 1000;
 const AVAILABLE_PLUGINS_GC_TIME_MS = 60 * 60 * 1000;
 
 /**
- * Shares one plugin list per control plane across every request and tab mount.
- * The tab unmounts when it is not selected, so TanStack Query is what keeps
- * switching tabs from refetching the same control plane plugins.
+ * One plugin list per control plane, shared by every surface that needs it
+ * (request Plugins tab, response-side plugins pane). Consumers mount at different
+ * times, so TanStack Query is what keeps them from refetching the same list.
  */
-export function useKonnectPlugins(syncedRoute: KonnectSyncedRoute | null): KonnectPluginsState {
-  const controlPlaneId = syncedRoute?.controlPlaneId;
-  const region = syncedRoute?.region;
-
-  const pluginsQuery = useServerQuery({
+export const konnectPluginsQueryOptions = (controlPlaneId: string | undefined, region: string | undefined) =>
+  queryOptions({
     queryKey: ['konnect-plugins', 'v3', controlPlaneId, region],
     queryFn: async ({ signal }) => {
       const pat = await window.main.secretStorage.getSecret('konnectPat');
@@ -51,6 +49,12 @@ export function useKonnectPlugins(syncedRoute: KonnectSyncedRoute | null): Konne
     gcTime: PLUGINS_GC_TIME_MS,
     retry: false,
   });
+
+export function useKonnectPlugins(syncedRoute: KonnectSyncedRoute | null): KonnectPluginsState {
+  const controlPlaneId = syncedRoute?.controlPlaneId;
+  const region = syncedRoute?.region;
+
+  const pluginsQuery = useServerQuery(konnectPluginsQueryOptions(controlPlaneId, region));
 
   const availabilityQuery = useServerQuery({
     queryKey: ['konnect-available-plugins', 'v1', controlPlaneId, region],
