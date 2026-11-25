@@ -770,7 +770,12 @@ export class WorkspaceFlow extends BaseFlow {
             const isStable = snapshot === previous;
             previous = snapshot;
             const agrees = errors === listedErrors && warnings === listedWarnings;
-            if (isStable && agrees && errors >= minLintErrors) {
+            // Spectral reports a lone `unrecognized-format` while the editor
+            // still holds the pre-authoring (empty) document; it is transient
+            // and can look "stable" for a couple of ticks before the real
+            // spec is linted, so never accept it as settled.
+            const isTransientEmptyDoc = entries.length > 0 && entries.every(entry => entry.code === 'unrecognized-format');
+            if (isStable && agrees && !isTransientEmptyDoc && errors >= minLintErrors) {
               settled = { errors, warnings, entries };
             }
             return settled !== undefined;
