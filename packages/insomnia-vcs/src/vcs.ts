@@ -591,15 +591,19 @@ export class VCS {
     const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
-    const delta = (await this._merge(
-      candidates,
-      localBranch.name,
-      tmpBranchForRemote.name,
-      message,
-      true,
-    )) as unknown as Operation;
-    // Remove tmp branch
-    await this._removeBranch(tmpBranchForRemote);
+    let delta: Operation;
+    try {
+      delta = (await this._merge(
+        candidates,
+        localBranch.name,
+        tmpBranchForRemote.name,
+        message,
+        true,
+      )) as unknown as Operation;
+    } finally {
+      // Remove tmp branch, even if the merge fails
+      await this._removeBranch(tmpBranchForRemote);
+    }
     console.log(`[sync] Pulled branch ${localBranch.name}`);
 
     // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
