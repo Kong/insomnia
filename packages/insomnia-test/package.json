@@ -1,6 +1,6 @@
 {
   "name": "insomnia-test",
-  "version": "1.0.0",
+  "version": "13.5.0",
   "scripts": {
     "lint": "eslint . --ext .js,.ts --cache",
     "type-check": "tsc --noEmit",
