@@ -24,6 +24,18 @@ test.describe('Examples', () => {
     await exampleNode.click();
     await expect.soft(page).toHaveURL(/\/example\/exp_/);
 
+    // Auth is part of the example snapshot and is editable from the example pane
+    await page.getByRole('tab', { name: 'Auth' }).click();
+    await page.getByRole('button', { name: /Change Authentication type/ }).click();
+    await page.getByRole('option', { name: 'Basic', exact: true }).click();
+    await page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror textarea').fill('example-user');
+    await insomnia.navigationSidebar.clickRequestOrFolder('example http');
+    await page.getByTestId('example-node-200 OK').first().click();
+    await page.getByRole('tab', { name: 'Auth' }).click();
+    await expect
+      .soft(page.locator('tr', { hasText: 'Username' }).locator('.CodeMirror-code'))
+      .toContainText('example-user');
+
     // Collapse the request's examples section; the example nodes disappear until expanded again
     const exampleToggle = page.getByTestId('example-toggle-example http');
     await expect.soft(exampleToggle).toBeVisible();

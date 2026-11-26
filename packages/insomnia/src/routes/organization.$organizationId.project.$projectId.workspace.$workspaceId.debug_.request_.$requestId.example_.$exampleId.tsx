@@ -24,6 +24,7 @@ const EXAMPLE_REQUEST_KEYS = [
   'pathParameters',
   'headers',
   'body',
+  'authentication',
 ] as const;
 
 const buildExampleRequest = (parentRequest: Request, example: Example): Request => ({
@@ -34,6 +35,7 @@ const buildExampleRequest = (parentRequest: Request, example: Example): Request 
   pathParameters: example.request.pathParameters ?? parentRequest.pathParameters,
   headers: example.request.headers,
   body: example.request.body,
+  authentication: example.request.authentication as Request['authentication'],
   _id: example._id,
   name: example.name,
 });
