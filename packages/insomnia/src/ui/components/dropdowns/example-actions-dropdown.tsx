@@ -8,6 +8,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import {
+  useCreateRequestFromExample,
   useDeleteExample,
   useDuplicateExample,
   useUpdateExample,
@@ -15,16 +16,39 @@ import {
 
 interface Props {
   example: ExampleSummary;
+  // The example's own location: the sidebar lists examples from every
+  // workspace, so navigation must not read the active route's params.
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
-export const ExampleActionsDropdown = ({ example, isOpen, onOpenChange }: Props) => {
+export const ExampleActionsDropdown = ({
+  example,
+  organizationId,
+  projectId,
+  workspaceId,
+  isOpen,
+  onOpenChange,
+}: Props) => {
   const updateExample = useUpdateExample();
   const duplicateExampleMutation = useDuplicateExample();
   const deleteExampleMutation = useDeleteExample();
+  const createRequestFromExampleMutation = useCreateRequestFromExample();
 
   const exampleName = example.name || `Example ${example.response.statusCode}`;
+
+  const createRequestFromExample = () => {
+    createRequestFromExampleMutation.mutate({
+      exampleId: example._id,
+      parentId: example.parentId,
+      organizationId,
+      projectId,
+      workspaceId,
+    });
+  };
 
   const duplicateExample = () => {
     showModal(PromptModal, {
@@ -71,6 +95,12 @@ export const ExampleActionsDropdown = ({ example, isOpen, onOpenChange }: Props)
       id: 'actions',
       icon: 'cog' as const,
       items: [
+        {
+          id: 'CreateRequest',
+          name: 'Create Request from Example',
+          icon: 'plus' as const,
+          action: createRequestFromExample,
+        },
         { id: 'Duplicate', name: 'Duplicate', icon: 'copy' as const, action: duplicateExample },
         { id: 'Rename', name: 'Rename', icon: 'edit' as const, action: renameExample },
         { id: 'Delete', name: 'Delete', icon: 'trash' as const, action: deleteExample },
