@@ -374,7 +374,7 @@ const RootContent = () => {
   // other entry points are not, so pasting then can stack one more modal.
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
-  // Reload the renderer when a signed-in session ends, so no in-memory cache (query clients, workers, module state) will be cleared.
+  // Reload the renderer when a signed-in session ends, so no in-memory cache (query clients, workers, module state) survives into the next session.
   const sessionId = useRootLoaderData()?.userSession.id;
   const previousSessionId = useRef(sessionId);
   useEffect(() => {

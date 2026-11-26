@@ -12,17 +12,20 @@ type CreateCloudCredentialData = Pick<CloudProviderCredential, 'name' | 'provide
   provider: string;
 };
 
-interface AuthenticateResult { access_token: string; expires_at: number }
+interface AuthenticateResult {
+  access_token: string;
+  expires_at: number;
+}
 
 const EMPTY_CLOUD_CREDENTIALS: CloudProviderCredential[] = [];
 
 // Refreshed by updateAppDataOnDbChanges, so the mutations below don't invalidate it themselves.
 export const useCloudCredentials = () => {
-  const { data, isPending } = useDBQuery({
+  const { data, isPending, isError, error } = useDBQuery({
     queryKey: cloudCredentialKeys.all,
     queryFn: () => services.cloudCredential.all(),
   });
-  return { cloudCredentials: data ?? EMPTY_CLOUD_CREDENTIALS, isPending };
+  return { cloudCredentials: data ?? EMPTY_CLOUD_CREDENTIALS, isPending, isError, error };
 };
 
 // Throws on failure so the mutation's `error` / `onError` / `onSuccess` reflect the real outcome.
@@ -46,11 +49,14 @@ const authenticate = async (provider: string, credentials: unknown) => {
 const withHashicorpToken = <T extends Partial<CloudProviderCredential>>(
   patch: T,
   provider: string,
-  { access_token, expires_at }: AuthenticateResult,
-): T =>
-  provider === 'hashicorp'
-    ? { ...patch, credentials: { ...patch.credentials, access_token, expires_at } as T['credentials'] }
-    : patch;
+  result: AuthenticateResult,
+): T => {
+  if (provider !== 'hashicorp') {
+    return patch;
+  }
+  const { access_token, expires_at } = result;
+  return { ...patch, credentials: { ...patch.credentials, access_token, expires_at } as T['credentials'] };
+};
 
 export const useCreateCloudCredential = () =>
   useDBMutation({
