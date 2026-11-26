@@ -7,6 +7,7 @@ import { buildCookieJarTabs } from './cookie-jar-diff-card';
 import { computeFieldChanges, type EntityDiff, type VisualDiffEntityType } from './diff-engine';
 import type { DiffTabDef } from './diff-tabs';
 import { buildEnvironmentTabs } from './environment-diff-card';
+import { buildExampleTabs, ExampleDiffCard } from './example-diff-card';
 import { buildGenericTabs } from './generic-entity-diff-card';
 import { buildGrpcTabs } from './grpc-diff-card';
 import { buildMcpTabs } from './mcp-diff-card';
@@ -112,6 +113,82 @@ describe('buildRequestTabs', () => {
 
     expect(summary(tabs)).toEqual([{ id: 'params', status: 'modified', count: 1 }]);
     expect(renderToStaticMarkup(React.createElement(tabs[0].content))).toContain('tag (1)');
+  });
+});
+
+describe('buildExampleTabs', () => {
+  const before = {
+    name: '200 OK',
+    meta: { id: 'exp_1', description: '' },
+    request: { method: 'GET', url: 'https://a', headers: [], parameters: [], body: {} },
+    response: { statusCode: 200, statusMessage: 'OK', headers: [], body: '{}' },
+  };
+
+  it('maps the request snapshot and the response to their own tabs, with no raw Request/Response in Settings', () => {
+    const after = {
+      ...before,
+      meta: { id: 'exp_1', description: '' },
+      request: {
+        ...before.request,
+        url: 'https://b',
+        headers: [{ name: 'X-New', value: '1' }],
+        body: { mimeType: 'application/json', text: '{}' },
+      },
+      response: { ...before.response, statusCode: 201, body: '{"id":1}' },
+    };
+
+    expect(summary(buildExampleTabs(modified('example', before, after)))).toEqual([
+      { id: 'body', status: 'added', count: undefined },
+      { id: 'headers', status: 'added', count: 1 },
+      { id: 'response', status: 'modified', count: 2 },
+    ]);
+  });
+
+  it('shows the example description as Docs, not in the Settings catch-all', () => {
+    const after = { ...before, meta: { id: 'exp_1', description: 'Saves the created user' } };
+
+    expect(summary(buildExampleTabs(modified('example', before, after)))).toEqual([
+      { id: 'docs', status: 'added', count: undefined },
+    ]);
+  });
+
+  it('keeps a method and URL change in the header rather than the Settings catch-all', () => {
+    const after = { ...before, request: { ...before.request, method: 'POST', url: 'https://b' } };
+
+    expect(summary(buildExampleTabs(modified('example', before, after)))).toEqual([]);
+  });
+
+  it('shows request fields the request tabs cannot render in their own catch-all', () => {
+    const headers = [
+      { name: 'A', value: '1' },
+      { name: 'B', value: '2' },
+    ];
+    const withHeaders = { ...before, request: { ...before.request, headers } };
+    const after = { ...withHeaders, request: { ...withHeaders.request, headers: [...headers].reverse() } };
+
+    expect(summary(buildExampleTabs(modified('example', withHeaders, after)))).toEqual([
+      { id: 'request-settings', status: 'modified', count: 1 },
+    ]);
+  });
+
+  it('renders the example header with its method and URL', () => {
+    const after = {
+      ...before,
+      request: { ...before.request, url: 'https://b' },
+      response: { ...before.response, body: '{"id":1}' },
+    };
+    const html = renderToStaticMarkup(
+      React.createElement(ExampleDiffCard, {
+        diff: modified('example', before, after),
+        staged: false,
+        pendingAction: null,
+        isDisabled: false,
+      }),
+    );
+
+    expect(html).toContain('200 OK');
+    expect(html).toContain('https://b');
+    expect(html).toContain('Response');
   });
 });
 
