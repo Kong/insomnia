@@ -38,8 +38,8 @@ import { CertificatesModal } from '~/ui/components/modals/workspace-certificates
 import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
@@ -73,7 +73,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 const Component = () => {
   const { unitTestSuites } = useLoaderData<typeof clientLoader>();
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { organizationId, projectId, workspaceId, testSuiteId } = useParams() as {
     organizationId: string;
     projectId: string;

@@ -4,7 +4,7 @@ import { href } from 'react-router';
 
 import { createFetcherLoadHook } from '~/ui/utils/router';
 
-import type { Route } from './+types/settings.update';
+import type { Route } from './+types/trial.check';
 
 // only revalidate when call load(), not on every render
 export function shouldRevalidate() {

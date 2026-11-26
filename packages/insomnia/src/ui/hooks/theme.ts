@@ -5,14 +5,14 @@ import * as reactUse from 'react-use';
 import type { PluginTheme } from '~/common/plugins/bridge-types';
 import { type ColorScheme } from '~/common/plugins/types';
 import { AnalyticsEvent } from '~/ui/analytics';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { applyColorScheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);

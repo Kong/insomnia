@@ -1,6 +1,6 @@
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 const MASK_CHARACTER = '•';
 /** randomly get anywhere between 4 and 11 mask characters on each invocation */
@@ -20,7 +20,7 @@ export const PasswordViewer: FC<{
    */
   maskText?: boolean;
 }> = ({ onShow, initiallyHidden = true, text, maskText = true }) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { showPasswords } = settings;
   const [mask, setMask] = useState<string | null>(null);
   useEffect(() => {

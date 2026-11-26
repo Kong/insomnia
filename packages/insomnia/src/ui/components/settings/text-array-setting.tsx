@@ -3,7 +3,7 @@ import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
 import { invariant } from '~/common/utils/invariant';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
@@ -17,7 +17,7 @@ export const TextArraySetting: FC<{
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string[] | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   invariant(setting in settings, `Invalid setting name ${setting}`);
 
   const patchSettings = useSettingsPatcher();

@@ -12,7 +12,7 @@ import { getAuthObjectOrNull } from '~/network/authentication';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { AuthWrapper } from '~/ui/components/editors/auth/auth-wrapper';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import {
   type SocketIORequestLoaderData,
@@ -65,7 +65,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
 
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 

@@ -30,8 +30,8 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
@@ -86,7 +86,7 @@ const Component = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
   const tabNavigate = useTabNavigate();

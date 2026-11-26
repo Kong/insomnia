@@ -2,13 +2,13 @@ import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderRequestPane: FC = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const { hotKeyRegistry } = settings;
   const requestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {

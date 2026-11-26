@@ -3,7 +3,7 @@ import { services } from 'insomnia-data';
 
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
-import type { Route } from './+types/settings.update';
+import type { Route } from './+types/trial.start';
 
 async function syncCurrentPlan(sessionId: string, accountId: string) {
   const [currentPlanResult] = await Promise.allSettled([getCurrentPlan({ sessionId })]);

@@ -54,9 +54,9 @@ import {
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 const emptyServerData: McpServerData = {
   serverCapabilities: getDefaultServerCapabilities(),
@@ -94,7 +94,7 @@ export const McpPane = () => {
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const [mcpServerData, setMcpServerData] = useState<McpServerData>(emptyServerData);
   const [primitiveErrors, setPrimitiveErrors] =
     useState<Partial<Record<McpServerPrimitiveTypes, McpListValidationError>>>(emptyPrimitiveErrors);

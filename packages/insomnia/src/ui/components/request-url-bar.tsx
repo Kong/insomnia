@@ -17,6 +17,7 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
@@ -112,7 +113,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
 
     const { activeWorkspace, activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
     const gitVersion = useGitVCSVersion();
-    const { settings } = useRootLoaderData()!;
+    const settings = useSettings();
     const { hotKeyRegistry } = settings;
     const {
       activeRequest,

@@ -1,6 +1,6 @@
 import { Switch } from 'react-aria-components';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { QUICKJS_SANDBOX_ENABLED } from '../../../scripting/run-script-quickjs';
 import {
@@ -145,7 +145,7 @@ const RuleCard = ({
 );
 
 export const ScriptingSettings = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const patchSettings = useSettingsPatcher();
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;

@@ -8,6 +8,7 @@ import { useFetcher, useParams } from 'react-router';
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { KongLogo } from '~/ui/components/kong-logo';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useOpenKonnectDebuggerTab } from '~/ui/hooks/use-insomnia-tab';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
@@ -52,8 +53,8 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
-  const { settings } = useRootLoaderData()!;
   const openKonnectDebuggerTab = useOpenKonnectDebuggerTab();
+  const settings = useSettings();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const isKonnectRequest = 'konnectRouteKey' in activeRequest && !!activeRequest.konnectRouteKey;
   const handleSetFilter = async (responseFilter: string) => {

@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect } from 'react';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 const updateFontStyle = (key: string, value: string | null) =>
   document?.querySelector('html')?.style.setProperty(key, value);
 
 // as a general rule, if the body effect in this file is more than one line, extract into a separate function.
 export const useSettingsSideEffects = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   useLayoutEffect(() => {
     updateFontStyle('--font-default', settings.fontInterface);

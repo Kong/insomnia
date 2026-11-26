@@ -3,7 +3,7 @@ import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
 import { Hotkey } from '~/ui/components/hotkey';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { RequestResultCard } from './request-result-card';
 import { hasMatchingTestResults, type TargetTestType } from './request-test-result-pane';
@@ -20,7 +20,7 @@ interface Props {
 export const RunnerTestResultPane: FC<Props> = ({ result }) => {
   const [targetTests, setTargetTests] = useState<TargetTestType>('all');
   const [resultFilter, setResultFilter] = useState('');
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
 
   if (!result) {
     return (

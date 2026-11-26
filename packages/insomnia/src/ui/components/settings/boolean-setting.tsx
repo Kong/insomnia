@@ -1,7 +1,7 @@
 import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC, type ReactNode } from 'react';
 
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { HelpTooltip } from '../help-tooltip';
@@ -29,7 +29,7 @@ export const BooleanSetting: FC<{
   checked,
   onAfterToggle,
 }) => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }

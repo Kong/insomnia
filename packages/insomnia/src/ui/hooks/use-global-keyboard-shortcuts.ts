@@ -1,4 +1,4 @@
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
 
@@ -8,7 +8,7 @@ import { SettingsModal } from '../components/modals/settings-modal';
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
-  const { settings } = useRootLoaderData()!;
+  const settings = useSettings();
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({
