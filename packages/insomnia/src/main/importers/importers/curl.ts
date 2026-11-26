@@ -220,6 +220,70 @@ const extractCookieHeaderValue = (pairsByName: PairsByName) => {
     })
     .join('; ');
 };
+const FORM_MODIFIER_NAMES = ['type', 'filename', 'headers', 'encoder'];
+
+const isFormModifier = (segment: string) =>
+  FORM_MODIFIER_NAMES.some(name => segment.trim().toLowerCase().startsWith(`${name}=`));
+
+const splitFormContent = (content: string) => {
+  if (content.startsWith('"')) {
+    let value = '';
+    let index = 1;
+    while (index < content.length && content[index] !== '"') {
+      if (content[index] === '\\' && index + 1 < content.length) {
+        index++;
+      }
+      value += content[index];
+      index++;
+    }
+    return { value, rest: content.slice(index + 1) };
+  }
+  const separatorIndex = content.indexOf(';');
+  if (separatorIndex === -1) {
+    return { value: content, rest: '' };
+  }
+  return { value: content.slice(0, separatorIndex), rest: content.slice(separatorIndex) };
+};
+
+const extractFormModifiers = (rest: string) =>
+  rest.split(';').reduce<string[]>((modifiers, segment) => {
+    if (isFormModifier(segment)) {
+      modifiers.push(segment.trim());
+    } else if (modifiers.length) {
+      modifiers[modifiers.length - 1] += `;${segment}`;
+    }
+    return modifiers;
+  }, []);
+
+const parseFormParameter = (str: string): Parameter => {
+  const separatorIndex = str.indexOf('=');
+  const name = separatorIndex === -1 ? str : str.slice(0, separatorIndex);
+  const content = separatorIndex === -1 ? '' : str.slice(separatorIndex + 1);
+  const isFile = content.startsWith('@');
+  const { value, rest } = splitFormContent(isFile ? content.slice(1) : content);
+  const typeModifier = extractFormModifiers(rest).find(modifier => modifier.toLowerCase().startsWith('type='));
+  const item: Parameter = {
+    name,
+  };
+
+  if (isFile) {
+    item.fileName = value;
+    item.type = 'file';
+  } else {
+    item.value = value;
+    item.type = 'text';
+  }
+
+  if (typeModifier) {
+    const contentType = typeModifier.slice('type='.length).trim();
+    if (contentType) {
+      item.multiline = contentType;
+    }
+  }
+
+  return item;
+};
+
 const extractBody = (
   dataParameters: Parameter[],
   pairsByName: PairsByName,
@@ -232,23 +296,7 @@ const extractBody = (
   const formDataParams = [
     ...((pairsByName.form as string[] | undefined) || []),
     ...((pairsByName.F as string[] | undefined) || []),
-  ].map(str => {
-    const [name, ...rest] = str.split('=');
-    const value = rest.join('=').split(';')[0];
-    const item: Parameter = {
-      name,
-    };
-
-    if (value.indexOf('@') === 0) {
-      item.fileName = value.slice(1);
-      item.type = 'file';
-    } else {
-      item.value = value;
-      item.type = 'text';
-    }
-
-    return item;
-  });
+  ].map(parseFormParameter);
 
   if (dataParameters.length !== 0 && mimeType === 'application/x-www-form-urlencoded') {
     return {
