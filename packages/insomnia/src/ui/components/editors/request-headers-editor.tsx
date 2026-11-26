@@ -8,6 +8,7 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
+import { useExampleEditorContext } from '../../context/example-editor-context';
 import { useRequestGroupPatcher, useRequestPatcher, useWorkspacePatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -41,19 +42,22 @@ export const RequestHeadersEditor: FC<Props> = ({
   disableUserAgentHeader,
   onDescriptionToggle,
 }) => {
+  const exampleEditor = useExampleEditorContext();
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patchWorkspace = useWorkspacePatcher();
   const isRequestGroup = requestType === 'RequestGroup';
   const isWorkspace = requestType === 'Workspace';
-  const patcher = isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest;
+  const routePatcher = isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest;
+  const patcher = exampleEditor ? exampleEditor.patchRequest : routePatcher;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
   const { requestId, requestGroupId, workspaceId } = useParams() as {
     requestId?: string;
     requestGroupId?: string;
     workspaceId?: string;
   };
-  const id = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
+  const routeId = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
+  const id = exampleEditor ? exampleEditor.exampleId : routeId;
   invariant(id, 'Request, RequestGroup or Workspace ID is required');
   const showUserAgentReadOnly =
     !isRequestGroup && !isWorkspace && !headers.some(h => h.name.toLowerCase() === 'user-agent');
@@ -67,7 +71,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       // If the user just removed their last User-Agent header, default the read-only row to
       // disabled rather than letting it silently start sending `insomnia/<version>`.
       if (!isRequestGroup && !isWorkspace && hadUserAgent && !hasUserAgent) {
-        patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
+        patcher(id, { headers: newHeaders, disableUserAgentHeader: true });
       } else {
         patcher(id, { headers: newHeaders });
       }
@@ -143,7 +147,9 @@ export const RequestHeadersEditor: FC<Props> = ({
       readOnlyPairs={readOnlyPairs}
       readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
       onReadOnlyDisabledChange={
-        showUserAgentReadOnly ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled }) : undefined
+        showUserAgentReadOnly && !exampleEditor
+          ? (_name, disabled) => patcher(id, { disableUserAgentHeader: disabled })
+          : undefined
       }
       onDescriptionToggle={onDescriptionToggle}
     />

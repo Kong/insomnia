@@ -106,6 +106,7 @@ export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => 
       dbModels.oAuth2Token.type,
     ],
     [dbModels.request.type]: [
+      dbModels.example.type,
       dbModels.requestMeta.type,
       dbModels.response.type,
       dbModels.requestVersion.type,

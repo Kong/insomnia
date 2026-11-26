@@ -78,7 +78,7 @@ describe('getAllDesignChildrenByWorkspaceIds', () => {
     const result = await getAllDesignChildrenByWorkspaceIds([workspace._id]);
 
     expect(result.get(workspace._id)).toEqual({
-      data: { apiSpec: undefined, requestsAndGroups: [] },
+      data: { apiSpec: undefined, requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
   });

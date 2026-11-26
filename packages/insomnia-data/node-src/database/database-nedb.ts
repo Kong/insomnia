@@ -17,6 +17,7 @@ import type {
   CookieJar,
   DataStoreOptions,
   Environment,
+  Example,
   GitRepository,
   IDatabase,
   Operation,
@@ -329,6 +330,10 @@ export const createNedbDatabase = <O = initOptions>(
         Environment: new NeDB<Environment>({
           ...configForType('Environment'),
           filename: fsPath.join(dbPath, 'insomnia.Environment.db'),
+        }),
+        Example: new NeDB<Example>({
+          ...configForType('Example'),
+          filename: fsPath.join(dbPath, 'insomnia.Example.db'),
         }),
         GitCredentials: new NeDB({
           ...configForType('GitCredentials'),

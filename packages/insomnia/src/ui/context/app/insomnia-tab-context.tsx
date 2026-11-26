@@ -11,6 +11,7 @@ export type TabType =
   | 'environment'
   | 'mockServer'
   | 'mockRoute'
+  | 'example'
   | 'document'
   | 'collection'
   | 'runner'

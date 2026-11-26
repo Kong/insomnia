@@ -160,7 +160,10 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceId = 'wrk_1';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const collectionChildren: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
@@ -180,11 +183,14 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceBId = 'wrk_b';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceAId });
     const childrenA: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceAId), childrenA);
@@ -215,7 +221,7 @@ describe('updateAppDataOnDbChanges', () => {
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const requestsAndGroups = [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]];
     const collectionChildren: CollectionWorkspaceChildren = {
-      data: { apiSpec: fakeApiSpec({ parentId: workspaceId, contents: 'old' }), requestsAndGroups },
+      data: { apiSpec: fakeApiSpec({ parentId: workspaceId, contents: 'old' }), requestsAndGroups, examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
@@ -235,7 +241,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('sets the api spec in place when the cached collection children do not have one yet', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -257,11 +263,11 @@ describe('updateAppDataOnDbChanges', () => {
     const specB = fakeApiSpec({ _id: 'spc_b', parentId: workspaceBId, contents: 'b' });
     const emptyMetas = { allRequestMetas: [], requestGroupMetas: [] };
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceAId), {
-      data: { apiSpec: specA, requestsAndGroups: [] },
+      data: { apiSpec: specA, requestsAndGroups: [], examples: [] },
       dataMetas: emptyMetas,
     });
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceBId), {
-      data: { apiSpec: specB, requestsAndGroups: [] },
+      data: { apiSpec: specB, requestsAndGroups: [], examples: [] },
       dataMetas: emptyMetas,
     });
 
@@ -276,7 +282,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('invalidates the workspace cache when an api spec is created', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -288,7 +294,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('invalidates the workspace cache when an api spec is removed', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { apiSpec: fakeApiSpec({ parentId: workspaceId }), requestsAndGroups: [] },
+      data: { apiSpec: fakeApiSpec({ parentId: workspaceId }), requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -325,11 +331,11 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('fetches all workspace ids in a single batched call when none are cached', async () => {
     const childrenA = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(
@@ -349,13 +355,13 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('only fetches the uncached subset of workspace ids', async () => {
     const cachedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), cachedChildren);
 
     const fetchedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(new Map([['wrk_b', fetchedChildren]]));
@@ -368,7 +374,7 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('does not call the service when every workspace id is already cached', async () => {
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
