@@ -334,12 +334,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     );
   }, [scanResourcesFetcherData]);
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1 && !mustCreateNewWorkspace;
-  // Check if base environment is being imported to existing workspace
-  const isImportingBaseEnvironmentToWorkspace =
-    shouldImportToWorkspace &&
-    scanResourcesFetcherData?.some(data =>
-      data.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
-    );
+
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
   const header =
     shouldImportToWorkspace && workspaceName
@@ -382,7 +377,6 @@ export const ImportModal: FC<ImportModalProps> = ({
             disabled={importErrors.length > 0}
             defaultProjectId={defaultProjectId}
             defaultWorkspaceId={defaultWorkspaceId}
-            isImportingBaseEnvironmentToWorkspace={!!isImportingBaseEnvironmentToWorkspace}
             onImport={async (
               overrideBaseEnvironmentData: boolean,
               overrideCollectionProperties: boolean,
@@ -647,7 +641,6 @@ const ImportResourcesForm = ({
   loading,
   defaultProjectId,
   defaultWorkspaceId,
-  isImportingBaseEnvironmentToWorkspace,
 }: {
   scanResults: ScanResult[];
   errors?: string[];
@@ -662,7 +655,6 @@ const ImportResourcesForm = ({
   loading: boolean;
   defaultProjectId: string;
   defaultWorkspaceId?: string;
-  isImportingBaseEnvironmentToWorkspace: boolean;
 }) => {
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -721,15 +713,20 @@ const ImportResourcesForm = ({
         .filter(isNotNullOrUndefined)
         .filter(w => w.scope === 'collection' || w.scope === 'design') || [];
   const shouldShowWorkspaceSelect = !scanResults.some(requiresNewWorkspace) && workspacesForActiveProject.length > 0;
+  const hasSelectedWorkspace = shouldShowWorkspaceSelect && !!selectedWorkspaceId;
+  const containsCollectionLevelPropertiesToImport = scanResults.some(result =>
+    result.workspaces?.some(hasCollectionLevelProperties),
+  );
+  const isImportingCollectionPropertiesToWorkspace = hasSelectedWorkspace && containsCollectionLevelPropertiesToImport;
 
-  const isImportingCollectionPropertiesToWorkspace =
-    shouldShowWorkspaceSelect &&
-    !!selectedWorkspaceId &&
-    scanResults.some(result => result.workspaces?.some(hasCollectionLevelProperties));
+  const containsBaseEnvironmentToImport = scanResults.some(result =>
+    result.environments?.some(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__')),
+  );
+  const isImportingBaseEnvironmentToWorkspace = hasSelectedWorkspace && containsBaseEnvironmentToImport;
 
   const handleImport = () =>
     onImport(
-      overrideBaseEnvironmentData,
+      isImportingBaseEnvironmentToWorkspace && overrideBaseEnvironmentData,
       isImportingCollectionPropertiesToWorkspace && overrideCollectionProperties,
       selectedProjectId,
       selectedWorkspaceId,
@@ -740,7 +737,7 @@ const ImportResourcesForm = ({
     <Fragment>
       <Form
         id={formId}
-        className="flex max-h-[50vh] flex-col gap-(--padding-md) overflow-auto"
+        className="flex max-h-[55vh] flex-col gap-(--padding-md) overflow-auto"
         onSubmit={e => {
           e.preventDefault();
           if (!disabled && !loading) {
@@ -818,31 +815,34 @@ const ImportResourcesForm = ({
           <div className="mt-4 w-full items-center gap-4 text-wrap outline-hidden">
             ⚠️ Make sure that you trust the import source before continuing.
           </div>
-          {isImportingBaseEnvironmentToWorkspace && (
-            <Checkbox
-              isSelected={overrideBaseEnvironmentData}
-              onChange={checked => setOverrideBaseEnvironmentData(checked)}
-              className="mt-1"
-            >
-              Override Base Environment On Name Conflict
-              <HelpTooltip className="space-left">
-                Override existing variables in the base environment if the same variable names are found during import.
-              </HelpTooltip>
-            </Checkbox>
-          )}
-          {isImportingCollectionPropertiesToWorkspace && (
-            <Checkbox
-              isSelected={overrideCollectionProperties}
-              onChange={checked => setOverrideCollectionProperties(checked)}
-              className="mt-1"
-            >
-              Override Workspace Level Headers, Scripts And Authentication
-              <HelpTooltip className="space-left">
-                The imported file defines workspace-level headers, scripts or authentication. Check to replace those of
-                the selected workspace with the imported one. Otherwise, imported workspace-level properties will be
-                discarded.
-              </HelpTooltip>
-            </Checkbox>
+          {(isImportingBaseEnvironmentToWorkspace || isImportingCollectionPropertiesToWorkspace) && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+              {isImportingBaseEnvironmentToWorkspace && (
+                <Checkbox
+                  isSelected={overrideBaseEnvironmentData}
+                  onChange={checked => setOverrideBaseEnvironmentData(checked)}
+                >
+                  Override Base Environment
+                  <HelpTooltip>
+                    Override existing variables in the base environment if the same variable names are found during
+                    import.
+                  </HelpTooltip>
+                </Checkbox>
+              )}
+              {isImportingCollectionPropertiesToWorkspace && (
+                <Checkbox
+                  isSelected={overrideCollectionProperties}
+                  onChange={checked => setOverrideCollectionProperties(checked)}
+                >
+                  Override Collection Settings
+                  <HelpTooltip>
+                    The imported file defines workspace-level headers, scripts or authentication. Check to replace those
+                    of the selected workspace with the imported one. Otherwise, imported workspace-level properties will
+                    be discarded.
+                  </HelpTooltip>
+                </Checkbox>
+              )}
+            </div>
           )}
         </div>
 

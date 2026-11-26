@@ -358,22 +358,7 @@ export async function importResourcesToProject({
     const { resources, importer } = resourceCacheItem;
     const bufferId = await db.bufferChanges();
 
-    // if the resource is postman collection
-    const postmanTopLevelFolder = resources.find(
-      resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__',
-    ) as Workspace | undefined;
-    if (importer.id === 'postman' && postmanTopLevelFolder) {
-      const newWorkspace = await importResourcesToNewWorkspace({
-        projectId,
-        resourceCacheItem,
-        workspaceToImport: postmanTopLevelFolder,
-        syncNewWorkspaceIfNeeded,
-      });
-      importedWorkspaces.push(newWorkspace);
-      continue;
-    }
-
-    // if the resource is postman environment,
+    // if the resource is postman environment
     if (importer.id === postmanEnvImporterId && resources.find(models.environment.isEnvironment)) {
       const newWorkspaces = await Promise.all(
         resources.filter(models.environment.isEnvironment).map(resource =>

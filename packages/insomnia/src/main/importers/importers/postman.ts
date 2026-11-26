@@ -334,12 +334,13 @@ export class ImportPostman {
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
 
-    const collectionFolder: ImportRequest = {
-      parentId: '__WORKSPACE_ID__',
-      _id: `__GRP_${requestGroupCount++}__`,
-      _type: 'request_group',
+    const workspace: ImportRequest = {
+      parentId: null,
+      _id: '__WORKSPACE_ID__',
+      _type: 'workspace',
       name,
       description: postmanDescriptionToString(description),
+      scope: 'collection',
       authentication,
       preRequestScript,
       afterResponseScript,
@@ -354,9 +355,9 @@ export class ImportPostman {
         name: 'Variables',
         data: postmanVariable,
       };
-      return [collectionFolder, ...this.importItems(item, collectionFolder._id), baseEnvironment];
+      return [workspace, ...this.importItems(item), baseEnvironment];
     }
-    return [collectionFolder, ...this.importItems(item, collectionFolder._id)];
+    return [workspace, ...this.importItems(item)];
   };
 
   importUrl = (url?: Url | string) => {
