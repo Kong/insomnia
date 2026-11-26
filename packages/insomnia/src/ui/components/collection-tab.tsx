@@ -133,7 +133,11 @@ export const CollectionTab = ({
       </TabPanel>
       <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
         <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-          <RequestHeadersEditor bulk={false} headers={headers} requestType="Workspace" />
+          <RequestHeadersEditor
+            bulk={false}
+            request={activeWorkspace}
+            onChange={patch => patchWorkspace(activeWorkspace._id, patch)}
+          />
         </ErrorBoundary>
       </TabPanel>
       <TabPanel className="w-full flex-1" id="scripts">
