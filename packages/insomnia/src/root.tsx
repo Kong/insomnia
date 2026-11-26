@@ -2,7 +2,7 @@ import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
 import { models, services } from 'insomnia-data';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
   href,
@@ -46,7 +46,7 @@ import { SettingsModal } from '~/ui/components/modals/settings-modal';
 import { showToast, Toaster } from '~/ui/components/toast-notification';
 import { VariableSourceTooltipHost } from '~/ui/components/variable-source-tooltip-host';
 import { AppHooks } from '~/ui/containers/app-hooks';
-import { AppDataCacheProvider, useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
+import { AppDataCacheProvider } from '~/ui/context/app/insomnia-app-data-context';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import { useCreateCloudCredential } from '~/ui/hooks/data/use-cloud-credentials';
@@ -374,14 +374,15 @@ const RootContent = () => {
   // other entry points are not, so pasting then can stack one more modal.
   useGlobalCurlPasteImport({ enabled: !importTrigger, onCurlPaste: handleCurlPaste });
 
-  // Drop the app data cache when the user logs out to avoid showing the previous session's org/project data to the next user.
-  const dbQueryClient = useDBQueryClient();
+  // Reload the renderer when a signed-in session ends, so no in-memory cache (query clients, workers, module state) will be cleared.
   const sessionId = useRootLoaderData()?.userSession.id;
+  const previousSessionId = useRef(sessionId);
   useEffect(() => {
-    if (!sessionId) {
-      dbQueryClient.clear();
+    if (previousSessionId.current && !sessionId) {
+      window.location.reload();
     }
-  }, [dbQueryClient, sessionId]);
+    previousSessionId.current = sessionId;
+  }, [sessionId]);
 
   const { mutateAsync: createCloudCredentials } = useCreateCloudCredential();
   const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
