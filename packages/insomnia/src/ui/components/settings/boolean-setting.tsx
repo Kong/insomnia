@@ -29,7 +29,7 @@ export const BooleanSetting: FC<{
   checked,
   onAfterToggle,
 }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }

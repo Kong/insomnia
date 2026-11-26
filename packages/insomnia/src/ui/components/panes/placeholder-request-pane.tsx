@@ -8,7 +8,7 @@ import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderRequestPane: FC = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { hotKeyRegistry } = settings;
   const requestFetcher = useRequestNewActionFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as {

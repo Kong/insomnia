@@ -168,7 +168,7 @@ export const Runner: FC = () => {
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
-  const settings = useSettings();
+  const { settings } = useSettings();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(

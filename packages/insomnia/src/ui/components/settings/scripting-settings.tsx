@@ -145,7 +145,7 @@ const RuleCard = ({
 );
 
 export const ScriptingSettings = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const patchSettings = useSettingsPatcher();
 
   const sandboxEnabled = settings.scriptSandboxEnabled !== false;

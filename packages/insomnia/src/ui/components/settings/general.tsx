@@ -47,7 +47,7 @@ const onHideConfidentialValuesToggled = (isHiding: boolean) => {
 };
 
 export const General: FC = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { userSession } = useRootLoaderData()!;
   const isLoggedIn = Boolean(userSession.id);
   const { isEnforcedByOrganization: isHideSecretValuesEnforced } = useHideSecretValues();

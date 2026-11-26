@@ -33,7 +33,7 @@ const { useInterval } = reactUse;
 
 export const MockResponsePane = () => {
   const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
-  const settings = useSettings();
+  const { settings } = useSettings();
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
   const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });

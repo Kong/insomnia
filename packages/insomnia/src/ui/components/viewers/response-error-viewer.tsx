@@ -18,7 +18,7 @@ interface Props {
 export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResponse, showErrorDetails = true }) => {
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
   let msg: React.ReactNode = null;
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { editorFontSize } = settings;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {

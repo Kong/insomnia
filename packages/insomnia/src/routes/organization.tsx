@@ -174,7 +174,7 @@ const Component = () => {
   const organizations = useOrganizations();
   const user = useCurrentUser();
   const currentPlan = useCurrentPlan();
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { userSession } = useRootLoaderData()!;
   const [konnectMigrationGroups, setKonnectMigrationGroups] = useState<KonnectMigrationGroup[]>([]);
   // `konnectMigrationGroups` starts empty before `detectKonnectOrgMigration` below has resolved too,

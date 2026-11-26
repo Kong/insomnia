@@ -8,7 +8,7 @@ import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { hotKeyRegistry } = settings;
   return (
     <Pane type="response">

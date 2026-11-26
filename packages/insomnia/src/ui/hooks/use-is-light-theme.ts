@@ -6,7 +6,7 @@ import { getColorScheme } from '~/ui/plugins/misc';
 // Kept out of ./theme so components rendered under the root route (eg. modals) can use it without
 // importing ~/root, which would close an import cycle.
 export const useIsLightTheme = () => {
-  const { lightTheme, darkTheme, theme, autoDetectColorScheme } = useSettings();
+  const { settings: { lightTheme, darkTheme, theme, autoDetectColorScheme } } = useSettings();
 
   const calcIsLightTheme = useCallback(() => {
     let isLightTheme = false;

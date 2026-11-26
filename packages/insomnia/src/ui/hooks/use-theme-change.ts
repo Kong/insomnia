@@ -4,7 +4,7 @@ import { useSettings } from '~/ui/hooks/data/use-settings';
 import * as themes from '~/ui/plugins/misc';
 
 export const useThemeChange = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   // Handle System Theme change
   useEffect(() => {
     const matches = window.matchMedia('(prefers-color-scheme: dark)');

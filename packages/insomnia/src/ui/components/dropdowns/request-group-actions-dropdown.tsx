@@ -45,7 +45,7 @@ export const RequestGroupActionsDropdown = ({
   activeProject,
   activeWorkspace,
 }: Props) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});

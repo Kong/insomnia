@@ -10,7 +10,7 @@ import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import { useSettings } from '~/ui/hooks/data/use-settings';
 
 const Component = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const [status, setStatus] = useState<'online' | 'offline'>('online');
   useEffect(() => {
     const handleOnline = () => setStatus('online');

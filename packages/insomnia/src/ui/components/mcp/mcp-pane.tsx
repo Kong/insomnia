@@ -94,7 +94,7 @@ export const McpPane = () => {
   const sidebarPanelRef = useRef<ImperativePanelGroupHandle>(null);
   const [allExpanded, setAllExpanded] = useState(true);
   const [filter, setFilter] = useLocalStorage<string>(`${workspaceId}:mcp-list-filter`);
-  const settings = useSettings();
+  const { settings } = useSettings();
   const [mcpServerData, setMcpServerData] = useState<McpServerData>(emptyServerData);
   const [primitiveErrors, setPrimitiveErrors] =
     useState<Partial<Record<McpServerPrimitiveTypes, McpListValidationError>>>(emptyPrimitiveErrors);

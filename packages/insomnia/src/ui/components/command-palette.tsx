@@ -46,7 +46,7 @@ const { isRequestGroup } = models.requestGroup;
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {

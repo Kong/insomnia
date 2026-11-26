@@ -17,7 +17,7 @@ export const TextArraySetting: FC<{
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string[] | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   invariant(setting in settings, `Invalid setting name ${setting}`);
 
   const patchSettings = useSettingsPatcher();

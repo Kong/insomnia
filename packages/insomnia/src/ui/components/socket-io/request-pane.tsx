@@ -65,7 +65,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
 
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 

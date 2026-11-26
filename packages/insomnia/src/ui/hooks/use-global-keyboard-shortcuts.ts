@@ -8,7 +8,7 @@ import { SettingsModal } from '../components/modals/settings-modal';
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({

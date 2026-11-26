@@ -100,7 +100,7 @@ const ProjectNavigationSidebarInner = (
     requestId?: string;
     requestGroupId?: string;
   };
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const [searchParams, _setSearchParams] = useSearchParams();
   const tabNavigate = useTabNavigate();

@@ -86,7 +86,7 @@ const Component = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
   const tabNavigate = useTabNavigate();

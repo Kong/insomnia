@@ -20,7 +20,7 @@ interface Props {
 export const RunnerTestResultPane: FC<Props> = ({ result }) => {
   const [targetTests, setTargetTests] = useState<TargetTestType>('all');
   const [resultFilter, setResultFilter] = useState('');
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   if (!result) {
     return (

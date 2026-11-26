@@ -10,7 +10,7 @@ export const settingsKeys = {
   all: ['settings'],
 };
 
-export const useSettings = (): Settings => {
+export const useSettings = (): { settings: Settings } => {
   // The root loader has already read the settings, so they are the value until the query resolves
   const loaderSettings = useRouteLoaderData('root')?.settings;
   const { data } = useDBQuery({
@@ -19,7 +19,7 @@ export const useSettings = (): Settings => {
   });
   const settings = data ?? loaderSettings;
   invariant(settings, 'useSettings must be used below the root route');
-  return settings;
+  return { settings };
 };
 
 export const useUpdateSettings = () => {

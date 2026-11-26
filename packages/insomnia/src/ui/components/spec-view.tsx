@@ -143,7 +143,7 @@ export const SpecView = ({
   apiSpec,
 }: SpecViewProps) => {
   const { activeProject, vcsVersion, activeWorkspace, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
   const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);

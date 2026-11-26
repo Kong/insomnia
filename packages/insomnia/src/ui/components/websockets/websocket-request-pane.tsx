@@ -196,7 +196,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const disabled = readyState;
 

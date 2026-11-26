@@ -216,7 +216,7 @@ const Debug = () => {
     };
   }, []);
 
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>

@@ -18,7 +18,7 @@ export function useKeyboardShortcuts(
   getTarget: () => HTMLElement | Window,
   listeners: Partial<Record<KeyboardShortcut, (event: KeyboardEvent) => any>>,
 ) {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { hotKeyRegistry } = settings;
 
   useEffect(() => {

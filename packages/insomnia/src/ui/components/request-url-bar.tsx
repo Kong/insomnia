@@ -113,7 +113,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
 
     const { activeWorkspace, activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
     const gitVersion = useGitVCSVersion();
-    const settings = useSettings();
+    const { settings } = useSettings();
     const { hotKeyRegistry } = settings;
     const {
       activeRequest,

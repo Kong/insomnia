@@ -5,7 +5,7 @@ import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useHideSecretValues } from '~/ui/hooks/use-organization-features';
 
 export const useEditorRefresh = (callback: () => void) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { showVariableSourceAndValue, nunjucksPowerUserMode } = settings;
   // Effective value (user setting OR organization enforcement), so editors also refresh when
   // the organization's enforcement changes or the user switches organization.

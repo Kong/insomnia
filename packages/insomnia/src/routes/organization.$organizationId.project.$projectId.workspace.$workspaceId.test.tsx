@@ -73,7 +73,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 const Component = () => {
   const { unitTestSuites } = useLoaderData<typeof clientLoader>();
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { organizationId, projectId, workspaceId, testSuiteId } = useParams() as {
     organizationId: string;
     projectId: string;

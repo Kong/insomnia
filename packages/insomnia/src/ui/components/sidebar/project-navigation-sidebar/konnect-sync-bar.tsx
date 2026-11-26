@@ -65,7 +65,7 @@ export function useKonnectSyncBar({
   setExpandedProjectAndWorkspaceIds,
 }: UseKonnectSyncBarOptions) {
   const navigate = useNavigate();
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { userSession } = useRootLoaderData()!;
   const konnectSyncEnabled = useKonnectSyncEnabled();
   const { syncing, progress, startSync, cancelSync } = useKonnectSync();

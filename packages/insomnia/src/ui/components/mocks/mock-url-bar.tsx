@@ -18,7 +18,7 @@ import { PromptModal } from '../modals/prompt-modal';
 
 export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
   const { mockServer, mockRoute } = useMockRouteLoaderData()!;
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { hotKeyRegistry } = settings;
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);
   const dropdownRef = useRef<DropdownHandle>(null);

@@ -29,7 +29,7 @@ export const AuthInputRow: FC<Props> = ({
   overrideValueWhenDisabled,
   copyBtn = false,
 }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { showPasswords } = settings;
   const { authentication, _id, patcher } = useAuthentication();
   const [masked, toggleMask] = reactUse.useToggle(true);

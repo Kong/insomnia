@@ -26,7 +26,7 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step = 1 }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);

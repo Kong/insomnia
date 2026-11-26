@@ -15,7 +15,7 @@ interface Props {
 
 export const NoProjectView: FC<Props> = ({ storageRules }) => {
   const { organizationId } = useParams() as { organizationId: string };
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { credentials, providers } = useGitCredentials();
 
   // Konnect projects come exclusively from sync, so there is nothing for the user to create here.

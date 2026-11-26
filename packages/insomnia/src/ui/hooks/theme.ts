@@ -12,7 +12,7 @@ import { plugins } from '~/ui/plugins/renderer-bridge';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
@@ -47,7 +47,7 @@ export const useThemes = () => {
         lightTheme,
         ...patch,
       });
-      patchSettings(patch);
+      await patchSettings(patch);
     },
     [autoDetectColorScheme, darkTheme, lightTheme, patchSettings, theme],
   );

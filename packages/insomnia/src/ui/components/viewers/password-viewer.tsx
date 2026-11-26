@@ -20,7 +20,7 @@ export const PasswordViewer: FC<{
    */
   maskText?: boolean;
 }> = ({ onShow, initiallyHidden = true, text, maskText = true }) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
   const { showPasswords } = settings;
   const [mask, setMask] = useState<string | null>(null);
   useEffect(() => {

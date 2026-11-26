@@ -23,7 +23,7 @@ export const EnumSetting = <T extends string | number>({
   values,
   disabled = false,
 }: PropsWithChildren<Props<T>>) => {
-  const settings = useSettings();
+  const { settings } = useSettings();
 
   const patchSettings = useSettingsPatcher();
 

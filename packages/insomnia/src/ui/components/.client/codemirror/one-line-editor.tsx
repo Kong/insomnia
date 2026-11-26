@@ -137,7 +137,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     const [tooltipValue, setTooltipValue] = useState<string>(
       type?.toLowerCase() === 'password' ? '' : defaultValue || '',
     );
-    const settings = useSettings();
+    const { settings } = useSettings();
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks(PREVIEW_NUNJUCKS_OPTIONS);
     const openVariableSource = useOpenVariableSource();

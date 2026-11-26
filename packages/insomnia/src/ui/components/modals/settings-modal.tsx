@@ -46,7 +46,7 @@ type SettingsModalTabKey =
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const { userSession } = useRootLoaderData()!;
-  const settings = useSettings();
+  const { settings } = useSettings();
   const modalRef = useRef<ModalHandle>(null);
   const [keyboardClosable, setKeyboardClosable] = useState(true);
   const { organizationId } = useParams() as { organizationId?: string };

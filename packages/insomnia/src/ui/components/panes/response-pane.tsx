@@ -54,7 +54,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
   const openKonnectDebuggerTab = useOpenKonnectDebuggerTab();
-  const settings = useSettings();
+  const { settings } = useSettings();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const isKonnectRequest = 'konnectRouteKey' in activeRequest && !!activeRequest.konnectRouteKey;
   const handleSetFilter = async (responseFilter: string) => {
