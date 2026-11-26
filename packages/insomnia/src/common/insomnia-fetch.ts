@@ -29,11 +29,16 @@ export async function insomniaFetch<T = void>({
   headers,
   timeout = INSOMNIA_FETCH_TIME_OUT,
   onDeepLink,
+  parseErrorBody = true,
 }: FetchConfig & {
   // It's not used at all, should be removed?
   retries?: number;
   onDeepLink?: (uri: string) => void;
 }): Promise<T> {
+  const isRawBody =
+    data instanceof URLSearchParams || data instanceof FormData || data instanceof Blob || data instanceof ArrayBuffer;
+  const hasContentTypeHeader = Object.keys(headers || {}).some(key => key.toLowerCase() === 'content-type');
+
   const config: RequestInit = {
     method,
     headers: {
@@ -42,14 +47,15 @@ export async function insomniaFetch<T = void>({
       'insomnia-request-id': generateId('desk'),
       'X-Origin': origin || getApiBaseURL(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
-      ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...(data && !isRawBody && !hasContentTypeHeader ? { 'Content-Type': 'application/json' } : {}),
       ...(organizationId ? { 'X-Insomnia-Org-Id': organizationId } : {}),
       ...(PLAYWRIGHT_TEST ? { 'X-Mockbin-Test': 'true' } : {}),
     },
-    ...(data ? { body: JSON.stringify(data) } : {}),
+    ...(data ? { body: isRawBody ? (data as BodyInit) : JSON.stringify(data) } : {}),
     signal: AbortSignal.timeout(timeout),
   };
-  if (sessionId === undefined) {
+  if ((!origin || origin === getApiBaseURL()) && sessionId === undefined) {
+    // This is a safeguard to make sure only Insomnia related requests to the API include a session ID.
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
@@ -63,7 +69,7 @@ export async function insomniaFetch<T = void>({
     if (!response.ok) {
       let errName = `CODE-${response.status}`;
       let errMsg = response.statusText;
-      if (isJson) {
+      if (isJson && parseErrorBody) {
         try {
           const json = await response.json();
           if (typeof json?.error === 'string') {
@@ -86,8 +92,7 @@ export async function insomniaFetch<T = void>({
       throw new Error(`insomniaFetch timed out: ${method} ${path}`, { cause: err });
     }
     // the real error (ECONNREFUSED, cert problems) hides in err.cause, sometimes nested in an AggregateError
-    const cause = (err as { cause?: string | { code?: string; message?: string; errors?: { code?: string }[] } })
-      .cause;
+    const cause = (err as { cause?: string | { code?: string; message?: string; errors?: { code?: string }[] } }).cause;
     const detail = typeof cause === 'string' ? cause : cause?.code || cause?.errors?.[0]?.code || cause?.message;
     if (detail) {
       // fresh Error (don't mutate err.message) so a re-observed/retried error doesn't append the detail twice

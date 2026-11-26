@@ -246,7 +246,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
             </Select>
             <Button
               // Disable the start button if a session is starting/stopping, konnect PAT is missing, or current debug session is loading.
-              isDisabled={isStartingOrStopping || !debugSessionContext.pat || isLoadingDebugSession}
+              isDisabled={isStartingOrStopping || !debugSessionContext.accessToken || isLoadingDebugSession}
               onPress={startDebugSessionWithAnalytics}
               className="rounded-xs bg-(--color-surprise) px-3 py-1 font-semibold text-(--color-font-surprise) transition-all hover:brightness-90 focus:brightness-90 disabled:opacity-50"
             >
@@ -395,12 +395,12 @@ const StatusBanners = ({
   debug: ReturnType<typeof useKonnectDebuggerSession>;
   onRetry: () => void;
 }) => {
-  const { debugSession, debugSessionState, debugSessionAction, hasKonnectPat, authError, mutationError } = debug;
+  const { debugSession, debugSessionState, debugSessionAction, hasAccessToken, authError, mutationError } = debug;
   const startedAtText = formatStartedAt(debugSession?.startedAt ?? null);
   const [isKonnectSettingsModalOpen, setIsKonnectSettingsModalOpen] = useState(false);
   const konnectSyncEnabled = useKonnectSyncEnabled();
 
-  if (!hasKonnectPat) {
+  if (!hasAccessToken) {
     return (
       <StatusBanner type="error">
         No Konnect token found. Connect one from the Konnect sync bar in the sidebar.
