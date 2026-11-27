@@ -9,7 +9,7 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   ksai:
     name: run
-    uses: Kong/ksai-public/.github/workflows/ksai.yml@3ecfcc60e12a2d5f664f17c90b0a7e76233e717d # v5.0.3
+    uses: Kong/ksai-public/.github/workflows/ksai.yml@b4ebc0ffff01f35558a86feb4872cf40e8aa240d # v5.2.0
     permissions:
       contents: read   # checked out by every command; a push uses the token CP mints
       id-token: write  # mint the GitHub OIDC token for the Kong gateway
