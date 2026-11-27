@@ -35,7 +35,6 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { sync } from '~/ui/ipc';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
-import { createFetcherLoadHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -346,28 +345,6 @@ export function useWorkspaceLoaderData() {
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   );
 }
-
-export const useWorkspaceLoaderFetcher = createFetcherLoadHook(
-  load =>
-    ({
-      organizationId,
-      projectId,
-      workspaceId,
-    }: {
-      organizationId: string;
-      projectId: string;
-      workspaceId: string;
-    }) => {
-      return load(
-        href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
-          organizationId,
-          projectId,
-          workspaceId,
-        }),
-      );
-    },
-  clientLoader,
-);
 
 export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
   const workspaceMeta = await services.workspaceMeta.getByParentId(workspaceId);
