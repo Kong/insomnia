@@ -94,6 +94,7 @@ export enum AnalyticsEvent {
   konnectPluginEditInKonnectClicked = 'Konnect Plugin Edit in Konnect Clicked',
   konnectPluginDeckCommandClicked = 'Konnect Plugin decK Command Clicked',
   konnectPluginViewAllPluginsClicked = 'Konnect Plugin View All Plugins Clicked',
+  konnectPluginsPaneToggled = 'Konnect Plugins Pane Toggled',
   konnectDebugSessionStarted = 'Konnect Debugger Session Started',
   konnectDebugSessionFinished = 'Konnect Debugger Session Finished',
 

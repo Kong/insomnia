@@ -804,4 +804,17 @@ export default function setup(app: Application) {
     }
     res.json({ names: konnectAvailablePlugins });
   });
+
+  // Gateway stub for synced requests: mirrors the rate limiting headers Kong adds,
+  // so the response-side plugins pane has something to read.
+  app.get('/flights', (_req, res) => {
+    res.setHeader('X-RateLimit-Limit-Minute', '20');
+    res.setHeader('X-RateLimit-Remaining-Minute', '16');
+    res.json({ data: [{ flightNumber: 'TA18' }] });
+  });
+
+  // Same gateway without rate limiting headers, for the "configured but no evidence" case.
+  app.get('/flights-plain', (_req, res) => {
+    res.json({ data: [{ flightNumber: 'TA18' }] });
+  });
 }

@@ -370,6 +370,125 @@ test.describe('Konnect plugin info', () => {
     await expect.soft(page.getByText('No plugins apply to this request.')).toBeVisible();
   });
 
+  test('shows rate limit quota from the last response in the plugins pane', async ({ page, request }) => {
+    test.setTimeout(120_000);
+    // Environments without an OS credential store show a blocking first-run notice.
+    await page.addLocatorHandler(
+      page.getByRole('dialog', { name: 'The local encryption key is not available' }),
+      async () => page.getByTestId('field-encryption-continue').click(),
+    );
+    await setKonnectFixtures(request, {
+      controlPlanes: [{ ...controlPlane, proxy_urls: [{ host: '127.0.0.1', port: 4010, protocol: 'http' }] }],
+      plugins: [
+        plugin({
+          id: 'plugin-service-rate-limit',
+          name: 'rate-limiting',
+          service: { id: 'svc-e2e' },
+          config: { minute: 999 },
+        }),
+      ],
+    });
+
+    await page.getByRole('button', { name: 'Organizations' }).click();
+    await page.getByRole('option', { name: 'Control Planes' }).click();
+    await page.getByRole('button', { name: 'Configure' }).click();
+    await page.getByLabel('Personal Access Token').fill('kpat_test');
+    await page.getByRole('button', { name: 'Connect & Sync' }).click();
+
+    await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
+    await dismissKonnectOnboarding(page);
+    await page.getByTestId('project-node-E2E Control Plane').click();
+    await page.getByTestId('workspace-node-flights-svc').click();
+    await page
+      .getByLabel('Expand flights-svc')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+    await page
+      .getByLabel('Expand flights-collection')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+
+    const requestRow = page.getByTestId('request-node-/flights').first();
+    await expect.soft(requestRow).toBeVisible();
+    await requestRow.click();
+    await dismissKonnectOnboarding(page);
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    const pane = page.getByTestId('konnect-plugins-pane');
+    await expect.soft(page.getByText('200 OK')).toBeVisible({ timeout: 30_000 });
+    await expect.soft(pane).toBeVisible({ timeout: 30_000 });
+    await expect.soft(pane.getByText('16 of 20 left this minute')).toBeVisible();
+    // The configured limit is 999; a config-derived number would fail here.
+    await expect.soft(pane.getByText(/999/)).toBeHidden();
+
+    await page.getByRole('button', { name: 'Hide Plugins' }).click();
+    await expect.soft(pane).toBeHidden();
+    await expect.soft(page.getByRole('button', { name: 'Show Plugins' })).toBeVisible();
+    const storedPreference = await page.evaluate(() => window.localStorage.getItem('konnect-plugins-pane-hidden'));
+    expect.soft(storedPreference).toBe('true');
+
+    await page.getByRole('button', { name: 'Show Plugins' }).click();
+    await expect.soft(pane).toBeVisible();
+  });
+
+  test('reports a configured rate limiting plugin with no evidence', async ({ page, request }) => {
+    test.setTimeout(120_000);
+    await page.addLocatorHandler(
+      page.getByRole('dialog', { name: 'The local encryption key is not available' }),
+      async () => page.getByTestId('field-encryption-continue').click(),
+    );
+    const plainRoute = { ...route, id: 'route-plain-e2e', name: 'flights-plain', paths: ['/flights-plain'] };
+    await setKonnectFixtures(request, {
+      controlPlanes: [{ ...controlPlane, proxy_urls: [{ host: '127.0.0.1', port: 4010, protocol: 'http' }] }],
+      routes: [...fixtures.routes, plainRoute],
+      plugins: [
+        plugin({
+          id: 'plugin-plain-rate-limit',
+          name: 'rate-limiting',
+          route: { id: 'route-plain-e2e' },
+          config: { minute: 20 },
+        }),
+      ],
+    });
+
+    await page.getByRole('button', { name: 'Organizations' }).click();
+    await page.getByRole('option', { name: 'Control Planes' }).click();
+    await page.getByRole('button', { name: 'Configure' }).click();
+    await page.getByLabel('Personal Access Token').fill('kpat_test');
+    await page.getByRole('button', { name: 'Connect & Sync' }).click();
+
+    await expect.soft(page.getByTestId('project-node-E2E Control Plane')).toBeVisible({ timeout: 30_000 });
+    await dismissKonnectOnboarding(page);
+    await page.getByTestId('project-node-E2E Control Plane').click();
+    await page.getByTestId('workspace-node-flights-svc').click();
+    await page
+      .getByLabel('Expand flights-svc')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+    await page
+      .getByLabel('Expand flights-plain')
+      .click({ timeout: 1000 })
+      .catch(() => {});
+
+    const requestRow = page.getByTestId('request-node-/flights-plain').first();
+    await expect.soft(requestRow).toBeVisible();
+    await requestRow.click();
+    await dismissKonnectOnboarding(page);
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+    const pane = page.getByTestId('konnect-plugins-pane');
+    await expect.soft(page.getByText('200 OK')).toBeVisible({ timeout: 30_000 });
+    await expect.soft(pane).toBeVisible({ timeout: 30_000 });
+    await expect.soft(pane.getByText('No rate limit headers in this response.')).toBeVisible();
+    await expect.soft(pane.getByText(/left this/)).toBeHidden();
+    await expect.soft(page.getByText('inferred', { exact: true })).toBeHidden();
+
+    await page.getByRole('button', { name: 'About this rate limit data' }).hover();
+    await expect.soft(page.getByText('None of the supported headers are present.')).toBeVisible();
+  });
+
   test('hides the Plugins tab for a non-Konnect project', async ({ page, insomnia }) => {
     test.setTimeout(60_000);
     await insomnia.projectPage.createProject('Non-Konnect Project');
