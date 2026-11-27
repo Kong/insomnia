@@ -2,11 +2,6 @@
   "insomnia": [
     "packages/insomnia/src/common/import.ts -> packages/insomnia/src/common/insomnia-v5.ts",
     "packages/insomnia/src/common/render.ts -> packages/insomnia/src/network/network.ts",
-    "packages/insomnia/src/main/git-service.ts -> packages/insomnia/src/sync/git/repo-file-watcher.ts",
-    "packages/insomnia/src/main/plugin-window.ts -> packages/insomnia/src/main/prompt-bridge.ts -> packages/insomnia/src/main/window-utils.ts",
-    "packages/insomnia/src/main/plugin-window.ts -> packages/insomnia/src/main/window-utils.ts",
-    "packages/insomnia/src/main/templating-worker-database.ts -> packages/insomnia/src/plugins/index.ts",
-    "packages/insomnia/src/main/templating-worker-database.ts -> packages/insomnia/src/templating/index.ts -> packages/insomnia/src/plugins/index.ts",
     "packages/insomnia/src/sync/git/providers/github.ts -> packages/insomnia/src/sync/git/utils.ts -> packages/insomnia/src/sync/git/providers/index.ts",
     "packages/insomnia/src/sync/git/providers/gitlab.ts -> packages/insomnia/src/sync/git/utils.ts -> packages/insomnia/src/sync/git/providers/index.ts",
     "packages/insomnia/src/ui/components/modals/export-requests-modal.tsx -> packages/insomnia/src/ui/components/settings/import-export.tsx",
