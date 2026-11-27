@@ -128,7 +128,7 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   const isStartingOrStopping = debugSessionAction !== 'idle';
   const isActive = debugSessionState === 'active';
 
-  const isCompleting = debugSessionState === 'completing' || debugSessionState === 'timed_out';
+  const isCompleting = debugSessionState === 'completing';
   const isCapturing = isActive || isCompleting;
 
   const traces = useMemo(
@@ -171,7 +171,10 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   // Capture event when a session started from this client is awaiting its natural end.
   // Prevents reporting sessions loaded from another client and prevents duplicate "finished" events.
   useEffect(() => {
-    if (debugSessionState === 'completed' && projectsPendingFinishEvent.has(projectId)) {
+    if (
+      ['completed', 'timed_out', 'polling_timed_out'].includes(debugSessionState || '') &&
+      projectsPendingFinishEvent.has(projectId)
+    ) {
       projectsPendingFinishEvent.delete(projectId);
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.konnectDebugSessionFinished,
@@ -462,6 +465,23 @@ const StatusBanners = ({
         <StatusBanner type="warning">Current debug session was deleted in Konnect.</StatusBanner>
       )}
       {debugSessionState === 'completing' && <StatusBanner type="info">Wait for the session to complete.</StatusBanner>}
+      {debugSessionState === 'timed_out' && <StatusBanner type="warning">Timed out</StatusBanner>}
+      {debugSessionState === 'polling_timed_out' && (
+        <StatusBanner
+          type="warning"
+          action={
+            <Button
+              onPress={debug.refreshTraces}
+              isDisabled={debug.isRefreshingTraces}
+              className="rounded-xs border border-solid border-current px-2 py-0.5 ring-1 ring-transparent focus:ring-(--hl-md) disabled:opacity-50"
+            >
+              {debug.isRefreshingTraces ? 'Refreshing…' : 'Refresh traces'}
+            </Button>
+          }
+        >
+          Stopped waiting for traces. Traces shown may be incomplete.
+        </StatusBanner>
+      )}
       {debugSessionState === 'cancelled' && (
         <StatusBanner
           type="info"

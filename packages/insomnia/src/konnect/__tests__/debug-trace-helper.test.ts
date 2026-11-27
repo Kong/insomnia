@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DebugTraceDetail } from '../debug-session-api';
-import { getRouteIdFromKonnectRouteKey, type SpanTree, summarizeTrace } from '../debug-trace-helper';
+import type { DebugSession, DebugTraceDetail } from '../debug-session-api';
+import {
+  COMPLETING_TIMEOUT_MS,
+  deriveSessionState,
+  getRouteIdFromKonnectRouteKey,
+  type SpanTree,
+  summarizeTrace,
+} from '../debug-trace-helper';
 
 const detail = (traceId: string, attributes: Record<string, any>[]): DebugTraceDetail => ({
   traceId,
@@ -61,5 +67,42 @@ describe('summarizeTrace', () => {
   it('defaults the route fields to empty strings when absent', () => {
     const summary = summarizeTrace(treeWith({ 'proxy.kong.latency.total': 10 }));
     expect(summary).toMatchObject({ routeId: '', method: '', protocol: '', urlScheme: '' });
+  });
+});
+
+describe('deriveSessionState', () => {
+  const startedAt = '2026-11-01T00:00:00.000Z';
+  const endsAt = new Date(startedAt).getTime() + 30 * 1000;
+  const session = (overrides: Partial<DebugSession> = {}) =>
+    ({
+      startedAt,
+      durationSecs: 30,
+      timedOut: false,
+      stoppedAt: null,
+      completedAt: null,
+      ...overrides,
+    }) as DebugSession;
+
+  it('is active before the expected end time', () => {
+    expect(deriveSessionState(session({ timedOut: true }), endsAt - 1)).toBe('active');
+  });
+
+  it('is completing after the end time within the completing timeout', () => {
+    expect(deriveSessionState(session(), endsAt + COMPLETING_TIMEOUT_MS - 1)).toBe('completing');
+    expect(deriveSessionState(session({ timedOut: true }), endsAt + COMPLETING_TIMEOUT_MS - 1)).toBe('completing');
+  });
+
+  it('is timed_out when completing exceeds the timeout and the server reports timedOut', () => {
+    expect(deriveSessionState(session({ timedOut: true }), endsAt + COMPLETING_TIMEOUT_MS)).toBe('timed_out');
+  });
+
+  it('is polling_timed_out when completing exceeds the timeout and the server never reports timedOut', () => {
+    expect(deriveSessionState(session(), endsAt + COMPLETING_TIMEOUT_MS)).toBe('polling_timed_out');
+  });
+
+  it('prefers cancelled and completed over timed_out', () => {
+    const now = endsAt + COMPLETING_TIMEOUT_MS * 2;
+    expect(deriveSessionState(session({ timedOut: true, stoppedAt: startedAt }), now)).toBe('cancelled');
+    expect(deriveSessionState(session({ timedOut: true, completedAt: startedAt }), now)).toBe('completed');
   });
 });
