@@ -171,7 +171,10 @@ export const KonnectDebuggerPane = ({ project: currentProject }: { project: Konn
   // Capture event when a session started from this client is awaiting its natural end.
   // Prevents reporting sessions loaded from another client and prevents duplicate "finished" events.
   useEffect(() => {
-    if (debugSessionState === 'completed' && projectsPendingFinishEvent.has(projectId)) {
+    if (
+      ['completed', 'timed_out', 'polling_timed_out'].includes(debugSessionState || '') &&
+      projectsPendingFinishEvent.has(projectId)
+    ) {
       projectsPendingFinishEvent.delete(projectId);
       window.main.trackAnalyticsEvent({
         event: AnalyticsEvent.konnectDebugSessionFinished,
