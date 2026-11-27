@@ -4,6 +4,7 @@ import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 
+import { getRouteTabLocationUpdate } from '~/ui/components/tabs/tab-location';
 import { formatMethodName, getRequestMethodShortHand } from '~/ui/components/tags/method-tag';
 import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 
@@ -363,7 +364,7 @@ export const useOpenKonnectDebuggerTab = () => {
 };
 
 export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
-  const { appTabsRef, changeActiveTab, closeTabById, addTemporaryTab } = useInsomniaTabContext();
+  const { appTabsRef, changeActiveTab, closeTabById, addTemporaryTab, updateTabById } = useInsomniaTabContext();
   const { routeInfo, getNavigationResources } = useInsomniaNavigation();
 
   // Sync active tab with current route (only activates existing tabs, or creates/updates temporary tab if no match)
@@ -402,12 +403,27 @@ export const useInsomniaTab = ({ organizationId }: InsomniaTabProps) => {
       if (!isStale() && currentActiveTabId !== matchingTab?.id) {
         changeActiveTab(matchingTab?.id ?? '');
       }
+
+      // The tab was stored with an old location (its resource moved while the tab wasn't synced, e.g.
+      // before an app restart) and the route guards have since redirected to the real one: persist it,
+      // so the next click doesn't go through the redirect again.
+      if (
+        matchingTab &&
+        routeInfo?.projectId &&
+        routeInfo.workspaceId &&
+        (matchingTab.projectId !== routeInfo.projectId || matchingTab.workspaceId !== routeInfo.workspaceId)
+      ) {
+        const update = await getRouteTabLocationUpdate(matchingTab, await getNavigationResources());
+        if (!isStale() && update) {
+          updateTabById?.(update.id, update.fields);
+        }
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo]);
+  }, [addTemporaryTab, appTabsRef, changeActiveTab, getNavigationResources, organizationId, routeInfo, updateTabById]);
 
   // Keyboard shortcut to close current tab
   useDocBodyKeyboardShortcuts({

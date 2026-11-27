@@ -35,6 +35,7 @@ import { showResourceNotFoundToast } from '~/ui/components/toast-notification';
 import { useGitFileIssues } from '~/ui/hooks/use-git-file-issues';
 import { sync } from '~/ui/ipc';
 import { syncVCSLikeForWorkspace } from '~/ui/sync-utils';
+import { redirectIfResourceMoved } from '~/ui/utils/resource-location';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
@@ -101,6 +102,9 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     showResourceNotFoundToast(`Workspace not found: ${workspaceId}`);
     throw redirect(href('/organization/:organizationId/project/:projectId', { organizationId, projectId }));
   }
+  // The collection was moved to another project and the URL (a stale tab, history entry or restored
+  // location) still names the old one: continue at the real project before anything project-scoped loads.
+  await redirectIfResourceMoved(activeWorkspace, { projectId, workspaceId }, request);
 
   const activeWorkspaceMeta = await services.workspaceMeta.getOrCreateByParentId(workspaceId);
 
