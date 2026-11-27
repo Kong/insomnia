@@ -403,12 +403,45 @@ describe('importRaw()', () => {
 
     const projectWorkspaces = await services.workspace.listByParentId(projectToImportTo._id);
 
-    const requestGroups = await services.requestGroup.findByParentId(projectWorkspaces[0]._id);
-    const requests = await services.request.findByParentId(requestGroups[0]._id);
+    expect(await services.requestGroup.findByParentId(projectWorkspaces[0]._id)).toHaveLength(0);
+    const requests = await services.request.findByParentId(projectWorkspaces[0]._id);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',
     });
+  });
+
+  it('should import postman collection auth and scripts to the new workspace', async () => {
+    const fixturePath = path.join(
+      __dirname,
+      '..',
+      '__fixtures__',
+      'postman',
+      'collection-with-auth-and-scripts-v2_1-input.json',
+    );
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
+    const projectToImportTo = await services.project.create();
+
+    const scanResult = await importUtil.scanResources([{ contentStr: content }]);
+    expect(scanResult[0].type?.id).toBe('postman');
+    expect(scanResult[0].errors.length).toBe(0);
+
+    await importUtil.importResourcesToProject({ projectId: projectToImportTo._id });
+
+    const [workspace] = await services.workspace.listByParentId(projectToImportTo._id);
+    expect(workspace).toMatchObject({
+      name: 'Collection With Auth And Scripts',
+      description: 'Collection docs',
+      scope: 'collection',
+      authentication: { type: 'bearer', token: 'collection-token' },
+    });
+    expect(workspace.preRequestScript).toContain('collection pre');
+    expect(workspace.afterResponseScript).toContain('collection post');
+
+    const folders = await services.requestGroup.findByParentId(workspace._id);
+    expect(folders.map(f => f.name)).toEqual(['Folder']);
+    const topLevelRequests = await services.request.findByParentId(workspace._id);
+    expect(topLevelRequests.map(r => r.name)).toEqual(['Top level request']);
   });
 
   it('should import a postman collection to an existing workspace', async () => {
@@ -430,8 +463,7 @@ describe('importRaw()', () => {
       workspaceId: existingWorkspace._id,
     });
 
-    const requestGroups = await services.requestGroup.findByParentId(existingWorkspace._id);
-    const requests = await services.request.findByParentId(requestGroups[0]._id);
+    const requests = await services.request.findByParentId(existingWorkspace._id);
 
     expect(requests[0]).toMatchObject({
       url: 'https://insomnia.rest',

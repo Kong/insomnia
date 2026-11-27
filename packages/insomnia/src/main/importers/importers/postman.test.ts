@@ -606,6 +606,48 @@ describe('postman', () => {
     });
   });
 
+  describe('collection', () => {
+    it('maps the collection to a workspace carrying its auth and scripts', () => {
+      const schema = {
+        ...postmanSchema({ version: 'v2.1.0' }),
+        auth: { type: 'bearer', bearer: [{ key: 'token', value: 'abc', type: 'string' }] },
+        event: [
+          { listen: 'prerequest', script: { exec: ['console.log("pre");'] } },
+          { listen: 'test', script: { exec: ['console.log("post");'] } },
+        ],
+      } as HttpsSchemaGetpostmanComJsonCollectionV210;
+      schema.info.description = 'Collection docs';
+
+      const result = new ImportPostman(schema).importCollection();
+      const workspaces = result.filter(i => i._type === 'workspace');
+
+      expect(workspaces).toHaveLength(1);
+      expect(workspaces[0]).toMatchObject({
+        _id: '__WORKSPACE_ID__',
+        parentId: null,
+        name: 'Postman Schema',
+        description: 'Collection docs',
+        scope: 'collection',
+        authentication: { type: 'bearer', token: 'abc' },
+      });
+      expect(workspaces[0].preRequestScript).toContain('console.log("pre");');
+      expect(workspaces[0].afterResponseScript).toContain('console.log("post");');
+    });
+
+    it('does not wrap the items in a folder named after the collection', () => {
+      const schema = {
+        ...postmanSchema(),
+        item: [{ name: 'Projects', item: [{ name: 'Request 1', request: {} }] }],
+      } as HttpsSchemaGetpostmanComJsonCollectionV210;
+
+      const result = new ImportPostman(schema).importCollection();
+
+      const topLevel = result.filter(i => i.parentId === '__WORKSPACE_ID__');
+      expect(topLevel.map(i => [i._type, i.name])).toEqual([['request_group', 'Projects']]);
+      expect(topLevel[0]._id).toBe('__GRP_1__');
+    });
+  });
+
   describe('descriptions', () => {
     it('unwraps the object form and keeps raw text as-is', () => {
       const schema = postmanSchema();
@@ -614,7 +656,8 @@ describe('postman', () => {
 
       const folder = { name: 'Users', description: { content: 'Folder docs', type: 'text/markdown' }, item: [] };
 
-      expect(postman.importCollection()[0].description).toBe('Collection docs');
+      const workspace = postman.importCollection().find(i => i._type === 'workspace');
+      expect(workspace?.description).toBe('Collection docs');
       expect(postman.importFolderItem(folder, 'n/a').description).toBe('Folder docs');
       expect(postman.importRequestItem({ request: { description: folder.description } }, 'n/a').description).toBe(
         'Folder docs',

@@ -1,0 +1,22 @@
+{
+  "info": {
+    "name": "Collection With Auth And Scripts",
+    "description": "Collection docs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "collection-token", "type": "string" }]
+  },
+  "event": [
+    { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["console.log('collection pre');"] } },
+    { "listen": "test", "script": { "type": "text/javascript", "exec": ["console.log('collection post');"] } }
+  ],
+  "item": [
+    {
+      "name": "Folder",
+      "item": [{ "name": "Nested request", "request": { "method": "GET", "url": "https://insomnia.rest/nested" } }]
+    },
+    { "name": "Top level request", "request": { "method": "GET", "url": "https://insomnia.rest/top" } }
+  ]
+}
