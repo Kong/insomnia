@@ -11,29 +11,36 @@ export function useDBMutation<TData = unknown, TError = Error, TVariables = void
   return useMutation(options, useDBQueryClient());
 }
 
-export function useInvalidatingDBMutation<
+// Runs the mutation against the chosen query client ('db' = local database cache, 'server' = server data),
+// then invalidates the given query keys on that same client once it succeeds.
+export function useMutationWithAutoInvalidation<
   TData = unknown,
   TError = Error,
   TVariables = void,
   TOnMutateResult = unknown,
 >(
   options: UseMutationOptions<TData, TError, TVariables, TOnMutateResult> & {
+    client: 'db' | 'server';
     invalidates: readonly QueryKey[] | ((data: TData, vars: TVariables) => readonly QueryKey[]);
   },
 ): UseMutationResult<TData, TError, TVariables, TOnMutateResult> {
+  // Both hooks must be called unconditionally; pick the client afterwards.
   const dbQueryClient = useDBQueryClient();
+  const serverQueryClient = useServerDataQueryClient();
+  const queryClient = options.client === 'db' ? dbQueryClient : serverQueryClient;
+  const { client: _client, invalidates, ...mutationOptions } = options;
   return useMutation(
     {
-      ...options,
+      ...mutationOptions,
       onSuccess: async (data, vars, result, context) => {
-        if (options.onSuccess) {
-          await options.onSuccess(data, vars, result, context);
+        if (mutationOptions.onSuccess) {
+          await mutationOptions.onSuccess(data, vars, result, context);
         }
-        const keys = typeof options.invalidates === 'function' ? options.invalidates(data, vars) : options.invalidates;
-        await Promise.all(keys.map(queryKey => dbQueryClient.invalidateQueries({ queryKey })));
+        const keys = typeof invalidates === 'function' ? invalidates(data, vars) : invalidates;
+        await Promise.all(keys.map(queryKey => queryClient.invalidateQueries({ queryKey })));
       },
     },
-    dbQueryClient,
+    queryClient,
   );
 }
 
