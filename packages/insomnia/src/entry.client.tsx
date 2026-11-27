@@ -124,7 +124,10 @@ window.addEventListener(
 const insomniaSession = getInsomniaSession();
 const insomniaVaultKey = getInsomniaVaultKey() || '';
 const insomniaVaultSalt = getInsomniaVaultSalt() || '';
-if (insomniaSession) {
+// Applied once per window: logout reloads the renderer, and re-applying would sign the user straight back in.
+const INSOMNIA_SESSION_APPLIED_KEY = 'insomniaSessionApplied';
+if (insomniaSession && !window.sessionStorage.getItem(INSOMNIA_SESSION_APPLIED_KEY)) {
+  window.sessionStorage.setItem(INSOMNIA_SESSION_APPLIED_KEY, 'true');
   try {
     const session = JSON.parse(insomniaSession) as SessionData;
     await setSessionData(
