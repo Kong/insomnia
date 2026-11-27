@@ -53,6 +53,9 @@ function inferTabType(resource: TabResource): TabType | null {
   if (models.mockRoute.isMockRoute(resource)) {
     return 'mockRoute';
   }
+  if (models.example.isExample(resource)) {
+    return 'example';
+  }
   if (models.unitTestSuite.isUnitTestSuite(resource)) {
     return 'testSuite';
   }

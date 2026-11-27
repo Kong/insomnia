@@ -1,6 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
-import type { CollectionWorkspaceChildren, RequestGroup, Workspace } from 'insomnia-data';
+import type { CollectionWorkspaceChildren, ExampleSummary, RequestGroup, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { fuzzyMatchAll } from 'insomnia-data/common';
 import {
@@ -47,6 +47,7 @@ import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
+import { ExampleNode } from './example-node';
 import {
   KonnectSyncActionsRow,
   KonnectSyncProgressLine,
@@ -191,6 +192,53 @@ const ProjectNavigationSidebarInner = (
 
       const collectionChildrenAndMetaByWorkspaceIds = collectionByWorkspaceIds;
 
+      // Group examples by their parent request id across the loaded collection
+      // workspaces. A request that can no longer host examples is hidden
+      // everywhere else, so its cached summaries must not render either: the
+      // app-data update path patches requests in place and cannot re-apply that
+      // filter itself. The read-side filter in `workspace-data.ts` is the primary
+      // gate — this is the fallback for the patched cache.
+      const examplesByRequestId = new Map<string, ExampleSummary[]>();
+      for (const workspaceChildren of collectionByWorkspaceIds.values()) {
+        const hostableRequestIds = new Set(
+          workspaceChildren.data.requestsAndGroups
+            .filter(models.request.isRequest)
+            .filter(models.example.canHostExamples)
+            .map(request => request._id),
+        );
+        for (const example of workspaceChildren.data.examples) {
+          if (!hostableRequestIds.has(example.parentId)) {
+            continue;
+          }
+          const examples = examplesByRequestId.get(example.parentId);
+          if (examples) {
+            examples.push(example);
+          } else {
+            examplesByRequestId.set(example.parentId, [example]);
+          }
+        }
+      }
+      for (const examples of examplesByRequestId.values()) {
+        examples.sort((a, b) => a.metaSortKey - b.metaSortKey);
+      }
+
+      // Examples are searchable rows of the collection tree, matched on the same
+      // fields `filterCollection` searches for requests (name, description).
+      const matchingExampleIds = new Set<string>();
+      if (activeFilter) {
+        for (const examples of examplesByRequestId.values()) {
+          for (const example of examples) {
+            const matches = fuzzyMatchAll(activeFilter, [example.name ?? '', example.description ?? ''], {
+              splitSpace: false,
+              loose: true,
+            });
+            if (matches?.indexes) {
+              matchingExampleIds.add(example._id);
+            }
+          }
+        }
+      }
+
       for (const project of organizationProjects) {
         const projectId = project._id;
         const isProjectCollapsed = !(expandedProjectAndWorkspaceIds ?? []).includes(projectId);
@@ -285,9 +333,9 @@ const ProjectNavigationSidebarInner = (
               hidden: isProjectCollapsed,
             });
 
-            const requestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(
-              workspaceId,
-            ) as CollectionWorkspaceChildren;
+            const requestsAndMetaInWorkspace = collectionChildrenAndMetaByWorkspaceIds.get(workspaceId) as
+              | CollectionWorkspaceChildren
+              | undefined;
             // build collection children if it's a collection workspace and parent workspace and project are not collapsed or there is an active filter
             const shouldHideCollectionChildren = isWorkspaceCollapsed || isProjectCollapsed;
             let collectionChildren =
@@ -303,6 +351,24 @@ const ProjectNavigationSidebarInner = (
             if (activeFilter) {
               // apply filter to collection children first
               collectionChildren = filterCollection(collectionChildren, activeFilter);
+              // A matching example keeps its request and that request's folders
+              // visible, the same way a matching request keeps its ancestors.
+              const collectionChildrenById = new Map(collectionChildren.map(child => [child.doc._id, child]));
+              collectionChildren.forEach(child => {
+                const hasMatchingExample = (examplesByRequestId.get(child.doc._id) ?? []).some(example =>
+                  matchingExampleIds.has(example._id),
+                );
+                if (!models.request.isRequest(child.doc) || !hasMatchingExample) {
+                  return;
+                }
+                child.hidden = false;
+                (child.ancestors ?? []).forEach(ancestorId => {
+                  const ancestor = collectionChildrenById.get(ancestorId);
+                  if (ancestor) {
+                    ancestor.hidden = false;
+                  }
+                });
+              });
               const collectionChildMatchesFilter = collectionChildren.some(child => !child.hidden);
               const workspaceMatchesFilter = Boolean(
                 fuzzyMatchAll(
@@ -349,7 +415,34 @@ const ProjectNavigationSidebarInner = (
               });
             });
 
+            // The workspace children may not be cached yet (a collapsed workspace
+            // is not fetched), so this lookup has to tolerate an absent entry:
+            // the loop below is empty then, but the map is built either way.
+            const requestMetaByParentId = new Map(
+              (requestsAndMetaInWorkspace?.dataMetas.allRequestMetas ?? [])
+                .filter(models.requestMeta.isRequestMeta)
+                .map(meta => [meta.parentId, meta] as const),
+            );
+
             collectionChildren.forEach(child => {
+              // A request's rows are its examples — all of them normally, only
+              // the matching ones while a filter is active.
+              const allExamples = models.request.isRequest(child.doc)
+                ? (examplesByRequestId.get(child.doc._id) ?? [])
+                : [];
+              const examples = activeFilter
+                ? allExamples.filter(example => matchingExampleIds.has(example._id))
+                : allExamples;
+              const hasExamples = examples.length > 0;
+              // A request's children are its examples: reuse the same `collapsed`
+              // field folders use, sourced from the app-data cache the toggle
+              // patches optimistically.
+              const requestMeta = requestMetaByParentId.get(child.doc._id);
+              // While filtering, the tree is force-expanded (the loader ignores
+              // parentIsCollapsed then), so a persisted collapse must not hide
+              // the examples of a matching request.
+              const collapsed =
+                !activeFilter && hasExamples && requestMeta ? Boolean(requestMeta.collapsed) : child.collapsed;
               items.push({
                 kind: 'collectionChild',
                 organizationId,
@@ -358,11 +451,25 @@ const ProjectNavigationSidebarInner = (
                 children: child.children,
                 ancestors: child.ancestors,
                 doc: child.doc,
-                collapsed: child.collapsed,
+                collapsed,
                 hidden: child.hidden,
                 level: child.level,
                 pinned: child.pinned,
+                hasExamples,
               });
+              if (hasExamples && !collapsed) {
+                examples.forEach(example => {
+                  items.push({
+                    kind: 'example',
+                    organizationId,
+                    project: project,
+                    workspace: workspace as Workspace,
+                    doc: example,
+                    hidden: child.hidden,
+                    level: child.level + 1,
+                  });
+                });
+              }
               if (
                 models.requestGroup.isRequestGroupId(child.doc._id) &&
                 child.children?.length === 0 &&
@@ -658,6 +765,51 @@ const ProjectNavigationSidebarInner = (
     [activeFilter, queryClient],
   );
 
+  const toggleRequest = useCallback(
+    async (requestId: string, workspace: Workspace, collapsed?: boolean) => {
+      // A filtered tree is force-expanded, so a click on a disclosure arrow has
+      // nothing to collapse; persist nothing (same rule as folders below).
+      if (activeFilter) {
+        return;
+      }
+
+      // The cached collection children already carry the request metas the tree
+      // renders from; only go to the database when this request is not cached.
+      const requestMeta =
+        queryClient
+          .getQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspace._id))
+          ?.dataMetas.allRequestMetas.filter(models.requestMeta.isRequestMeta)
+          .find(meta => meta.parentId === requestId) ?? (await services.requestMeta.getByParentId(requestId));
+      const nextCollapsed = collapsed ?? !(requestMeta?.collapsed ?? false);
+      // Navigating to an example expands its section; do not write a meta the
+      // state already matches (every tab switch would otherwise hit the DB).
+      if ((requestMeta?.collapsed ?? false) === nextCollapsed) {
+        return;
+      }
+
+      // Optimistically patch the query cache so the UI reflects the new collapsed state immediately.
+      queryClient.setQueryData<CollectionWorkspaceChildren>(
+        workspaceChildrenKeys.byWorkspaceId(workspace._id),
+        previous => {
+          if (!previous) {
+            return previous;
+          }
+          const allRequestMetas = previous.dataMetas.allRequestMetas.map(meta => {
+            if (!models.requestMeta.isRequestMeta(meta) || meta.parentId !== requestId) {
+              return meta;
+            }
+            return { ...meta, collapsed: nextCollapsed };
+          });
+          return { ...previous, dataMetas: { ...previous.dataMetas, allRequestMetas } };
+        },
+      );
+
+      // Persist the change to database
+      await services.requestMeta.updateOrCreateByParentId(requestId, { collapsed: nextCollapsed });
+    },
+    [activeFilter, queryClient],
+  );
+
   const parentRef = useRef<HTMLDivElement>(null);
   const shortcutCreateTriggerRef = useRef<HTMLElement | null>(null);
   const [isShortcutCreateOpen, setIsShortcutCreateOpen] = useState(false);
@@ -715,9 +867,13 @@ const ProjectNavigationSidebarInner = (
     onWorkspaceReorder: handleLocalWorkspaceReorder,
     expandedProjectAndWorkspaceIds,
     depthOffset: treeDepthOffset,
+    // Filtered rows are a subset: a midpoint computed from them would not match
+    // the order the examples actually land in.
+    disableExampleReorder: Boolean(activeFilter),
   });
   const { selectedItemId, routeInfo } = useProjectNavigationSidebarNavigation({
     toggleRequestGroups,
+    toggleRequest,
     expandProjectOrWorkspaces,
     visibleFlatItems,
     virtualizer,
@@ -1011,17 +1167,19 @@ const ProjectNavigationSidebarInner = (
               }
               // ArrowRight expands a collapsed item; ArrowLeft collapses an expanded one.
               const expand = e.key === 'ArrowRight';
+              const isFolder = item.kind === 'collectionChild' && models.requestGroup.isRequestGroup(item.doc);
+              const isExamplesCollapsible = item.kind === 'collectionChild' && Boolean(item.hasExamples);
               const isExpandable =
-                (item.kind === 'collectionChild' && models.requestGroup.isRequestGroup(item.doc)) ||
-                item.kind === 'project' ||
-                item.kind === 'workspace';
+                isFolder || isExamplesCollapsible || item.kind === 'project' || item.kind === 'workspace';
               if (!isExpandable || item.collapsed !== expand) {
                 return;
               }
               e.preventDefault();
               e.stopPropagation();
-              if (item.kind === 'collectionChild') {
+              if (isFolder) {
                 toggleRequestGroups([docId], item.workspace, !expand);
+              } else if (isExamplesCollapsible) {
+                toggleRequest(docId, item.workspace, !expand);
               } else {
                 toggleProjectOrWorkspace(docId);
               }
@@ -1140,6 +1298,24 @@ const ProjectNavigationSidebarInner = (
                               { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
                             );
                           }
+                        } else if (item.kind === 'example') {
+                          if (enableCollectionFocus && focusedWorkspaceId !== item.workspace._id) {
+                            focusWorkspace(item.workspace._id, item.project._id);
+                          }
+                          // Sidebar items carry summaries (no bodies); the tab needs
+                          // the full document for its method tag.
+                          const example = await services.example.getById(item.doc._id);
+                          if (example) {
+                            tabNavigate(
+                              {
+                                organization: organizationId,
+                                project: item.project,
+                                workspace: item.workspace,
+                                item: example,
+                              },
+                              { withTab: isPrimaryClickModifier(e), shouldNavigate: true, searchParams },
+                            );
+                          }
                         } else if (item.kind === 'collectionChild' || item.kind === 'pinnedRequest') {
                           // Clicking anything inside a collection (folder, request, etc.) focuses it.
                           // Guard so re-clicking within an already-focused collection doesn't replay the transition.
@@ -1217,12 +1393,15 @@ const ProjectNavigationSidebarInner = (
                         <RequestNode
                           item={item}
                           onToggleFolder={toggleRequestGroups}
+                          onToggleRequest={toggleRequest}
                           depthOffset={treeDepthOffset}
                           onRename={() => showRenameModal(item)}
                           onDelete={() => showDeleteModal(item)}
                           apiSpec={collectionByWorkspaceIds.get(item.workspace._id)?.data.apiSpec}
                         />
                       )}
+
+                      {item.kind === 'example' && <ExampleNode item={item} depthOffset={treeDepthOffset} />}
 
                       {item.kind === 'unsyncedWorkspace' && <UnsyncedWorkspaceNode item={item} />}
 

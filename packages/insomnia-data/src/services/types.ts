@@ -1,6 +1,7 @@
 import type {
   ApiSpec,
   Environment,
+  ExampleSummary,
   GitRepository,
   GrpcRequest,
   GrpcRequestMeta,
@@ -34,13 +35,16 @@ interface CommonWorkspaceChildren<TChildren, TChildrenMeta extends object = {}> 
 }
 
 type CollectionChildDoc = Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup;
+
 export type { CollectionChildDoc };
 
 type CollectionRequestMeta = RequestMeta | GrpcRequestMeta | WebSocketRequestMeta | SocketIORequestMeta;
 
+// Only requests can host examples, so only the scopes that carry requests list
+// them. The entries are summaries: bodies live in the example editor's own query.
 export interface CollectionWorkspaceChildren
   extends CommonWorkspaceChildren<
-    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[] },
+    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[]; examples: ExampleSummary[] },
     {
       allRequestMetas: CollectionRequestMeta[];
       requestGroupMetas: RequestGroupMeta[];
@@ -51,7 +55,7 @@ export interface MockServerWorkspaceChildren extends CommonWorkspaceChildren<{ m
 
 export interface DesignWorkspaceChildren
   extends CommonWorkspaceChildren<
-    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[] },
+    { apiSpec?: ApiSpec; requestsAndGroups: CollectionChildDoc[]; examples: ExampleSummary[] },
     {
       allRequestMetas: CollectionRequestMeta[];
       requestGroupMetas: RequestGroupMeta[];

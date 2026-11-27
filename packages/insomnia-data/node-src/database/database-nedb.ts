@@ -17,6 +17,7 @@ import type {
   CookieJar,
   DataStoreOptions,
   Environment,
+  Example,
   GitRepository,
   IDatabase,
   Operation,
@@ -247,12 +248,13 @@ export const createNedbDatabase = <O = initOptions>(
       query: Query<T> | string = {},
       sort: Record<string, any> = { created: 1 },
       limit = 0,
+      projection?: Record<string, 0 | 1>,
     ): Promise<T[]> {
       if (!nedbBucket[type]) {
         console.warn(`[db] No collection for type "${type}"`);
         return [];
       }
-      const docs = await nedbBucket[type].findAsync<T>(query).sort(sort).limit(limit);
+      const docs = await nedbBucket[type].findAsync<T>(query, projection).sort(sort).limit(limit);
       // TODO: create a db init phase for migrations rather than doing it on every find.
       const migrated = [];
       for (const rawDoc of docs) {
@@ -329,6 +331,10 @@ export const createNedbDatabase = <O = initOptions>(
         Environment: new NeDB<Environment>({
           ...configForType('Environment'),
           filename: fsPath.join(dbPath, 'insomnia.Environment.db'),
+        }),
+        Example: new NeDB<Example>({
+          ...configForType('Example'),
+          filename: fsPath.join(dbPath, 'insomnia.Example.db'),
         }),
         GitCredentials: new NeDB({
           ...configForType('GitCredentials'),

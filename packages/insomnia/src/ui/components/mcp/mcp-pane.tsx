@@ -55,6 +55,7 @@ import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-response-pane';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
+import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
@@ -108,9 +109,7 @@ export const McpPane = () => {
   const { activeEnvironment } = useWorkspaceLoaderData()!;
   const readyState = useMcpReadyState({ requestId });
   const parentRef = useRef<HTMLDivElement>(null);
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
+  const direction = usePaneDirection(settings.forceVerticalLayout);
 
   const isConnected = readyState === 'connected';
 
@@ -322,26 +321,6 @@ export const McpPane = () => {
       return `${item.itemLevel}::${item.type}::${item.name}::${index}`;
     },
   });
-
-  useEffect(() => {
-    if (settings.forceVerticalLayout) {
-      setDirection('vertical');
-      return () => {};
-    }
-    // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
-    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDirection(e.matches ? 'vertical' : 'horizontal');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.forceVerticalLayout, direction]);
 
   useEffect(() => {
     const updateServerData = async () => {

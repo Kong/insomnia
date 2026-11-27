@@ -1,6 +1,6 @@
 import type { BaseModel, MockRoute, Request } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -26,7 +26,11 @@ import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { AddRequestToCollectionModal } from '../modals/add-request-to-collection-modal';
 import { formatMethodName, getRequestMethodShortHand } from '../tags/method-tag';
-import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
+import {
+  getExampleDeleteFallbackUrl,
+  getRequestDeleteFallbackUrl,
+  isRequestLikeDocType,
+} from './request-delete-fallback';
 import { InsomniaTab, TAB_CONTEXT_MENU_COMMAND } from './tab';
 
 const { isRequest } = models.request;
@@ -105,6 +109,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       models.workspace.type,
       models.environment.type,
       models.mockRoute.type,
+      models.example.type,
       models.project.type,
       models.socketIORequest.type,
     ];
@@ -123,7 +128,10 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
   }, [tabList]);
 
   const handleDelete = useCallback(
-    (doc: BaseModel) => {
+    // `removedDocs` carries every document removed in the same change batch, so
+    // a cascade (a request delete also removes its examples) can be told apart
+    // from a single delete.
+    (doc: BaseModel, removedDocs?: Map<string, BaseModel>) => {
       const { _id: docId, type: docType, parentId } = doc;
       if (docType === models.project.type) {
         // delete all tabs of this project
@@ -134,6 +142,20 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       } else if (docType === models.requestGroup.type) {
         // when delete a folder, we need also delete the corresponding folder runner tab(if exists)
         batchCloseTabs?.([docId, `runner_${docId}`], { removeFromClosedTabs: true });
+      } else if (docType === models.example.type) {
+        const closingTab = tabListRef.current.find(tab => tab.id === docId);
+        const removedParent = parentId ? removedDocs?.get(parentId) : undefined;
+        const fallbackUrl = getExampleDeleteFallbackUrl({
+          parentId,
+          // A request delete removes its examples too; landing on that request
+          // would show a "Request not found" error.
+          removedParentRequestParentId:
+            removedParent && models.request.isRequest(removedParent) ? removedParent.parentId : undefined,
+          closingTab,
+          organizationId,
+          projectId,
+        });
+        closeTabById(docId, { removeFromClosedTabs: true, fallbackUrl });
       } else if (isRequestLikeDocType(docType)) {
         const closingTab = tabListRef.current.find(tab => tab.id === docId);
         const fallbackUrl = getRequestDeleteFallbackUrl({ parentId, closingTab, organizationId, projectId });
@@ -146,12 +168,67 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     [batchCloseTabs, closeAllTabsUnderProject, closeAllTabsUnderWorkspace, closeTabById, organizationId, projectId],
   );
 
+  // Requests whose example tabs were already hidden this session, so a run of
+  // body edits does not re-query the examples on every keystroke.
+  const examplesHiddenForRequestRef = useRef(new Set<string>());
+
+  // A request that stops being able to host examples must not leave a way back
+  // into them. The read path (`workspace-data.ts`) and the sidebar already hide
+  // them; open tabs and their closed-tab history entries are the third place a
+  // way back could exist, so close those too. The local documents stay put.
+  const hideExampleTabsForRequest = useCallback(
+    async (request: Request) => {
+      if (models.example.canHostExamples(request)) {
+        // Hostable again: a later switch-off has to run the cleanup again.
+        examplesHiddenForRequestRef.current.delete(request._id);
+        return;
+      }
+      if (examplesHiddenForRequestRef.current.has(request._id)) {
+        return;
+      }
+      examplesHiddenForRequestRef.current.add(request._id);
+      // Only the ids are needed: do not pull whole example documents (bodies can
+      // be up to 1 MB each) over IPC just to close their tabs. The second field
+      // matters — NeDB reads an `_id`-only projection as an omit list and hands
+      // back the whole document.
+      const examples = await database.find(
+        models.example.type,
+        { parentId: request._id },
+        undefined,
+        undefined,
+        { _id: 1, parentId: 1 },
+      );
+      if (examples.length === 0) {
+        return;
+      }
+      const exampleIds = new Set(examples.map(example => example._id));
+      const closingTab = tabListRef.current.find(tab => exampleIds.has(tab.id));
+      const fallbackUrl = getExampleDeleteFallbackUrl({
+        parentId: request._id,
+        closingTab,
+        organizationId,
+        projectId,
+      });
+      // Every example id, not only the open ones: this also clears the
+      // closed-tab history entries that would offer a way back.
+      batchCloseTabs?.(examples.map(example => example._id), { removeFromClosedTabs: true, fallbackUrl });
+    },
+    [batchCloseTabs, organizationId, projectId],
+  );
+
   const handleUpdate = useCallback(
     async (doc: BaseModel, patches: Partial<BaseModel>[] = []) => {
       const patchObj: Record<string, any> = {};
       patches.forEach(patch => {
         Object.assign(patchObj, patch);
       });
+      // Any edit can leave the request unable to host examples (the body type,
+      // an Accept header), and the check runs on the post-change document, so it
+      // is evaluated for every request update rather than for a list of fields
+      // that has to be kept in sync with the model.
+      if (models.request.isRequest(doc)) {
+        await hideExampleTabsForRequest(doc);
+      }
       // only need to handle name, method, parentId change
       if (!patchObj.name && !patchObj.method && !patchObj.parentId) {
         return;
@@ -196,6 +273,8 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
         const workspace = await services.workspace.getById(patchObj.parentId);
         if (workspace) {
+          const exampleUrl = (requestId: string, exampleId: string) =>
+            `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${requestId}/example/${exampleId}`;
           if (
             isRequest(doc) ||
             models.grpcRequest.isGrpcRequest(doc) ||
@@ -207,6 +286,27 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
               workspaceName: workspace.name,
               url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
+            if (isRequest(doc)) {
+              // The example tabs carry the parent request's location, so they
+              // move with it.
+              const openExampleIds = new Set(tabListRef.current.map(tab => tab.id));
+              const examples = await database.find(
+                models.example.type,
+                { parentId: doc._id },
+                undefined,
+                undefined,
+                { _id: 1, parentId: 1 },
+              );
+              for (const example of examples) {
+                if (openExampleIds.has(example._id)) {
+                  updateTabById?.(example._id, {
+                    workspaceId: workspace._id,
+                    workspaceName: workspace.name,
+                    url: exampleUrl(doc._id, example._id),
+                  });
+                }
+              }
+            }
           } else if (isRequestGroup(doc)) {
             const folderEntities = await database.getWithDescendants(doc, [
               models.request.type,
@@ -214,6 +314,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
               models.webSocketRequest.type,
               models.socketIORequest.type,
               models.requestGroup.type,
+              models.example.type,
             ]);
             const batchUpdates = [doc, ...folderEntities].map(entity => {
               return {
@@ -223,7 +324,9 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
                   workspaceName: workspace.name,
                   url: isRequestGroup(entity)
                     ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
-                    : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
+                    : models.example.isExample(entity)
+                      ? exampleUrl(entity.parentId, entity._id)
+                      : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
                 },
               };
             });
@@ -232,18 +335,29 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         }
       }
     },
-    [organizationId, projectId, updateProjectName, updateTabById, updateWorkspaceName, batchUpdateTabs],
+    [
+      hideExampleTabsForRequest,
+      organizationId,
+      projectId,
+      updateProjectName,
+      updateTabById,
+      updateWorkspaceName,
+      batchUpdateTabs,
+    ],
   );
 
   useEffect(() => {
     // sync tabList with database
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
+      const removedDocs = new Map(
+        changes.flatMap(([changeType, doc]) => (changeType === 'remove' ? [[doc._id, doc] as const] : [])),
+      );
       for (const change of changes) {
         const [changeType, doc, patches] = change;
 
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
-            handleDelete(doc);
+            handleDelete(doc, removedDocs);
           } else if (changeType === 'update') {
             handleUpdate(doc, patches);
           }

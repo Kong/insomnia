@@ -18,6 +18,7 @@ import type {
   CookieJar,
   Environment,
   EnvironmentKvPairData,
+  Example,
   GrpcRequest,
   IDatabase,
   McpRequest,
@@ -48,6 +49,7 @@ import { invariant } from '~/common/utils/invariant';
 
 import { database } from './database';
 import {
+  type Insomnia_Example,
   type Insomnia_GRPCRequest,
   type Insomnia_Request,
   type Insomnia_RequestGroup,
@@ -118,13 +120,9 @@ function mapParameters(parameters?: RequestParameter[]) {
  * Extracts common metadata fields that are shared across all resource types
  *
  * @param resource - The resource object to extract metadata from
- * @returns Metadata object in v5 format, or undefined if resource is null/undefined
+ * @returns Metadata object in v5 format
  */
-function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest) {
-  if (!resource) {
-    return;
-  }
-
+function mapMeta(resource: Request | WebSocketRequest | SocketIORequest | GrpcRequest | Example) {
   return {
     id: resource._id,
     created: resource.created,
@@ -275,6 +273,34 @@ function mapBody(body?: RequestBody) {
       type: param.type,
     })),
   };
+}
+
+/**
+ * Maps Example resources to the v5 export format nested under their parent request
+ *
+ * @param examples - Example resources whose parentId is the same request
+ * @returns Examples in v5 export format
+ */
+function mapExampleResourcesToInsomniaExamples(examples: Example[]): Insomnia_Example[] {
+  return examples.map(example => ({
+    name: example.name,
+    meta: mapMeta(example),
+    request: {
+      method: example.request.method,
+      url: example.request.url,
+      parameters: mapParameters(example.request.parameters),
+      pathParameters: example.request.pathParameters,
+      headers: mapHeaders(example.request.headers),
+      body: mapBody(example.request.body),
+      disableUserAgentHeader: example.request.disableUserAgentHeader,
+    },
+    response: {
+      statusCode: example.response.statusCode,
+      statusMessage: example.response.statusMessage,
+      headers: example.response.headers.map(header => ({ name: header.name, value: header.value })),
+      body: example.response.body,
+    },
+  }));
 }
 
 /**
@@ -679,7 +705,16 @@ function isSocketIOCollectionNode(item: Record<string, any>): boolean {
 
 function getCollection(
   file: InsomniaFile,
-): (Request | WebSocketRequest | WebSocketPayload | SocketIORequest | SocketIOPayload | GrpcRequest | RequestGroup)[] {
+): (
+  | Request
+  | WebSocketRequest
+  | WebSocketPayload
+  | SocketIORequest
+  | SocketIOPayload
+  | GrpcRequest
+  | RequestGroup
+  | Example
+)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
     const resources: (
       | Request
@@ -689,6 +724,7 @@ function getCollection(
       | SocketIOPayload
       | GrpcRequest
       | RequestGroup
+      | Example
     )[] = [];
 
     function walkCollection(
@@ -761,6 +797,36 @@ function getCollection(
           };
 
           resources.push(request);
+
+          (item.examples || []).forEach(example => {
+            const exampleResource: WithExportType<Example> = {
+              ...mapMetaToInsomniaMeta(example.meta),
+              type: 'Example',
+              _type: 'example',
+              // `??`, not `||`: an empty name or a 0 status code is a value the
+              // model accepts, and importing it as a default would make the
+              // export → import roundtrip lossy.
+              name: example.name ?? '',
+              parentId: request._id,
+              request: {
+                method: example.request.method,
+                url: example.request.url ?? '',
+                parameters: mapParameters(example.request.parameters),
+                pathParameters: example.request.pathParameters,
+                headers: mapHeaders(example.request.headers),
+                body: mapBody(example.request.body),
+                disableUserAgentHeader: example.request.disableUserAgentHeader,
+              },
+              response: {
+                statusCode: example.response.statusCode ?? 200,
+                statusMessage: example.response.statusMessage ?? '',
+                headers: (example.response.headers ?? []).map(header => ({ name: header.name, value: header.value })),
+                body: example.response.body ?? '',
+              },
+            };
+
+            resources.push(exampleResource);
+          });
         } else if ('reflectionApi' in item) {
           const grpcRequest: WithExportType<GrpcRequest> = {
             ...mapMetaToInsomniaMeta(
@@ -1151,10 +1217,36 @@ export async function getInsomniaV5DataExport({
      * @returns Hierarchical collection structure in v5 format
      */
     function getCollectionFromResources(
-      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
+      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest | Example)[],
       parentId: string,
+      indexedExamples?: Map<string, Example[]>,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
+
+      // Index examples by their parent request once per resource set (the
+      // recursion passes the same index down): this function visits every
+      // resource, so scanning the whole list per request is quadratic.
+      const examplesByParentId = indexedExamples ?? new Map<string, Example[]>();
+      if (!indexedExamples) {
+        for (const resource of resources) {
+          if (models.example.isExample(resource)) {
+            const siblings = examplesByParentId.get(resource.parentId);
+            if (siblings) {
+              siblings.push(resource);
+            } else {
+              examplesByParentId.set(resource.parentId, [resource]);
+            }
+          }
+        }
+      }
+      // Examples stay in the file even when the request can no longer host them
+      // (it was switched to GraphQL or an event stream). The file is the source
+      // of truth for the database: an example the file omits is deleted as an
+      // orphan on the next import, and the local copy must survive that.
+      const examplesForRequest = (requestId: string) => {
+        const examples = examplesByParentId.get(requestId);
+        return examples?.length ? mapExampleResourcesToInsomniaExamples(examples) : undefined;
+      };
 
       // Filter resources based on requestIds filter and parent relationship
       resources
@@ -1194,6 +1286,7 @@ export async function getInsomniaV5DataExport({
                 rebuildPath: resource.settingRebuildPath,
               },
               pathParameters: resource.pathParameters,
+              examples: examplesForRequest(resource._id),
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
@@ -1201,7 +1294,7 @@ export async function getInsomniaV5DataExport({
             const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
               meta: mapGroupMeta(resource),
-              children: getCollectionFromResources(resources, resource._id), // Recursively build children
+              children: getCollectionFromResources(resources, resource._id, examplesByParentId), // Recursively build children
               scripts: getScriptFromResources(resource),
               authentication: resource.authentication,
               environment: resource.environment,
@@ -1505,7 +1598,8 @@ export async function getInsomniaV5DataExport({
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
               models.grpcRequest.isGrpcRequest(resource) ||
-              models.socketIORequest.isSocketIORequest(resource),
+              models.socketIORequest.isSocketIORequest(resource) ||
+              models.example.isExample(resource),
           ),
           workspace._id,
         ),
@@ -1541,7 +1635,8 @@ export async function getInsomniaV5DataExport({
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
               models.grpcRequest.isGrpcRequest(resource) ||
-              models.socketIORequest.isSocketIORequest(resource),
+              models.socketIORequest.isSocketIORequest(resource) ||
+              models.example.isExample(resource),
           ),
           workspace._id,
         ),

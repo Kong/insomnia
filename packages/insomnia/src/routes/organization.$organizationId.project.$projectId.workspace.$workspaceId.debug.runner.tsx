@@ -62,6 +62,7 @@ import { useInsomniaTabContext } from '~/ui/context/app/insomnia-tab-context';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
 import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
 import { buildRunnerTabId } from '~/ui/hooks/use-insomnia-tab';
+import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useRunnerRequestList } from '~/ui/hooks/use-runner-request-list';
 import {
@@ -171,9 +172,7 @@ export const Runner: FC = () => {
   const { settings } = useRootLoaderData()!;
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
+  const direction = usePaneDirection(settings.forceVerticalLayout);
 
   const { updateTabById } = useInsomniaTabContext();
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
@@ -199,26 +198,6 @@ export const Runner: FC = () => {
   }, [delay]);
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
-
-  useEffect(() => {
-    if (settings.forceVerticalLayout) {
-      setDirection('vertical');
-      return () => {};
-    }
-    // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
-    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDirection(e.matches ? 'vertical' : 'horizontal');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.forceVerticalLayout, direction]);
 
   const isConsistencyChanged = useMemo(() => {
     if (requestRows.length !== reqList.length) {

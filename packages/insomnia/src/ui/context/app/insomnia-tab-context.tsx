@@ -11,6 +11,7 @@ export type TabType =
   | 'environment'
   | 'mockServer'
   | 'mockRoute'
+  | 'example'
   | 'document'
   | 'collection'
   | 'runner'
@@ -304,7 +305,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
         if (options.navigateOnAllClose !== false && !models.organization.isScratchpadOrganizationId(organizationId)) {
-          navigate(`/organization/${organizationId}/project/${projectId}`);
+          navigate(options.fallbackUrl || `/organization/${organizationId}/project/${projectId}`);
         }
         updateInsomniaTabs({
           organizationId,

@@ -75,6 +75,22 @@ const navigationCases = [
     },
   },
   {
+    title: 'example routes',
+    resource: {
+      _id: 'exp_1',
+      parentId: 'req_1',
+      type: 'Example',
+    },
+    route: {
+      pathname: '/organization/org_1/project/proj_1/workspace/wrk_1/debug/request/req_1/example/exp_1',
+      routeId: 'example',
+      resourceId: 'exp_1',
+      organizationId: 'org_1',
+      projectId: 'proj_1',
+      workspaceId: 'wrk_1',
+    },
+  },
+  {
     title: 'unit test suite routes',
     resource: {
       _id: 'uts_1',

@@ -41,8 +41,9 @@ export const database: IDatabase = {
     query: Query<T> | string = {},
     sort: Record<string, any> = { created: 1 },
     limit = 0,
+    projection?: Record<string, 0 | 1>,
   ): Promise<T[]> {
-    return window.database.invoke<T[]>('find', type, query, sort, limit);
+    return window.database.invoke<T[]>('find', type, query, sort, limit, projection);
   },
 
   findOne: async function <T extends BaseModel>(

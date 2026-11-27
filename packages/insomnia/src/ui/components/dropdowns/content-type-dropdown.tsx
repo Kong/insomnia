@@ -1,5 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC } from 'react';
+import type { Request, RequestBody, RequestHeader, RequestParameter } from 'insomnia-data';
+import React, { type FC, useMemo } from 'react';
 import {
   Button,
   Collection,
@@ -26,11 +27,13 @@ import {
   CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
+import { updateMimeType } from '../../../common/request-mime-type';
 import {
   type RequestLoaderData,
   useRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { AnalyticsEvent } from '../../analytics';
+import { useExampleEditorContext } from '../../context/example-editor-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -38,10 +41,32 @@ import { AlertModal } from '../modals/alert-modal';
 
 const EMPTY_MIME_TYPE = null;
 
+/**
+ * The request route expands a mime type change into a complete body in its update
+ * action (`updateMimeType`); the example editor writes into the snapshot
+ * directly, so it has to produce the same full patch — a bare `{ body }` replaces
+ * the snapshot body and drops its text. Exported so a test can pin both modes.
+ */
+export const buildMimeTypePatch = (
+  request: Request,
+  mimeType: string | null,
+  writesSnapshot: boolean,
+): { body: RequestBody; headers?: RequestHeader[]; params?: RequestParameter[]; method?: string } =>
+  writesSnapshot ? updateMimeType(request, mimeType) : { body: { mimeType } };
+
 export const ContentTypeDropdown: FC = () => {
-  const { activeRequest } = useRequestLoaderData()! as RequestLoaderData;
-  const patchRequest = useRequestPatcher();
-  const { requestId } = useParams() as { requestId: string };
+  const exampleEditor = useExampleEditorContext();
+  const loaderData = useRequestLoaderData() as RequestLoaderData | undefined;
+  const routePatchRequest = useRequestPatcher();
+  const { requestId: routeRequestId } = useParams() as { requestId: string };
+  const activeRequest = exampleEditor ? exampleEditor.request : loaderData!.activeRequest;
+  const patchRequest = useMemo(
+    () => exampleEditor?.patchRequest ?? ((patch: Partial<Request>) => routePatchRequest(routeRequestId, patch)),
+    [exampleEditor, routePatchRequest, routeRequestId],
+  );
+  const applyMimeType = (mimeType: string | null) => {
+    patchRequest(buildMimeTypePatch(activeRequest, mimeType, Boolean(exampleEditor)));
+  };
   const handleChangeMimeType = async (mimeType: string | null) => {
     const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;
@@ -71,7 +96,7 @@ export const ContentTypeDropdown: FC = () => {
         message: 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true,
         onConfirm: async () => {
-          patchRequest(requestId, { body: { mimeType } });
+          applyMimeType(mimeType);
           window.main.trackAnalyticsEvent({
             event: AnalyticsEvent.requestBodyTypeSelect,
             properties: { type: mimeType },
@@ -79,7 +104,7 @@ export const ContentTypeDropdown: FC = () => {
         },
       });
     } else {
-      patchRequest(requestId, { body: { mimeType } });
+      applyMimeType(mimeType);
       window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestBodyTypeSelect, properties: { type: mimeType } });
     }
   };

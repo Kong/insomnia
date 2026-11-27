@@ -910,9 +910,19 @@ class RepoFileWatcher {
     const originDocs = await db.getWithDescendants(existingWorkspace);
     const importedIds = new Set(docs.map(d => d._id));
     const deletedDocs = originDocs.filter(o => !importedIds.has(o._id) && models.canSync(o));
-    for (const doc of deletedDocs) {
-      this.docToWorkspace.delete(doc._id);
-      await db.unsafeRemove(doc);
+    if (deletedDocs.length === 0) {
+      return;
+    }
+    // One change batch: the renderer relies on a cascade (a request deleted with
+    // its examples) arriving together to choose the right tab fallback.
+    const bufferId = await db.bufferChanges();
+    try {
+      for (const doc of deletedDocs) {
+        this.docToWorkspace.delete(doc._id);
+        await db.unsafeRemove(doc);
+      }
+    } finally {
+      await db.flushChanges(bufferId);
     }
   }
 

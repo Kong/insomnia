@@ -1,6 +1,7 @@
 import type {
   ApiSpec,
   Environment,
+  Example,
   GrpcRequest,
   McpRequest,
   MockRoute,
@@ -97,6 +98,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | UnitTest
     | MockServer
     | MockRoute
+    | Example
     | ProjectLintRuleset
   )[] = [];
   const activeWorkspace = await services.workspace.getById(workspaceId);
@@ -113,7 +115,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   };
   const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
   const activeApiSpec = await services.apiSpec.getByParentId(workspaceId);
-  const reqs = await database.find(models.request.type, {
+  const reqs = await database.find<Request>(models.request.type, {
     parentId: { $in: listOfParentIds },
   });
   const reqGroups = await database.find(models.requestGroup.type, {
@@ -135,6 +137,21 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | WebSocketRequest
     | SocketIORequest
   )[];
+  // Examples sync as part of the collection snapshot (canSync === true), so
+  // they must be collected alongside their parent requests or the cloud snapshot
+  // silently loses them.
+  //
+  // Only requests that can still own examples contribute. Leaving an example out
+  // is a **deletion** in VCS terms: `insomnia-vcs` getStagable reports a document
+  // that is in the last snapshot but missing from the candidates as
+  // `deleted: true`, so a request switched to GraphQL/SSE drops its examples from
+  // the remote snapshot on the next stage+push. That is intended — the local
+  // document and the exported file keep them, the UI hides them, and an earlier
+  // snapshot can be restored. `__tests__/sync-utils.test.ts` pins both halves.
+  const exampleCapableRequestIds = reqs.filter(models.example.canHostExamples).map(r => r._id);
+  const examples = exampleCapableRequestIds.length
+    ? await services.example.listByParentIds(exampleCapableRequestIds)
+    : [];
   const testSuites = await services.unitTestSuite.findByParentId(workspaceId);
   const tests = await database.find<UnitTest>(models.unitTest.type, {
     parentId: { $in: testSuites.map(t => t._id) },
@@ -167,6 +184,7 @@ export async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   }
 
   allRequests.map(r => syncItemsList.push(r));
+  examples.map(e => syncItemsList.push(e));
   tests.map(t => syncItemsList.push(t));
   testSuites.map(t => syncItemsList.push(t));
   syncItemsList.push(activeWorkspace, baseEnvironment);

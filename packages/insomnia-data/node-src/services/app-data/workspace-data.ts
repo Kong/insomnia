@@ -5,11 +5,13 @@ import type {
   DesignWorkspaceChildren,
   Environment,
   EnvironmentWorkspaceChildren,
+  Example,
   GrpcRequestMeta,
   McpRequest,
   McpWorkspaceChildren,
   MockServer,
   MockServerWorkspaceChildren,
+  Request,
   RequestGroup,
   RequestGroupMeta,
   RequestMeta,
@@ -48,6 +50,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     allRequestsAndMetaByWorkspaceId.set(workspaceId, {
       data: {
         requestsAndGroups: [],
+        examples: [],
       },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
@@ -76,7 +79,7 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
   const listOfParentIds = [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)];
 
   const [reqs, grpcReqs, wsReqs, socketIOReqs] = await Promise.all([
-    database.find(models.request.type, { parentId: { $in: listOfParentIds } }),
+    database.find<Request>(models.request.type, { parentId: { $in: listOfParentIds } }),
     database.find(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }),
     database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } }),
     database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } }),
@@ -162,6 +165,28 @@ export const getAllCollectionChildrenAndMetasByWorkspaceIds = async (
     }
   });
 
+  // Only requests that can still host an example are listed here: a request
+  // switched to GraphQL or an event stream keeps its local examples (and the
+  // exported file keeps them, so a re-import does not treat them as orphans), but
+  // the UI must not show them. This is the primary gate; the sidebar re-checks
+  // the cached summaries and the tab list closes example tabs, because the
+  // app-data cache patches documents in place.
+  const hostableRequestIds = reqs.filter(models.example.canHostExamples).map(request => request._id);
+  const examples = hostableRequestIds.length
+    ? await database.find<Example>(
+        models.example.type,
+        { parentId: { $in: hostableRequestIds } },
+        undefined,
+        undefined,
+        models.example.exampleSummaryProjection,
+      )
+    : [];
+  examples.forEach(example => {
+    const workspaceId = requestToWorkspaceId.get(example.parentId);
+    const workspaceData = workspaceId ? allRequestsAndMetaByWorkspaceId.get(workspaceId) : undefined;
+    workspaceData?.data.examples.push(example);
+  });
+
   return allRequestsAndMetaByWorkspaceId;
 };
 
@@ -174,6 +199,7 @@ export const getAllDesignChildrenByWorkspaceIds = async (workspaceIds: string[])
         data: {
           apiSpec: designRequestsAndMetas.get(workspaceId)?.data.apiSpec,
           requestsAndGroups: designRequestsAndMetas.get(workspaceId)?.data.requestsAndGroups || [],
+          examples: designRequestsAndMetas.get(workspaceId)?.data.examples || [],
         },
         dataMetas: {
           allRequestMetas: designRequestsAndMetas.get(workspaceId)?.dataMetas.allRequestMetas || [],

@@ -2,7 +2,11 @@ import { models } from 'insomnia-data';
 import { describe, expect, it } from 'vitest';
 
 import type { BaseTab } from '../../context/app/insomnia-tab-context';
-import { getRequestDeleteFallbackUrl, isRequestLikeDocType } from './request-delete-fallback';
+import {
+  getExampleDeleteFallbackUrl,
+  getRequestDeleteFallbackUrl,
+  isRequestLikeDocType,
+} from './request-delete-fallback';
 
 const makeTab = (overrides: Partial<BaseTab> = {}): BaseTab => ({
   type: 'request',
@@ -34,6 +38,56 @@ describe('isRequestLikeDocType', () => {
     models.unitTestSuite.type,
   ])('returns false for %s', docType => {
     expect(isRequestLikeDocType(docType)).toBe(false);
+  });
+});
+
+describe('getExampleDeleteFallbackUrl', () => {
+  it('points at the parent request, keyed off the closing tab workspace', () => {
+    const closingTab = makeTab({ type: 'example', id: 'exp_1', workspaceId: 'wrk_other' });
+
+    const url = getExampleDeleteFallbackUrl({
+      parentId: 'req_1',
+      closingTab,
+      organizationId: 'org_1',
+      projectId: 'proj_1',
+    });
+
+    expect(url).toBe('/organization/org_1/project/proj_1/workspace/wrk_other/debug/request/req_1');
+  });
+
+  it('falls back where the request itself would when the parent request is deleted in the same batch', () => {
+    const closingTab = makeTab({ type: 'example', id: 'exp_1' });
+
+    // The request lived in a folder: land on the folder, not on the dead request.
+    expect(
+      getExampleDeleteFallbackUrl({
+        parentId: 'req_1',
+        removedParentRequestParentId: 'fld_1',
+        closingTab,
+        organizationId: 'org_1',
+        projectId: 'proj_1',
+      }),
+    ).toBe('/organization/org_1/project/proj_1/workspace/wrk_1/debug/request-group/fld_1');
+
+    // A request under the workspace root lands on the collection root.
+    expect(
+      getExampleDeleteFallbackUrl({
+        parentId: 'req_1',
+        removedParentRequestParentId: 'wrk_1',
+        closingTab,
+        organizationId: 'org_1',
+        projectId: 'proj_1',
+      }),
+    ).toBe('/organization/org_1/project/proj_1/workspace/wrk_1/debug');
+  });
+
+  it('returns undefined without a closing tab or a parent request', () => {
+    const closingTab = makeTab({ type: 'example', id: 'exp_1' });
+
+    expect(getExampleDeleteFallbackUrl({ closingTab, organizationId: 'org_1', projectId: 'proj_1' })).toBeUndefined();
+    expect(
+      getExampleDeleteFallbackUrl({ parentId: 'req_1', organizationId: 'org_1', projectId: 'proj_1' }),
+    ).toBeUndefined();
   });
 });
 
