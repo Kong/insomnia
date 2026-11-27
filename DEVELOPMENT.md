@@ -4,7 +4,7 @@ The purpose of this document is to provide a general overview of the application
 
 ## Technologies
 
-Insomnia is a desktop application built on top of [Electron](http://electronjs.org/). Electron provides a Chromium runtime for the Insomnia web app to run inside, as well as additional tools to provide access to operating system features.
+Insomnia is a desktop application built on top of [Electron](https://electronjs.org/). Electron provides a Chromium runtime for the Insomnia web app to run inside, as well as additional tools to provide access to operating system features.
 
 There are a few more technologies and tools worth mentioning:
 
