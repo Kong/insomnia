@@ -1,5 +1,5 @@
 import type { DebugSession, DebugSpan, DebugTraceDetail, DebugTraceSummary } from './debug-session-api';
-export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out';
+export type DebugSessionState = 'active' | 'cancelled' | 'completed' | 'completing' | 'timed_out' | 'polling_timed_out';
 
 // Attribute names used in debug traces
 export const TRACE_ATTRIBUTE_NAMES = {
@@ -14,8 +14,12 @@ export const TRACE_ATTRIBUTE_NAMES = {
   URL_SCHEME: 'url.scheme',
 };
 
+// How long a session may stay in 'completing' before it is surfaced as 'timed_out' (server reported a timeout)
+// or 'polling_timed_out' (server never confirmed the end, so the client stopped waiting).
+export const COMPLETING_TIMEOUT_MS = 60 * 1000;
+
 // Derive the state of a debug session from its response
-export function deriveSessionState(session: DebugSession): DebugSessionState {
+export function deriveSessionState(session: DebugSession, now: number = Date.now()): DebugSessionState {
   if (session.stoppedAt) {
     return 'cancelled';
   }
@@ -24,16 +28,14 @@ export function deriveSessionState(session: DebugSession): DebugSessionState {
   }
   if (session.startedAt) {
     const endsAt = new Date(session.startedAt).getTime() + session.durationSecs * 1000;
-    if (Number.isFinite(endsAt) && Date.now() >= endsAt) {
+    if (Number.isFinite(endsAt) && now >= endsAt) {
+      if (now - endsAt >= COMPLETING_TIMEOUT_MS) {
+        // Stuck completing for too long: the server reported a timeout, or it never did and we stop polling.
+        return session.timedOut ? 'timed_out' : 'polling_timed_out';
+      }
       // The session has reached its expected end time but last status fetch has not been reached yet.
       return 'completing';
     }
-  }
-  // Timeout never reaches here. The timedOut(timed_out) determines whether the target did not respond in time before the sampling time elapsed.
-  // But we still need to fetch the session status to determine if it has completed or been cancelled.
-  // Leave it here as a placeholder in case API changes in the future and we need to handle additional session states.
-  if (session.timedOut) {
-    return 'timed_out';
   }
   return 'active';
 }
