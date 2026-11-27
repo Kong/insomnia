@@ -660,8 +660,7 @@ const ImportResourcesForm = ({
     organizationId: string;
   };
   const formId = useId();
-  const [overrideBaseEnvironmentData, setOverrideBaseEnvironmentData] = useState(true);
-  const [overrideCollectionProperties, setOverrideCollectionProperties] = useState(false);
+  const [overrideCollectionSettings, setOverrideCollectionSettings] = useState(true);
   const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(defaultProjectId);
@@ -726,8 +725,8 @@ const ImportResourcesForm = ({
 
   const handleImport = () =>
     onImport(
-      isImportingBaseEnvironmentToWorkspace && overrideBaseEnvironmentData,
-      isImportingCollectionPropertiesToWorkspace && overrideCollectionProperties,
+      isImportingBaseEnvironmentToWorkspace && overrideCollectionSettings,
+      isImportingCollectionPropertiesToWorkspace && overrideCollectionSettings,
       selectedProjectId,
       selectedWorkspaceId,
       selectedNewProject ? newProjectName || 'New Project' : undefined,
@@ -816,32 +815,22 @@ const ImportResourcesForm = ({
             ⚠️ Make sure that you trust the import source before continuing.
           </div>
           {(isImportingBaseEnvironmentToWorkspace || isImportingCollectionPropertiesToWorkspace) && (
-            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-              {isImportingBaseEnvironmentToWorkspace && (
-                <Checkbox
-                  isSelected={overrideBaseEnvironmentData}
-                  onChange={checked => setOverrideBaseEnvironmentData(checked)}
-                >
-                  Override Base Environment
-                  <HelpTooltip>
-                    Override existing variables in the base environment if the same variable names are found during
-                    import.
-                  </HelpTooltip>
-                </Checkbox>
-              )}
-              {isImportingCollectionPropertiesToWorkspace && (
-                <Checkbox
-                  isSelected={overrideCollectionProperties}
-                  onChange={checked => setOverrideCollectionProperties(checked)}
-                >
-                  Override Collection Settings
-                  <HelpTooltip>
-                    The imported file defines workspace-level headers, scripts or authentication. Check to replace those
-                    of the selected workspace with the imported one. Otherwise, imported workspace-level properties will
-                    be discarded.
-                  </HelpTooltip>
-                </Checkbox>
-              )}
+            <div className="mt-3">
+              <Checkbox isSelected={overrideCollectionSettings} onChange={setOverrideCollectionSettings}>
+                Overwrite existing settings
+                <HelpTooltip>
+                  <div className="flex flex-col gap-2 text-left">
+                    <p>Mergeable settings (e.g. base environment): overwrites conflicting values.</p>
+                    <p>
+                      Non-mergeable settings (e.g. headers, scripts, authentication): replaces existing settings
+                      entirely.
+                    </p>
+                    <p>
+                      When unchecked, existing settings are preserved and imported non-mergeable settings are discarded.
+                    </p>
+                  </div>
+                </HelpTooltip>
+              </Checkbox>
             </div>
           )}
         </div>
