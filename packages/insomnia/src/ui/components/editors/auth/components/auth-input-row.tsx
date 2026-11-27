@@ -3,8 +3,8 @@ import * as reactUse from 'react-use';
 
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { Tooltip } from '~/ui/components/tooltip';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useAuthentication } from '~/ui/hooks/use-request-authentication';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { AuthRow } from './auth-row';
@@ -29,7 +29,7 @@ export const AuthInputRow: FC<Props> = ({
   overrideValueWhenDisabled,
   copyBtn = false,
 }) => {
-  const { settings } = useRootLoaderData()!;
+  const { settings } = useSettings();
   const { showPasswords } = settings;
   const { authentication, _id, patcher } = useAuthentication();
   const [masked, toggleMask] = reactUse.useToggle(true);

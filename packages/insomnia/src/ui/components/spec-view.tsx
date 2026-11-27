@@ -58,9 +58,9 @@ import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { getMethodsFromOpenApiPathItem, type PathItemObject } from '~/ui/utils/openapi-path-item-methods';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
@@ -143,7 +143,7 @@ export const SpecView = ({
   apiSpec,
 }: SpecViewProps) => {
   const { activeProject, vcsVersion, activeWorkspace, activeWorkspaceMeta } = useWorkspaceLoaderData()!;
-  const { settings } = useRootLoaderData()!;
+  const { settings } = useSettings();
 
   const [isViewRulesetModalOpen, setIsViewRulesetModalOpen] = useState(false);
   const [isLintCLIModalOpen, setIsLintCLIModalOpen] = useState(false);

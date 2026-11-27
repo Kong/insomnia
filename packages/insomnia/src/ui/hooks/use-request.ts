@@ -25,7 +25,7 @@ import {
   useWorkspaceUpdateActionFetcher,
   type WorkspacePatch,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
-import { useSettingsUpdateActionFetcher } from '~/routes/settings.update';
+import { useUpdateSettings } from '~/ui/hooks/data/use-settings';
 
 export const useRequestPatcher = (requestWorkspaceId = '') => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -112,10 +112,8 @@ export const useRequestGroupMetaPatcher = (requestWorkspaceId = '') => {
 };
 
 export const useSettingsPatcher = () => {
-  const fetcher = useSettingsUpdateActionFetcher();
-  return (patch: Partial<Settings>) => {
-    fetcher.submit({ patch });
-  };
+  const { mutateAsync } = useUpdateSettings();
+  return (patch: Partial<Settings>) => mutateAsync(patch);
 };
 
 export const useWorkspaceMetaPatcher = () => {

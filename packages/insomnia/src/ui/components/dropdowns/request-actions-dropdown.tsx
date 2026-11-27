@@ -19,8 +19,8 @@ import type { SerializableActionMeta } from '~/common/plugins/bridge-types';
 import { findSpecOperationForRequest, type SpecOperationLocation } from '~/common/spec-operation';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { useSettings } from '~/ui/hooks/data/use-settings';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
-import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 
 import { toKebabCase } from '../../../common/misc';
@@ -64,7 +64,7 @@ export const RequestActionsDropdown = ({
 }: Props) => {
   const workspaceId = activeWorkspace._id;
   const projectId = activeProject._id;
-  const { settings } = useRootLoaderData()!;
+  const { settings } = useSettings();
   const patchRequestMeta = useRequestMetaPatcher(workspaceId);
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<SerializableActionMeta[]>([]);
