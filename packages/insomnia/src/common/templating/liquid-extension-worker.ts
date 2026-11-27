@@ -6,6 +6,7 @@ import type { Plugin } from '~/common/plugins/types';
 
 import packageJson from '../../../package.json';
 import { CONFIDENTIAL_MASK_VALUE, isExternalVaultTag, shouldMaskExternalVaultTag } from './confidential-value-policy';
+import { runExcludedFromRenderLimit } from './liquid-engine';
 import { resolveArg } from './resolve-arg';
 import { tokenizeArgs } from './tokenize-args';
 import type {
@@ -190,7 +191,7 @@ export function createLiquidTagWorker(
         return;
       }
 
-      const result = await Promise.resolve(ext.run(helperContext, ...args));
+      const result = await runExcludedFromRenderLimit(ctx, async () => ext.run(helperContext, ...args));
       const resultStr = result == null ? '' : String(result);
       // Register external vault tag results for timeline redaction when purpose='send'.
       // The collector cannot cross the structured-clone Worker boundary, so we postMessage
