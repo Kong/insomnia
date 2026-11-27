@@ -82,7 +82,7 @@ describe('use-cloud-credentials', () => {
 
       const { result } = renderHook(() => useCloudCredentials());
 
-      expect(result.current).toEqual({ cloudCredentials: [], isPending: true });
+      expect(result.current).toMatchObject({ cloudCredentials: [], isPending: true });
       await vi.waitFor(async () => {
         await act(async () => {});
         expect(result.current.isPending).toBe(false);

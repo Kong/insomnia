@@ -11,8 +11,7 @@ export function useDBMutation<TData = unknown, TError = Error, TVariables = void
   return useMutation(options, useDBQueryClient());
 }
 
-// Runs the mutation against the chosen query client ('db' = local database cache, 'server' = server data),
-// then invalidates the given query keys on that same client once it succeeds.
+// Runs the mutation against the chosen query client then invalidates the given query keys on that same client once it succeeds.
 export function useMutationWithAutoInvalidation<
   TData = unknown,
   TError = Error,
@@ -24,7 +23,6 @@ export function useMutationWithAutoInvalidation<
     invalidates: readonly QueryKey[] | ((data: TData, vars: TVariables) => readonly QueryKey[]);
   },
 ): UseMutationResult<TData, TError, TVariables, TOnMutateResult> {
-  // Both hooks must be called unconditionally; pick the client afterwards.
   const dbQueryClient = useDBQueryClient();
   const serverQueryClient = useServerDataQueryClient();
   const queryClient = options.client === 'db' ? dbQueryClient : serverQueryClient;
