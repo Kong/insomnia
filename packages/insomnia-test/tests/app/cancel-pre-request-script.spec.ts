@@ -1,0 +1,66 @@
+import { faker } from "@faker-js/faker";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { RequestState } from "@package/enums/request-state";
+import { DEFAULT_TIMEOUT, HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+const LONG_DELAY_PRE_REQUEST_SCRIPT = `
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function printAfterDelay() {
+    await delay(3000);
+}
+await printAfterDelay();
+`;
+
+test("Verify cancelling a long-running pre-request script shows a cancellation message and a later request still succeeds", async ({
+  user,
+}) => {
+  const { workspaceFlow, httpRequestFlow } = user.flowManager;
+  const { httpRequestPage, responsePage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+  const request = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Get,
+    url: `${HTTP_SERVER}/get`,
+    preRequestScript: LONG_DELAY_PRE_REQUEST_SCRIPT,
+  });
+  const laterRequest = await httpRequestFlow.create(collection, {
+    name: faker.string.alphanumeric(10),
+    method: HttpMethod.Get,
+    url: `${HTTP_SERVER}/get`,
+  });
+
+  await httpRequestFlow.get(request.name);
+  await httpRequestPage.send();
+  await expect
+    .poll(() => responsePage.getRequestState(), { timeout: DEFAULT_TIMEOUT })
+    .toBe(RequestState.Sending);
+  await responsePage.cancelRequest();
+  let cancelledMessageVisible = false;
+  await expect
+    .poll(
+      async () =>
+        (cancelledMessageVisible = await responsePage.hasMessage(
+          "Request was cancelled",
+        )),
+      { timeout: DEFAULT_TIMEOUT },
+    )
+    .toBe(true);
+
+  const laterResponse = await httpRequestFlow.send(laterRequest);
+
+  expect(cancelledMessageVisible).toBe(true);
+  expect(laterResponse.statusBar.code).toBe(200);
+});

@@ -1,0 +1,39 @@
+import { faker } from "@faker-js/faker";
+import { ProjectType } from "@package/enums/project-types";
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+import { buildReorderedCollectionFile } from "./helpers";
+
+test("Verify committing a hand-reordered file once leaves the working tree clean", async ({
+  user,
+}) => {
+  const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
+  const { gitSyncPage } = user.pageManager;
+
+  const fileName = `${faker.string.alpha(10).toLowerCase()}.yaml`;
+  await pushServerFile({
+    path: fileName,
+    content: buildReorderedCollectionFile(faker.string.alpha(10)).content,
+  });
+  await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
+  await workspaceFlow.cloneGitProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Git),
+    GIT_CREDENTIAL.name,
+  );
+  await expect
+    .poll(async () => (await gitSyncFlow.getChanges()).unstaged, {
+      timeout: DEFAULT_TIMEOUT,
+    })
+    .toContain(fileName);
+  const message = faker.string.alphanumeric(10);
+  const commit = await gitSyncFlow.commit(message);
+
+  await expect
+    .poll(async () => gitSyncPage.hasUncommittedChanges(), {
+      timeout: DEFAULT_TIMEOUT,
+    })
+    .toBe(false);
+  expect(commit.message).toBe(message);
+});

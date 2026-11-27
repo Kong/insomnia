@@ -1,0 +1,13 @@
+extends: [spectral:oas]
+# "functions" is a disallowed top-level key (RCE vector); upload should be rejected.
+functions:
+  - my-custom-function
+rules:
+  require-x-smoke-test-marker:
+    description: info object must contain a custom x-smoke-test-marker field
+    message: "{{description}}"
+    severity: error
+    given: $.info
+    then:
+      field: x-smoke-test-marker
+      function: truthy

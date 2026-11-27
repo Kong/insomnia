@@ -1,0 +1,41 @@
+openapi: 3.2.0
+info: { title: Invalid querystring, version: 1.0.0 }
+paths:
+  /twice:
+    get:
+      summary: Two querystring parameters
+      parameters:
+        - name: qs1
+          in: querystring
+          content:
+            application/x-www-form-urlencoded:
+              schema: { type: object, properties: { a: { type: string } } }
+        - name: qs2
+          in: querystring
+          content:
+            application/x-www-form-urlencoded:
+              schema: { type: object, properties: { b: { type: string } } }
+      responses:
+        "200": { description: OK }
+  /with-schema:
+    get:
+      summary: Querystring with schema and style
+      parameters:
+        - name: qs
+          in: querystring
+          schema: { type: string }
+          style: form
+      responses:
+        "200": { description: OK }
+  /mixed:
+    get:
+      summary: Querystring together with query
+      parameters:
+        - name: qs
+          in: querystring
+          content:
+            application/x-www-form-urlencoded:
+              schema: { type: object, properties: { a: { type: string } } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: OK }

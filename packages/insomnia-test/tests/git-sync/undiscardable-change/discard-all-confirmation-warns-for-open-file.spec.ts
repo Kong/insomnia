@@ -1,0 +1,29 @@
+import { faker } from '@faker-js/faker';
+import { GitChangeList } from '@package/enums/git-change-list';
+import { ProjectType } from '@package/enums/project-types';
+import { DEFAULT_TIMEOUT, GIT_CREDENTIAL, pushServerFile, test } from "@package/misc/git-fixtures";
+import { Project } from '@package/models/project';
+import { expect } from "@playwright/test";
+
+import { buildReorderedCollectionFile, UNDISCARDABLE_WARNING_TEXT } from './helpers';
+
+test('Verify the Discard all confirmation warns when the open file is an undiscardable change', async ({ user }) => {
+  const { gitSyncFlow, preferencesFlow, workspaceFlow } = user.flowManager;
+  const { gitSyncPage, gitCommitDialogPage } = user.pageManager;
+
+  const fileName = `${faker.string.alpha(10).toLowerCase()}.yaml`;
+  await pushServerFile({ path: fileName, content: buildReorderedCollectionFile(faker.string.alpha(10)).content });
+  await preferencesFlow.addGitCredential(GIT_CREDENTIAL);
+  await workspaceFlow.cloneGitProject(new Project(faker.string.alphanumeric(10), ProjectType.Git), GIT_CREDENTIAL.name);
+  await expect
+    .poll(async () => (await gitSyncFlow.getChanges()).unstaged, {
+      timeout: DEFAULT_TIMEOUT,
+    })
+    .toContain(fileName);
+  await gitSyncPage.openCommitDialog();
+  await gitCommitDialogPage.openChangeDiff(GitChangeList.Unstaged, fileName);
+  await gitCommitDialogPage.openDiscardAllConfirmation();
+
+  expect(await gitCommitDialogPage.isUndiscardableWarningVisibleInDiscardDialog()).toBe(true);
+  expect(await gitCommitDialogPage.getDiscardConfirmationText()).toContain(UNDISCARDABLE_WARNING_TEXT);
+});

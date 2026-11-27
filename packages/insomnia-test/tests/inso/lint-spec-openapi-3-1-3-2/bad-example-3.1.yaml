@@ -1,0 +1,19 @@
+openapi: 3.1.0
+info:
+  title: Bad example 3.1
+  version: 1.0.0
+paths:
+  /pets:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  age:
+                    type: integer
+              example:
+                age: not-a-number

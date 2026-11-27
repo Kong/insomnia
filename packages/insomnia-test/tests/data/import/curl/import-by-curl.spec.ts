@@ -1,0 +1,64 @@
+import { faker } from "@faker-js/faker";
+import { ContentType } from "@package/enums/content-type";
+import { HttpMethod } from "@package/enums/http-method";
+import { ProjectType } from "@package/enums/project-types";
+import { HTTP_SERVER, test } from "@package/misc/fixtures";
+import { Collection } from "@package/models/collection";
+import type { CurlCommand } from "@package/models/curl-command";
+import type { HttpRequest } from "@package/models/http-request";
+import { Project } from "@package/models/project";
+import { expect } from "@playwright/test";
+
+const url = `${HTTP_SERVER}/posts`;
+const body = `{"title": "title", "body": "body", "userId": 1}`;
+const command = `curl -X POST "${url}"
+  -H "Content-Type: application/json"
+  -d '${body}'`;
+
+test("Import HTTP Request by Curl Command", async ({ user }) => {
+  const { httpRequestFlow, importFlow, workspaceFlow } = user.flowManager;
+  const { workspacePage } = user.pageManager;
+
+  const project = await workspaceFlow.createProject(
+    new Project(faker.string.alphanumeric(10), ProjectType.Local),
+  );
+  const collection = await workspaceFlow.createCollection(
+    project,
+    new Collection(faker.string.alphanumeric(10)),
+  );
+
+  const curl: CurlCommand = { command };
+  await importFlow.importCurl(project, collection, curl);
+
+  const request = {
+    name: url,
+    method: HttpMethod.Post,
+    url: url,
+    body: { mimeType: ContentType.JSON, text: body },
+  } satisfies HttpRequest;
+  expect(await httpRequestFlow.get(url)).toMatchObject(request);
+
+  const responseView = await httpRequestFlow.send(request);
+  expect(responseView.statusBar.code).toBe(201);
+  expect(responseView.statusBar.message).toBe("Created");
+  expect(responseView.headers).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: "content-type",
+        value: expect.stringContaining("application/json"),
+      }),
+    ]),
+  );
+
+  await workspaceFlow.delete(request);
+  const deletedNames = [request.name];
+  await expect
+    .poll(
+      async () => {
+        const names = (await workspacePage.getNodes()).map((node) => node.name);
+        return deletedNames.filter((name) => names.includes(name));
+      },
+      { timeout: 10_000 },
+    )
+    .toEqual([]);
+});
