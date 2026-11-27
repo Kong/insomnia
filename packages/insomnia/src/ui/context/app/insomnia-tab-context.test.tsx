@@ -134,3 +134,52 @@ describe('useInsomniaTabContext > closeTabById', () => {
     expect(hook.current.currentOrgTabs.tabList.map(tab => tab.id)).toEqual(['req_2']);
   });
 });
+
+describe('useInsomniaTabContext > batchCloseTabs', () => {
+  let hook: ReturnType<typeof renderTabContext>;
+
+  beforeEach(() => {
+    localStorage.clear();
+    mockNavigate.mockClear();
+    hook = renderTabContext();
+  });
+
+  afterEach(() => {
+    hook.unmount();
+  });
+
+  const exampleTab = (id: string) => ({
+    ...requestTab,
+    id,
+    type: 'example' as const,
+    url: `/organization/org_1/project/proj_1/workspace/wrk_1/debug/request/req_1/example/${id}`,
+  });
+
+  it('navigates to the provided fallbackUrl when the batch closes every open tab', () => {
+    act(() => {
+      hook.current.addTab(exampleTab('exp_1'), { setActive: false });
+      hook.current.addTab(exampleTab('exp_2'));
+    });
+
+    const fallbackUrl = '/organization/org_1/project/proj_1/workspace/wrk_1/debug/request/req_1';
+    act(() => {
+      hook.current.batchCloseTabs?.(['exp_1', 'exp_2'], { removeFromClosedTabs: true, fallbackUrl });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith(fallbackUrl);
+    expect(hook.current.currentOrgTabs.tabList).toHaveLength(0);
+  });
+
+  it('falls back to the project dashboard without a fallbackUrl', () => {
+    act(() => {
+      hook.current.addTab(exampleTab('exp_1'));
+    });
+
+    act(() => {
+      hook.current.batchCloseTabs?.(['exp_1'], { removeFromClosedTabs: true });
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/organization/org_1/project/proj_1');
+    expect(hook.current.currentOrgTabs.tabList).toHaveLength(0);
+  });
+});

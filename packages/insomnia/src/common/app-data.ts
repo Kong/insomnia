@@ -4,6 +4,7 @@ import type {
   BaseModel,
   ChangeBufferEvent,
   CollectionWorkspaceChildren,
+  Example,
   OrganizationData,
   WorkspaceChildren,
   WorkspaceChildrenForScope,
@@ -22,12 +23,21 @@ export const workspaceChildrenKeys = {
   byWorkspaceId: (workspaceId: string) => [...workspaceChildrenKeys.all, workspaceId],
 };
 
+// One entry per open example editor. The full document (request/response
+// bodies) lives here only, so workspace-wide reads never carry example bodies.
+export const exampleKeys = {
+  all: ['example'],
+  byId: (exampleId: string) => [...exampleKeys.all, exampleId],
+};
+
+
 const COLLECTION_REQUEST_DOC_TYPES: string[] = [
   models.request.type,
   models.grpcRequest.type,
   models.webSocketRequest.type,
   models.socketIORequest.type,
   models.requestGroup.type,
+  models.example.type,
 ];
 
 const COLLECTION_REQUEST_META_DOC_TYPES: string[] = [
@@ -198,7 +208,10 @@ function findWorkspaceIdForDoc(queryClient: QueryClient, doc: BaseModel): string
   return undefined;
 }
 
-function replaceById<T extends BaseModel>(list: T[], doc: BaseModel): T[] | null {
+function replaceById<T extends Pick<BaseModel, '_id' | 'parentId'>>(
+  list: T[],
+  doc: Pick<BaseModel, '_id' | 'parentId'>,
+): T[] | null {
   const index = list.findIndex(item => item._id === doc._id);
   if (index === -1) {
     return null;
@@ -216,6 +229,10 @@ function updateCollectionChildrenWithUpdatedDoc(
   collectionChildren: CollectionWorkspaceChildren,
   doc: BaseModel,
 ): CollectionWorkspaceChildren | null {
+  if (doc.type === models.example.type) {
+    const examples = replaceById(collectionChildren.data.examples, doc);
+    return examples ? { ...collectionChildren, data: { ...collectionChildren.data, examples } } : null;
+  }
   if (COLLECTION_REQUEST_DOC_TYPES.includes(doc.type)) {
     const requestsAndGroups = replaceById(collectionChildren.data.requestsAndGroups, doc);
     return requestsAndGroups
@@ -298,6 +315,18 @@ export function updateAppDataOnDbChanges(queryClient: QueryClient, changes: Chan
         }
       }
       continue;
+    }
+
+    if (models.example.isExample(doc)) {
+      // An open example editor keeps the full document (bodies included) in its
+      // own query, which no workspace-wide refetch touches. The change carries
+      // the whole document, so patch the cache in place (like requests above)
+      // instead of refetching on every keystroke's write.
+      if (event === 'remove') {
+        queryClient.removeQueries({ queryKey: exampleKeys.byId(doc._id) });
+      } else {
+        queryClient.setQueryData<Example>(exampleKeys.byId(doc._id), previous => (previous ? doc : previous));
+      }
     }
 
     if (COLLECTION_CHILDREN_DOC_TYPES.includes(doc.type)) {

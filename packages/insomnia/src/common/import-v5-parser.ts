@@ -22,6 +22,7 @@ import { JsonSchema } from '~/common/zod/base-schemas';
 
 const {
   environment,
+  example,
   mockServer,
   mockRoute,
   unitTest,
@@ -206,6 +207,27 @@ export const RequestGroupSchema = z.object({
 });
 
 const {
+  description: _exampleDescriptionShape,
+  metaSortKey: _exampleMetaSortKeyShape,
+  ...restExampleSchemaShape
+} = example.baseExampleSchema.shape;
+export const ExampleSchema = z.object({
+  // Examples are identified across files by `meta.id`, so it is required and
+  // must be a real example id (no placeholder/default).
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('exp_'),
+  }),
+  ...restExampleSchemaShape,
+});
+// The 1 MB response-body cap is a *write* guard (`services.example` and the
+// response pane), never a format rule. `getInsomniaV5DataExport` re-validates its
+// own output with this schema and turns any rejection into an empty file, so a
+// reject here would blank the export of a workspace holding an oversized example
+// (reachable through the generic git/cloud write paths). The body is data the
+// user owns: import it, and let the editor refuse further saves until it is back
+// under the limit.
+
+const {
   url: requestUrlShape,
   name: requestNameShape,
   description: requestDescriptionShape,
@@ -237,6 +259,10 @@ export const RequestSchema = z.object({
     },
   }),
   pathParameters: requestPathParametersShape.nullable(),
+  // Examples may exist under a request that can no longer host them: a request
+  // switched to GraphQL or an event stream keeps its local examples, and the
+  // exported file carries them so the next import does not delete them.
+  examples: z.array(ExampleSchema).optional(),
 });
 
 /**
@@ -516,6 +542,7 @@ export type InsomniaFile = z.infer<typeof InsomniaFileSchema>;
 export type Insomnia_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 export type Insomnia_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
 export type Insomnia_Request = z.infer<typeof RequestSchema>;
+export type Insomnia_Example = z.infer<typeof ExampleSchema>;
 export type Insomnia_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
 export type Insomnia_SocketIORequest = z.infer<typeof SocketIORequestSchema>;
 export type Insomnia_Meta = z.infer<typeof MetaSchema>;

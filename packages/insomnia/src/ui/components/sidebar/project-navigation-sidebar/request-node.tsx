@@ -135,6 +135,7 @@ interface RequestNodeProps {
   item: CollectionChildFlatItem | PinnedRequestFlatItem;
   apiSpec?: ApiSpec;
   onToggleFolder: (requestGroupIds: string[], workspace: Workspace) => void;
+  onToggleRequest?: (requestId: string, workspace: Workspace, collapsed?: boolean) => void;
   className?: string;
   // Number of ancestor indent levels to strip when the sidebar is focused on a
   // single collection (the project and workspace rows are no longer shown).
@@ -146,6 +147,7 @@ interface RequestNodeProps {
 export const RequestNode = ({
   item,
   onToggleFolder,
+  onToggleRequest,
   className,
   depthOffset = 0,
   onRename,
@@ -153,6 +155,7 @@ export const RequestNode = ({
   apiSpec,
 }: RequestNodeProps) => {
   const { doc, level: requestLevel, workspace, project, collapsed, pinned, kind } = item;
+  const hasExamples = item.kind === 'collectionChild' ? item.hasExamples : false;
   const isPinnedRequest = kind === 'pinnedRequest';
   const isLastPinned = item.kind === 'pinnedRequest' && item.isLastPinned;
 
@@ -171,15 +174,32 @@ export const RequestNode = ({
   const content = (
     <>
       <Button slot="drag" className="hidden" />
-      {!isPinnedRequest && (
-        <Button
-          aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${doc.name}`}
-          onPress={() => isFolder && onToggleFolder([doc._id], workspace)}
-          className={TOGGLE_BTN_CLASS}
-        >
-          {isFolder ? <Icon icon={collapsed ? 'chevron-right' : 'chevron-down'} className={ICON_CLASS} /> : null}
-        </Button>
-      )}
+      {!isPinnedRequest &&
+        (isFolder || hasExamples ? (
+          <Button
+            aria-label={`${collapsed ? 'Expand' : 'Collapse'} ${
+              isFolder ? doc.name : `examples for ${getRequestNameOrFallback(doc)}`
+            }`}
+            data-testid={hasExamples ? `example-toggle-${getRequestNameOrFallback(doc)}` : undefined}
+            onPress={() => {
+              if (isFolder) {
+                onToggleFolder([doc._id], workspace);
+              } else {
+                onToggleRequest?.(doc._id, workspace);
+              }
+            }}
+            className={TOGGLE_BTN_CLASS}
+          >
+            <Icon
+              icon={collapsed ? 'chevron-right' : 'chevron-down'}
+              className={ICON_CLASS}
+            />
+          </Button>
+        ) : (
+          // Keep the content column aligned with rows that have a toggle, without
+          // rendering a focusable button that does nothing.
+          <span className={TOGGLE_BTN_CLASS} />
+        ))}
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-xs px-2 py-1 text-left transition-colors">
         {isFolder ? (
           <Icon icon="folder" className={ICON_CLASS} data-testid="node-type-icon" />

@@ -2,7 +2,7 @@ import clone from 'clone';
 import type { Request, RequestBodyParameter } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from 'insomnia-data/common';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 import { Toolbar } from 'react-aria-components';
 import { useParams } from 'react-router';
 
@@ -25,6 +25,7 @@ const lookupMimeType = (path: string) => {
   };
   return mimeMap[ext || ''];
 };
+import { useExampleEditorContext } from '../../../context/example-editor-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
 import { AskModal } from '../../modals/ask-modal';
@@ -45,17 +46,22 @@ interface Props {
 }
 
 export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
-  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
+  const exampleEditor = useExampleEditorContext();
+  const { workspaceId, requestId: routeRequestId } = useParams() as { workspaceId: string; requestId: string };
+  const routePatchRequest = useRequestPatcher();
+  const patchRequest = useMemo(
+    () => exampleEditor?.patchRequest ?? ((patch: Partial<Request>) => routePatchRequest(routeRequestId, patch)),
+    [exampleEditor, routePatchRequest, routeRequestId],
+  );
   const handleRawChange = useCallback(
     (rawValue: string) => {
       const body =
         typeof request.body.mimeType !== 'string'
           ? { text: rawValue }
           : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
-      patchRequest(requestId, { body });
+      patchRequest({ body });
     },
-    [patchRequest, request.body.mimeType, requestId],
+    [patchRequest, request.body.mimeType],
   );
 
   const handleGraphQLChange = useCallback(
@@ -64,25 +70,25 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
         typeof CONTENT_TYPE_GRAPHQL !== 'string'
           ? { text: content }
           : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
-      patchRequest(requestId, { body });
+      patchRequest({ body });
     },
-    [patchRequest, requestId],
+    [patchRequest],
   );
 
   const handleFormUrlEncodedChange = useCallback(
     (params: RequestBodyParameter[]) => {
       const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
-      patchRequest(requestId, { body });
+      patchRequest({ body });
     },
-    [patchRequest, requestId],
+    [patchRequest],
   );
 
   const handleFormChange = useCallback(
     (parameters: RequestBodyParameter[]) => {
       const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
-      patchRequest(requestId, { body });
+      patchRequest({ body });
     },
-    [patchRequest, requestId],
+    [patchRequest],
   );
 
   const handleFileChange = async (path: string) => {
@@ -91,7 +97,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
       mimeType: CONTENT_TYPE_FILE,
       fileName: path,
     };
-    patchRequest(requestId, { body });
+    patchRequest({ body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -118,7 +124,7 @@ export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
         ),
         onDone: async (saidYes: boolean) => {
           if (saidYes) {
-            patchRequest(requestId, { headers });
+            patchRequest({ headers });
           }
         },
       });

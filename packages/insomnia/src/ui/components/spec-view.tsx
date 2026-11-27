@@ -2,7 +2,7 @@ import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { type ApiSpec, models } from 'insomnia-data';
 import type { OpenAPIV3 } from 'openapi-types';
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -60,6 +60,7 @@ import { formatMethodName } from '~/ui/components/tags/method-tag';
 import { showToast } from '~/ui/components/toast-notification';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
 import { getMethodsFromOpenApiPathItem, type PathItemObject } from '~/ui/utils/openapi-path-item-methods';
@@ -610,29 +611,7 @@ export const SpecView = ({
   const generateDisabledKeys = generateActionList.filter(item => item.isDisabled).map(item => item.id);
   const historyKey = `${activeWorkspace._id}::${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${vcsVersion}`;
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
-  useLayoutEffect(() => {
-    if (settings.forceVerticalLayout) {
-      setDirection('vertical');
-      return () => {};
-    }
-    // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
-    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDirection(e.matches ? 'vertical' : 'horizontal');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.forceVerticalLayout, direction]);
-
+  const direction = usePaneDirection(settings.forceVerticalLayout);
   const specEditor = (
     <div className="relative flex h-full w-full overflow-hidden">
       <CodeEditor

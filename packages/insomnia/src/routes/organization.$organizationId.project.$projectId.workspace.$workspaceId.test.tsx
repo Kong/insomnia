@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { UnitTestSuite } from 'insomnia-data';
 import { models } from 'insomnia-data';
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -39,6 +39,7 @@ import { WorkspaceEnvironmentsEditModal } from '~/ui/components/modals/workspace
 import { OrganizationTabList } from '~/ui/components/tabs/tab-list';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
@@ -233,29 +234,7 @@ const Component = () => {
     },
   });
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
-  useLayoutEffect(() => {
-    if (settings.forceVerticalLayout) {
-      setDirection('vertical');
-      return () => {};
-    }
-    // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
-    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDirection(e.matches ? 'vertical' : 'horizontal');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.forceVerticalLayout, direction]);
-
+  const direction = usePaneDirection(settings.forceVerticalLayout);
   const hasLegacyUnitTests = unitTestSuites.length > 0;
 
   useEffect(() => {

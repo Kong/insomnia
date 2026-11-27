@@ -84,12 +84,17 @@ export interface IDatabase<O = DataStoreOptions> {
 
   /**
    * Find documents matching query.
+   *
+   * `projection` keeps only the named fields (MongoDB-style, dot paths allowed)
+   * so a caller that only needs a summary does not read whole documents —
+   * example bodies are up to 1 MB each.
    */
   find<T extends BaseModel>(
     type: AllTypes,
     query?: Query<T> | string,
     sort?: Record<string, any>,
     limit?: number,
+    projection?: Record<string, 0 | 1>,
   ): Promise<T[]>;
 
   /**

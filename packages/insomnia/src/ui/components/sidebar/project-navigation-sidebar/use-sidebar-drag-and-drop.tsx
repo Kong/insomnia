@@ -1,18 +1,20 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
 import { models, type WorkspaceScope } from 'insomnia-data';
+import { getMetaSortKeyAfter, getMetaSortKeyBefore } from 'insomnia-data/common';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { DragAndDropHooks, DropTarget, ItemDropTarget } from 'react-aria-components';
 import { DropIndicator, useDragAndDrop } from 'react-aria-components';
 
 import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
 import { Icon } from '~/ui/components/icon';
+import { useUpdateExample } from '~/ui/hooks/use-example-mutations';
 
-import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem } from './types';
+import type { CollectionChildFlatItem, EmptyNodeFlatItem, ExampleFlatItem, FlatItem } from './types';
 
-const allowDragKinds: FlatItem['kind'][] = ['workspace', 'collectionChild'];
+const allowDragKinds: FlatItem['kind'][] = ['workspace', 'collectionChild', 'example'];
 const emptyNodeKinds: FlatItem['kind'][] = ['emptyFolder', 'emptyProject', 'emptyCollection'];
 const allowDropKinds: FlatItem['kind'][] = ['workspace', 'collectionChild', 'project', ...emptyNodeKinds];
-type AllowDragItem = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' }>;
+type AllowDragItem = Extract<FlatItem, { kind: 'workspace' | 'collectionChild' | 'example' }>;
 type AllowDropTarget = Extract<
   FlatItem,
   { kind: 'workspace' | 'collectionChild' | 'project' | 'emptyFolder' | 'emptyProject' | 'emptyCollection' }
@@ -41,8 +43,12 @@ export function getIndentLevel(item: FlatItem | null): number {
 
 type HasVisibleChildren = (folderId: string) => boolean;
 type FlatItemById = (id: string) => FlatItem | null;
-// Every visible row mapped to itself plus its previous and next visible rows.
-type FlatItemsById = Map<string, readonly [FlatItem, FlatItem | undefined, FlatItem | undefined]>;
+// Every visible row mapped to itself, its previous and next visible rows, and
+// the first row after it that is not an example row (the row after its section).
+type FlatItemsById = Map<
+  string,
+  readonly [FlatItem, FlatItem | undefined, FlatItem | undefined, FlatItem | undefined]
+>;
 type DropPositionKind = ItemDropTarget['dropPosition'];
 
 function isCollectionChild(item: FlatItem | null | undefined): item is CollectionChildFlatItem {
@@ -60,6 +66,10 @@ export interface BoundaryTargets {
   targetItem: FlatItem;
   realTargetItem?: FlatItem | null;
   nextItem?: FlatItem | null;
+  // The first row after `nextItem`'s examples section: an example row belongs to
+  // its request, so a sibling boundary must look past the whole section. Only
+  // needed for an "after" drop, because an example row is never a drop target.
+  afterNextItemSection?: FlatItem | null;
 }
 
 export interface DropContext {
@@ -249,6 +259,75 @@ export function resolveDrop(boundary: BoundaryTargets, ctx: DropContext): Resolv
   };
 }
 
+/** Where a dragged example is being dropped inside its request's examples section. */
+export type ExampleDropAnchor =
+  // beside a sibling example
+  | { kind: 'sibling'; id: string; position: 'before' | 'after' }
+  // at the top of the section, right under the parent request row
+  | { kind: 'section-top' }
+  // at the bottom of the section, below the last example
+  | { kind: 'section-bottom' };
+
+/**
+ * Sort key that places an example in the gap the anchor names, or `undefined`
+ * when that gap is already where the example sits (nothing to write).
+ * `siblings` is every visible example of the dragged example's request,
+ * including it, sorted by `metaSortKey`.
+ */
+export function exampleDropMetaSortKey({
+  siblings,
+  draggedId,
+  anchor,
+}: {
+  siblings: { id: string; metaSortKey: number }[];
+  draggedId: string;
+  anchor: ExampleDropAnchor;
+}): number | undefined {
+  const draggedIndex = siblings.findIndex(sibling => sibling.id === draggedId);
+  if (draggedIndex === -1) {
+    return undefined;
+  }
+  const others = siblings.filter(sibling => sibling.id !== draggedId);
+
+  let insertAt: number;
+  if (anchor.kind === 'section-top') {
+    insertAt = 0;
+  } else if (anchor.kind === 'section-bottom') {
+    insertAt = others.length;
+  } else {
+    const anchorIndex = others.findIndex(sibling => sibling.id === anchor.id);
+    if (anchorIndex === -1) {
+      return undefined;
+    }
+    insertAt = anchor.position === 'before' ? anchorIndex : anchorIndex + 1;
+  }
+  // The example's own gap: dropping there is a no-op.
+  if (insertAt === draggedIndex) {
+    return undefined;
+  }
+
+  const before = others[insertAt - 1];
+  const after = others[insertAt];
+  if (before && after) {
+    if (before.metaSortKey < after.metaSortKey) {
+      return getMetaSortKeyAfter(before.metaSortKey, after.metaSortKey);
+    }
+    // Equal keys (two examples created in the same millisecond, or imported
+    // without sort keys) cannot be split; keep the direction the drop asked for
+    // so the row never jumps to the other side of its anchor.
+    return anchor.kind === 'section-bottom' || (anchor.kind === 'sibling' && anchor.position === 'after')
+      ? getMetaSortKeyAfter(after.metaSortKey)
+      : getMetaSortKeyBefore(after.metaSortKey);
+  }
+  if (after) {
+    return getMetaSortKeyBefore(after.metaSortKey);
+  }
+  if (before) {
+    return getMetaSortKeyAfter(before.metaSortKey);
+  }
+  return undefined;
+}
+
 export function canDrop(
   dragItem: FlatItem,
   boundary: BoundaryTargets,
@@ -276,7 +355,13 @@ export function canDrop(
 
   // The item following realDropItem in the list
   const itemAfterRealDrop = dropPosition === 'before' ? dropItem : nextItem;
-  if (!realDropItem || !isAllowDropTarget(realDropItem)) {
+  // Example rows are valid anchors for sibling-example reordering, though they
+  // are not general drop targets.
+  if (!realDropItem || (!isAllowDropTarget(realDropItem) && realDropItem.kind !== 'example')) {
+    return false;
+  }
+  // No non-example drag may land beside an example row.
+  if (dragItem.kind !== 'example' && realDropItem.kind === 'example') {
     return false;
   }
 
@@ -307,6 +392,29 @@ export function canDrop(
     if (!changesParent) {
       return false;
     }
+  }
+
+  // Examples may only reorder within their own request's examples section:
+  // beside a sibling example, or at either edge of the section (top: "after"
+  // the parent request row; bottom: "before" the row that follows the section).
+  // No dropping into folders, across requests, or onto other row kinds.
+  if (dragItem.kind === 'example') {
+    if (dropItem.kind === 'example') {
+      return dropItem.doc.parentId === dragItem.doc.parentId;
+    }
+    const isTopEdge =
+      dropPosition === 'after' && isCollectionChild(dropItem) && dropItem.doc._id === dragItem.doc.parentId;
+    const isBottomEdge =
+      dropPosition === 'before' &&
+      isCollectionChild(dropItem) &&
+      realDropItem.kind === 'example' &&
+      realDropItem.doc.parentId === dragItem.doc.parentId;
+    return isTopEdge || isBottomEdge;
+  }
+  // No other kind may land beside an example row; a real target that is an
+  // example is already rejected by isAllowDropTarget above.
+  if (dropItem.kind === 'example') {
+    return false;
   }
 
   if (!isAllowDragItem(dragItem)) {
@@ -362,11 +470,16 @@ export function canDrop(
         return isWorkspaceMoveAllowed();
       }
       if (realDropItem.kind === 'collectionChild') {
-        // Drop after a collection child who is the last element of its parent workspace
+        // Drop after a collection child who is the last element of its parent
+        // workspace. Example rows belong to their request's section, so the
+        // sibling is whatever follows the whole section: the guard must behave
+        // the same whether that section is open or closed.
+        const itemAfterSection =
+          itemAfterRealDrop?.kind !== 'example' ? itemAfterRealDrop : boundary.afterNextItemSection;
         const isLastChildOfWorkspace =
-          itemAfterRealDrop == null ||
-          itemAfterRealDrop.kind !== 'collectionChild' ||
-          itemAfterRealDrop.workspace._id !== realDropItem.workspace._id;
+          itemAfterSection == null ||
+          itemAfterSection.kind !== 'collectionChild' ||
+          itemAfterSection.workspace._id !== realDropItem.workspace._id;
         if (!isLastChildOfWorkspace) {
           return false;
         }
@@ -603,6 +716,9 @@ interface UseSidebarDragAndDropOptions {
   expandedProjectAndWorkspaceIds?: string[];
   // Ancestor indent levels stripped from row rendering (see request-node.tsx).
   depthOffset?: number;
+  // A filtered tree only shows a subset of a request's examples, so a reorder
+  // computed from the visible rows would not match the order they land in.
+  disableExampleReorder?: boolean;
 }
 
 export const useSidebarDragAndDrop = ({
@@ -612,14 +728,35 @@ export const useSidebarDragAndDrop = ({
   onWorkspaceReorder,
   expandedProjectAndWorkspaceIds,
   depthOffset = 0,
+  disableExampleReorder = false,
 }: UseSidebarDragAndDropOptions): DragAndDropHooks => {
   const reorderFetcher = useDebugReorderActionFetcher();
+  const exampleUpdate = useUpdateExample();
 
   const flatItemsById = useMemo(() => {
     const visibles = flatItems.filter(item => !item.hidden);
+    // The nearest non-example row strictly after each row: the row after an
+    // examples section, which example rows belong to.
+    const nextNonExampleById = new Map<string, FlatItem>();
+    let nextNonExample: FlatItem | undefined;
+    for (let index = visibles.length - 1; index >= 0; index--) {
+      const item = visibles[index];
+      if (nextNonExample) {
+        nextNonExampleById.set(item.doc._id, nextNonExample);
+      }
+      if (item.kind !== 'example') {
+        nextNonExample = item;
+      }
+    }
     // keep previous item for "move into collection/project" logic, also previous and next item
     return new Map(
-      visibles.map((item, index) => [item.doc._id, [item, visibles[index - 1], visibles[index + 1]]] as const),
+      visibles.map(
+        (item, index) =>
+          [
+            item.doc._id,
+            [item, visibles[index - 1], visibles[index + 1], nextNonExampleById.get(item.doc._id)],
+          ] as const,
+      ),
     );
   }, [flatItems]);
 
@@ -691,8 +828,36 @@ export const useSidebarDragAndDrop = ({
       if (target.type !== 'item') {
         return 'cancel';
       }
+      const draggedItem = getCollectionItemByKey(draggingCollectionItemIdRef.current);
+      const dropItem = getCollectionItemByKey(target.key);
+      // Examples may only reorder within their own request's examples section:
+      // beside a sibling example, or at either edge of the section.
+      if (draggedItem?.kind === 'example') {
+        if (disableExampleReorder) {
+          return 'cancel';
+        }
+        // Examples only reorder beside each other; an "on" drop has no meaning
+        // and `canDrop` rejects it, so do not advertise it as a valid target.
+        if (target.dropPosition === 'on') {
+          return 'cancel';
+        }
+        const prevItem = flatItemsById.get(target.key.toString())?.[1];
+        const isSiblingExample = dropItem?.kind === 'example' && dropItem.doc.parentId === draggedItem.doc.parentId;
+        const isTopEdge =
+          target.dropPosition === 'after' &&
+          dropItem?.kind === 'collectionChild' &&
+          dropItem.doc._id === draggedItem.doc.parentId;
+        const isBottomEdge =
+          target.dropPosition === 'before' &&
+          dropItem?.kind === 'collectionChild' &&
+          prevItem?.kind === 'example' &&
+          prevItem.doc.parentId === draggedItem.doc.parentId;
+        return isSiblingExample || isTopEdge || isBottomEdge ? 'move' : 'cancel';
+      }
+      if (dropItem?.kind === 'example') {
+        return 'cancel';
+      }
       if (target.dropPosition === 'on') {
-        const dropItem = getCollectionItemByKey(target.key);
         // Only allow the "on" drop position (move inside) for folders. This lets
         // react-aria carve out real before/after edge zones for every other row,
         // instead of the whole row being one big "move inside" target.
@@ -723,6 +888,9 @@ export const useSidebarDragAndDrop = ({
         targetItem,
         realTargetItem,
         nextItem: nextTargetItem,
+        // An example row is never a drop target, so the only section a sibling
+        // boundary can land after is the row following the target.
+        afterNextItemSection: nextTargetItem ? flatItemsById.get(nextTargetItem.doc._id)?.[3] : undefined,
       };
       const resolved = boundary ? resolveDrop(boundary, dropContext) : null;
       const destinationParentId = resolved?.parentId ?? null;
@@ -733,6 +901,58 @@ export const useSidebarDragAndDrop = ({
         !resolved ||
         !canDrop(draggedItem, boundary, resolved, expandedProjectAndWorkspaceIds)
       ) {
+        return;
+      }
+
+      // Examples only reorder within their own request's examples section, so
+      // the drop is either beside a sibling example or at one of the section's
+      // two edges. canDrop already rejected every other combination.
+      if (draggedItem.kind === 'example') {
+        const dropTarget = flatItemsById.get(droppedKey)?.[0] ?? null;
+        if (!dropTarget) {
+          return;
+        }
+        const anchor = ((): ExampleDropAnchor | null => {
+          if (dropTarget.kind === 'example') {
+            return {
+              kind: 'sibling',
+              id: dropTarget.doc._id,
+              position: dropPosition === 'before' ? 'before' : 'after',
+            };
+          }
+          if (!isCollectionChild(dropTarget)) {
+            return null;
+          }
+          // "after the parent request row" is the top edge of the section;
+          // "before the row following the section" (its previous row being this
+          // request's last example) is the bottom edge.
+          if (dropPosition === 'after' && dropTarget.doc._id === draggedItem.doc.parentId) {
+            return { kind: 'section-top' };
+          }
+          if (
+            dropPosition === 'before' &&
+            realTargetItem?.kind === 'example' &&
+            realTargetItem.doc.parentId === draggedItem.doc.parentId
+          ) {
+            return { kind: 'section-bottom' };
+          }
+          return null;
+        })();
+        if (!anchor) {
+          return;
+        }
+        const siblings = flatItems
+          .filter(
+            (item): item is ExampleFlatItem =>
+              item.kind === 'example' && !item.hidden && item.doc.parentId === draggedItem.doc.parentId,
+          )
+          .sort((a, b) => a.doc.metaSortKey - b.doc.metaSortKey)
+          .map(item => ({ id: item.doc._id, metaSortKey: item.doc.metaSortKey }));
+        const metaSortKey = exampleDropMetaSortKey({ siblings, draggedId: draggedItem.doc._id, anchor });
+        if (metaSortKey === undefined) {
+          return;
+        }
+        exampleUpdate.mutate({ exampleId: draggedItem.doc._id, patch: { metaSortKey } });
         return;
       }
 
@@ -855,7 +1075,7 @@ export const useSidebarDragAndDrop = ({
       if (isMovingItemInsideFolder) {
         // Sort ahead of the folder's current first child so it lands at the top.
         const children = workspaceCollectionItems.filter(item => item.doc.parentId === targetId);
-        metaSortKey = children.length > 0 ? children[0].doc.metaSortKey - 100 : -1 * Date.now();
+        metaSortKey = children.length > 0 ? getMetaSortKeyBefore(children[0].doc.metaSortKey) : -1 * Date.now();
       } else if (isMovingIntoEmptyFolder) {
         // The placeholder has no doc of its own to sort against, so target the
         // folder that owns it; parentId below puts the item inside that folder.
@@ -869,18 +1089,27 @@ export const useSidebarDragAndDrop = ({
         const targetIndex = siblingItems.findIndex(item => item.doc._id === targetId);
 
         if ('metaSortKey' in normalizedTargetItem.doc && normalizedTargetItem.doc.metaSortKey != null) {
+          const targetSortKey = normalizedTargetItem.doc.metaSortKey;
           if (dropPosition === 'after') {
-            const afterItem = siblingItems[targetIndex + 1];
-            metaSortKey = afterItem
-              ? normalizedTargetItem.doc.metaSortKey -
-                (normalizedTargetItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2
-              : normalizedTargetItem.doc.metaSortKey + 100;
+            // Skip siblings tied with the target: equal keys cannot be split, and
+            // a strictly greater neighbour keeps the row on the requested side.
+            const nextSortKey = siblingItems
+              .slice(targetIndex + 1)
+              .map(item => ('metaSortKey' in item.doc ? item.doc.metaSortKey : undefined))
+              .find((key): key is number => typeof key === 'number' && key > targetSortKey);
+            metaSortKey = getMetaSortKeyAfter(targetSortKey, nextSortKey);
           } else {
-            const beforeItem = siblingItems[targetIndex - 1];
-            metaSortKey = beforeItem
-              ? normalizedTargetItem.doc.metaSortKey -
-                (normalizedTargetItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2
-              : normalizedTargetItem.doc.metaSortKey - 100;
+            // Likewise for the previous neighbour: only a strictly smaller key
+            // gives a midpoint that stays before the target.
+            const previousSortKey = siblingItems
+              .slice(0, targetIndex)
+              .reverse()
+              .map(item => ('metaSortKey' in item.doc ? item.doc.metaSortKey : undefined))
+              .find((key): key is number => typeof key === 'number' && key < targetSortKey);
+            metaSortKey =
+              previousSortKey === undefined
+                ? getMetaSortKeyBefore(targetSortKey)
+                : getMetaSortKeyAfter(previousSortKey, targetSortKey);
           }
         }
       }
@@ -919,11 +1148,13 @@ export const useSidebarDragAndDrop = ({
       const entry = flatItemsById.get(target.key.toString());
       const draggedItem = getCollectionItemByKey(draggingCollectionItemIdRef.current);
       const targetItem = getCollectionItemByKey(target.key);
+      const nextItem = entry?.[2];
       const boundary: BoundaryTargets | null = targetItem && {
         dropPosition: target.dropPosition,
         targetItem,
         realTargetItem: target.dropPosition === 'before' ? entry?.[1] : targetItem,
-        nextItem: entry?.[2],
+        nextItem,
+        afterNextItemSection: nextItem ? flatItemsById.get(nextItem.doc._id)?.[3] : undefined,
       };
 
       // One pass drives validity, indent and the named destination.
@@ -933,6 +1164,12 @@ export const useSidebarDragAndDrop = ({
         boundary != null &&
         resolved != null &&
         canDrop(draggedItem, boundary, resolved, expandedProjectAndWorkspaceIds);
+      // Example rows sit one level below their request. The section edges
+      // resolve against the request row (or the row after the section), so
+      // indent those to the example's own level.
+      const isExampleDrag = draggedItem?.kind === 'example';
+      const exampleIndentOffset =
+        isExampleDrag && resolved && resolved.normalized.targetItem.kind !== 'example' ? 1 : 0;
 
       return (
         <SidebarDropIndicator
@@ -941,9 +1178,10 @@ export const useSidebarDragAndDrop = ({
           rowEnd={row.end}
           rowHeight={row.size}
           isValid={isValid}
-          indentRem={indentRemForLevel(resolved?.landingLevel ?? 0, depthOffset)}
-          // A rejected boundary must not name a folder.
-          folderName={isValid ? (resolved?.folderName ?? null) : null}
+          indentRem={indentRemForLevel((resolved?.landingLevel ?? 0) + exampleIndentOffset, depthOffset)}
+          // A rejected boundary must not name a folder, and an example reorder
+          // never lands inside one.
+          folderName={isValid && !isExampleDrag ? (resolved?.folderName ?? null) : null}
         />
       );
     },
@@ -962,7 +1200,9 @@ export const useSidebarDragAndDrop = ({
       useDraggableItem(props, state) {
         const draggableItem = originalUseDraggableItem(props, state);
         const flatItem = flatItemsById.get(props.key.toString())?.[0];
-        const isDraggable = ['collectionChild', 'workspace'].includes(flatItem?.kind || '');
+        const isDraggable =
+          ['collectionChild', 'workspace', 'example'].includes(flatItem?.kind || '') &&
+          !(flatItem?.kind === 'example' && disableExampleReorder);
 
         if (!isDraggable) {
           return {
@@ -981,5 +1221,5 @@ export const useSidebarDragAndDrop = ({
         return draggableItem;
       },
     };
-  }, [collectionDragAndDrop.dragAndDropHooks, flatItemsById]);
+  }, [collectionDragAndDrop.dragAndDropHooks, flatItemsById, disableExampleReorder]);
 };

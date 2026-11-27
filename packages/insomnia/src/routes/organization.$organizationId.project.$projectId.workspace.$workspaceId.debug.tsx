@@ -42,6 +42,7 @@ import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-respon
 import { WebSocketRequestPane } from '~/ui/components/websockets/websocket-request-pane';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { usePaneDirection } from '~/ui/hooks/use-pane-direction';
 import { type CreateRequestType, useRequestMetaPatcher } from '~/ui/hooks/use-request';
 import { useRootLoaderData } from '~/ui/hooks/use-root-loader-data';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
@@ -439,29 +440,7 @@ const Debug = () => {
       },
     });
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
-    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
-  );
-  useEffect(() => {
-    if (settings.forceVerticalLayout) {
-      setDirection('vertical');
-      return () => {};
-    }
-    // Listen on media query changes
-    const mediaQuery = window.matchMedia('(max-width: 880px)');
-    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setDirection(e.matches ? 'vertical' : 'horizontal');
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [settings.forceVerticalLayout, direction]);
-
+  const direction = usePaneDirection(settings.forceVerticalLayout);
   const tabNavigate = useTabNavigate();
 
   return (

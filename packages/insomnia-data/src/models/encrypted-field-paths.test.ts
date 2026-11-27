@@ -31,6 +31,7 @@ describe('getEncryptedFieldPathsByType()', () => {
           "cookies[].value",
         ],
         "Environment": [],
+        "Example": [],
         "GitCredentials": [
           "credentials.password",
           "credentials.refreshToken",

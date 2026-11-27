@@ -1,5 +1,5 @@
-import type { RequestHeader } from 'insomnia-data';
-import React, { type FC, useCallback } from 'react';
+import type { Request, RequestHeader } from 'insomnia-data';
+import React, { type FC, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router';
 
 import { getAppVersion } from '~/common/constants';
@@ -8,6 +8,7 @@ import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
+import { useExampleEditorContext } from '../../context/example-editor-context';
 import { useRequestGroupPatcher, useRequestPatcher, useWorkspacePatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -41,20 +42,31 @@ export const RequestHeadersEditor: FC<Props> = ({
   disableUserAgentHeader,
   onDescriptionToggle,
 }) => {
+  const exampleEditor = useExampleEditorContext();
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patchWorkspace = useWorkspacePatcher();
   const isRequestGroup = requestType === 'RequestGroup';
   const isWorkspace = requestType === 'Workspace';
-  const patcher = isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest;
+  // The three route patchers accept the same header patches, but their document
+  // types differ; this editor only writes headers.
+  const routePatcher = (isWorkspace ? patchWorkspace : isRequestGroup ? patchRequestGroup : patchRequest) as (
+    id: string,
+    patch: Partial<Request>,
+  ) => void;
   const isWebSocketRequest = requestType === 'WebSocketRequest';
   const { requestId, requestGroupId, workspaceId } = useParams() as {
     requestId?: string;
     requestGroupId?: string;
     workspaceId?: string;
   };
-  const id = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
-  invariant(id, 'Request, RequestGroup or Workspace ID is required');
+  const routeId = isWorkspace ? workspaceId : isRequestGroup ? requestGroupId : requestId;
+  invariant(routeId, 'Request, RequestGroup or Workspace ID is required');
+  const id = exampleEditor ? exampleEditor.exampleId : routeId;
+  const patcher = useMemo(
+    () => exampleEditor?.patchRequest ?? ((patch: Partial<Request>) => routePatcher(routeId, patch)),
+    [exampleEditor, routePatcher, routeId],
+  );
   const showUserAgentReadOnly =
     !isRequestGroup && !isWorkspace && !headers.some(h => h.name.toLowerCase() === 'user-agent');
   const readOnlyPairs = (isWebSocketRequest ? readOnlyWebsocketPairs : readOnlyHttpPairs).filter(
@@ -67,12 +79,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       // If the user just removed their last User-Agent header, default the read-only row to
       // disabled rather than letting it silently start sending `insomnia/<version>`.
       if (!isRequestGroup && !isWorkspace && hadUserAgent && !hasUserAgent) {
-        patchRequest(id, { headers: newHeaders, disableUserAgentHeader: true });
+        patcher({ headers: newHeaders, disableUserAgentHeader: true });
       } else {
-        patcher(id, { headers: newHeaders });
+        patcher({ headers: newHeaders });
       }
     },
-    [headers, isRequestGroup, isWorkspace, patchRequest, id, patcher],
+    [headers, isRequestGroup, isWorkspace, patcher],
   );
   const handleBulkUpdate = useCallback(
     (headersString: string) => {
@@ -143,7 +155,7 @@ export const RequestHeadersEditor: FC<Props> = ({
       readOnlyPairs={readOnlyPairs}
       readOnlyDisabledByName={showUserAgentReadOnly ? { 'user-agent': !!disableUserAgentHeader } : undefined}
       onReadOnlyDisabledChange={
-        showUserAgentReadOnly ? (_name, disabled) => patchRequest(id, { disableUserAgentHeader: disabled }) : undefined
+        showUserAgentReadOnly ? (_name, disabled) => patcher({ disableUserAgentHeader: disabled }) : undefined
       }
       onDescriptionToggle={onDescriptionToggle}
     />

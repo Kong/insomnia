@@ -1,5 +1,5 @@
-import type { RequestParameter } from 'insomnia-data';
-import { type FC, useCallback } from 'react';
+import type { Request, RequestParameter } from 'insomnia-data';
+import { type FC, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router';
 
 import {
@@ -7,6 +7,7 @@ import {
   useRequestLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { useExampleEditorContext } from '~/ui/context/example-editor-context';
 import { useRequestPatcher } from '~/ui/hooks/use-request';
 
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -18,9 +19,16 @@ interface Props {
 }
 
 export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onDescriptionToggle }) => {
-  const { requestId } = useParams() as { requestId: string };
-  const { activeRequest } = useRequestLoaderData() as RequestLoaderData;
-  const patchRequest = useRequestPatcher();
+  const exampleEditor = useExampleEditorContext();
+  const { requestId: routeRequestId } = useParams() as { requestId: string };
+  const loaderData = useRequestLoaderData() as RequestLoaderData | undefined;
+  const routePatchRequest = useRequestPatcher();
+  const requestId = exampleEditor ? exampleEditor.exampleId : routeRequestId;
+  const activeRequest = exampleEditor ? exampleEditor.request : loaderData!.activeRequest;
+  const patchRequest = useMemo(
+    () => exampleEditor?.patchRequest ?? ((patch: Partial<Request>) => routePatchRequest(routeRequestId, patch)),
+    [exampleEditor, routePatchRequest, routeRequestId],
+  );
   const handleBulkUpdate = useCallback(
     (paramsString: string) => {
       const parameters: {
@@ -43,9 +51,9 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
           value,
         });
       }
-      patchRequest(requestId, { parameters });
+      patchRequest({ parameters });
     },
-    [patchRequest, requestId],
+    [patchRequest],
   );
 
   let paramsString = '';
@@ -64,9 +72,9 @@ export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false, onD
 
   const onChangeParameter = useCallback(
     (parameters: RequestParameter[]) => {
-      patchRequest(requestId, { parameters });
+      patchRequest({ parameters });
     },
-    [patchRequest, requestId],
+    [patchRequest],
   );
 
   if (bulk) {

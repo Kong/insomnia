@@ -1,9 +1,17 @@
+import { getMetaSortKeyAfter, META_SORT_KEY_GAP } from 'insomnia-data/common';
 import { describe, expect, it } from 'vitest';
 
-import type { CollectionChildFlatItem, EmptyNodeFlatItem, FlatItem, ProjectWithGitRepository } from './types';
+import type {
+  CollectionChildFlatItem,
+  EmptyNodeFlatItem,
+  ExampleFlatItem,
+  FlatItem,
+  ProjectWithGitRepository,
+} from './types';
 import type { BoundaryTargets, DropContext } from './use-sidebar-drag-and-drop';
 import {
   canDrop,
+  exampleDropMetaSortKey,
   getIndentLevel,
   levelFromX,
   resolveDrop,
@@ -70,11 +78,40 @@ function emptyFolderNode(id: string, level: number, requestGroupId: string) {
   } as unknown as EmptyNodeFlatItem;
 }
 
+function exampleItem({ id, requestId, metaSortKey = 0 }: { id: string; requestId: string; metaSortKey?: number }) {
+  return {
+    kind: 'example',
+    doc: { _id: id, type: 'Example', name: id, parentId: requestId, metaSortKey, response: { statusCode: 200 } },
+    project,
+    workspace: workspaceDoc,
+    level: 1,
+    hidden: false,
+    organizationId: 'org_1',
+  } as unknown as ExampleFlatItem;
+}
+
 // Rebuilds the lookups the hook derives from its flat list.
 function buildIndex(items: FlatItem[]) {
   const visibles = items.filter(item => !item.hidden);
+  const nextNonExampleById = new Map<string, FlatItem>();
+  let nextNonExample: FlatItem | undefined;
+  for (let index = visibles.length - 1; index >= 0; index--) {
+    const item = visibles[index];
+    if (nextNonExample) {
+      nextNonExampleById.set(item.doc._id, nextNonExample);
+    }
+    if (item.kind !== 'example') {
+      nextNonExample = item;
+    }
+  }
   const flatItemsById = new Map(
-    visibles.map((item, index) => [item.doc._id, [item, visibles[index - 1], visibles[index + 1]] as const]),
+    visibles.map(
+      (item, index) =>
+        [
+          item.doc._id,
+          [item, visibles[index - 1], visibles[index + 1], nextNonExampleById.get(item.doc._id)],
+        ] as const,
+    ),
   );
   const lookup = (id: string) => flatItemsById.get(id)?.[0] ?? null;
   // Mirrors the hook: a childless expanded folder still shows an interior.
@@ -105,6 +142,7 @@ function boundaryAt(items: FlatItem[], dropPosition: DropPosition, key: string) 
     targetItem,
     realTargetItem: dropPosition === 'before' ? prevItem : targetItem,
     nextItem,
+    afterNextItemSection: nextItem ? flatItemsById.get(nextItem.doc._id)?.[3] : undefined,
   };
   return { boundary, flatItemsById, lookup, hasVisibleChildren };
 }
@@ -136,6 +174,19 @@ const nestedTree: FlatItem[] = [workspaceItem, A, A1, B, B1, C];
 const E = child({ id: 'E', level: 1, parentId: 'A', ancestors: ['A'], folder: true, metaSortKey: 200, name: 'Echo' });
 const emptyPlaceholder = emptyFolderNode('empty_E', 1, 'E');
 const emptyTree: FlatItem[] = [workspaceItem, A, E, emptyPlaceholder, C];
+
+//   request R1        level 0
+//     example E1      level 1
+//     example E2      level 1
+//   request R2        level 0
+const R1 = child({ id: 'R1', level: 0, parentId: 'wrk_1', ancestors: [], metaSortKey: 100 });
+const R2 = child({ id: 'R2', level: 0, parentId: 'wrk_1', ancestors: [], metaSortKey: 200 });
+const E1 = exampleItem({ id: 'E1', requestId: 'R1', metaSortKey: 10 });
+const E2 = exampleItem({ id: 'E2', requestId: 'R1', metaSortKey: 20 });
+// A request whose examples are open and that is followed by another request.
+const examplesThenRequest: FlatItem[] = [workspaceItem, R1, E1, E2, R2];
+// The same, with nothing after the examples section: R1 is the last child.
+const trailingExamples: FlatItem[] = [workspaceItem, R1, E1, E2];
 
 describe('levelFromX', () => {
   // 1rem is 13px by default here, not the css default of 16.
@@ -393,6 +444,19 @@ describe('canDrop', () => {
     // Previous row is a collection child, not the workspace header.
     expect(canDrop(B1, at(nestedTree, 'before', 'C'), dest(nestedTree, 'wrk_1'))).toBe(true);
   });
+
+  // A workspace only lands in the gap below its collection's last child. An open
+  // examples section belongs to the request above it, so it must not read as
+  // "nothing else follows".
+  it('rejects a workspace dropped after a request whose examples are followed by another request', () => {
+    expect(canDrop(workspaceItem, at(examplesThenRequest, 'after', 'R1'), dest(examplesThenRequest, 'wrk_1'))).toBe(
+      false,
+    );
+  });
+
+  it('allows a workspace dropped after the last request of a collection whose examples are open', () => {
+    expect(canDrop(workspaceItem, at(trailingExamples, 'after', 'R1'), dest(trailingExamples, 'wrk_1'))).toBe(true);
+  });
 });
 
 describe('SidebarDropTargetDelegate', () => {
@@ -521,5 +585,100 @@ describe('the region below an empty folder placeholder', () => {
     const { boundary, flatItemsById, lookup, hasVisibleChildren } = boundaryAt(items, 'after', 'empty_ws');
     const ctx: DropContext = { hasVisibleChildren, lookup, flatItemsById, preferredLevel: 0 };
     expect(canDrop(R, boundary, resolveDrop(boundary, ctx))).toBe(false);
+  });
+});
+
+describe('exampleDropMetaSortKey', () => {
+  const siblings = [
+    { id: 'exp_a', metaSortKey: -300 },
+    { id: 'exp_b', metaSortKey: -200 },
+    { id: 'exp_c', metaSortKey: -100 },
+  ];
+
+  it('places the example in the gap before a sibling', () => {
+    // exp_c dropped before exp_a: no lower neighbour, so one gap above it.
+    expect(
+      exampleDropMetaSortKey({
+        siblings,
+        draggedId: 'exp_c',
+        anchor: { kind: 'sibling', id: 'exp_a', position: 'before' },
+      }),
+    ).toBe(-300 - META_SORT_KEY_GAP);
+  });
+
+  it('places the example in the gap after a sibling', () => {
+    // exp_a dropped after exp_b: the free slot is between exp_b and exp_c.
+    expect(
+      exampleDropMetaSortKey({
+        siblings,
+        draggedId: 'exp_a',
+        anchor: { kind: 'sibling', id: 'exp_b', position: 'after' },
+      }),
+    ).toBe(getMetaSortKeyAfter(-200, -100));
+  });
+
+  it('places the example at the top and bottom edges of the section', () => {
+    expect(exampleDropMetaSortKey({ siblings, draggedId: 'exp_c', anchor: { kind: 'section-top' } })).toBe(-400);
+    expect(exampleDropMetaSortKey({ siblings, draggedId: 'exp_a', anchor: { kind: 'section-bottom' } })).toBe(0);
+  });
+
+  it('writes nothing when the drop lands in the gap the example already occupies', () => {
+    // exp_b already sits second: both neighbours name the same gap.
+    expect(
+      exampleDropMetaSortKey({
+        siblings,
+        draggedId: 'exp_b',
+        anchor: { kind: 'sibling', id: 'exp_a', position: 'after' },
+      }),
+    ).toBeUndefined();
+    expect(
+      exampleDropMetaSortKey({
+        siblings,
+        draggedId: 'exp_b',
+        anchor: { kind: 'sibling', id: 'exp_c', position: 'before' },
+      }),
+    ).toBeUndefined();
+    expect(exampleDropMetaSortKey({ siblings, draggedId: 'exp_a', anchor: { kind: 'section-top' } })).toBeUndefined();
+    expect(exampleDropMetaSortKey({ siblings, draggedId: 'exp_c', anchor: { kind: 'section-bottom' } })).toBeUndefined();
+  });
+
+  it('has nothing to order against when the request has a single example', () => {
+    const only = [{ id: 'exp_a', metaSortKey: -300 }];
+    expect(
+      exampleDropMetaSortKey({ siblings: only, draggedId: 'exp_a', anchor: { kind: 'section-top' } }),
+    ).toBeUndefined();
+    expect(
+      exampleDropMetaSortKey({
+        siblings: only,
+        draggedId: 'exp_a',
+        anchor: { kind: 'sibling', id: 'exp_b', position: 'after' },
+      }),
+    ).toBeUndefined();
+  });
+
+  it('keeps the drop direction when the neighbours share a sort key', () => {
+    // Same-millisecond creation (init uses -Date.now()) or files without sort
+    // keys produce ties. A "before" drop must land on the earlier side, not the
+    // later one, even though the neighbours cannot be split.
+    const tied = [
+      { id: 'exp_a', metaSortKey: 0 },
+      { id: 'exp_b', metaSortKey: 0 },
+      { id: 'exp_c', metaSortKey: 0 },
+    ];
+
+    expect(
+      exampleDropMetaSortKey({
+        siblings: tied,
+        draggedId: 'exp_c',
+        anchor: { kind: 'sibling', id: 'exp_a', position: 'before' },
+      }),
+    ).toBe(-META_SORT_KEY_GAP);
+    expect(
+      exampleDropMetaSortKey({
+        siblings: tied,
+        draggedId: 'exp_a',
+        anchor: { kind: 'sibling', id: 'exp_b', position: 'after' },
+      }),
+    ).toBe(META_SORT_KEY_GAP);
   });
 });

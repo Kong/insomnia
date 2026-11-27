@@ -67,7 +67,8 @@ export const getSidebarPinnedHeaderId = (workspaceId: string): string => `${work
 export const getSidebarItemParentId = (item: FlatItem): string | undefined => {
   switch (item.kind) {
     case 'workspace':
-    case 'collectionChild': {
+    case 'collectionChild':
+    case 'example': {
       return item.doc.parentId;
     }
     case 'pinnedHeader': {

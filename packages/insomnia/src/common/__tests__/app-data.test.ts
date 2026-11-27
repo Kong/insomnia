@@ -5,11 +5,13 @@ import type {
   BaseModel,
   ChangeBufferEvent,
   CollectionWorkspaceChildren,
+  Example,
   OrganizationData,
+  Request,
 } from 'insomnia-data';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
+import { exampleKeys, organizationDataKeys, workspaceChildrenKeys } from '~/common/app-data';
 
 vi.mock('insomnia-data', async () => {
   const actual = await vi.importActual<typeof InsomniaData>('insomnia-data');
@@ -160,7 +162,10 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceId = 'wrk_1';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const collectionChildren: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
@@ -180,11 +185,14 @@ describe('updateAppDataOnDbChanges', () => {
     const workspaceBId = 'wrk_b';
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceAId });
     const childrenA: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]] },
+      data: {
+        requestsAndGroups: [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]],
+        examples: [],
+      },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB: CollectionWorkspaceChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceAId), childrenA);
@@ -215,7 +223,7 @@ describe('updateAppDataOnDbChanges', () => {
     const request = fakeDoc('Request', { _id: 'req_1', parentId: workspaceId });
     const requestsAndGroups = [request as CollectionWorkspaceChildren['data']['requestsAndGroups'][0]];
     const collectionChildren: CollectionWorkspaceChildren = {
-      data: { apiSpec: fakeApiSpec({ parentId: workspaceId, contents: 'old' }), requestsAndGroups },
+      data: { apiSpec: fakeApiSpec({ parentId: workspaceId, contents: 'old' }), requestsAndGroups, examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId(workspaceId), collectionChildren);
@@ -235,7 +243,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('sets the api spec in place when the cached collection children do not have one yet', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -257,11 +265,11 @@ describe('updateAppDataOnDbChanges', () => {
     const specB = fakeApiSpec({ _id: 'spc_b', parentId: workspaceBId, contents: 'b' });
     const emptyMetas = { allRequestMetas: [], requestGroupMetas: [] };
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceAId), {
-      data: { apiSpec: specA, requestsAndGroups: [] },
+      data: { apiSpec: specA, requestsAndGroups: [], examples: [] },
       dataMetas: emptyMetas,
     });
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceBId), {
-      data: { apiSpec: specB, requestsAndGroups: [] },
+      data: { apiSpec: specB, requestsAndGroups: [], examples: [] },
       dataMetas: emptyMetas,
     });
 
@@ -276,7 +284,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('invalidates the workspace cache when an api spec is created', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -288,7 +296,7 @@ describe('updateAppDataOnDbChanges', () => {
   it('invalidates the workspace cache when an api spec is removed', () => {
     const workspaceId = 'wrk_1';
     queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
-      data: { apiSpec: fakeApiSpec({ parentId: workspaceId }), requestsAndGroups: [] },
+      data: { apiSpec: fakeApiSpec({ parentId: workspaceId }), requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
@@ -305,6 +313,70 @@ describe('updateAppDataOnDbChanges', () => {
     ).not.toThrow();
 
     expect(queryClient.getQueryState(workspaceChildrenKeys.byWorkspaceId(workspaceId))).toBeUndefined();
+  });
+
+  it('patches an open example in place instead of invalidating its query', () => {
+    const example = { ...fakeDoc('Example', { _id: 'exp_1', parentId: 'req_1' }), name: '200 OK' } as unknown as Example;
+    queryClient.setQueryData(exampleKeys.byId(example._id), example);
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+
+    updateAppDataOnDbChanges(queryClient, [change('update', { ...example, name: 'Renamed' })]);
+
+    expect(queryClient.getQueryData<Example>(exampleKeys.byId(example._id))).toMatchObject({ name: 'Renamed' });
+    expect(invalidateQueries).not.toHaveBeenCalled();
+  });
+
+  it('patches a cached example summary in place instead of invalidating the workspace', () => {
+    const workspaceId = 'wrk_1';
+    const request = fakeDoc('Request', { _id: 'req_9', parentId: workspaceId }) as Request;
+    const example = {
+      ...fakeDoc('Example', { _id: 'exp_9', parentId: 'req_9' }),
+      name: '200 OK',
+      description: '',
+      metaSortKey: -1,
+      request: { method: 'GET' },
+      response: { statusCode: 200 },
+    } as unknown as Example;
+
+    queryClient.setQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId), {
+      data: {
+        requestsAndGroups: [request],
+        examples: [
+          {
+            _id: 'exp_9',
+            parentId: 'req_9',
+            type: 'Example',
+            name: '200 OK',
+            description: '',
+            metaSortKey: -1,
+            modified: 0,
+            created: 0,
+            isPrivate: false,
+            request: { method: 'GET' },
+            response: { statusCode: 200 },
+          },
+        ],
+      },
+      dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+
+    updateAppDataOnDbChanges(queryClient, [change('update', { ...example, name: 'Renamed' })]);
+
+    expect(
+      queryClient.getQueryData<CollectionWorkspaceChildren>(workspaceChildrenKeys.byWorkspaceId(workspaceId))?.data
+        .examples,
+    ).toEqual([expect.objectContaining({ _id: 'exp_9', name: 'Renamed' })]);
+    expect(invalidateQueries).not.toHaveBeenCalled();
+  });
+
+  it('drops an open example from the cache when it is removed', () => {
+    const example = fakeDoc('Example', { _id: 'exp_2', parentId: 'req_1' }) as unknown as Example;
+    queryClient.setQueryData(exampleKeys.byId(example._id), example);
+
+    updateAppDataOnDbChanges(queryClient, [change('remove', example)]);
+
+    expect(queryClient.getQueryData(exampleKeys.byId(example._id))).toBeUndefined();
   });
 
   it('ignores doc types it does not monitor', () => {
@@ -325,11 +397,11 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('fetches all workspace ids in a single batched call when none are cached', async () => {
     const childrenA = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     const childrenB = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(
@@ -349,13 +421,13 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('only fetches the uncached subset of workspace ids', async () => {
     const cachedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), cachedChildren);
 
     const fetchedChildren = {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     };
     vi.mocked(services.appData.getWorkspaceChildren).mockResolvedValue(new Map([['wrk_b', fetchedChildren]]));
@@ -368,7 +440,7 @@ describe('prefetchUncachedWorkspaceChildren', () => {
 
   it('does not call the service when every workspace id is already cached', async () => {
     queryClient.setQueryData(workspaceChildrenKeys.byWorkspaceId('wrk_a'), {
-      data: { requestsAndGroups: [] },
+      data: { requestsAndGroups: [], examples: [] },
       dataMetas: { allRequestMetas: [], requestGroupMetas: [] },
     });
 
