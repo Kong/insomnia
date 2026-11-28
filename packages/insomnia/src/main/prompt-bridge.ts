@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { ipcMain } from 'electron';
 
+import type { DialogRequest } from '~/common/plugins/dialog-payload';
 import type { AppPromptOptions } from '~/common/templating/types';
 
 import { getMainWindow } from './window-utils';
@@ -29,6 +30,15 @@ export function requestPromptFromRenderer(options: PromptRequestOptions): Promis
     });
     mainWindow.webContents.send('ui.prompt', id, options);
   });
+}
+
+/**
+ * Show a plugin dialog in the app window. Electron's native message box can only render plain text,
+ * so plugin content (which arrives as HTML) has to go through the renderer's WrapperModal. No-op when
+ * there is no app window, e.g. in the CLI.
+ */
+export function showDialogInRenderer(request: DialogRequest): void {
+  getMainWindow()?.webContents.send('plugins.uiDialog', request);
 }
 
 ipcMain.on('ui.promptResult', (event, { id, value }: { id: string; value: string | null }) => {
